@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "kind": "submission",
+  "scope": "Independent one or both configured team authors manuscripts. Joint or conditional coauthorship remains on the collaboration track for authorship, consent and submission; since the owner 2026-11-14 a joint manuscript also passes these review rounds before any submission, resubmission or arXiv posting, with every change proposed to its co-authors.",
+  "trigger": "An independent submission board entry with explicitly selected current local inputs, or an exact Claude-reviewed correspondence classification with selected manuscript artifacts.",
+  "stages": [
+    "Read complete source correspondence, independence evidence, actual authorship and current holds. Do not re-open a declined collaboration.",
+    "Contribution gate (the owner 2026-10-31), before any write-up or polish: an independent paper exists only for a real incremental contribution the field cares about. It must resolve a conjecture or open problem stated in the literature (cite where it is posed) or prove a substantive new theorem that specialists would recognise as advancing the area. Check priority first: search later preprints and papers (arXiv, figshare, journal versions, the original authors' follow-ups) that may already settle it, and test whether the result follows from existing theorems by a short argument, a known gauge or conjugacy, or verbatim reuse of a published proof. If someone else published a solution first, the paper proceeds only as an honestly dated independent solution: credit their priority and dates, state our own dated record, and say exactly what differs (method, generality, verified extension). If the problem was never posed, or the content is a routine extension, small special case or computation-only observation, stop the paper: set needs_work with that reason, attack the strongest still-open problem in the line via Oracle direction -> Codex proof -> Oracle gap check, and archive the paper if nothing substantive is attained. Never pad a minor result into a paper or retitle it to look new. Significance test (the owner 2026-11-14): write one plain paragraph stating what a specialist learns that was not known before, why it matters to the area, and the strongest prior result it improves, with the improvement made precise (new range, removed hypothesis, sharper constant, new mechanism). A fresh Oracle conversation judges that paragraph against the literature. If it cannot be written honestly, or the judge calls the increment routine, the manuscript is not a journal paper.",
+    "Audit the current manuscript and existing reviews first. Reuse a review only when its claim/source/PDF version still matches. A legacy ready flag is not a new review.",
+    "Verify the exact source claim and hypotheses, complete proofs, priority and systematic primary-source literature. Apply research-paper-writing-rigor including argument-and-evidence and proof-completeness when applicable.",
+    "For substantive reasoning preserve Oracle direction -> Codex rigorous proof/computation/write-up -> Oracle gap check. Use oracle-broker and streaming nyxid proxy request oracle, first checking live pools. Preserve uncertain original handles; never use the retired nyxid oracle command.",
+    "Obtain Oracle journal-editor/referee assessment and ranked journal fit. Address concrete proof, novelty, exposition and desk-rejection issues, verify suggested references, and re-review substantive changes. Oracle advice is internal, not an actual journal decision.",
+    "Check current venue rules, actual author facts/contributions, disclosures, availability and submission fields. Reuse P56 author_facts and the current locked AI statement in managed/submission/author-policy.json. Do not invent missing roles, commitments or addresses. Respect venue restrictions and publication timing.",
+    "Compile the final source archive in isolation, inspect the PDF, check source/PDF identity and necessary reproducibility material. Consume existing formal verification with precise scope; do not run Lean without a machine selected for this task.",
+    "Deliver the exact final PDF, TeX, rebuildable source archive and internal review/evidence artifact for independent Claude review. Return short evidence-backed questions only for real missing user facts. A PASS makes this version submission-ready; actual journal submission requires its own authorized execution and receipt."
+  ],
+  "workspace": "Use the person-owned workspace. The remote board stays one record per manuscript; detailed revisions, proofs, manifests, hashes and reviews stay in local mail or the explicitly selected CMA task deliverables. Do not mirror local repositories or environments.",
+  "required_artifact_roles": ["manuscript-pdf", "manuscript-tex", "source-archive", "evidence"],
+  "result": "Use the managed task result contract and routing from managed/automation.json. routing.mail=none. Include a compact proposed board update in the evidence artifact; the operator reconciles shared tables. Never submit, publish, send mail or approve your own work.",
+  "rounds_policy": "the owner 2026-11-01: every independent paper passes five separate CMA rounds in this order: improve, sprint, consult, uplift, finalize. A task executes exactly the round named in inputs.submission_round (missing means improve) and stops at that round's deliverable. After each round the operator reviews the exact result; a PASS advances to the next round with the reviewed result and review as inputs, a BOUNCE repeats the round with the feedback (bounded by automation.max_revisions), and a stop verdict ends the line with a board proposal. The stages above apply inside every round as far as relevant. Scope (the owner 2026-11-14, after two Physical Review A desk rejections and an outside reading of our arXiv preprints found little real innovation): these rounds apply to every manuscript we write or co-write before any journal submission, resubmission or arXiv posting, joint papers included; changes to a joint paper are proposed to its co-authors through the correspondence and never submitted without their agreement. A manuscript that fails the significance test or the desk-rejection simulation is not sent to a journal: it is strengthened first or becomes a short note (Mathesis, Zenodo DOI).",
+  "quality_bar": [
+    "Real value first (the owner 2026-11-14): every round must find or create content a specialist would call new and meaningful; polish, reformatting and longer reference lists do not count. Desk rejections and outside readings are evidence: record each stated reason and address it before the next venue.",
+    "Value maximization (the owner 2026-11-01: every resolved conjecture is used to its full value): when the paper resolves a posed conjecture or open problem, the title or the first sentence of the abstract says so with the exact posing citation; check whether the same source poses sibling cases (other rows of the same table, companion conjectures, the converse, the open parameter range) and either settle them in the sprint or uplift round or state them explicitly as open; record whether the posing authors have been told (first contact or reply) and propose that letter if not; choose the target venue at the level the resolution merits.",
+    "New content every round: the evidence artifact lists each new mathematical item (theorem, proposition, proof, counterexample, sharp example, classification, computed table, literature comparison) with its location in the manuscript and how it was verified. Rewording, reformatting, renaming or moving material is not new content. A round without new content reports the failed attempts, what was learned and the next method; it never passes the manuscript through unchanged.",
+    "Mathematics first: construct proofs and structure; use computation to test, find counterexamples and certify finite statements, never as a replacement for a proof of a general claim.",
+    "Oracle independence: direction, gap check and editor review each run in a fresh Oracle conversation with the current PDF attached; never let the conversation that proposed an argument certify it. Record conversation_id, task_id, observed model and effort for every call, and quote the decisive parts of each answer.",
+    "Complete proofs: every stated result has a complete argument in the manuscript; no 'it is easy to see' gaps, no claims supported only by code output, no proof deferred to a repository.",
+    "Honest positioning: state where the problem was posed, the dated priority record, what is new and what is credited to others. Never inflate a special case or retitle a known result.",
+    "Writing: apply research-paper-writing-rigor. The introduction states the problem, the main theorem and the increment over prior work within the first page. Citations meet mature-paper standards with checked bibliographic data; cite repositories by link, not Zenodo. Integrate valuable material into the paper and keep supplementary files few.",
+    "Back matter only from author facts in managed/submission/author-policy.json: never invent competing interests, funding, affiliations or contribution roles. Keep the provisional byline and the locked AI statement as the policy file specifies.",
+    "Deliverables are LaTeX source, compiled PDF, source archive and one evidence artifact; research results go into the TeX, not loose notes."
+  ],
+  "rounds": {
+    "improve": {
+      "name": "提升轮",
+      "goal": "Decide whether the paper deserves to exist and make the existing manuscript correct, complete and honestly positioned.",
+      "do": [
+        "Run the contribution gate with a dated priority search (arXiv, figshare, journal versions, the posing authors' later work) and a test of whether the result follows quickly from known theorems.",
+        "Search for proofs of the posed statement and its siblings that appeared after the posing date (arXiv, Zenodo, figshare, OEIS edit history and linked papers, MathOverflow answers, the posing authors' pages and citing papers); credit the earliest proof found by date and later independent proofs in order; never claim priority; record the search scope and dates in the evidence.",
+        "Audit every proof line by line against the source definitions; repair each gap with a complete argument or weaken the claim to what is proved.",
+        "Write or correct the relation-to-prior-work section and a precise contribution paragraph.",
+        "Rebuild the manuscript and record a gap ledger (location, problem, fix, verification)."
+      ],
+      "new_content": "Completed or corrected proofs, the positioned prior-work comparison and every new lemma needed for correctness.",
+      "stop": "If the gate fails, return a stop verdict: give the reason, the strongest still-open problem in this line as a redirect, and a board proposal (needs_work or archive)."
+    },
+    "sprint": {
+      "name": "冲刺轮",
+      "goal": "Strengthen the mathematics beyond the current manuscript.",
+      "do": [
+        "Ask Oracle, with the current PDF, for the three strongest mathematical extensions a specialist in the area would value (stronger or more general theorem, removed hypothesis, sharp bound with extremal example, new case, classification) with feasibility.",
+        "Choose by value and feasibility, prove it rigorously (Codex for proofs and computations), then run an Oracle gap check in a fresh conversation and fix what it finds.",
+        "Integrate the result into the main text and update the title, abstract and introduction only to what is proved."
+      ],
+      "new_content": "At least one new theorem or proposition with complete proof, integrated into the paper.",
+      "stop": "If no extension succeeds, report the attempts, correct partial results and the obstruction; partial results that are correct and interesting still enter the paper."
+    },
+    "consult": {
+      "name": "Oracle 会诊",
+      "goal": "Obtain a senior specialist assessment of the post-sprint paper and choose the uplift direction.",
+      "do": [
+        "In a fresh Oracle conversation with the PDF, ask: 'You are the handling editor of the target journal and a specialist referee. Would you accept this paper? What is its single weakest point? Rank up to five concrete mathematical additions that would most raise its acceptance chance or venue tier, with feasibility and risk. Is the target journal right, or should it aim higher or lower?'",
+        "Desk-rejection simulation (the owner 2026-11-14): in a second fresh Oracle conversation with the PDF and the target journal's stated acceptance criteria, act as the handling editor deciding at the initial assessment whether to desk-reject or send to referees, quoting the criterion. A desk-reject verdict blocks submission until the weakness is fixed with new mathematics or the venue is lowered; record both conversations.",
+        "Check each of the top three directions for prior work and scout feasibility (small cases, a proof sketch, an obstruction).",
+        "Implement the referee's concrete correctness, exposition and reference points now."
+      ],
+      "new_content": "The referee-driven corrections and the scouting results (lemmas, data, obstructions) in the manuscript or evidence, plus a ranked uplift plan with a chosen direction and a fallback.",
+      "stop": "The operator's review confirms or replaces the chosen direction for the uplift round."
+    },
+    "uplift": {
+      "name": "拔高冲刺",
+      "goal": "Carry out the uplift direction confirmed in the consult review.",
+      "do": [
+        "Follow review_feedback for the confirmed direction; use the fallback only with a stated reason.",
+        "Oracle direction, rigorous Codex proof or computation, then an Oracle gap check in a fresh conversation; fix every gap.",
+        "Integrate into the paper and rebalance the exposition around the strongest result."
+      ],
+      "new_content": "The uplift theorem or structural result with complete proof, integrated into the paper.",
+      "stop": "If the direction fails, deliver the correct partial results and the obstruction; the operator decides between another uplift attempt and finalizing."
+    },
+    "finalize": {
+      "name": "定稿",
+      "goal": "Bring the paper to journal-submission quality.",
+      "do": [
+        "In a fresh Oracle conversation with the PDF, ask: 'As editor of the target journal, would you accept this paper, desk-reject it, or send it out? Write the referee report.' Ask for a ranked list of suitable journals.",
+        "Address every concrete point, verify suggested references and re-check changed proofs.",
+        "Check venue rules and author facts, compile in isolation, inspect every page, and deliver PDF, TeX, source archive and evidence with a proposed board row."
+      ],
+      "new_content": "All referee fixes, the final verified manuscript and the venue assessment.",
+      "stop": "If the editor assessment is below minor revision at the target journal, say so; the operator then bounces for one more uplift attempt, changes the target venue or archives."
+    }
+  }
+}

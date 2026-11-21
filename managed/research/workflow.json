@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "kinds": [
+    "research",
+    "shortnote",
+    "mathesis"
+  ],
+  "principle": "Give a concrete checked mathematical result, a complete readable note, or a precise evidence-bearing hold.",
+  "inputs": [
+    "pinned upstream result and exact original claim",
+    "primary-source literature and later journal versions",
+    "current private project ownership and decisions",
+    "selected focused workspace bundle"
+  ],
+  "short_note": {
+    "required_for_each_resolved_result": true,
+    "reuse_existing_source_first": true,
+    "deliverables": [
+      "note.tex and bibliography/figures needed to rebuild it",
+      "visually checked note.pdf",
+      "exact statement and full focused proof",
+      "verified references and attribution",
+      "independent computation/Lean evidence with precise scope",
+      "metadata.json matching scripts/short_notes/metadata.example.json: stable note ID, revision, explicit problem_ids, actual author order, license and pinned Lean/source evidence URL; deliver as an evidence artifact and review together with the exact PDF/source"
+    ],
+    "layout": "Use the shared general Mathesis LaTeX template in short_note.manuscript_template for newly authored short notes and new manuscript revisions. Fetch its exact commit and path through the selected GitHub connection or https://raw.githubusercontent.com/<repository>/<commit>/<path>, verify the SHA-256, and read the guide at that same commit. Copy it to the authoring workspace as note.tex. Keep the base A4 article typography, 11pt text, one-inch margins, Latin Modern and shared theorem counter. Fill actual title, authors, affiliations, date and licence from the task's author policy; our short notes default to CC BY 4.0. Adapt sections and add packages, figures, bibliography files or appendices when the mathematics needs them. There is no fixed page count, section order, mandatory coverage table or verification paragraph. Use checked DOI/arXiv identifiers when available; books, OEIS, MathOverflow and other sources may use ISBNs or stable URLs with exact locators and relevant versions. Both thebibliography and BibTeX are supported. Record template repository, commit, file SHA-256 and material layout adaptations in private preparation evidence. Keep all mathematical, attribution and verification requirements of this workflow. Reuse an unchanged approved manuscript rather than rewriting it for typography; versions already sent or carrying a DOI retain their exact source and PDF, and substantive revisions follow the normal review/publication workflow.",
+    "skill": "research-paper-writing-rigor",
+    "research_review": "A short note summarizes a resolved conjecture so the result can be sent and recorded; it is not a paper. Codex writes it with research-paper-writing-rigor as a short result note: exact statement at the posing locator, complete focused proof, verified references and attribution, precise Lean/finite-check scope. Short notes make exactly one Oracle GPT Pro call, the prior-work check in the uplift round (the owner 2026-11-04, replacing the 2026-11-02 no-Oracle rule); any other Oracle use stays reserved for substantive open research and formal manuscripts.",
+    "formal_validation": "Do not launch Lean until the user selected its execution machine in the current task. Consume already published verification with source identity intact.",
+    "closure": {
+      "applies_to": "Every completed final round, including roundless tasks, value uplift and review revisions. A draft is preparation.",
+      "formalization_gaps": "Return a top-level list of every statement in the final note that should be formalized and lacks an exact Lean declaration. Use [] when there are no gaps. Compare the exact hypotheses and conclusion with existing pinned declarations.",
+      "gap_fields": {
+        "statement": "Exact mathematical statement with hypotheses and conclusion",
+        "note_locator": "Exact theorem, corollary, equation or section in the final note",
+        "source_doi": "Verified source DOI or null",
+        "source_arxiv": "Verified source arXiv ID, preferably with version, or null",
+        "source_url": "Verified public HTTPS source URL or null. Required when there is no DOI or arXiv ID.",
+        "source_locator": "Exact locator in the cited source",
+        "why_it_matters": "What formalizing this precise gap would add"
+      },
+      "value_assessment": "Return {verdict, reasons} at top level. The verdict is trivial, incremental or substantial. Give a concrete journal desk decision. Identify any prior result that directly implies the claim, the scope of a finite check, any restatement, and exactly what mathematical content the note adds.",
+      "value_uplift": "Use the exact previous result and its prior-work evidence. Try a stronger statement, a general case, a sharp bound or a structural explanation. When none can be proved, explain why and return the preserved completed note with verdict trivial. The coordinator owns the bounded uplift and archive decision.",
+      "filing": "Supply only publishable mathematical information in gap fields. The coordinator files reviewed formalization requests. CMA agents return the evidence and never file issues."
+    },
+    "prior_work_check": {
+      "result_field": "Record the verdict (first-known, prior-exists or unclear) and verified public citations in the optional top-level prior_work_check field with items (list). For prior-exists, include result_id, the exact public posed statement in statement, the exact public posing_locator, posing_url, and the pinned lean_url when available.",
+      "resolution_date": "Use the date of our exact upstream resolution as recorded in the upstream result or the note's pipeline inputs. If the inputs omit the date and you can establish it from the upstream record for this resolution, include resolution_date and give the upstream source in the evidence section. Omit an unknown date. Do not substitute a coverage snapshot, posing, review or mail date.",
+      "items": "Include verified public works that prove, refute or answer the exact posed statement. Give authors, release date (ISO day, month or year), exact locator, public url and proves (the exact mathematical scope). Cite a public paper, preprint, talk page or slides. Keep private reports out of prior_work_check.",
+      "evidence_section": "Use labeled lines for Verdict and result coordinates. Give each citation block its own heading and include Authors, Date or Year, Locator, URL and What it proves, or use a Markdown table with those columns. Keep the Oracle response reference and search date in the evidence section."
+    },
+    "uplift_round": {
+      "round_name": "uplift",
+      "purpose": "A completed explicit draft is followed by an initial scientific uplift round. The exact draft result and its preserved PDF/source artifacts are passed by Release reference. The coordinator advances trivial results through bounded value uplift before final Claude review.",
+      "sibling_analysis": "Codex performs this source analysis directly, without Oracle: which other conjectures, comments or open questions in the posing source and its cross-referenced entries does this argument settle or nearly settle; what is the strongest corollary or generalization; is the posing locator exact; is the Lean coverage stated precisely.",
+      "required_repairs": [
+        "Oracle Pro prior-work check (the owner 2026-11-04): before other repairs, send Oracle GPT Pro (oracle-broker; streaming nyxid proxy request oracle after checking live pools; never the retired nyxid oracle command) the exact statement, its posing locator and a summary of our argument, and ask it to search for any earlier released proof, counterexample, answer or correction (arXiv and later versions, Zenodo, figshare, OEIS comments and edit history, MathOverflow/MSE answers, journals, theses, the posing authors' pages and citing papers, and the posing authors' own follow-up: later versions of the posing paper, their subsequent preprints, and conference programmes, talk titles, abstracts and slides in the months after posting, since authors often solve their own problems and announce it in a talk first). Open and verify every item it reports against the source before relying on it. Record a 'Prior-work check' section in the evidence file with verdict first-known, prior-exists or unclear, each verified item (authors, year, locator, URL, what exactly it proves), the Oracle response reference and the search date. The verdict decides the framing: prior-exists makes the title, abstract and coverage rows present our note as an alternative proof or extension crediting that work, and the outreach letter must say so; unclear is reserved for a specific located source that may overlap and cannot yet be resolved, and returns held with that open overlap question. When the bounded search locates no earlier settlement, record first-known within the stated search scope (list the places searched and their dates), make no absolute priority claim, and complete the note (operator rule 2026-11-06).",
+        "Search for proofs of the posed statement and its siblings that appeared after the posing date (arXiv, Zenodo, figshare, OEIS edit history and linked papers, MathOverflow answers, the posing authors' pages and citing papers); credit the earliest proof found by date and later independent proofs in order; never claim priority; record the search scope and dates in the evidence.",
+        "Prove every sibling result settled in a few lines as a corollary. State clearly which relevant source items are proved, refuted-and-corrected, supported by a cited prior proof, or not covered. Use prose or a table according to what helps the reader, and retain a complete item-to-result mapping in the private evidence.",
+        "When any prior proof exists (found by the search or cited anywhere in the note), the title and the first sentence of the abstract present the note as an alternative proof or extension that credits that work by name (for example 'A short proof of Y's theorem on X'); the date and exact reference go in the first abstract sentence, not the title; describe those results as 'Reproved; prior proof <author, year>' in the coverage mapping. Never call our own trureturing or Lean development a 'prior proof'. The new content (extensions, counterexamples, corrections) leads the title when the main statement was already proved.",
+        "Label outcomes precisely: 'refuted (explicit counterexample)' unless the note states a corrected replacement statement, 'refuted-and-corrected' only then, and 'answered negatively' for questions. Keep wording about errors in published work restrained.",
+        "Before writing, check this repository's existing short notes and passed sibling notes on the same problem IDs or source; never restate their results as new: cite the sibling note and cover only what is new, or report that the result belongs in a revision of the sibling.",
+        "Read the full text of every prior source whose overlap matters; try the Oracle full-text request, arXiv or author versions and the publisher before giving up, and never describe content from a search summary. If a source still cannot be read (paywall, HTTP 403): return held only when its title, abstract or citing context indicates the same statement as ours; otherwise complete the note, name the unread source in the prior-work section as not checked (with the reason), and keep the overlap risk explicit in evidence (operator rule 2026-11-06, after four uplift holds caused only by unread citing papers).",
+        "Add a covered sibling's problem ID to metadata only when an upstream trureturing record with that ID exists (never invent IDs; otherwise record the source item and its coverage explicitly in the evidence), and put the exact posing locator (paper, section, page or equation, arXiv identifier or OEIS revision) in the first sentence of the abstract. The title names the resolved problem and its authors (for example 'Proof of the grid-cylinder conjecture') without page, section, revision, identifier or year locators, and never names an internal Lean declaration; our own trureturing or Mathesis records are not third-party prior work and are cited only in the verification section.",
+        "Link every pinned .lean file in the PDF body and state what each declaration proves and what remains a written proof or finite check.",
+        "Run a final self-audit of sibling coverage, locators, Lean scope and absence of process wording in public files, and report that checklist with the result. Return it when available as the optional top-level self_audit list [{check, status: pass|fail|n/a, note}]."
+      ],
+      "result_fields": {
+        "self_audit": "Optional list of check/status/note entries covering sibling coverage, exact locators, Lean scope and absence of process wording."
+      },
+      "self_audit": "Return the optional top-level self_audit list [{check, status: pass|fail|n/a, note}] for sibling coverage, locators, Lean scope and absence of process wording."
+    },
+    "author_contacts": "Return author_contacts in the final result: one proposal for every author of the primary source that posed the problem, not the authors of our new note. For an OEIS (or similar database) source the poser is the person credited on the exact CONJECTURE/FORMULA/COMMENT line that states the question (its signature, or 'Conjectured by'/'Sequence Machine' attribution with the submitter who recorded it); the entry's %A author and other contributors are not posers unless that line credits them, so list them only when it does. Quote that line and its .seq line number in source_url evidence. Each has full_name, title (Professor, Dr., or none), title_evidence_url, affiliation (current; explicitly state unresolved if necessary), source_url (primary posing source establishing authorship), emails (a list of {email, evidence_url} verified from an institutional page, paper or ORCID), problem_ids, and in_refusals (boolean). Read tables/refusals.json through the pinned Outreach repository at source_revision; check names and all verified addresses/aliases, and record that revision in refusals_checked_revision. Omit unverifiable emails, never guess; emails=[] needs email_omission_reason. Use title=none if no academic title is verified; its evidence URL must support the identity/status assessment, never invent a degree. Cover all known authors even when unreachable. If no author can be identified/reached, an explicit author_contacts=[] is allowed only with a substantive author_contacts_reason explaining the source search and missing evidence. These are proposals only: never edit shared tables or grant approval.",
+    "author_contacts_schema": {
+      "author_contacts": "Required list in every shortnote final result (including a hold); all authors of the primary source posing the problem, including unreachable authors.",
+      "entry": {
+        "full_name": "Full verified name",
+        "title": "Professor | Dr. | none",
+        "title_evidence_url": "HTTP(S) source for verified title or explicit unresolved status",
+        "affiliation": "Current affiliation or explicit unresolved status",
+        "source_url": "Primary posing-source URL establishing authorship",
+        "emails": [
+          {
+            "email": "Bare verified address; never guessed",
+            "evidence_url": "Institutional page, paper or ORCID URL"
+          }
+        ],
+        "problem_ids": [
+          "Original result/problem IDs; includes task result ID"
+        ],
+        "in_refusals": "boolean; name/address/alias check in pinned table 3",
+        "refusals_checked_revision": "Task source_revision (40 lowercase hex)",
+        "email_omission_reason": "Required if emails=[]; explain failed verification"
+      },
+      "author_contacts_reason": "Required if author_contacts=[]; explain the source search and why no author is reachable/identifiable."
+    },
+    "value_maximization": "the owner 2026-11-01: every resolved conjecture is used to its full value. When the note resolves a posed conjecture, open question or remark, the title names the resolution (e.g. 'Proof of X's conjecture on ...', '...: resolving a conjecture of A and B') and the first abstract sentence states exactly what is resolved with the posing citation and locator (paper, section/remark/formula number, arXiv version). Quote the source's status word (conjecture, open question) rather than paraphrasing it as 'asks whether'. Check the same source for sibling statements (other formulas of the same OEIS entry, other rows of the same table, the companion question in the same remark, the natural exponent/limit or converse) and prove those that follow from the same argument as corollaries with a coverage mapping to their problem IDs; state the rest as open. Never call something open that a few lines settle. Keep internal process wording (workspace owners, recorded answers, review notes) out of the PDF, TeX and source archive.",
+    "reader_acceptance": {
+      "application": "The writer and the independent reviewer apply this checklist to the exact rendered note and source. For coverage and verification evidence: keep substantive mathematical coverage and exact verification scope, but put exhaustive-check counts and implementation details in supporting files.",
+      "checklist": [
+        "Preserve the source's status word: a question is answered in the negative; a counterexample falsifies a stated assertion. Make a numbered problem identifiable from the title without the bibliography.",
+        "Define every structure, map, symbol and coefficient notation before its first use, and give the whole construction (generators, all relations, zero/identity conventions) before the theorem that refers to it.",
+        "Minimize notation changes and prefer the reader's conventions; check ordinary words for competing technical meanings and symbols for visual collisions.",
+        "Keep the abstract to the result and necessary scope; check that contrast and inference words (while, although, thus) say what is meant.",
+        "Give structural reasons for routine laws; describe verification by the statement it covers, keep pinned Lean links and material scope differences, and give both old and new values when comparing versions.",
+        "Attribute exactly: distinguish an original construction from a correspondent's simplification, suggested variant, independent check or cited consequence; lead with the clearest example and put useful variants at the end."
+      ]
+    },
+    "manuscript_template": {
+      "repository": "mathesis-papers/paper-template",
+      "version": "0.7.6",
+      "commit": "75a89b7311dc7e84d7ccbbd1399bd63e3c0f7c06",
+      "path": "docs/layer-mathesis/manuscript/note.tex",
+      "guide_path": "docs/layer-mathesis/MANUSCRIPT.md",
+      "sha256": "1aee298674a84b818c1fc1a496e623d6978b470098c3b33f3b57edd9e9c3aaef"
+    }
+  },
+  "publication": "Every independently reviewed short note needs tracked Zenodo DOI and Mathesis coverage. The local Claude operator packages the exact PASS artifacts using scripts/short_notes/service.py, registers the stable note ID and stages the immutable source/PDF/metadata privately. Respect author agreements and holds. Do not reserve, publish or submit from a research Agent. The deterministic publication worker reserves/publishes the selected revision through Zenodo, retaining its concept/version identity. Pages Research publications are public arXiv papers or formally accepted/published papers only. Zenodo short notes and their DOIs belong to Mathesis. Conjecture/dossier/result entries on Pages retain verified public Mathesis reading links without archive DOI/file links; archive-only notes have no Pages publication requirement.",
+  "mathesis": "Prepare the existing source/PDF/metadata/evidence contract as task artifacts, including the scientific handoff manifest and exact staged source-vN.zip. Preserve authors, claim identity, source revision and publication history; exclude private correspondence. A separate local Claude PASS reviews the exact result. The operator records actual author/processing decisions and stages a signed source selection with managed.control stage-mathesis. The single coordinator performs delivery when active and verifies a durable version/source-bound Mathesis receipt; that receipt completes Outreach's responsibility. Mathesis owns later statement confirmation, review and presentation. Never wait for public publication or require a reverse Mathesis/Pages event. Never submit from the research Agent or invent consent. Any later public link is optional display metadata and must match the same immutable source.",
+  "workspace": "Use a focused independent local repository below mail/<person> for source, environments and calculations. Keep it local; the remote map records relative pointers only. A CMA Agent receives explicitly selected inputs and saves required note/handoff/evidence deliverables below deliverables/ and returns exact agent_path/hash/size metadata; the coordinator verifies and preserves selected files in its private task Release. Do not mirror local mail trees. Remove reproducible temporary outputs and completed worktrees/branches after preservation checks.",
+  "registry": "The contact map is the index: check table 3 before any outreach proposal, keep table 1 relationship facts current, and add exact positive feedback/public facts to table 2 with context. Research progress alone is not a sent or received message. Return evidence-bearing proposed index updates for operator reconciliation.",
+  "delivery": "Return agent_path relative to the actual Agent worktree for selected files under deliverables/. The coordinator checks bytes, persists them in the task-specific private Release and reads them back before review/cleanup. Do not search for tokens or mirror workspace/environment trees. Existing immutable Release references remain supported."
+}

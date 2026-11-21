@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "kind": "firstcontact",
+  "sender": "sender@example.invalid",
+  "to": [
+    "author@example.invalid"
+  ],
+  "cc": [],
+  "problem_ids": [
+    "synthetic-question-a"
+  ],
+  "subject": "A synthetic exact calculation: ρ₁",
+  "body": "Dear Professor Example,\n\nThis synthetic fixture checks that 2 + 3 = 5. It is not an outreach candidate.\n\nBest regards,\nAvery and Blaire\n",
+  "attachments": [
+    {
+      "name": "synthetic-note.txt",
+      "media_type": "text/plain",
+      "content_b64": "MiArIDMgPSA1Cg=="
+    }
+  ]
+}

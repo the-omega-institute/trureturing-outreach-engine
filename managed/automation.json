@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "purpose": "A user-started Claude loop reviews exact CMA results; the serialized coordinator continues work and dispatches eligible mail.",
+  "routing_contract": {
+    "mail": "auto | owner | none",
+    "questions": [
+      {
+        "id": "stable-choice-id",
+        "question": "The actual decision needed from the owner, in Chinese",
+        "source_quote": "Exact relevant words from the complete latest message",
+        "evidence_ref": "Actual message/thread or manuscript source"
+      }
+    ],
+    "independent_submission": "null, or {id,title,authors,target_journal,source_quote,message_id,artifact_names} with explicitly selected, preserved manuscript inputs"
+  },
+  "mail": {
+    "automatic": "The user authorizes routine academic first contacts and purely academic replies after an exact independent Claude PASS, fresh mailbox/contact checks and verified delivery. No separate per-letter confirmation is needed.",
+    "user_decisions": "Ask only genuine choices about authorship, commitments, meetings, personal matters or publication decisions. Use outcome needs-decision, packet=null and source-backed questions. After the actual answer, treat the question as decided and do not ask it again. Route the revised letter from its own content: academic answers may use routing.mail=auto after exact review and fresh mailbox checks; meetings/calls, personal facts, questions about us/the project/AI, byline order and submission timing remain owner drafts.",
+    "no_reply": "Judge the complete latest message and thread first. Thanks-only, acknowledgements or a decline may require no reply. Return outcome no-reply, packet=null, routing.mail=none; useful independent research may continue separately.",
+    "ownership": "Never overwrite the user's web-edited draft or act on owner-controlled threads. Preserve actual reply-all recipients, verified titles, direct Lean source links and contact boundaries. An explicit collaboration decline may permit independent publication without permitting another email.",
+    "delivery": "Persist intent and cross-task reservations before an external call. Verify actual Sent content/attachments and message/thread identity. A timeout or missing Sent result is uncertain: lookup the original attempt, never resend it. Production pause disables new writes. Save receipts before updating relationship facts.",
+    "owner_routing": "Route routing.mail=owner (a draft for the owner to send herself) whenever the latest incoming message or the needed reply touches anything personal, asks about us or the project (who we are, affiliation, how the results are produced, tools/AI, funding, plans, motives), or concerns meetings/calls, invitations, collaboration terms, byline order or submission timing. Purely academic mathematics, including a letter produced from an answered decision, may use routing.mail=auto after exact independent review and fresh mailbox checks. When unsure, choose owner. (User 2026-11-18.)"
+  },
+  "continuation": {
+    "bounce": "Create one new immutable request with the exact previous result and signed review feedback; use the current workflow. Re-review every changed version. Retain original CMA handles for uncertain operations rather than making a new task.",
+    "hold": "Keep real holds visible. Do not automatically override another author's timing, journal policy or a missing user fact.",
+    "limits": "Bound new work and revisions; expose exhausted or failed work to the full Claude inventory. Independent owners may progress while one line waits."
+  },
+  "claude_loop": {
+    "entry": "python3 -m managed.control work",
+    "cycle": "Read the complete inventory: questions, owner drafts, every pending review, submission inputs, daily_local and exceptions. For local daily work, inspect daily_local status and pending dates; use managed.daily_local prepare, inspect the exact text/image/source and existing independent review, then sign and record the current Claude verdict. Publish through managed.daily_local only when the separately controlled local daily channel is active. Do not restore launchd or enable duplicate CMA daily scheduling. Review all exact files and complete threads, then sign and stage PASS/BOUNCE/HOLD. Present user_questions to the owner through the conversation; never invent an answer. Record an actual answer in a signed decision envelope. Stage selected person-owned submission inputs with stage-submission. The Actions writer advances tasks; the loop does not write SQLite or restore legacy timers. Inspect short_note_deliveries and service.py coverage; reconcile stable note IDs and exact PASS artifacts, metadata, author decisions and publication holds. Stage one scientific package for Zenodo and Mathesis. Review Mathesis adaptation tasks independently; inspect mathesis_deliveries_needed, record actual author/processing decisions and use stage-mathesis to sign the exact preserved source selection. Actions delivers when active and marks verified only after receipt readback. Inspect mathesis_deliveries for conflicts or recovery; a durable receipt completes Outreach delivery without waiting for Mathesis review or public display. Update only selected public publication/research-exchange rows. Use service.py sync and verify deployed note links after public receipts. Production pause prevents external publication.",
+    "decision_envelope": "{schema_version:1,task_id,result_hash,answers:{question_id:actual_user_answer},evidence_ref,reviewer:local-claude-loop}; sign with sign-review, stage with decision. This records provenance and never grants automatic sending.",
+    "inputs": "CMA cannot read a local mail path. Select only needed source, PDF, manuscript manifest and review/evidence files, or a focused archive. Use stage-submission --paper ID --file relative-file (repeat as needed); preserve local environments and unrelated correspondence locally.",
+    "author_contacts": "Inspect work.author_contacts_needed after an exact shortnote PASS. Save its complete reviewed_proposal (request/result/signed review) unchanged as local JSON, then run python3 -m managed.registry apply-author-contacts <reviewed-proposal.json>. The operator alone reconciles shared tables and regenerated views. This checks the existing review signature and current table-3/history preflight for every address; stops on any verified alias apply to the entire author. It only registers/links, never sends or enqueues. The next coordinator tick derives firstcontact from the existing pipeline. Missing proposals in legacy PASS notes require new evidence and review."
+  },
+  "activation": "Workflow wiring and offline acceptance do not prove live deployment. Keep paused until hosted CMA authentication, PDF compilation and the chosen mailbox adapter/snapshot/send/readback are verified. Mathesis and journal submission have separate credentials, authorization and receipts.",
+  "publication": {
+    "coverage": "Every reviewed short note tracks its version DOI and Mathesis delivery independently. A durable producer/work/version/source-bound Mathesis receipt completes Outreach delivery. A future public Mathesis URL is optional display metadata; no reverse event or public page gates delivery.",
+    "public_updates": "The operator maintains concise, evidence-backed research_exchange or confirmed_active summaries in tables/publications.json; never export email bodies, addresses, mailbox IDs or unconfirmed collaboration claims.",
+    "daily": "Local entry is python3 -m managed.daily_local; work exposes daily_local including last publication and pending dates. Reuse broadcast-kit and omega-x with the 2026-10-31 16:31 template and historical date reservations. Local publishing was resumed by the user on 2026-11-01 and still requires the exact signed PASS; pipeline.daily=false and kinds.daily=false prevent duplicate CMA scheduling."
+  }
+}

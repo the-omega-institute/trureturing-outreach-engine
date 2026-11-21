@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "source_revision": "ac734061c43076800ad210af61b81d24ae5181bb",
+  "source_path": "scripts/mailflow/ref/AI-STATEMENT-TEMPLATE.md",
+  "author_facts": "Read P56-independent-board.author_facts in managed/replies/workflow.json. Preserve actual author agreements and contributions; missing personal facts are not inferred from a byline.",
+  "locked_statement_with_lean": "In preparing this manuscript, the authors used AI tools (ChatGPT Pro, Codex and Claude) for literature search, computation, checking and formal verification in Lean. All proofs can be checked by hand, and the computations can be reproduced from the accompanying verification package. The authors take full responsibility for the content.",
+  "locked_statement_without_lean": "In preparing this manuscript, the authors used AI tools (ChatGPT Pro, Codex and Claude) for literature search, computation and checking. All proofs can be checked by hand, and the computations can be reproduced from the accompanying verification package. The authors take full responsibility for the content.",
+  "application": "Preserve the 2026-10-28 user-approved wording for our actual contribution and verification scope. Use the Lean variant only when applicable. Preserve coauthors' supplied declarations. Verify current venue requirements and actual tool use; flag any required truthful additional disclosure or incompatible venue rule rather than claiming nonexistent human-only authorship. Do not insert manuscript disclosure boilerplate in ordinary academic emails."
+}

@@ -1,0 +1,12 @@
+{
+  "id": "example-conjecture",
+  "revision": 1,
+  "problem_ids": ["example-problem"],
+  "topic": "the exact conjecture resolved by the note",
+  "title": "The actual manuscript title",
+  "creators": [{"name": "Researcher, A.", "affiliation": "Example Institute"}],
+  "abstract": "The manuscript abstract, stating the result and its proof mechanism.",
+  "summary": "A concise public description of the result and its scope.",
+  "license": "cc-by-4.0",
+  "evidence_url": "https://example.org/fixed-revision/proof.lean"
+}

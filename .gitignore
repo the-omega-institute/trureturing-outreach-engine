@@ -1,0 +1,21 @@
+# Worker transcripts: large, and may echo credentials from the tool environment.
+*.log
+*.lock
+.DS_Store
+.tracker-generated.json
+# mailflow runtime
+scripts/mailflow/.*.lock
+scripts/mailflow/work/
+scripts/mailflow/__pycache__/
+collaborations/mail/.cache/
+# relations job
+__pycache__/
+
+# Local Claude Code loop state (scheduled-task lock); never committed.
+.claude/
+
+# Private staging and hosted data checkout
+/private-data/
+/tables/
+/data/
+/SPLIT-REPORT.md

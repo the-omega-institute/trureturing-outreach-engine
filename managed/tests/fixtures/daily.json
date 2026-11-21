@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "kind": "daily",
+  "account": "synthetic-x-account",
+  "covered_days": [
+    "2026-10-28"
+  ],
+  "text": "Synthetic daily fixture: one recorded family.",
+  "evidence_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "media": [
+    {
+      "name": "synthetic-card.txt",
+      "media_type": "text/plain",
+      "content_b64": "U3ludGhldGljIG1lZGlhLCBub3QgYSByZW5kZXJlZCBwb3N0ZXIuCg=="
+    }
+  ]
+}

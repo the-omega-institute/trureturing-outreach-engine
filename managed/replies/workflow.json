@@ -1,0 +1,837 @@
+{
+  "version": "6.1-managed-contact-map",
+  "name": "mailflow",
+  "description": "Academic mail with parallel per-directory preparation, one durable serial Mail queue, and independent delivery checks. All A–F stages and safety checks remain required in their scopes.",
+  "core_principle": {
+    "id": "C0-value",
+    "rule": "Help others and give them valuable content. Every outgoing message must help its recipient; without substantive content, keep researching instead of sending an empty progress report. A useful answer to a question, a requested file, a new checked result or a decision the owner made supplies that value. Courtesy alone does not: when the latest incoming message is thanks, an acknowledgement or a status note without a question or request, return no reply. When the latest message says the correspondent will read or study what we just sent, send no new note, file or result until they respond, unless they asked for it; an open musing such as 'I wonder whether ...' is not a request. Record it as research backlog in the report and return no reply (the owner 2026-11-14: a co-author still reading must not be given extra reading). Never write a letter whose only content is a late-reply apology, thanks, congratulations or a reminder ping, and never revive an old thread without new substance (the owner 2026-11-10). Every job delivers concrete progress (a result, a finished letter, a fixed defect); no letter contains empty promises ('we will now work on X') in place of content (the owner 2026-10-29)."
+  },
+  "reply_pre_return_checks": {
+    "salutation": "Read the complete thread and use mailbox_history.latest_sent, keyed by address. For the correspondent, select the newest entry across their verified addresses and all threads. Use its salutation and closing fields directly. Preserve the salutation and name form unless the thread provides explicit evidence for a correction. Match the closing while omitting affiliation lines in replies. Cite the source internetMessageId in the salutation/latest-Sent audit. Hold if the supplied evidence shows Sent messages to the correspondent but the latest_sent entry is missing. When the entry is available, a missing closing in messages[*].body_excerpt is not a reason to hold.",
+    "saved_owner_draft": "Read mailbox_history.drafts for current unsent drafts across all covered addresses and threads. Hold when drafts_complete is false or missing. With drafts_complete true, an empty list confirms there is no current unsent draft, and an absent historical draft ID in registry notes is not a reason to hold. If a current owner draft exists, incorporate and supersede its substance in one consolidated letter, route owner, name its ID in owner_brief.cautions_zh and report the saved-draft supersession check.",
+    "note_sources": "A note, proof write-up or verification package built inside this reply task and attached to the letter is reviewed as part of this result by the independent review of the exact packet; it needs no separate short-note PASS, and note_sources stays empty. The short-note source gate applies only when the letter attaches or cites an existing Outreach short note; then bind that note's exact PASS. Never return outcome 'hold' solely because an in-task note lacks its own PASS.",
+    "owner_brief": "When routing.mail is owner or routing.questions is non-empty, return the required top-level owner_brief with summary_zh (one Chinese sentence), decisions_zh (only concrete decisions the owner must make) and cautions_zh (checks before sending). Legacy results may omit it when neither condition applies.",
+    "self_audit": "Return self_audit as [{check, status: pass|fail|n/a, note}] for outgoing letters. Record the voice pass, salutation versus latest Sent, saved-draft supersession, registry_patch presence, and attachment/claim agreement.",
+    "voice_pass": "After the content is final, rewrite the body once as a whole against managed/replies/voice.md. Preserve checked facts, decisions, attachment references and any required exact text, including the Mathesis sentence beginning 'You may submit'. In self_audit, add one entry with check exactly 'voice pass' and a note giving (a) the letter's first prose sentence after the salutation, quoted, and the exact incoming sentence it answers; (b) for each subsequent prose paragraph, the connective or reference that links it to the previous one; (c) every sentence stating project scale or method, quoted verbatim, or 'none'; (d) any sentence that could be read as accepting something the owner has not decided, quoted verbatim, or 'none'. Resolve any such wording before returning the packet.",
+    "revision_proofread": "When a revision changes wording (for example a voice fix such as I -> we), apply it as an edit of the sentence, never a bare string replacement: re-read every changed sentence and then the whole body for case, grammar and agreement (no mid-sentence capitals such as \", We enumerated\"), and change nothing else the review did not ask for. Record the check in self_audit."
+  },
+  "owner_preferences": [
+    {
+      "id": "W1-decisions",
+      "rule": "Ask the owner only for his decisions: submission/journal, final author order, collaboration commitments, publication timing, personal matters and conference/seminar invitations. Use AskUserQuestion or the available user-input tool with a self-contained brief, exact request, options and recommendation; do not invent extra actions. Treat recorded answers as decided and never ask the same question again. Purely academic replies, including letters produced from answered decisions, are sent by the queue after the final review and fresh mailbox checks. Route routing.mail=owner (a draft for the owner to send herself) whenever the latest incoming message or the needed reply touches anything personal, asks about us or the project (who we are, affiliation, how the results are produced, tools/AI, funding, plans, motives), or concerns meetings/calls, invitations, collaboration terms, byline order or submission timing. When unsure, choose owner. (User 2026-11-18.) Owner-routed letters are saved as the owner's draft for her to send."
+    },
+    {
+      "id": "W2-actions-first",
+      "rule": "Put actions the owner must take first, precisely: full name <email>, subject, draft time, quoted request, direct link and exact action. Give a sendable checklist rather than internal IDs or folder paths."
+    },
+    {
+      "id": "W3-writing",
+      "rule": "Write one connected conversational letter using managed/replies/voice.md. Respond to the latest message, explain the useful result and give the next step. Use first-person plural for joint work and the configured joint sign-off."
+    },
+    {
+      "id": "W4-collaboration",
+      "rule": "Accept collaboration offers and advance research first. Joint authors default to surname alphabetical order, with the final order decided by the owner. For Overleaf lines remind the owner to update Overleaf, attach no Overleaf content. Give him each new result as one self-contained paragraph in a short .tex compiled to PDF (define every symbol, state it precisely, key proof idea, and what is proved / exactly computed / open), with full proofs and checks only in the verification package; never a new paper, never a patch .tex, never an assumed insertion location in their manuscript. A collaborator rewriting or polishing their own manuscript and our digging deeper into the properties are independent tracks: do not wait for or compare against their new version. Invitations that are not about co-authoring mathematics (an editorial board, a talk, a visit, a meeting) are the owner's decisions: ask her, and until she answers ask the correspondent only for the facts she needs and use no wording that can be read as acceptance, such as 'we are very interested' (2026-11-20: a correspondent replied 'thanks for agreeing to join the editorial board')."
+    },
+    {
+      "id": "W5-independent",
+      "rule": "Once independent submission is confirmed, keep developing the paper on submission/ until ready to submit. Report it only when the owner asks; never list it as his to-do or request his final review."
+    },
+    {
+      "id": "W6-positioning",
+      "rule": "Introduce the project where personal engagement, an invitation, an identity question or a forming collaboration makes it relevant (P29); choose a short reference or fuller explanation as needed, with no automatic footer in technical replies."
+    },
+    {
+      "id": "W7-boundaries",
+      "rule": "Prefer email and escalate conference or seminar invitations to the owner. Respect tables/refusals.json and the recorded owner boundaries. First-contact problems belong to the first-contact workflow."
+    },
+    {
+      "id": "W8-research-and-sync",
+      "rule": "Reasoning research follows Oracle → Codex → Oracle; formal papers get Oracle review as the target journal editor. Pause the scheduled loop when the owner comes to coordinate; a progress question calls for a report before action."
+    },
+    {
+      "id": "W-mathesis-invite",
+      "rule": "Mathesis first (the owner 2026-11-19): when the correspondent shows interest, sends new questions, papers or conjectures, or asks for a call or meeting, decline calls politely and continue in writing, and include this paragraph exactly as given: If you'd like to try the system behind the result above, we recently launched Mathesis ([configured Mathesis URL]/). You may submit a short note or a conjecture bothering you, and our review pipeline maps it against existing formal libraries to suggest further directions and formalization targets and assigns a DOI to protect your priority and authorship. Never say or imply that the correspondent's work is already part of our map, graph or system. Write as peers offering results and a platform; do not plead for their time. This paragraph is approved standing text (the owner 2026-11-20): including it does not make a letter about us or the project, and it never changes routing; an otherwise academic letter stays routing.mail=auto and is sent by the operator after review. Use it at most once per correspondent: if an earlier Sent message to this correspondent in the supplied thread or mailbox history already contains the Mathesis link, leave the paragraph out. When the letter itself reports no result (a short introduction after a friendly exchange), the lead-in 'the system behind the result above' points at nothing: replace only the lead-in by one sentence naming the earlier exchange, for example 'A short update since our exchange in October on <topic>: the system behind that result is now open for others to use. We recently launched Mathesis ([configured Mathesis URL]/).', then keep the sentence beginning 'You may submit' exactly."
+    },
+    {
+      "id": "W-advance-collaboration",
+      "rule": "Judge the reply against the whole thread, not only the latest message (the owner 2026-11-19). If the correspondent has said they would like to collaborate, or accepted our offer, and the latest message closes a round without a next step, do not choose routing.mail=none: we drive the collaboration. Reply briefly confirming what was settled, then propose one concrete next step with real content, such as writing the combined results up as a joint short paper (give a short outline of the sections and what is already proved) or the next open question with our partial progress, and ask about their plans for it. Include the Mathesis paragraph from W-mathesis-invite. Byline order and submission timing stay the owner's decisions; propose no meeting or call."
+    },
+    {
+      "id": "W-candid-ai",
+      "rule": "Be candid about how we work whenever it is relevant: a question about AI or our process, a request for a call or meeting, or a collaboration decision that depends on it: 'To be direct and honest about how we work, this whole research system is heavily AI-assisted, with human leading the loop, so for a collaboration the best way for us is email. A Zoom call would be less efficient for us, because we need more time to understand your questions properly and to check each step before we answer.' Use this substance in one or two sentences in her voice; never claim that we personally checked every step or understate the AI's share; do not add it to letters where the topic does not arise."
+    }
+  ],
+  "policy_precedence": "These rules incorporate the owner's revised 2026-10-27 charter, which overrides older memory, reference examples and historical workflow wording. Later decisions override earlier ones. Memory is not an execution dependency. This specification describes standing mail authority; an explicit session restriction (including draft-only, no Mail or no push) controls the current task.",
+  "metadata": {
+    "subject": "Required original thread or reply subject. Ordinary replies remove settings.subject_gateway_tags (case-insensitive literal tokens) and use exactly one 'Re: ' before review and transport fingerprinting. Other title text, case and internal spacing are retained. RESEND and REDELIVERY preserve their original Sent subject under C1.",
+    "to": "Required list of email addresses or Name <email> strings.",
+    "cc": "Reply-all Cc list from the latest inbound message; preserve intended co-recipients and exclude our sending address.",
+    "attachments": "List of paths relative to draft_dir or absolute; unioned with non-comment lines in ATTACH.txt. Use actual dated filenames for note delivery and include every file named in the body.",
+    "collaborating": "Required boolean: true for an existing discussion or collaboration.",
+    "heavy_reasoning": "Required boolean: true for substantial reasoning or formal manuscript conclusions; false still needs an explicit C13 not-applicable confirmation.",
+    "recipient_names": "Optional mapping of email addresses to full names for reports.",
+    "replace_id": "Optional positive Mail draft ID; requires baseline.",
+    "baseline": "Path to the body used for the prior saved draft; protected by the input fingerprint.",
+    "intake_dir": "Optional path to a mailflow thread work directory whose B gates must all pass before saving; defaults to draft_dir.",
+    "summary": "Chinese description of what the new draft delivers.",
+    "owner_todos": "Concrete personal prerequisites only, with full name <email>, subject, quote/link and action; Overleaf update when applicable. Never include confirmed independent-paper preparation or review.",
+    "questions": "List of unresolved decisions for the owner, with research and recommendation.",
+    "ai_statement_files": "Optional list of attachment paths explicitly containing an AI statement.",
+    "title_exemptions": "Optional mapping email -> {greeting, evidence}; only an explicit user-selected first-name exception, never inferred.",
+    "joint_paper": "Optional boolean marking a joint manuscript; C14 must address unresolved author order.",
+    "authorship_order": "Optional the owner-resolved author order or unresolved; unresolved order blocks C14 and goes to his decision brief, never an invented proposal in BODY.",
+    "resend_of": "Optional RESEND mode: {original_sent_rowid: positive Sent ROWID, original_address: original bare email, reason: bounce or misaddressed, address_evidence_file: non-empty verified-address evidence path}. B1/B2 use original_address; exactly one corrected To is allowed only here. C1 automatically compares the original B2 Sent MIME body modulo greeting/title and transport wrapping, plus original subject/Cc/attachments. Evidence bytes are fingerprinted. All C reviews, including C9–C12, remain required.",
+    "redelivery_of": "Optional same-address REDELIVERY: {original_sent_rowid: positive Sent ROWID, reason: dlp_block or missing_attachment, evidence_file: path}. Mutually exclusive with resend_of. Evidence must show the stated incident and reference the original Message-ID, subject or explicit original_sent_rowid. B1/B2 read the original recipient thread and original Sent MIME; subject/To/Cc stay identical. Body/attachments may be repaired after all C reviews. Evidence bytes are fingerprinted. Use a new draft directory and explicit send authorization; never automatic retry.",
+    "replace_review": "Optional JSON path for a replacement expressly authorized by the account owner for a named existing draft. Records authority=account_owner_explicit_replacement, the specific authorization and a full read-only live source snapshot (ID, full subject, saved second, recipients, body hash and attachment hashes). Included in preparation identity. D1 rechecks it and the baseline before recording narrowly scoped ownership; D2 deletes only after the final new draft verifies. This is never a send authorization."
+  },
+  "policy_groups": [
+    {
+      "id": "authority",
+      "title": "Sending authority & asking the owner"
+    },
+    {
+      "id": "reply",
+      "title": "Reply judgment"
+    },
+    {
+      "id": "writing",
+      "title": "Writing style & form"
+    },
+    {
+      "id": "research",
+      "title": "Research & review"
+    },
+    {
+      "id": "collaboration",
+      "title": "Collaboration, authorship & submission"
+    },
+    {
+      "id": "operations",
+      "title": "Operations"
+    }
+  ],
+  "policies": [
+    {
+      "id": "P1-send-authority",
+      "group": "authority",
+      "rule": "SEND AUTHORITY (the owner 2026-11-18, supersedes earlier wording): after every B/C/D/F gate and the dispatcher’s final contextual read, the serial queue may send purely academic exchange, including results, proofs, computations, corrections, requested references and letters produced from the owner's answered decisions, after exact independent review and fresh mailbox checks. Route meetings/calls, personal matters, questions about us or the project/AI, collaboration terms, byline order and submission timing to the owner's owner draft. Unresolved decisions go to the owner; mixed academic/process mail follows that route. Explicit owner-send-only instructions still control. Never put [OWNER: ...] placeholders in a body; put open decisions in RESULT.txt and BOARD.json. P11 settles ordinary acceptance of collaboration offers; new terms or personal commitments still need the owner's decision."
+    },
+    {
+      "id": "P12-decision-brief",
+      "group": "authority",
+      "rule": "Before asking, read complete Inbox/Sent context, solve factual questions yourself and obtain Oracle-supported recommendations for judgment calls. Give full name <email>, subject, exact request, prior agreement, current result/numbers, reason his decision is needed, options and recommendation. Ask the actual decision, not “may I send?”; never add unrequested steps such as Zenodo. Fulfil commitments we drafted ourselves; request only genuinely necessary account access or material from him."
+    },
+    {
+      "id": "P12b-check-her-reading",
+      "group": "authority",
+      "rule": "Check the owner’s reading of the latest incoming message before drafting. Compare each referent, proposal and reply-all role with the thread. If the evidence differs, surface it before drafting."
+    },
+    {
+      "id": "P13-sync-and-report",
+      "group": "authority",
+      "rule": "When the owner starts coordinating or reviewing, pause scheduled loop/monitor ticks; running research continues and work he requests is still processed. When he finishes sending, remind him and ask whether to resume, then wait for his answer. A request for progress means read-only status and a report first, with no incidental save/send/delete."
+    },
+    {
+      "id": "P14-ready-and-freeze",
+      "group": "authority",
+      "rule": "Ready means no unanswered the owner decision, unfinished prerequisite or running research/review/redraft for that thread. Check fresh Sent and newer inbound before listing a draft. Once declared sendable, do not deepen or change it without the owner's instruction; finish all work into one mail, and retain later results for the correspondent’s next reply rather than unsolicited follow-ups."
+    },
+    {
+      "id": "P15-precise-reporting",
+      "group": "authority",
+      "rule": "Report the owner's concrete actions first, ordered by urgency; identify full name <email>, subject and saved draft time, quote the request, give the actionable link and exact step/deadline. Search all relevant invitations/links before reminding him. Include unanswered incoming mail and its wait, distinguish our work from waiting on others, and say when nothing is urgent. No draft ROWIDs, internal shorthand or folder paths as his checklist; confirmed independent submissions are excluded unless he asks."
+    },
+    {
+      "id": "P16-reply-decision",
+      "group": "reply",
+      "rule": "Read every sentence of the whole thread and record reply/no-reply with its reason before drafting. Non-collaborator pure thanks, “will read/get back” without new content, or clear no-collaboration intent means wait without replying. A proposed direction, substantive assessment, own attempt or unresolved problem calls for research then a useful reply. Read the original yourself before accepting triage; uncertainty goes to the owner rather than default silence."
+    },
+    {
+      "id": "P17-reply-exceptions",
+      "group": "reply",
+      "rule": "Actual help for us (OEIS submission, citation, endorsement, publication or access) earns brief thanks. Every message from a real active collaborator, including thanks or “will submit tomorrow”, gets an appropriate short reply; do not require a new theorem for an owed acknowledgement. Conditional coauthorship (“If I can understand your proof and make any contribution ...”) is not acceptance: acknowledge lightly, do not add authors, attach a manuscript or push an invitation. Confirming a joint-writing offer creates an immediate draft obligation."
+    },
+    {
+      "id": "P18-asked-research",
+      "group": "reply",
+      "rule": "Research only the correspondent’s questions/directions and the owner's assignments; a suggested open direction counts as asked, even without a question mark. Answer each with checked content rather than “which should we start with?”. A personal/authorship decision blocks only its dependent reply; continue independent authorized mathematics and record the question outside the body. Do not send unrequested work on their other problems."
+    },
+    {
+      "id": "P19-declines-and-prior-contact",
+      "group": "reply",
+      "rule": "Check tables/refusals.json, aliases and complete prior correspondence even for rebuilt/merged drafts. Record explicit declines with date, exact quote, source message and no-follow-up; do not send again or start a new cold-contact topic with someone already contacted. A direct request to stop checking a direction is a decline; “send them all” never waives these checks. Preserve particular user withdrawals; do not send a remaining coauthor a second copy of an already-sent first contact."
+    },
+    {
+      "id": "P20-thread-ownership",
+      "group": "reply",
+      "rule": "Read current refusals and ownership holds before advancing work. An owner-controlled thread permits registration of incoming messages only, even where another participant appears in an existing thread."
+    },
+    {
+      "id": "P21-meetings-and-invitations",
+      "group": "reply",
+      "rule": "For a first meeting request prefer email, with a natural truthful reason; never propose slots, accept or schedule on the owner's behalf. Escalate insistence and personal commitments. Conference/seminar invitations, including appended invitations, must be put to the owner with context; never silently discard them because of a past example."
+    },
+    {
+      "id": "P22-no-affiliation-send-gate",
+      "group": "reply",
+      "rule": "Nationality, .edu.cn, 985/211 and h-index/OpenAlex are not send-permission gates; apply the same authority, quality, prior-contact and decline checks to everyone. Preserve specific withdrawn drafts (including the named Nanchang/Xinjiang withdrawals); later broad permission does not resurrect them. This reply pipeline does not acquire first-contact sending authority."
+    },
+    {
+      "id": "P23-conversational-logic",
+      "group": "writing",
+      "rule": "Connect their specific point to what we did, what follows and a useful next step; answer actual questions in their order and state premises before judgments. Keep short connected paragraphs, plain verbs and natural contractions, usually one or two main points within about 200 words. Do not mechanically answer line by line or force a closing question; in an ongoing discussion continue the known work rather than asking them to choose a direction again."
+    },
+    {
+      "id": "P24-voice-and-reply-all",
+      "group": "writing",
+      "rule": "Use I for personal facts and we for shared work. Before preparing, saving or sending a reply, preserve the latest inbound From/To/Cc except configured own addresses. Retain public To/Cc from the same-topic preceding Sent and provide evidence for any exclusions."
+    },
+    {
+      "id": "P25-titles-and-format",
+      "group": "writing",
+      "rule": "Verify Professor/Dr. from evidence and retain the title in replies; students/unknown status use verified names without an invented title. A first-name exception requires the owner's explicit choice. Keep a consistent salutation register, readable Unicode or simple ASCII mathematics and one blank line between paragraphs. Avoid punctuation dashes (—, – or spaced -), report-like colons/page accounting and undefined jargon; mathematical minus, names and compound-word hyphens remain valid.",
+      "evidence": "collaborations/mail/reviews/learn-sent-20261030/EDITS.md"
+    },
+    {
+      "id": "P26-recipient-identity",
+      "group": "writing",
+      "rule": "Verify that the current address belongs to the author of the relevant paper using a primary source. Ambiguity or conflicting sources means hold until verified."
+    },
+    {
+      "id": "P27-fresh-context-and-owner-edits",
+      "group": "writing",
+      "rule": "Write each body/note afresh from its complete thread, attachments, current draft and checked results; no stitched text from old drafts except the two approved P29/P11 quotations. Every revision re-reads the complete context. Before replacement compare the live draft with its baseline; provide the owner's edited version to Codex and integrate it, preserving his meaning, order and stance while polishing wording/grammar. New concurrent edits stop the save for another reviewed merge."
+    },
+    {
+      "id": "P6-language-last",
+      "group": "writing",
+      "rule": "Apply reply_pre_return_checks.voice_pass as the final body edit. Read the audit against the final body before returning it for independent review."
+    },
+    {
+      "id": "P28-tone-and-own-statements",
+      "group": "writing",
+      "rule": "Read tone literally: a joking “you took my ToDo 😃” is not an ownership complaint and needs no apology. Speak only for our funding, conflicts, approval and contributions; ask coauthors to supply theirs. Do not repeat their criticism, over-apologize, moralize or add unasked AI-process boilerplate. Answer direct AI/subscription/model questions truthfully with current verified facts, not an unrelated community pitch. When asked about workflow, describe verified current orchestration roles and independent checks; AI plan/power may mean subscriptions/setup. We choose directions and understand checked results before contacting authors; never invent tool capabilities or model versions."
+    },
+    {
+      "id": "P29-project-introduction",
+      "group": "writing",
+      "rule": "the owner's 2026-10-29 sends refine the older only-when-asked rule: project context may answer a question about us, personal engagement, a meeting invitation, or a forming collaboration where how we work matters. A greeting alone is insufficient. Introduce it where it serves that exchange: name the “AI+mathematics project” when clarifying identity, or explain “how we work with AI” as a chat’s subject. Use a clause or the fuller Trureturing community explanation according to their interest; explain participation, checking, credit and established platform plans when useful. Keep an optional project chat distinct from technical discussion by email and preserve the owner's supplied conditions. Never append an unrelated pitch to a purely technical answer, repeat an introduction already sent, or treat every collaboration as requiring the full paragraph. Preserve same-thread user edits; verification scope, launch promises and meeting commitments still need evidence or authority. Separate proactive outreach remains the owner's own thread.",
+      "standard_goal": "What we're really after is using AI to push the boundary of what is known; this exchange/problem is one part of that.",
+      "standard_paragraph": "More broadly, this exchange is part of an open research community we are building around AI-assisted mathematics. Anyone can bring a conjecture, a question or a short note, without knowing Lean, and work on it there with current models; whatever holds up is written down as a machine-checked Lean proof or counterexample. Every statement, attempt and resolution is kept in one growing public record, Trureturing, credited step by step to the person who proposed it, in a similar spirit to other open mathematics initiatives's open math model initiative, whose team we have also been in touch with. We are also building a review platform where mathematicians can post papers and notes and have them reviewed and checked in the same place; if that sounds interesting to you, we'd be glad to let you know when it launches.",
+      "standard_goal_usage": "Weave the big-goal idea into the relevant answer or invitation, without a standalone slogan. The approved standard_paragraph is a fuller explanation for a thread that needs it, not a mandatory footer; omit a duplicated lead-in and respect the owner's same-thread edits.",
+      "sent_rowids": [
+      ]
+    },
+    {
+      "id": "P30-citation-and-zenodo",
+      "group": "writing",
+      "rule": "Put readable mathematics in the body or short note. Supply requested citations and direct pinned Lean source links. Describe the evidence and publication status of a preliminary result precisely."
+    },
+    {
+      "id": "P31-dated-attachments",
+      "group": "writing",
+      "rule": "For ordinary note delivery merge note and figures into one topic_YYYYMMDD.pdf or note_YYYYMMDD.pdf; add a dated source/verification package only when useful, with as few files as possible. Do not attach attempts with no new result. Respect the requested source-only format and existing C1/C7/C12 size/content limits; P10’s Overleaf rule takes priority over note/manuscript attachments."
+    },
+    {
+      "id": "P32-reasoning-chain",
+      "group": "research",
+      "rule": "For proofs, classifications and open questions use Oracle GPT Pro direction → Codex rigorous proof/exact computation/write-up → Oracle gap check and further-progress assessment; iterate useful findings. Pure computation/packaging/editing may stay Codex-only. Use the oracle-broker skill and streaming nyxid proxy request oracle, model oracle/chrono-chatgpt-pro-pool, not retired nyxid oracle commands or obsolete pools; retain the original handle during waits and back off on quota errors."
+    },
+    {
+      "id": "P33-review-tiers",
+      "group": "research",
+      "rule": "Exchange notes get an independent extra Codex review plus the dispatcher’s own contextual check; plain thanks/logistics need no mathematical referee round. Formal joint papers, arXiv papers and submissions get Oracle GPT Pro review: “You are the handling editor of <target journal> (and the referee you would assign). Would you accept it / minor / major / reject, and why?” Request concrete section-based fixes, literature/novelty/proof/form and desk-rejection risks. Verify suggested references, assess each point, implement accepted fixes and review substantial revisions again. Reviews are internal; send the improved artifact, never Oracle’s referee report."
+    },
+    {
+      "id": "P51-best-result-standard",
+      "group": "research",
+      "rule": "For every substantive mail attack the recipient’s core question, not merely an easy case or a list of plans. For a verified current QS top-100 affiliation, explicitly brief BEST-RESULT STANDARD: Oracle → Codex → independent review → Oracle, try the strongest useful result and check it before final review. Check the current ranking if unsure; affiliation never relaxes the value standard for anyone else."
+    },
+    {
+      "id": "P34-structure-before-compute",
+      "group": "research",
+      "rule": "For “compute to N”, first seek constructions, recurrences/generating functions, symmetry, congruences plus strict intervals/CRT or another route around enumeration; justify cost before large computation. Meet the actual requested target, distinguish proof from finite evidence and keep unmet-target partial results internal. Feed failed approaches back to Oracle instead of an empty progress email; pursue a checked positive result or a genuine structural impossibility proof."
+    },
+    {
+      "id": "P35-academic-standard",
+      "group": "research",
+      "rule": "Papers and exchange notes need verified primary literature, precise source citations and field-appropriate structure scaled to length: title/authors, context, exact statements/proofs, computational method and references. Do not cite our unpublished working notes; incorporate the needed proof. No missing related-work placeholders, internal review notices or process/evidence logistics in the mathematical text. Scientific acceptance rests on correctness, coverage, methods and novelty, not hashes."
+    },
+    {
+      "id": "P36-field-terminology",
+      "group": "research",
+      "rule": "Before writing, inspect recent field literature and the recipient’s notation; afterwards obtain a separate terminology/readability review. Define necessary terms and align them with standard vocabulary. Say counterexample only when it falsifies an exactly cited proposition with its assumptions/domain, not a different convention or an unsuccessful method."
+    },
+    {
+      "id": "P37-published-lean",
+      "group": "research",
+      "rule": "A claimed trureturing Lean result must be readable, free of sorry/extra axioms and present in current origin/dev before it is reviewed or offered for sending; otherwise hold internally until published, not as a the owner decision. Link the corresponding source at a verified revision when needed. Check real proof scope; never infer mathematical validity from file/version identity or silently modify upstream for mail consumption."
+    },
+    {
+      "id": "P11-collab-stance",
+      "group": "collaboration",
+      "rule": "Accept genuine collaboration offers and push useful research first; distinguish conditional offers and declines under P17/P19. Express willingness to work with the recipient and their collaborators, identify a concrete useful next step. A collaboration offer by itself does not call for any about-us or how-we-work paragraph: answer the mathematics and accept warmly in one sentence (owner direction 2026-11-15). Introduce the project step by step: if no earlier Sent letter in the thread introduced trureturing, at most one plain sentence saying what trureturing is, before anything about future plans or a community; explain how AI is used only after the correspondent asks about it; keep it shortest for students. Only when the correspondent actually asks about roles, how we work, AI use or a meeting, use the approved collaboration framing below in your own light wording (the owner 2026-11-12): be honest that most of the work is done by AI; we are forming a human-led research loop with experts in many fields; the experts give intuition and direction and we take care of what AI does best. Read every earlier Sent in the thread first and do not repeat what was already said. For meeting or call requests say the owner is quite busy lately and a call is possible if they are happy with this plan or curious about the system; never set a time. Never describe the project as collecting or solving open problems; its purpose is finding methods and connecting knowledge. Never claim we checked every step ourselves. Before presenting a batch, obtain an independent cross-draft review of logic, facts, notes and consistency; the dispatcher reads every final body. Sending follows P1, not the obsolete blanket “the owner sends every collaboration mail”.",
+      "collaboration_sentence": "To be honest, most of the work is done by AI. We are forming a human-led research loop with experts in many fields: the experts focus on intuition and guide the direction, and we take care of the other things that AI is most capable of, like formalization, searching across the literature and finding connections. If there is anything that has been on your mind for a while, we would love to try it!"
+    },
+    {
+      "id": "P38-collaboration-stage",
+      "group": "collaboration",
+      "rule": "Classify exchange / agreed joint writing / thanks before choosing deliverables. Exchange notes give academic value without coauthor logistics or unsolicited AI discussion; unaccepted collaboration is never “our joint work”. Discuss verification/computation on our side and expert mathematical direction on theirs only when roles matter. Do not add anyone to an author list from a polite conditional offer."
+    },
+    {
+      "id": "P39-new-results-tex",
+      "group": "collaboration",
+      "rule": "New results on a joint line: give him each new result as one self-contained paragraph, written in a short results_YYYYMMDD.tex compiled to PDF (never .txt/.md as the deliverable), (define every symbol, state it precisely, key proof idea, and what is proved / exactly computed / open), with full proofs and checks only in the verification package; never a new paper, never a patch .tex, never an assumed insertion location in their manuscript. A collaborator rewriting or polishing their own manuscript and our digging deeper into the properties are independent tracks: do not wait for or compare against their new version."
+    },
+    {
+      "id": "P10-overleaf",
+      "group": "collaboration",
+      "rule": "For an Overleaf line, remind the owner precisely to update the shared project; give him the new results as self-contained paragraphs (P39-new-results-tex), and attach no Overleaf PDF/patch/ZIP to the correspondent’s reply. Never claim an upload/comment was made before it was verified. If an update is inaccessible, ask him for its ZIP in ~/Downloads, extract into the line’s intake/overleaf-YYYYMMDD/, compare every promised change, then draft; do not tell the correspondent “we have not seen it”. Do not silently take over the owner's Overleaf action."
+    },
+    {
+      "id": "P5-deliverable-type",
+      "group": "collaboration",
+      "rule": "Quote the requested artifact in GOAL and inspect the delivered artifact/title page against it. An incomplete draft or explicit “incorporate/draft the manuscript” request needs their completed manuscript in their structure and agreed author list; a near-final manuscript asking for comments needs located suggestions or a usable revised version. No stitched changes-summary/preface/revised-paper/supplement PDF. Preserve their original content and declarations; explain authorized changes plainly. Incremental new results use P39; Overleaf correspondence uses P10."
+    },
+    {
+      "id": "P40-author-order",
+      "group": "collaboration",
+      "rule": "Joint papers default to surname alphabetical order, including when the original author writes or corresponds; corresponding authorship is marked separately. Final order, adding authors and existing promised exceptions require the owner's decision; never silently rewrite a prior agreement. Do not revive the old blanket original-author-first exception."
+    },
+    {
+      "id": "P41-authorship-and-journals",
+      "group": "collaboration",
+      "rule": "Ask the owner before deciding authors, final order, corresponding author, submitter, arXiv uploader, journal or publication timing; never volunteer “we will submit” as politeness. Once joint writing is confirmed, obtain the collaborator’s journal preference, independently seek Oracle advice, compare and give the owner the reasoned choice. Read every prior agreement, including arXiv-before-journal; unresolved decisions live outside BODY and prevent ready status."
+    },
+    {
+      "id": "P42-paper-status-and-disclosure",
+      "group": "collaboration",
+      "rule": "Before a collaboration reply verify the latest manuscript/location, shared access, promises, what the author awaits and next owner; keep this on BOARD.json, not PAPERS.md. Use their notation and agreed joint author list in integrated sections; do not announce who drafted each piece. Draft only our relevant declarations, leaving theirs to them. Use the LOCKED AI statement in managed/submission/author-policy.json (the owner 2026-10-28: names ChatGPT Pro (GPT-6 Pro), Codex (gpt-6.1-sol), Claude Opus 5.5; emphasizes double-checking and Lean verification, not drafting); preserve coauthors’ own supplied disclosure and verify any additional tool/version facts. Email AI explanations remain question-driven."
+    },
+    {
+      "id": "P43-independent-submission",
+      "group": "collaboration",
+      "rule": "Only confirmed independent work belongs in submission/ (publication_mode: independent, exact author quote/source, current PDF/LaTeX/code/manifest/index and generated board); conditional or agreed coauthorship stays on the collaboration track. Once confirmed, keep researching, revising and using Oracle’s journal-editor review/positioning until ready to submit. Do not merely park a registered draft, request the owner's final review or list it as his action; report only when he asks. Preparation never authorizes actual submission or publication."
+    },
+    {
+      "id": "P44-arxiv-facts",
+      "group": "collaboration",
+      "rule": "For a preprint request check the actual paper’s category and current endorsement/quota evidence before describing limitations; quant-ph endorsement and the two-per-month October-2026 quota are dated facts, not permanent defaults. Supply a source package if appropriate, but who posts, endorsement, timing or asking a collaborator to submit are the owner decisions. Do not invent posting dates or a Zenodo alternative. With a verified quant-ph quota obstacle, prepare the option of deeper joint work; with missing category endorsement, prepare the option that the collaborator posts with our source package. the owner decides those outward roles."
+    },
+    {
+      "id": "P45-request-source-access",
+      "group": "collaboration",
+      "rule": "Try primary sources first; for an inaccessible paper/version ask the owner for full title, authors, journal and exact URL/PDF, not just a DOI and not a request to the correspondent. For inaccessible Overleaf use P10’s ZIP/download/compare route. Ask only the access/material needed, and continue work independent of it."
+    },
+    {
+      "id": "P46-collaboration-repos",
+      "group": "collaboration",
+      "rule": "Use the configured collaborator identity for authorized invitations. Report the repository, pull request, concrete changes and remaining coauthor choices. Keep correspondence and private tracker data private."
+    },
+    {
+      "id": "P2-board-is-the-record",
+      "group": "operations",
+      "rule": "The single mail-state record is collaborations/mail/BOARD.json, rendered to BOARD.md; record stage, current manuscript, promises, next action/owner/check date and quoted source ROWID using mailflow.py note. Include owner_actions/us_actions, deliberate no_reply_through and reviewed_through. Independent paper artifacts/status live on submission/ with a linked mail line. History is git commits, not a new PENDING/PAPERS/LINES/LESSONS or task-log document."
+    },
+    {
+      "id": "P3-unanswered-audit",
+      "group": "operations",
+      "rule": "Each authorized tick reconciles fresh Inbox/Sent, regenerates BOARD.md and audits every unanswered inbound, completed/dead/running job, ball=us line and overdue next_check, not only new mail. Advance reviewed_through after judgment; record completion and next work. Publisher/editorial-system mail addressed to the owner requires review, not automatic skipping. Keep active job handles during waits; diagnose an actually dead job before relaunch."
+    },
+    {
+      "id": "P4-new-results",
+      "group": "operations",
+      "rule": "A request for more content/what next requires a new proved or exactly verified statement beyond the last sent body/attachment; compare the actual artifacts before drafting. No result means further in-scope reasoning, not a failed-attempt note or parking the line. A pending the owner decision does not stop independent research; new rounds remain separate from a previously frozen ready draft."
+    },
+    {
+      "id": "P7-mail-safety",
+      "group": "operations",
+      "rule": "Run per-mail research/review/drafting/polish/preparation in parallel; only queue-run serializes Mail saves/sends/cleanup under the persistent shared lock. Preserve all current B/C/D/F checks, exact ownership/subject/time/payload proof, Sent MIME proof and independent asynchronous bounce watch. Uncertain saves only re-verify D2; uncertain sends only reconcile Sent, never retry automatically. Never enumerate unrelated composers for mutation, reuse a completed send directory for a new payload or change intake_dir to bypass review."
+    },
+    {
+      "id": "P8-jobs",
+      "group": "operations",
+      "rule": "Dispatch execution (research, writing, review, packaging, script fixes) to Codex; the dispatcher judges, briefs, checks final context and improves the system. Background codex exec jobs detach stdin with </dev/null and record job directory/handle/PID; terminate only a recorded task-owned process. Measure memory/active lean/lake by comm basename before Lean, check disk (>10 GB free) and use the current session’s selected machine/concurrency; no fixed runner or job-count default. Back off on Oracle quota limits; verify archives contain source rather than caches/binaries. Lean builds: LEAN_NUM_THREADS=2; never rebuild mathlib (use the cache). Lean links in mail must point to a commit already published on the public trureturing repository (merged to dev), never a local-only commit. Publishing Lean to trureturing: run all CI-equivalent checks locally first, push, merge only when every required CI check is green. Machine (2026-10-28): Lean and heavy compute for this pipeline run on the local Mac only; answer the trureturing machine-selection prompt with 'This local Mac'; never use a shared machine. Codex jobs are non-interactive and must never end on a question."
+    },
+    {
+      "id": "P9-local-layout",
+      "group": "operations",
+      "rule": "Use one mail/active/<correspondent>/ per open line, with body/meta/dated attachments/thread/intake/receipts/current job artifacts at top level, other temporary files in _work/ and new research rounds inside research-YYYYMMDD/. Reuse a suitable line directory, but use a fresh round/delivery directory after a completed send; archive closed lines under mail/archive/. No new omega-root mail-replies-* trees; BOARD’s folder column is the internal locator."
+    },
+    {
+      "id": "P47-task-artifacts",
+      "group": "operations",
+      "rule": "A Codex task produces its requested deliverables and one RESULT.txt with validation and unresolved questions; no extra per-task NOTES/NEXT/DONE/summary files unless explicitly required by the job protocol. Keep required machine gate/polish/merge receipts, and put process history in git; do not create a new narrative log for every action."
+    },
+    {
+      "id": "P48-maintain-and-sync",
+      "group": "operations",
+      "rule": "The dispatcher reads the full correspondence and every delivered body/note/review, not just a verdict; feed recurring failures into the relevant workflow policy/check or existing skill, not another checklist. Regenerate README with mailflow.py docs and run offline tests for workflow/script changes. Fetch/reconcile concurrent remote updates in an isolated worktree, preserve others’ uncommitted work and stage only owned files; commit substantive milestones and normally synchronize the private remote, respecting explicit no-push instructions."
+    },
+    {
+      "id": "P49-scheduled-patrol",
+      "group": "operations",
+      "rule": "Install or resume no automatic loop without current authorization. For an already authorized recurring patrol, record its handle/expiry, check the real scheduler on unexplained backlog and renew before expiry within its existing authorization; a CronCreate loop historically expired after seven days. Pausing for the owner's coordination overrides renewal/resumption; never restart a slow live job just because a tick elapsed."
+    },
+    {
+      "id": "P50-mail-recovery-and-pruning",
+      "group": "operations",
+      "rule": "On Mail errors stop the worker, retain uncertain intent and require a fresh health probe after repair. No automatic restart/quit/kill; any supervised restart needs exclusive access confirmed across pipelines, otherwise ask the owner to restart. After batches inspect Exchange/local orphan copies, consolidate useful unsent results and withdraw valueless owned drafts; cleanup needs exact current subject/time/payload and persistent ownership, never stale IDs or subject-only bulk deletion. Sent proof precedes deletion of sent copies; protect other pipelines and owner edits. A supervised restart uses queue-run --restart-mail JOB-RECORD.json and the cross-account P55 quiet guard, never an ad-hoc Mail script. Saved attachment failure or a returned Drafts copy after that restart also makes Mail unusable; stop live operations. API move success is provisional until stable absence is verified."
+    },
+    {
+      "id": "P52-subject-gateway-tags",
+      "group": "authority",
+      "rule": "Preserve draft subjects, identities and evidence while reconciling confirmed gateway subject tags."
+    },
+    {
+      "id": "P53-core-sources-cleanup",
+      "group": "operations",
+      "rule": "Core sources are only: Claude's mail-pipeline charter memory, this workflow.json, and collaborations/mail/BOARD.json; history lives in git commits. Research and paper outputs are always .tex compiled to PDF; never use .txt or .md as a substitute deliverable or notes file. Every Codex job writes into the line folder and, after the dispatcher's review, its scaffolding is removed (GOAL, run.sh, codex logs, RESULT reports, polish logs/before-after copies, temporary scripts, merged worktrees). Keep only deliverables: BODY.txt, meta.json, dated attachments, save/send/queue receipts, gate state, intake, results .tex/.pdf and verification archives. (the owner 2026-10-27) Gate evidence (B3–B5, C9–C15) and receipts must be self-contained: store the evidence text and the hashes of the deliverables themselves in gate-state/receipts, never depend on the continued existence of scaffolding files (GOAL, RESULT, logs), so scaffolding can always be deleted after review."
+    },
+    {
+      "id": "P54-already-replied",
+      "group": "operations",
+      "rule": "Before reworking or saving a draft, check Sent for a newer reply from the owner. Reconcile an obsolete draft against the verified Sent copy."
+    },
+    {
+      "id": "P55-fan-out",
+      "group": "operations",
+      "rule": "Parallelize independent mail preparation within available memory. Serialize Mail operations in one queue worker. Respect current ownership and refusal records."
+    },
+    {
+      "id": "P56-independent-board",
+      "group": "collaboration",
+      "rule": "The independent submission board (submission/) holds only papers authored by the configured team authors alone, written because the correspondent acknowledged the result but did not collaborate. Lines with co-authors never appear there; they live on the mail board as joint lines. Stages: verification_needed → needs_work → ready_to_submit (Oracle-positioned, no open gap) → submitted. No stage waits for the owner's or a co-author's review; report the board only when the owner asks. Submission hand-off (the owner 2026-10-28): when a paper (independent or joint) is ready to submit, report to the owner its location — absolute path of the final PDF and source archive, verified identical to the last version shared with coauthors — plus target journal and any precondition (e.g. coauthor's arXiv posting); the owner hands it to Codex for the submission itself. Author facts for every independent or joint submission come from author_facts below; a job must not mark a paper blocked on a fact listed there. Private-collaboration repos: when a collaborator asks that private material stay out of the public record until both agree, accept, explore in a private repo under the-omega-institute and invite them (GitHub invite from the owner's account); publish only after joint agreement.",
+      "author_facts": "Use the configured private identity.author_facts supplied with the task."
+    },
+    {
+      "id": "P57-attachment-policy",
+      "group": "writing",
+      "rule": "Recipients at domains with filtered attachments get a PDF and pinned public verification links. After a policy bounce, redeliver once without archives and escalate a further bounce."
+    },
+    {
+      "id": "P58-final-review-logic",
+      "group": "sending",
+      "rule": "Read the full thread and full letter as a coherent continuation. Each paragraph should pick up the correspondent’s point, respond and lead naturally to the next."
+    },
+    {
+      "id": "P59-meeting-invitations",
+      "group": "writing",
+      "rule": "Answer the invitation using the owner’s current thread-specific decision. The standing preference is email for detailed mathematics. Mention an informal discussion about the project only where it fits the invitation.",
+      "reference_wording": "Preserve exact agreed meeting terms and genuine outstanding choices.",
+      "evidence": "collaborations/mail/reviews/learn-sent-20261030/EDITS.md"
+    },
+    {
+      "id": "P59b-open-door-closing",
+      "group": "writing",
+      "rule": "When the correspondent is warm and keeps the door open but has not proposed a concrete collaboration (e.g. 'we will be interested in its progress', 'welcome to visit us'), end the letter with one sentence offering our help with their own problems (the owner 2026-11-04). Reference: Also, our AI system works well and runs 24/7, so if you have any open problems in mind, we would be glad to work on them together. Adapt lightly; do not add it where a concrete collaboration, a decline or an owner-controlled boundary already governs the thread."
+    },
+    {
+      "id": "P59c-project-framing",
+      "group": "writing",
+      "rule": "When a letter describes who we are or what our work is for, lead with finding methods and connecting knowledge: people choose directions, our AI system searches, verifies and formalizes, and every result is linked into a knowledge graph that credits the papers and people who posed the questions (https://www.trureturing.org/); each settled problem is a milestone in pushing the shared map of knowledge forward. Never summarize us as 'using AI to solve open problems' or showcase conjecture counts. Mathesis is live: describe it per docs/PROJECT-INTRO-TEMPLATE.md (submit papers, short notes or conjectures; AI review with suggestions and Lean checks; a modern arXiv where AI gives you a review) and never promise to announce it later."
+    },
+    {
+      "id": "P60-attachments-minimal",
+      "group": "writing",
+      "rule": "Attachments minimal (the owner 2026-10-29): fold any meaningful result into the paper itself instead of a separate note; for a joint paper attach only the manuscript PDF, plus one source zip (tex inside) only when the coauthor needs to edit; verification material travels with the letter in whatever way is most convenient — for research/collaboration lines attach it as ONE verification zip next to the note or paper (the owner 2026-10-29: the public-repo pinned-link rule belongs to first-contact letters only; writing results back into trureturing is a separate pipeline, so a letter is never held waiting for a public link). Never send paper + note + tex + zip together: at most a note or paper PDF, plus one zip (source for coauthors, or verification). Before finalizing or submitting a joint paper, ask the coauthor about the arXiv plan (who posts, when). Recipient attachment limits: before attaching a ZIP, read the line's CONTEXT.md and the thread's bounce history; if the recipient's server has rejected ZIP attachments (e.g. univ.haifa.ac.il, 550 5.7.1 attachment policy, 2026-10-29), attach the PDF only and offer the source/verification files by link or on request."
+    },
+    {
+      "id": "P61-follow-up-tone",
+      "group": "writing",
+      "rule": "Write follow-ups with new results as a friendly note between colleagues. Name the result promptly and connect it to the recipient’s question."
+    },
+    {
+      "id": "P62-conversational-logic-polish",
+      "group": "writing",
+      "rule": "Read the complete letter in the context of this exchange. Give each paragraph a purpose and preserve accurate mathematics and specific thanks.",
+      "evidence": "collaborations/mail/reviews/learn-sent-20261030/EDITS.md"
+    },
+    {
+      "id": "P63-voice-from-owner-edits",
+      "group": "writing",
+      "rule": "Write as the owner continuing this exchange using plain words and short connected paragraphs. Explain why a proposal matters. Apply inline instructions and preserve the intent of edits. Calibrate mathematical detail to the recipient. Explain the project through shared work on checked mathematics with attribution. Ask a closing question only when a choice remains.",
+      "evidence": "collaborations/mail/reviews/learn-sent-20261030/EDITS.md",
+      "sent_rowids": [
+      ]
+    },
+    {
+      "id": "P64-who-wrote-last",
+      "group": "writing",
+      "rule": "Check which message came last before drafting. Follow up with new evidence when our Sent is newer. Verify the salutation and reply-all. Avoid counts, file inventory and internal tooling in the letter. Follow the actual open choice and skip acknowledgements where work is due. Preserve prior Sent identity and ownership instructions. Answer every substantive point. Use readable Unicode or ASCII in mail and keep TeX for the PDF. Give concrete evidence when asked about reliability. Preserve specific thanks.",
+      "evidence": "collaborations/mail/reviews/learn-sent-20261030/EDITS.md"
+    }
+  ],
+  "tick": {
+    "definition": "Each wake-up does exactly two things, in order.",
+    "steps": [
+      {
+        "id": "T1-new-mail",
+        "rule": "Read all inbound after BOARD.reviewed_through; judge each per policies (reply or not, research, draft, save/send, board note); raise reviewed_through."
+      },
+      {
+        "id": "T2-advance",
+        "rule": "Advance every open line that needs pushing: (a) research lines judged in T1 or earlier as needing deeper work (directions proposed by correspondents, collaboration research); (b) every paper on the independent submission board until it is Oracle-positioned and ready to submit. Finish completed jobs, diagnose and redispatch stuck ones, change direction when a line has no result; never park a line."
+      },
+      {
+        "id": "T2-owed-work",
+        "rule": "Compute owed work from current action, promise and request evidence. Give each owing line an actionable next step. Record wait, decline and closure decisions. Track the trigger for a notification. Research a suggested direction promptly when authorized."
+      }
+    ]
+  },
+  "deployment": {
+    "mailbox_adapter": "deferred",
+    "reviewer": "local-claude-loop",
+    "execution": "CMA",
+    "policy": "The 2026-10-31 user instruction supersedes legacy directory, local runner and automatic loop assumptions."
+  },
+  "settings": {
+    "tables": "tables/",
+    "workspace_root": "../mail",
+    "thread_table": "tables/threads.json",
+    "contacts": "tables/contacts.json",
+    "decisions": "tables/decisions.json",
+    "queue": "private GitHub Release task requests and receipts",
+    "mailbox_adapter": "unconfigured",
+    "reviewer": "local-claude-loop"
+  },
+  "legacy_source": "workspace-migration-20261031/outreach-working-tree.tar.gz: scripts/mailflow/workflow.json",
+  "legacy_stage_contract": [
+    {
+      "id": "A",
+      "name": "TICK",
+      "scope": "cycle",
+      "steps": [
+        {
+          "id": "A1",
+          "order": 101,
+          "title": "Read new Inbox and Sent",
+          "rule": "Read the Mail index read-only above the checkpoint, exclude Junk, Deleted and other owners, and reconcile Sent before describing anything as pending.",
+          "gate": "auto",
+          "check": "check_mail_delta"
+        },
+        {
+          "id": "A2",
+          "order": 102,
+          "title": "Inspect every registered job",
+          "rule": "Inspect recorded job handles/PIDs and required completion evidence; respect holds, review finished outputs, diagnose dead jobs and route failed in-scope reasoning back to Oracle. Register new Codex jobs with detached stdin. Follow P3/P8/P49; never infer completion from a label alone.",
+          "gate": "auto",
+          "check": "check_jobs"
+        },
+        {
+          "id": "A4",
+          "order": 103,
+          "title": "Advance every line",
+          "rule": "Respect ownership, refusal and review gates for each thread.",
+          "gate": "auto",
+          "check": "check_lines"
+        },
+        {
+          "id": "A3",
+          "order": 104,
+          "title": "Commit cycle state",
+          "rule": "Only with --commit persist BOARD.json, generated BOARD.md and checkpoint after A1/A2/A4 succeed. Preserve live job handles; schedule a later wake only within current authorization and never while paused for the owner (P13/P49).",
+          "gate": "auto",
+          "check": "check_commit"
+        }
+      ]
+    },
+    {
+      "id": "B",
+      "name": "INTAKE",
+      "scope": "independent correspondence directory (read-only local Mail index/MIME)",
+      "steps": [
+        {
+          "id": "B1",
+          "order": 201,
+          "title": "Establish ownership",
+          "rule": "Read current ownership and refusal records before dispatch. Owner-controlled threads receive registration of fresh inbound only.",
+          "gate": "auto",
+          "check": "check_ownership"
+        },
+        {
+          "id": "B2",
+          "order": 202,
+          "title": "Read complete correspondence and attachments",
+          "rule": "Dump and read every Inbox/Sent exchange by correspondent address across subjects plus attachments, noting any unavailable local content explicitly. In RESEND mode, read the complete original_address thread, including the original_sent_rowid Sent MIME; do not intake the corrected address instead.",
+          "gate": "auto",
+          "check": "check_thread_dump"
+        },
+        {
+          "id": "B3",
+          "order": 203,
+          "title": "Classify and enumerate obligations",
+          "rule": "Read the whole thread, enumerate actual questions/promises, classify collaboration stage and record reply/no-reply under P16/P17. Real collaborators always get an appropriate reply, including thanks. Check tables/refusals.json and prior contact; route genuine decisions/invitations to the owner while independent research continues. Only confirmed independent work goes to submission/.",
+          "gate": "manual"
+        },
+        {
+          "id": "B4",
+          "order": 204,
+          "title": "Complete the research and independent review chain",
+          "rule": "Follow P18/P32–P37 for in-scope reasoning, exact verification, independent review, academic form and literature. Exchange notes need the extra Codex review; formal papers need journal-editor Oracle review. Maintain BOARD.json and the appropriate manuscript/submission artifacts in a clean worktree, staging only owned files.",
+          "gate": "manual"
+        },
+        {
+          "id": "B5",
+          "order": 205,
+          "title": "Establish a useful response",
+          "rule": "Draft a useful response to the actual request under C0/P16–P18/P34; owed collaborator acknowledgements or earned thanks may be brief. A substantive research reply must meet the stated target: n=33 does not meet n=100. Keep unmet-target partial results internal, consolidate unsent rounds, and continue research instead of empty progress mail.",
+          "gate": "manual"
+        }
+      ]
+    },
+    {
+      "id": "C",
+      "name": "DRAFT-GATES",
+      "scope": "independent draft preparation process",
+      "steps": [
+        {
+          "id": "C1",
+          "order": 301,
+          "title": "Validate draft inputs and attachment text",
+          "rule": "Reject unresolved the owner decision placeholders in BODY and nonempty meta.questions before readiness; ask with context outside the body. Require BODY.txt, recipients, collaboration/reasoning classification and readable attachment text. Scan ZIP/Office archives and tar source archives in memory without extracting paths or executing contents; apply the byte/depth budget and reject tar links/special files. Decode supported source formats including bibliography .bbl, JSONL records, verification .out and PostScript .eps; refuse undecodable or unavailable inputs. RESEND additionally requires non-empty corrected-address evidence and automatic equality to the original B2 Sent body modulo greeting/title and Apple transport wrapping; preserve original subject/Cc and attachment names/count/bytes. Total attachment bytes are summed after path deduplication: > 8 MB (8,000,000 bytes) FAIL; > 5 MB (5,000,000 bytes) WARN; exactly 5 MB passes and exactly 8 MB warns. The delivery target is <= 5 MB. REDELIVERY is mutually exclusive with RESEND and requires original B2 Sent MIME, unchanged subject/To/Cc and incident evidence referring to that message; repaired contents retain all C reviews. C1 scans readable content; the private-communication matcher remains at C5. P24 reply-all coverage is mandatory after B intake and before polish/prepare/save/send; compare original headers and retain preceding owner-Sent participants (Fu/Luo 2026-10-29).",
+          "gate": "auto",
+          "check": "check_inputs"
+        },
+        {
+          "id": "C2",
+          "order": 302,
+          "title": "Connect the opener to the result",
+          "rule": "Start from the correspondent’s specific point and explain what it led us to do. Warn on generic thanks that jumps to an unconnected result; a specific section reference or acknowledgement that their check succeeded is already a connection. C9 verifies it against the thread.",
+          "gate": "auto",
+          "check": "check_opener"
+        },
+        {
+          "id": "C3",
+          "order": 303,
+          "title": "Review the closing question in context",
+          "rule": "Warn on a question in the final substantive paragraph of a collaborating thread. C9 must distinguish a useful unresolved scope, manuscript-approval or required-information question from a generic direction request or a decision already settled. The punctuation alone does not justify rewriting a useful question into an invented commitment; an optional recorded --allow-question reason supplies review context.",
+          "gate": "auto",
+          "check": "check_direction_question"
+        },
+        {
+          "id": "C4",
+          "order": 304,
+          "title": "Use verified greeting titles",
+          "rule": "Match each addressed person to titles.json, retain Professor or Dr. where verified, use names for students and unresolved status, and accept first-name exceptions only on explicit user evidence.",
+          "gate": "auto",
+          "check": "check_titles"
+        },
+        {
+          "id": "C5",
+          "order": 305,
+          "title": "Keep attribution and process wording precise",
+          "rule": "Reject The authors used AI, drafted by and draft contribution in the body or attachments, including normalized hyphenation. Reject We used AI in attachment disclosures. In an ordinary mail body, a first-person answer about our AI use warns for C9 to verify the direct question, facts and attribution to our side; do not force formal author names into a conversational answer. Approval of the recipient’s private-communication wording in a reply warns for C9/C11 to verify against the thread; other private-communication occurrences retain the existing block. Writing rule: never cite or mention private communication, including negated/self-certifying phrases such as no private-communication references. Credit a specific question or correction in ordinary prose without an email bibliography entry. The existing matcher and its warning exception remain unchanged; real citations still FAIL.",
+          "gate": "auto",
+          "check": "check_forbidden_phrases"
+        },
+        {
+          "id": "C6",
+          "order": 306,
+          "title": "Flag counterexample terminology",
+          "rule": "Flag every counterexample occurrence in the body, subject or attachments for review against the exact proposition and domain notation.",
+          "gate": "auto",
+          "check": "check_counterexample"
+        },
+        {
+          "id": "C7",
+          "order": 307,
+          "title": "Keep delivery practical",
+          "rule": "Reject zip attachments above 5 MB and use a public repository at a fixed revision with a clean secret scan instead, supplying only .tex when LaTeX source alone was requested.",
+          "gate": "auto",
+          "check": "check_zip_size"
+        },
+        {
+          "id": "C8",
+          "order": 308,
+          "title": "Scope actual AI statements to our own authors",
+          "rule": "Distinguish actual author-use assertions from ordinary project/process explanations, human-coauthor clarification, checking answers, heading-only paragraphs and document pointers to a separate AI statement. Trigger on AI-related context rather than bare case-insensitive AI, which also matches mathematical aI. Our actual disclosure text must name the configured team authors without attributing AI use to collaborators. In a mail reference, use the configured coauthor and owner names and both sign; inspect the actual statement independently. First-person answers, reference/heading contexts and another named coauthor’s own supplied statement warn for C9/C11 review of relevance, evidence and attribution. Anonymous or unscoped actual disclosures remain failures.",
+          "gate": "auto",
+          "check": "check_ai_statement"
+        },
+        {
+          "id": "C9",
+          "order": 309,
+          "title": "Review substance and conversational logic",
+          "rule": "Confirm a useful checked response and its progression from the correspondent’s point through our work. Explain each automatic warning against the correspondence, including why a closing question is unresolved and useful, project/process facts, AI-statement scope and recipient-requested attribution. Remove generic questions and unsupported commitments; do not require a question or a next-action sentence in every letter.",
+          "gate": "manual"
+        },
+        {
+          "id": "C10",
+          "order": 310,
+          "title": "Finish open items and promises",
+          "rule": "Confirm that each question and promised OEIS action, link, file or check is delivered, and that one consolidated email/note covers all unsent rounds.",
+          "gate": "manual"
+        },
+        {
+          "id": "C11",
+          "order": 311,
+          "title": "Review terminology and readability",
+          "rule": "Confirm a separate terminology/readability review against field literature and the exact proposition; put a readable argument in the body/note and use direct verified GitHub .lean sources when giving Lean evidence. Apply P30/P36/P37.",
+          "gate": "manual"
+        },
+        {
+          "id": "C12",
+          "order": 312,
+          "title": "Review delivery and collaboration details",
+          "rule": "Check requested deliverable, current manuscript, reply-all, approved roles and P29’s exact project wording when needed. P10 overrides attachment defaults: remind the owner to update Overleaf, no Overleaf-content attachments to the author; new results go to him as self-contained paragraphs (P39-new-results-tex). Otherwise P31/P39/P5 select dated merged PDF, requested source or completed manuscript. Keep note packages <=5 MB, text/source only, no binary data/third-party PDFs/internal result or review logs; omit reproducible bulk output and give its command, with version identity only when useful. Large data may use a verified public trureturing-experiments revision after a secret scan. Check Luhn-like long digit runs. Our AI statement is the LOCKED paragraph in managed/submission/author-policy.json (2026-10-28).",
+          "gate": "manual"
+        },
+        {
+          "id": "C13",
+          "order": 313,
+          "title": "Obtain Oracle review for heavy reasoning",
+          "rule": "Record Oracle review for mathematical reasoning under P32, and journal-editor Oracle review for formal manuscripts under P33. For lighter exchange notes record the independent Codex review plus dispatcher check and explain why formal Oracle review is not applicable.",
+          "gate": "manual"
+        },
+        {
+          "id": "C14",
+          "order": 314,
+          "title": "Authorship order",
+          "gate": "manual",
+          "rule": "Confirm the owner has settled authorship/order/corresponding author/submitter decisions relevant to this draft, respecting prior agreements. Alphabetical surname order is the default, not permission to invent a proposal or change an agreed exception; unresolved decisions stay outside BODY and block readiness (P40/P41)."
+        },
+        {
+          "id": "C15",
+          "order": 315,
+          "title": "Final voice pass",
+          "gate": "manual",
+          "rule": "Apply reply_pre_return_checks.voice_pass after the content is final. Bind its self_audit entry to the returned packet for independent review. If the body changes, refresh the audit before returning the new packet."
+        }
+      ]
+    },
+    {
+      "id": "D",
+      "name": "SAVE",
+      "scope": "serial Mail queue only",
+      "steps": [
+        {
+          "id": "D1",
+          "order": 401,
+          "title": "Save the approved body once",
+          "rule": "Consume completed per-mail B/C preparation, preserve the owner edits through baseline comparison and MERGE review, persist intent, and invoke save_draft.py or guarded replacement once. P52 permits the specifically named older draft to differ in subject only by configured gateway tags; retain exact live ownership, body/attachment hashes and timestamp checks. No global tick/board dependency and no research, language pass or new review confirmations in the Mail worker. Attachment insertion is serial with a stable readiness interval; never certify a count-only placeholder as persisted data. Persist the transaction and before snapshot before construction, bound the entire AppleEvent helper process group, then verify local MIME independently. On failure remove only the unchanged new partial copies proved by that transaction; retain owner edits and report cleanup_failed rather than claiming rollback.",
+          "gate": "auto",
+          "check": "check_save"
+        },
+        {
+          "id": "D2",
+          "order": 402,
+          "title": "Verify and resolve proven duplicates",
+          "rule": "Read saved drafts from the live read-only index/MIME and actual embedded/external attachment bytes, without Mail attachment-export AppleEvents. Reverify an uncertain save for up to 120 seconds; accept only exact body, To/Cc/Bcc, subject, attachment names/count/bytes. failed_rolled_back, cleanup_failed and not_saved are terminal helper results: do not add another D2 wait or invoke the helper again. Delete only proven owned duplicates/replaced drafts with the full exact subject/time/payload and a verified keeper. For P52 use the explicit old subject only for the named source and the new subject for the keeper; recheck gateway-only equivalence. Exchange can replace numeric IDs, so an API success or disappearance of one ID never proves removal: require 30 seconds of stable payload/time absence and retain uncertain move intent without repeating it.",
+          "gate": "auto",
+          "check": "check_saved_draft"
+        }
+      ]
+    },
+    {
+      "id": "E",
+      "name": "REPORT",
+      "scope": "cycle",
+      "steps": [
+        {
+          "id": "E1",
+          "order": 501,
+          "title": "Reconcile Sent and report drafts",
+          "rule": "Reconcile fresh Sent/new inbound before reporting a saved, fully reviewed draft with no current jobs/decisions. Identify full name <email>, subject, draft time and concrete value, not ROWIDs; respect P14/P15/P20.",
+          "gate": "auto",
+          "check": "check_report_drafts"
+        },
+        {
+          "id": "E2",
+          "order": 502,
+          "title": "Report the owner's actions and decisions",
+          "rule": "Use current BOARD.json decisions/actions, with exact context, quotes, links, urgency and Oracle-supported advice. List only things the owner must do, including Overleaf updates; no confirmed independent papers or waiting-for-others as his to-dos (P12/P15/P43).",
+          "gate": "auto",
+          "check": "check_report_actions",
+          "legacy_report_translations": {
+          }
+        },
+        {
+          "id": "E3",
+          "order": 503,
+          "title": "Report active jobs in Chinese",
+          "rule": "Report in Chinese from the freshly generated board: the owner actions first, unanswered inbound and wait, ready drafts, our/running work. Preserve active waits, exclude other-owner threads and report independent submissions only when asked. A report request performs no incidental Mail mutation (P13/P15).",
+          "gate": "auto",
+          "check": "check_report_jobs"
+        }
+      ]
+    },
+    {
+      "id": "F",
+      "name": "SEND",
+      "scope": "authorized serial Mail queue; F3 snapshots and asynchronous F5 read-only checks",
+      "steps": [
+        {
+          "id": "F1",
+          "order": 601,
+          "title": "Check Mail health",
+          "gate": "auto",
+          "check": "check_send_health",
+          "rule": "Once per queue run before its first Mail operation, measure Mail PID/uptime (24-hour limit), create only the recipient-free script-owned scratch composer, verify attachment count (and names when readable), discard it and prove cleanup. Reuse only for the same healthy Mail process. After Mail errors stop the worker and require a fresh probe on resumption; never restart Mail or mutate unrelated composers. Verified-cleanup transient probe failures may use the existing bounded retry."
+        },
+        {
+          "id": "F2",
+          "order": 602,
+          "title": "Verify outgoing attachments before sending",
+          "gate": "auto",
+          "check": "check_send_outgoing",
+          "rule": "Consume current completed B/C preparation and a saved_verified receipt for the exact sent payload; reject any new inbound since review without re-exporting the thread. A timestamp-only re-export does not invalidate the saved receipt. Recheck the exact source subject/time, body, to/cc, no bcc and attachment bytes; retain the exact new composer reference in send_draft.js and attach only the checked source paths. Wait up to 120 seconds for the exact outgoing attachment count using content.attachments.length; check outgoing file names when readable, and record unavailable names separately from expected names. Re-read immediately before send and abort if the count is unreadable or count/readable names mismatch. Record the attempt before send; never retry automatically. F3 requires actual Sent attachment names and bytes."
+        },
+        {
+          "id": "F3",
+          "order": 603,
+          "title": "Confirm the Sent MIME message",
+          "gate": "auto",
+          "check": "check_send_sent",
+          "rule": "Use fresh read-only Envelope Index snapshots, the sender account and pre-send ROWID/time, and full local .emlx to verify exact subject, sender, To/Cc, no Bcc, body and attachment filenames/count/bytes. queue-run tries once per item per invocation; incomplete MIME records waiting_sent and immediately advances other mails. Resume with queue-run, never F2 again. The original 600s deadline remains; ambiguous/mismatched or expired evidence preserves source and attempt for reconciliation."
+        },
+        {
+          "id": "F5",
+          "order": 604,
+          "title": "Schedule and independently check Inbox delivery notices",
+          "gate": "auto",
+          "check": "check_send_delivery",
+          "rule": "After F3, persist a pending F5 task with original send time, Message-ID, subject and due time (delivery_wait_seconds capped at 600). Continue to F4 without waiting or claiming PASS. Outside the Mail queue, deliverycheck [--watch] scans fresh read-only Inbox snapshots for all selected tasks, decodes MIME/DSN and embedded original headers, and records matching postmaster/failed/blocked/undeliverable notice evidence. Unrelated ordinary mail with unavailable MIME is ignored; suspected notices with missing MIME remain pending until the window expires, then unverified. Matching blocks remain terminal. No resend or Mail mutation; dry runs scan isolated fixtures once."
+        },
+        {
+          "id": "F4",
+          "order": 605,
+          "title": "Delete only the proven source draft",
+          "gate": "auto",
+          "check": "check_send_cleanup",
+          "rule": "After durable F3 proof and scheduling F5, independently of current B/C receipts or delivery outcome, recheck the exact helper-owned source draft by ID, full subject and exact timestamp plus unchanged contents/recipients/attachments. Delete only that object and record the receipt; refuse all unowned objects and stop on any cleanup failure. Use the same helper ownership identity as F2: exact ID/subject, saved normalized body hash, attachment names/sizes/byte hashes and five-second timestamp tolerance. Re-read before deletion. Post-send draft recipient metadata is diagnostic; F2 headers and F3 Sent MIME remain authoritative. Refuse changed content, unowned or ambiguous identity; record observed identity on failure. If Exchange replaced dateReceived, allow dateSent only when it still matches the saved ownership timestamp within the same five-second tolerance; record both the observed received time and the timestamp used. This fallback never permits a different ID or changed content. Reconciliation may use the durable Sent/source record alone without local draft files; it never grants another send."
+        }
+      ]
+    }
+  ],
+  "legacy_execution_contract": {
+    "accepted": [
+      "pass",
+      "confirmed",
+      "warn"
+    ],
+    "warning_policy": "Warnings are visible and require discussion in the subsequent manual review; they do not themselves block the next step.",
+    "scopes": "A remains the authorized cycle-level Inbox/Sent/job/board audit (tick --commit); a malformed board line fails that audit without coupling unrelated prepared mail to it. B intake, research/review evidence, polish, metadata/title validation and C gates belong to each independent mail directory. prepare DIR... runs one process per directory; separate prepare invocations may overlap. D and Mail operations in F run only in queue-run. E/board reporting remains independent.",
+    "invalidation": "Preparation binds body, metadata, attachment bytes, baseline/incident evidence, stable B review, workflow policy and the relevant title records. Re-export timestamps and gate observation timestamps do not change identity. Saved/send transport identity covers only subject, body, To/Cc and attachment names/bytes; F2 separately rejects any new inbound since the reviewed snapshot. Unrelated title-registry entries do not invalidate another mail. Legacy byte fingerprints remain audit identifiers. Gate state and transport receipts retain review text and actual deliverable hashes; deleting reviewed scaffolding never changes approval identity.",
+    "new_lessons": "Edit the relevant grouped policy and affected ordered step in workflow.json, then run mailflow.py docs; no separate lesson checklist. Every Codex briefing must read this checkout’s complete workflow, including the charter fields and policies.",
+    "safety": "Never send during tests or dry runs, and close/remove only objects with proof that this automation created them. Old hidden composers and unrelated pipelines are untouched. No automatic Mail restart/quit/kill; an explicitly authorized supervised restart is a separate terminal queue-run operation under P55, with its budget reserved durably before orderly termination.",
+    "send_recovery": "Persist send-attempt.json before the sole F2 send call. running items after a worker crash and explicitly re-enqueued uncertain items only reconcile existing send attempts, never repeat send. F3 uses one full Sent MIME snapshot per queue pass; waiting_sent releases the queue for other mails and is resumed by the next queue-run. Its original 600s Sent deadline is retained. Durable Sent proof permits F4 with exact source ownership even if local B/C inputs are later stale or absent. Uncertain saves only re-verify D2, never invoke the save helper again. A proven failed_rolled_back save terminates D2 immediately, and ordinary queue execution never repeats it. cleanup_failed remains uncertain. Only the explicit repair-drafts --retry-rolled-back recovery may start a new transaction after reviewing unchanged originals and a complete durable rollback; preserve the prior attempt.",
+    "queue": "enqueue requires completed B/C evidence and specific authorization, writes no Mail state and is idempotent for active items. queue.json is atomically replaced under a short file lock; its adjacent .worker.lock serializes all Mail workers across checkouts using that queue. No preparation or slow Mail call holds the queue-file lock. Workers emit one short line per mail. Per-mail preparation failures block that item; Mail/transport errors stop the worker with durable state. Repair/inspect before explicitly re-enqueuing a stopped item. A busy per-directory lock leaves that item for the next pass.",
+    "health": "Run the full F1 scratch attachment/count/cleanup probe once, lazily, before the first Mail operation of a queue run; reuse it while the Mail PID and uptime remain healthy. F1 readiness does not establish saved-MIME or Exchange removal health. Stop on Mail errors. Only an authorized supervised P55 restart may terminate Mail; at most one per job, after no other pipeline saved OR sent during the last 600 seconds across all accounts and no active AppleEvent script. If Mail still cannot verify saves/removals after that restart, stop and report.",
+    "delivery": "F5 is a durable pending task scheduled immediately after F3; it is not marked PASS until checked. It never delays F4 or the Mail queue. deliverycheck scans all queued Sent receipts once; deliverycheck --watch scans all selected F5 windows together in a separate read-only process, releasing per-dir locks between snapshots. No Mail worker lock or AppleEvents are used. Record pending/clear/blocked/unverified and exact bounce evidence in both receipts. Blocks remain terminal and never authorize resend. Clear means no matching notice observed, not recipient delivery.",
+    "save_transaction": "A save creates once, waits for each attachment placeholder count to settle before inserting the next file, and closes with saving yes once. Outgoing counts are readiness only; missing names never become verified names or persisted bytes. The Python transaction reads the live read-only index/MIME and real attachment bytes for up to 120 seconds and requires one complete new payload stable for five seconds. AppleEvent attachment exports are not used for saved-draft read-back. Whole-process-group timeouts are nested so the transaction retains time for exact owned rollback and stable absence verification."
+  },
+  "execution": {
+    "intake": "Use the full pinned latest Inbox/Sent/thread evidence; no live mailbox adapter is enabled in this foundation.",
+    "research": "One focused CMA task per owner/thread; independent owners run in parallel within managed/config.json limits.",
+    "gates": "Apply the complete preserved policy and legacy stage checklist as substantive checks; old helper names are provenance, not executable commands.",
+    "review": "Every finished version enters the full local Claude review queue; accept only the exact signed verdict.",
+    "user_decisions": "Decide routing.mail per letter from the latest incoming message and the needed reply; thread history alone, including user_decision_ever, does not make a letter owner-routed. Treat inputs.user_answers as decided and never re-ask those questions. Use owner when either touches anything personal or about us/the project (who we are, affiliation, how results are produced, tools/AI, funding, plans, motives), or concerns meetings/calls, invitations, collaboration terms, byline order or submission timing. When unsure, choose owner. A purely academic exchange about the mathematics, including a letter produced directly from answered decisions, uses auto after the operator's exact independent PASS and fresh mailbox checks. User 2026-11-18; supersedes older thread-ownership wording. Always use routing.mail=owner if any To or Cc recipient is at the mailbox owner's university (the configured home domains and their subdomains).",
+    "delivery": "The mailbox adapter is deferred. Preserve exact proposed fields and attachment bytes; do not launch legacy Mail scripts.",
+    "recovery": "Retain original CMA lifecycle/command/response IDs and stable keys. Never restart merely because a task is slow.",
+    "state": "Private outreach-control Release task ledger plus the three social tables: contacts.json (1), positive.json (2), refusals.json (3). threads/projects/results/decisions/workspaces retain supporting indexes.",
+    "workspaces": "Only the synchronized trureturing-outreach map and local-only mail/<person>/ independent repositories. Remote records contain relative workspace pointers. Do not mirror local source, environments or calculations. Explicitly selected CMA inputs and task deliverables use private task Releases. Remove completed worktrees and disposable branches after checking preservation.",
+    "registry": "Read table 3 before new contact or collaboration invitations. Every incoming response updates table 1 with source identity, relationship summary and next action. Positive feedback also enters table 2 with exact quote and context; refusal enters tables 3 and 1. Retain received facts even for a blocked contact; praise never clears a refusal. A proposed draft never establishes a sent event. Always return a top-level registry_patch for the latest incoming message with one factual English-sentence incoming_summary, verbatim quote-based praise entries (quote only the positive clause itself, a verbatim substring; never include a following 'but', busy, decline or criticism clause in the quote; put that in context instead), a refusal only for an explicit decline of contact/collaboration or request to stop (busy/keep-us-updated is not a refusal), and new_contact only when the sender is absent from contacts.json with HTTP(S) identity evidence. The operator verifies quotes against the preserved plain-text message and reconciles the patch locally; no concurrent CMA pushes to shared tables.",
+    "registry_patch": "For every reply, and for research with a mailbox observation, return registry_patch with incoming_summary (one factual English sentence), praise entries whose quotes are verbatim substrings of the latest incoming message, refusal null unless the message explicitly declines contact/collaboration or asks us to stop, and new_contact null unless the sender is absent from contacts.json. Include HTTP(S) evidence URLs for a new contact."
+  }
+}

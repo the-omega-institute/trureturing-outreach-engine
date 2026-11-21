@@ -1,0 +1,77 @@
+name: Delivery
+
+on:
+  schedule:
+    - cron: '19 * * * *'
+  workflow_dispatch:
+    inputs:
+      action:
+        type: choice
+        options: [drain, reserve, publish, sync, promote, verify, verify-feed, status, doctor]
+        default: drain
+      retry_failed:
+        type: boolean
+        default: false
+  workflow_call:
+    inputs:
+      engine_repository:
+        type: string
+        required: true
+      action:
+        type: string
+        default: drain
+      retry_failed:
+        type: boolean
+        default: false
+    secrets:
+      OUTREACH_DATA_TOKEN:
+        required: true
+      OUTREACH_DATA_REPO:
+        required: false
+      OUTREACH_DATA_BRANCH:
+        required: false
+      OUTREACH_NOTE_REQUEST:
+        required: false
+      ZENODO_TOKEN:
+        required: false
+      PAGES_TOKEN:
+        required: false
+
+concurrency:
+  group: outreach-control-single-writer
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  OUTREACH_DATA_ROOT: ${{ github.workspace }}/data
+  OUTREACH_DATA_REPO: ${{ secrets.OUTREACH_DATA_REPO }}
+  OUTREACH_DATA_BRANCH: ${{ secrets.OUTREACH_DATA_BRANCH }}
+  OUTREACH_ENGINE_REPO: ${{ inputs.engine_repository || github.repository }}
+  OUTREACH_PUBLIC_LOG: '1'
+  GH_TOKEN: ${{ secrets.OUTREACH_DATA_TOKEN }}
+
+jobs:
+  deliver:
+    if: ${{ contains(fromJSON('["schedule","workflow_dispatch","workflow_call"]'), github.event_name) && (!inputs.engine_repository || inputs.engine_repository == github.repository) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.engine_repository || github.repository }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Prepare data
+        run: python3 -m managed.hosted checkout
+      - name: Process queue
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
+          PAGES_TOKEN: ${{ secrets.PAGES_TOKEN }}
+          OUTREACH_NOTE_REQUEST: ${{ secrets.OUTREACH_NOTE_REQUEST }}
+          NOTE_ACTION: ${{ contains(fromJSON('["drain","reserve","publish","sync","promote","verify","verify-feed","status","doctor"]'), inputs.action) && inputs.action || 'drain' }}
+          RETRY_FAILED: ${{ inputs.retry_failed }}
+        run: python3 -m managed.hosted notes

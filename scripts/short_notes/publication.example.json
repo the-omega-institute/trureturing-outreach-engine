@@ -1,0 +1,13 @@
+{
+  "id": "example-conjecture",
+  "problem_ids": ["example-problem"],
+  "topic": "the exact conjecture resolved by the paper",
+  "title": "The later public paper title",
+  "authors": "A. Researcher",
+  "date": "2026-10-29",
+  "url": "https://doi.org/10.1234/example",
+  "venue": "Example Journal",
+  "status": "published",
+  "summary": "The extended result and its scope.",
+  "evidence_url": "https://example.org/fixed-revision/proof.lean"
+}

@@ -1,0 +1,67 @@
+name: Coordinator
+
+on:
+  schedule:
+    - cron: '7,22,37,52 * * * *'
+  workflow_dispatch:
+    inputs:
+      action:
+        type: choice
+        options: [tick, status, doctor, reviews, mathesis-test]
+        default: status
+      refresh_credentials:
+        type: boolean
+        default: false
+
+concurrency:
+  group: outreach-control-single-writer
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  OUTREACH_DATA_ROOT: ${{ github.workspace }}/data
+  OUTREACH_DATA_REPO: ${{ secrets.OUTREACH_DATA_REPO }}
+  OUTREACH_DATA_BRANCH: ${{ secrets.OUTREACH_DATA_BRANCH }}
+  OUTREACH_ENGINE_REPO: ${{ github.repository }}
+  OUTREACH_PUBLIC_LOG: '1'
+  GH_TOKEN: ${{ secrets.OUTREACH_DATA_TOKEN }}
+
+jobs:
+  coordinator:
+    environment: outreach-runtime
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    env:
+      OUTREACH_CREDENTIAL_FILE: ${{ runner.temp }}/outreach-runtime.env
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Prepare data
+        run: python3 -m managed.hosted checkout
+      - name: Prepare credentials
+        env:
+          OUTREACH_NYX_SESSION: ${{ secrets.OUTREACH_NYX_SESSION }}
+          OUTREACH_GRAPH_CACHE: ${{ secrets.OUTREACH_GRAPH_CACHE }}
+          FORCE_REFRESH: ${{ inputs.refresh_credentials || 'false' }}
+        run: python3 -m managed.hosted credentials
+      - name: Run coordinator
+        env:
+          OUTREACH_REVIEW_KEY: ${{ secrets.OUTREACH_REVIEW_KEY }}
+          CONTROL_ACTION: ${{ inputs.action || 'tick' }}
+        run: python3 -m managed.hosted control
+      - name: Reconcile receipts
+        if: ${{ (inputs.action || 'tick') == 'tick' }}
+        continue-on-error: true
+        run: python3 -m managed.hosted submissions
+      - name: Synchronize feed
+        if: ${{ (inputs.action || 'tick') == 'tick' }}
+        continue-on-error: true
+        env:
+          PAGES_TOKEN: ${{ secrets.PAGES_TOKEN }}
+        run: python3 -m managed.hosted pages

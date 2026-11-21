@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>ArXiv Query: author watch</title>
+  <entry>
+    <id>http://arxiv.org/abs/2612.00001v1</id>
+    <published>2026-11-03T01:02:03Z</published>
+    <updated>2026-11-03T01:02:03Z</updated>
+    <title>Joint exact bounds for a cyclic two-qutrit model</title>
+    <summary>We prove the exact bound $r/(1+r+r^2)$ for every parameter. The second sentence gives a certificate with long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail long detail while a third sentence should not enter the short public summary.</summary>
+    <author><name>Blaire Mercer</name></author>
+    <author><name>Avery Reed</name></author>
+    <author><name>Rui Example</name></author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2612.00002v1</id>
+    <published>2026-11-02T01:02:03Z</published>
+    <updated>2026-11-02T01:02:03Z</updated>
+    <title>A paper by Blaire Mercer alone</title>
+    <summary>This paper deliberately lacks the second target author.</summary>
+    <author><name>Blaire Mercer</name></author>
+    <author><name>Rui Example</name></author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2612.00003v1</id>
+    <published>2026-11-01T01:02:03Z</published>
+    <updated>2026-11-01T01:02:03Z</updated>
+    <title>A covered board paper</title>
+    <summary>Its public row is already present in the submission board.</summary>
+    <author><name>Avery Reed</name></author>
+    <author><name>Blaire Mercer</name></author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2612.00004v1</id>
+    <published>2026-10-31T01:02:03Z</published>
+    <updated>2026-10-31T01:02:03Z</updated>
+    <title>A covered served paper</title>
+    <summary>Its identity is present in the served Pages index.</summary>
+    <author><name>Blaire Mercer</name></author>
+    <author><name>Avery Reed</name></author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2610.00991v1</id>
+    <published>2026-10-01T01:02:03Z</published>
+    <updated>2026-10-01T01:02:03Z</updated>
+    <title>Approximating a model by finite configurations</title>
+    <summary>An old version is retained by the API fixture.</summary>
+    <author><name>Dana Copley</name></author>
+    <author><name>Blaire Mercer</name></author>
+    <author><name>Avery Reed</name></author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2610.00991v2</id>
+    <published>2026-11-03T04:05:06Z</published>
+    <updated>2026-11-03T04:05:06Z</updated>
+    <title>Approximating a model by finite configurations</title>
+    <summary>We add the authors in a replacement and give a sharper convergence statement. The second sentence records the uniform error bound.</summary>
+    <author><name>Dana Copley</name></author>
+    <author><name>Blaire Mercer</name></author>
+    <author><name>Avery Reed</name></author>
+  </entry>
+</feed>

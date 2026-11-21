@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "workflow_id": "managed-research-daily",
+  "version": "2.2.0",
+  "status": "foundation_paused",
+  "runtime": {
+    "platform": "local",
+    "nyxid_service_slug": "omega-x",
+    "provider": "user-started local Claude loop",
+    "capabilities": [
+      "read pinned published source and existing private daily records",
+      "write own statistics, evidence and editorial packet"
+    ],
+    "forbidden": [
+      "send mail",
+      "Apple Mail",
+      "post to X directly",
+      "change launchd",
+      "modify upstream",
+      "grant own approval or publishing authority",
+      "spawn untracked workers or publish from a review worker"
+    ],
+    "instructions": "The user-started local Claude loop consumes daily_local in managed.control work, then uses python3 -m managed.daily_local status/prepare/binding/review/publish. The adapter reuses the existing broadcast-kit APIs, compiler/image environment and legacy independent review. All new evidence and date reservations stay under mail/outreach-maintenance/daily/. Do not start retired timers or duplicate this work on CMA. Preparation does not call the publisher; publication requires both local enabled and enable_live_publication plus the exact signed Claude PASS."
+  },
+  "schedule": {
+    "timezone": "Asia/Singapore",
+    "proposed_start": "00:00",
+    "reporting_period": "previous_complete_calendar_day",
+    "publish": "When preparation, independent review and separate publication authority all pass; no hourly :47 slot.",
+    "merged_days": "Only explicitly configured by user evidence. Reserve every included date and suppress standalone reports atomically.",
+    "deployment": "Local preparation, independent review and deterministic omega-x publication. Current production remains paused; pipeline.daily=false prevents duplicate CMA scheduling."
+  },
+  "inputs": [
+    "pinned upstream origin/dev history with baseline and cutoff commits",
+    "resolution markers and declaration evidence",
+    "published catalogue snapshot with source identity",
+    "Problems source dossiers",
+    "theory documents and commit subjects in the same interval",
+    "prior daily publication ledger including merged-day receipts",
+    "audited history for the poster",
+    "current stop flag, account policy and publication authority"
+  ],
+  "steps": [
+    {
+      "id": "audit",
+      "instructions": [
+        "Use [00:00 SGT on first covered date, 00:00 SGT after last date). A commit exactly at midnight belongs to the next day. Pin upstream tip and day-boundary first-parent commits; preserve original commit identity and do not substitute snapshot-download commit IDs.",
+        "Count problem families, not lemmas, declarations, mails or posts. Deduplicate resolution markers by problem_slug; conflicting resolution kinds are an error. Save baseline/cutoff sets, added_ids, removed_ids, proved/refuted counts and total.",
+        "A first-parent cutoff matches the current implementation but requires accessible complete history and meaningful commit timestamps. Missing history, anomalous timestamps or an unestablished day boundary is HOLD; do not estimate from the tip or catalogue alone.",
+        "Consume upstream's existing publications and verification reports. Published catalogue rows must have consistent source commit, matching declaration, frozen/proven-not-yet-frozen status and trusted axiom closure within Classical.choice, Quot.sound, propext. Never create upstream output requirements to simplify this consumer.",
+        "Catalogue lag remains internal release-status metadata and does not alter the committed-repository headline metric. A pending-public row may be counted from committed markers, but blanket machine-check claims require existing trusted verification evidence; absent evidence means HOLD or a newly reviewed accurate wording, never pretend a fresh build occurred.",
+        "Detect removals, backfills, reclassifications and prior solutions before claiming new work or open problems solved that day. Formal resolution addition does not prove first discovery. Preserve removed/reclassified IDs in evidence and prevent inflated counts.",
+        "Import already published days and merged spans before enqueue. Same-account date overlap is forbidden even if text, date label or image differs. A missing/uncertain prior write cannot be repaired by publishing again."
+      ]
+    },
+    {
+      "id": "evidence",
+      "instructions": [
+        "Build source-evidence.json for every counted result: exact problem statement, source/version, method, exclusions, declaration and existing verification evidence. Preserve primary-source attribution and distinguish borrowed methods from our contribution.",
+        "Build research-focus.json from theory documents touched and their contents/commit subjects during the same covered window. The opening describes this core research, not merely the open-problem count.",
+        "A feedback claim is admissible only when a cited theory document at the pinned cutoff explicitly builds on the counted result. Record path and supporting lines; a keyword match alone is insufficient.",
+        "Editorial drafting reads these bounded audited inputs; it does not browse anew, re-prove mathematics or load unrelated campaigns. If evidence is insufficient, return to the research/audit stage and hold publication."
+      ]
+    },
+    {
+      "id": "editorial",
+      "instructions": [
+        "Use the current results-first schema v3, following the user-polished 2026-10-13 summary and 2026-10-14 instruction. Do not accidentally fall back to the older one-tweet/numbers-only template merely because short_copy is true.",
+        "opening: one plain sentence beginning exactly We're researching (user 2026-11-01 dropped the leading Well,), at most 170 characters, truthfully describing the day's core research in accessible words. No @ tags, unexplained acronyms, internal filenames or unsupported connections.",
+        "For a nonzero day, the renderer follows with: Along the way, on <Month D or approved merged span>, we solved N open problems from the literature, across <topics>, all machine-checked in Lean 4. Numbers must come from audited stats, and open/machine-checked wording must have evidence.",
+        "explored: 3–4 topic phrases, each at most 30 characters with no internal and, supported by the counted results and covering most of them. If a tiny day cannot honestly support that many distinct topics, HOLD for editorial choice rather than invent topics.",
+        "featured: exactly one object {problem_id,text,card_title,source_urls}, chosen for mathematical significance and readability. Text is 40–260 characters, no formulas, @ tags or links, at most two author surnames, with literally supported statement/poser/year/significance. card_title at most 70 characters; source_urls are verified primary HTTPS sources.",
+        "feedback is null unless explicit theory evidence supports {problem_id,citation,text}; feedback text at most 240 characters. Use They fed back into our theory. only with such evidence, otherwise The highlight: followed by the featured text.",
+        "End with https://github.com/the-omega-institute/trureturing. Plain English/text, no Markdown links, unsupported first-ever claim, repository jargon such as owners, harness, file/lemma/module names, or automatic author mentions. The no-Omega-Institute email affiliation rule does not rewrite historical project URLs or silently redesign existing daily card branding.",
+        "For a zero-addition day use an explicitly audited zero-day packet: no feature or fabricated topics/feedback; state no new formal resolutions were recorded and the unchanged or corrected total. The daily notes document this branch rather than forcing v3's nonzero schema."
+      ]
+    },
+    {
+      "id": "render_and_review",
+      "instructions": [
+        "Render locally using broadcast-kit/broadcast_kit/research_digest_card.py, template revision 56c1a2f (2026-10-31 16:31 SGT): 1600×900 light background; top headline OPEN PROBLEMS FROM THE LITERATURE, SOLVED.; left running-total bar chart (one bar per calendar day); right total/coverage/average and +N/date/proved/refuted, followed by Results, Around the clock and Scale fact lines; footer CTA THE FRONTIER IS MOVING. GET IN EARLY and repository link. Pass audited facts.json, cumulative.json and daily proved/refuted counts to the existing renderer. All numbers must come from pinned upstream statistics; inspect the actual PNG.",
+        "Every visible number must match stats and the per-day running totals; the last bar equals the stated total. Inspect the actual full-resolution image for clipped bars or labels, axis ticks, date labels, legibility and font fallback; new image bytes require new review.",
+        "Bind final text bytes, account ID, all covered dates, statistics/evidence fingerprint and PNG bytes into an immutable packet. Review both body and actual image, not only a claimed digest.",
+        "Use independent Claude review of each final daily version with the same version/content/workflow binding as firstcontact. Apply audit, source fidelity, novelty/attribution, core-research opening, topic/featured/feedback, visual and duplicate-date checks; PASS, BOUNCE or HOLD with evidence. No edits within PASS.",
+        "Existing daily authorization calls for independent sshx review; retain that precondition at cutover until the user explicitly approves its replacement. The design does not run workers or remove existing review gates. Claude approval is additional and mandatory in the proposed managed flow."
+      ]
+    },
+    {
+      "id": "publish_and_verify",
+      "instructions": [
+        "Only the isolated deterministic publisher may call NyxID omega-x. Verify expected account ID and username, separate daily publishing authority, caps, stop state, immutable content approval, prior ledger and all covered-date reservations before POST.",
+        "Media upload is preparation, not publication; record media identity/expiry. Persist the publication attempt before creating the tweet. A local idempotency key does not imply X supports server-side create idempotency.",
+        "Known accepted post ID: GET that post and verify actual account, exact approved text, media identity/dimensions and actual visible media, timestamp and public URL. Only then write verified receipt. Unknown POST outcome: reconcile original attempt, never replay POST or switch accounts automatically.",
+        "A definitive no-effect response may be retried only with evidence and within the bounded budget. 402 credits depleted: pause writes and alert, with no media/upload or users/me storm; minimum one-hour cooldown plus budget/operator recheck. 429 honors Retry-After. 401/403 need owner resolution. Timeouts and 5xx are uncertain unless transport establishes no effect.",
+        "Store exact post URL/ID, observed body/media evidence, content hash, source span, covered dates, review and authority in the private ledger; register already verified receipts idempotently. Daily success never authorizes a mail send or hourly publication."
+      ]
+    }
+  ],
+  "packet_contract": "Use an immutable local daily packet with verified account, covered_days, exact text/media bytes and evidence fingerprint. The managed queue supports optional task tracking; rendering and omega-x publication use the local broadcast-kit pipeline, not a required CMA renderer. The user resumed local publication on 2026-11-01; every post still needs the exact signed Claude PASS.",
+  "review_policy": "managed/daily/DESIGN-notes.md#review-admission",
+  "enable_live_publication": true,
+  "local_entry": {
+    "module": "managed.daily_local",
+    "inventory": "python3 -m managed.control work -> daily_local",
+    "configuration": "../mail/outreach-maintenance/daily/config.json",
+    "state": "../mail/outreach-maintenance/daily/state/YYYY-MM-DD",
+    "history": "read-only ../mail/outreach-maintenance/legacy-daily/state; published and uncertain dates stay reserved",
+    "initialization": "python3 -m managed.daily_local init; idempotent, imports settings/receipts with enabled=false",
+    "prepare": "python3 -m managed.daily_local prepare --day YYYY-MM-DD; existing editor/renderer and independent review, no publish",
+    "claude_review": "binding -> independent read of exact body/PNG/evidence -> signed PASS/BOUNCE/HOLD -> review --envelope FILE",
+    "publish": "python3 -m managed.daily_local publish --day YYYY-MM-DD; local flag, workflow flag and exact signed PASS required",
+    "pause": "enable_live_publication=false and local enabled=false; CMA pipeline.daily and kinds.daily stay false even when local publishing resumes"
+  }
+}

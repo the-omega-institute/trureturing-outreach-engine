@@ -1,0 +1,182 @@
+{
+  "schema_version": 1,
+  "workflow_id": "managed-firstcontact",
+  "version": "2.2.0",
+  "status": "foundation_paused",
+  "updated_on": "2026-11-02",
+  "purpose": "CMA Codex researches and drafts first-contact academic letters; every dispatchable version receives independent Claude review.",
+  "runtime": {
+    "platform": "CMA",
+    "nyxid_service_slug": "cma",
+    "provider": "codex",
+    "repository": "[configured engine repository]",
+    "instructions_path": "managed/firstcontact/workflow.json",
+    "review_path": "managed/firstcontact/review.md",
+    "execution": "One durable task per item/version; settings are pinned at Agent creation, not passed as unsupported Responses instructions.",
+    "initial_concurrency_recommendation": 1,
+    "resource_rule": "Light exact-arithmetic checks only; no Lean builds or heavy parallel jobs. Measure actual resources before selecting future concurrency.",
+    "capabilities": [
+      "read pinned upstream source and public literature",
+      "read private contact/ownership policy",
+      "write own durable draft and research artifacts"
+    ],
+    "forbidden": [
+      "send mail",
+      "post to X",
+      "Apple Mail or AppleScript",
+      "change launchd",
+      "modify upstream",
+      "write reviewer verdicts or send authority",
+      "spawn subworkers",
+      "use volatile scratchpad as durable evidence"
+    ],
+    "missing_capability": "Persist needs-evidence and request scoped owner provisioning; never scrape credentials or silently use another service."
+  },
+  "inputs": {
+    "required": [
+      "item_id",
+      "version",
+      "pinned_origin_dev_commit",
+      "problem_ids",
+      "dossier_and_exact_source",
+      "resolution_marker_and_Lean_declarations",
+      "existing_receipts_and_decisions",
+      "complete_fresh_contacts_and_aliases",
+      "reply_thread_ownership",
+      "current_workflow_and_review_policy_digest",
+      "recipient_emails",
+      "coordinator_mailbox_history"
+    ],
+    "upstream": "Consume existing trureturing origin/dev resolution markers and published artifacts read-only. Pages catalogue lag must not omit resolved items or trigger upstream modifications.",
+    "existing_state": "Read tables/refusals.json first, then tables/contacts.json and all receipts, decisions and thread ownership records. Legacy declined.json and decisions.tsv are historical evidence only. No Mail draft ID is authoritative.",
+    "coordinator_mailbox_history": "The coordinator supplies task data.mailbox_history separately from the immutable request: fetched_at, addresses (recipients and verified aliases), messages (date, subject, direction, conversationId, isDraft, internetMessageId and short preview), delivery-queue attempts and complete. This complete fresh Graph Inbox/Sent Items/Drafts snapshot IS the mailbox evidence required here, including when tables/contacts.json has policy_fresh=false. CMA has no mailbox access; do not request an additional mailbox read. An incomplete snapshot cannot be admitted. The coordinator also supplies effective To/Cc and excluded_recipients; private history never enters public scientific artifacts."
+  },
+  "steps": [
+    {
+      "id": "intake",
+      "instructions": [
+        "Read this entire workflow, review.md, current repository AGENTS.md and the selected project's records before work. Current user instructions override historical batch rules; see SOURCES.md.",
+        "Process the complete ordered resolved-problem inventory. Reuse a current item/version or record why it is held/skipped; do not duplicate a prior draft or send.",
+        "Check all intended To/Cc people and verified aliases against declines, prior sent/uncertain attempts, bounced addresses, user-owned drafts, collaborations and active reply threads. A missing or stale snapshot means HOLD.",
+        "Evidence that is enough (operator 2026-11-15, after two needless holds): an address the person published or that a primary public source attributes to them (paper, OEIS record, mailing-list header) is usable when no newer address exists, even if only historically corroborated; a delivery failure is handled by bounce intake, so do not HOLD for lack of a current confirmation. For Lean, the public research catalogue entry with kernel_verified.freeze_status frozen and node_axiom_closure within [Classical.choice, Quot.sound, propext] is the trusted attestation of no placeholders or user axioms; do not HOLD for a missing separate dependency audit.",
+        "Use the coordinator-supplied mailbox_history as fresh mailbox evidence. Report excluded authors with their conversation IDs or attempt keys. Prior correspondence or active threads route to a reply on that thread; metadata previews do not authorize composing a reply without its complete conversation. Preserve owner drafts and hold uncertain sends. If no clear author remains, return outcome=hold, packet=null and routing mail=none, questions=[], independent_submission=null, with the reply thread(s) or precise release condition in report. Never return a firstcontact packet for an excluded author.",
+        "Never include anyone blocked by tables/refusals.json, including through Cc or a verified alternate address. Removing someone requires recomputing the greeting, common-author intersection and content; no remaining eligible author means HOLD.",
+        "Hold people with a prior sent receipt, active reply thread, user-owned draft or pending personal decision. Continue existing relationships as replies. This supersedes the historical batch exception for another paper; uncertain history is HOLD. Do not launch or take ownership from legacy scripts/mailflow.",
+        "Preserve all mathematical/user holds and release conditions from tables/decisions.json and the historical decisions.tsv evidence. A legacy numeric send approval is not authority for this packet.",
+        "Preserve the existing human-decision flag for Chinese researchers at Chinese universities; never infer ethnicity from surname. A .edu.cn address alone does not establish this flag. No new academic-record screen."
+      ]
+    },
+    {
+      "id": "research",
+      "instructions": [
+        "Fetch and read the original paper's exact conjecture, question or equation. Quote its wording, location, quantifiers and conventions internally. For a refutation, distinguish literal wording from evident intended domain; do not exploit an irrelevant convention or straw man.",
+        "Check the latest arXiv version, the journal version, Crossref/publisher DOI metadata and a focused later-literature search. Record queries, URLs, versions and checked-at times; search failure or unresolved settlement is HOLD, not an assertion that nothing exists.",
+        "When a journal version exists cite journal, volume, year and DOI as the main reference; arXiv may follow. Verify exact title, authors and arXiv ID/version. Do not cite only a preprint merely because the dossier did.",
+        "Decide whether the exact problem is still open, settled in the source, settled in later work, partially overlapping, or trivial. Re-formalizing known work is not a new resolution or a reason for cold outreach. Distinguish novelty of mathematics from novelty of formalization.",
+        "Independently verify the central mathematics using light computation where feasible, preferably exact integers/rationals. Check explicit matrices, witnesses, spectra, inequalities and all numbers. Give a readable argument for universal claims; a finite experiment is not their proof. Record the command/code, inputs, observed result and what was not checked.",
+        "HOLD if the result is wrong, trivial against the paper's evident intent, a straw man, already settled, in the wrong domain, or centrally unverifiable. Do not minimally reword a fatal mathematical defect into PASS. Fix an independently justified small error as a new version and report it.",
+        "For every proposed closing question, try to derive it immediately from the result and examine the source's strongest remaining question. It must genuinely remain open; do not propose seven-fold sums right after a theorem that immediately gives them. If no such question can be established (for example, the source problem is fully settled by the result), do not invent one and do not HOLD for that reason: use the invitation closing instead (the owner 2026-11-07).",
+        "Use any x_gate origin year/author handle information only when verified from the actual posing source and author-owned account evidence; it neither authorizes X activity nor makes the daily depend on the first-contact queue."
+      ]
+    },
+    {
+      "id": "recipients",
+      "instructions": [
+        "Prepare ONE letter per approved note/paper for all reachable eligible posing authors. Use the supplied effective To/Cc: To is the corresponding author when verified and selected, otherwise the first reachable author; Cc contains the other reachable authors in author_contacts order. Exclude authors already in active threads or with prior correspondence/drafts/attempts and say why. Do not create one letter per coauthor or add alternate addresses as separate people.",
+        "Recipients are only confirmed posers or authors of the paper posing this exact question, with current publicly verified addresses. An OEIS sequence/entry contributor who did not pose it is not eligible.",
+        "Tie identity to the paper: address printed in the paper, publication list naming it, or author's own page naming it; verify current institutional/personal address and matching field/affiliation. A same-name staff page is insufficient. Never guess an address pattern.",
+        "For OEIS read the poser's OEIS user page before matching a namesake. Record source URL for each address and research connection.",
+        "Check living/recent-activity status using authoritative current pages, recent authored work or memorial evidence. No obituary found is not proof of life; inactivity/retirement is not proof of death. Exclude deceased or unresolved recipients; a living coauthor needs separate evidence.",
+        "Read official faculty/staff pages for institutional recipients. Verify professor (including assistant, associate, emeritus), other doctorate, student or unresolved status. Do not infer a degree from an address or signature.",
+        "Retain verified titles per current AGENTS.md: Dear Professor <Surname>, or Dear Dr. <Surname>, with every recipient named. In a mixed group retain each verified title; for a person without a verified title use their full name without inventing rank. No first-name exception without explicit user evidence. Historical no-period Dr and all-full-name mixed-group rules are superseded as recorded in SOURCES.md."
+      ]
+    },
+    {
+      "id": "merge",
+      "instructions": [
+        "Inspect all unsent related results for the same author(s) before drafting; consolidate one coherent letter instead of parallel cold drafts.",
+        "For a multi-paper merge, recipients must be confirmed eligible COMMON authors of EVERY included paper: intersect the per-paper author sets, never union them. If the intersection is empty, keep separate scoped letters. Other coauthors never receive a combined multi-paper letter solely because they authored one part.",
+        "Use one greeting and shared opening, a neutral subject naming the main result(s), connected result paragraphs with transitions, one closing (a genuinely open question, or the invitation closing when nothing genuinely open can be established) and one signature. Each result retains its own argument, primary citation and exact Lean formalization line; include every necessary note.",
+        "Materialize a new merged version, preserve the original versions, and atomically mark component items superseded before dispatch. A component with any attempted send cannot be merged away. Merging changes content and recipients, so rerun research and Claude review."
+      ]
+    },
+    {
+      "id": "compose",
+      "voice_pass": "After the content is final, rewrite the body once as a whole against managed/replies/voice.md. Preserve checked facts, decisions, attachment references, the approved opening and closing, and the Mathesis sentence beginning 'You may submit'. In self_audit, add one entry with check exactly 'voice pass' and a note giving (a) the letter's first prose sentence after the salutation, quoted, and the exact recipient message sentence it answers, or the posing-source sentence for an unsolicited first contact; (b) for each subsequent prose paragraph, the connective or reference that links it to the previous one; (c) every sentence stating project scale or method, quoted verbatim, or 'none'; (d) any sentence that could be read as accepting something the owner has not decided, quoted verbatim, or 'none'. Resolve any such wording before returning the packet.",
+      "instructions": [
+        "Write a short personal academic letter from the configured authors in three connected parts (the owner 2026-11-04). Opening paragraph: who we are, what trureturing does, and openly that the result came from it. Reference opening, adapt lightly to the recipient and keep its content: I am [author name] at [configured affiliations], and together with [coauthor name] at [coauthor affiliation] we build trureturing (https://github.com/the-omega-institute/trureturing), an AI orchestration system that connects knowledge across the literature: each result is linked to the questions, methods and papers it draws on, with credit to the people behind them (https://www.trureturing.org/). People set the directions, the AI searches, verifies and formalizes, and each new connection shows us where to push next. To be open about it, the result below came out of this system and was verified in Lean. The emphasis is connecting knowledge and pushing it further: do not showcase conjecture solving or counts of solved problems, link only the GitHub repository and https://www.trureturing.org/ (never the conjectures page), and mention Mathesis only in the closing invitation paragraph below (the owner 2026-11-19). Middle: connect the recipient's exact question to our concrete result, credit their methods and give useful checked mathematics.",
+        "Fresh author follow-up check before drafting (the owner 2026-11-19, a core first-contact screen): the note's prior-work check may be weeks old, so at drafting time search again specifically for the posing authors' own follow-up since the posing date: later arXiv versions of the posing paper, each posing author's subsequent preprints (arXiv author listings, Zenodo), their homepages and talk pages, and conference programmes, talk titles, abstracts and slides. Record the search scope, dates and findings in the evidence. If the authors (or anyone) have announced a solution of the posed statement, apply the value gate below; when the check cannot be completed, hold rather than send. Use the note's Prior-work check (Oracle Pro, the owner 2026-11-04) for the wording: first-known allows 'we found a proof/counterexample'; prior-exists requires naming the earlier work in the first mathematical paragraph and presenting ours as an alternative proof or extension; when the posed statement is already proved, tell the recipient that (they may not know), then lead with what the note adds: extensions, equality or classification results, corrections of sibling statements; do not make our alternative proof the headline or the subject line; never claim a first resolution the check does not support. Value gate for already-solved problems: when the posed statement is already proved, write to the posing authors only if the note adds something they do not already have, i.e. a result that does not follow directly from propositions or theorems in their own paper or their announced follow-up; if every addition is a direct consequence of their own results (name them), do not send a first contact and return the note for Mathesis/archive only, with that reason. Triviality gate for literal readings (operator review 2026-11-20, after a posing author replied that they already knew the literal answer and that the intended question was the restricted one): when the posed statement fails or holds for an elementary reason that its authors would see at once (an obvious invariant, a degenerate case, a parameter outside the evidently intended range), identify the evidently intended question (the restricted class, the reduced or nondegenerate objects the paper actually studies) and make the result on that question the headline, mentioning the literal reading in one clause only. If the note has nothing on the intended question, do not send a first contact: return it for further research with that reason.",
+        "Routing: first contacts use routing.mail=auto. The approved opening and tie-back closing about who we are, trureturing and the community do not make a first contact an owner letter. Use routing.mail=owner when the letter needs something beyond them: a personal commitment, meeting, invitation, collaboration terms, authorship or publication arrangements, or an answer about funding or plans. Always use routing.mail=owner if any To or Cc recipient is at the mailbox owner's university (the configured home domains and their subdomains).",
+        "The body carries a complete checkable argument when short: typically a 3–6 sentence proof sketch or an explicit counterexample with its verification. Use precise quantifiers and distinguish written proof, finite computations and actual Lean scope.",
+        "Plain-text email, no Markdown or LaTeX markup/backticks. Unicode mathematics in body AND subject: ψ, ρ, †, ⊗, ≤, ≥, ≠, ∑, √, ∞, ‖, ⟨ ⟩, × and true minus −; use available digit/letter subscripts and superscripts, e.g. x₁, ‖T‖₂², 2ⁿ. Otherwise one underscore without braces, e.g. ρ_AB. Write kets |ψ⟩ and sums as ∑ over r,s ∈ {0,1}; matrices can be (1/5)·(4 3; −3 4). Preserve mathematical meaning and every verified number. Write plainly: no em dashes or en dashes as sentence punctuation (use a comma, a period or \"and\"); hyphens inside words and minus signs are fine (the owner 2026-11-03).",
+        "For each result use one line exactly Lean formalization: <URL>. Direct GitHub .lean source, preferably a verified immutable commit on origin/dev; never an HTML proof page, (for verification), or an invented URL.",
+        "Read the linked file and verify commit ancestry on current origin/dev and the relevant declaration's trusted verification evidence. Require zero real sorry/admit placeholders and no unverified user axioms in the dependency closure. Comment/prose matches are false positives; lexical grep alone does not establish verification. Ordinary Lean foundation axioms Classical.choice, Quot.sound and propext are not user-inserted gaps. No fresh Lean builds in this workflow; absent trusted evidence means HOLD.",
+        "Do not silently replace an already verified Lean URL; a necessary correction creates a new version. Never label unbuilt or partially checked work kernel-verified in the letter.",
+        "Ending: one short sentence naming what genuinely remains open that ends exactly with closing_suffix_exact (e.g. ..., and we'd be glad to look at it together if you're interested.); when the source problem is fully settled and nothing genuinely open can be established, instead invite corrections or discussion in one sentence that also ends with closing_suffix_exact, adapting lightly: We'd welcome any corrections or comments on the argument, and we'd be glad to look at it together if you're interested. (the owner 2026-11-07). Then two closing paragraphs, reproduced exactly as given (the owner 2026-11-19; never say or imply that the recipient's work is already part of our map, graph or system). Closing paragraph 1: More broadly, we are building a connected knowledge graph of mathematics (our Mathematical Atlas: https://www.trureturing.org/atlas) with an open community, pairing human intuition with AI for searching, checking, and formalizing, through open mathematics initiatives. Closing paragraph 2: If you'd like to try the system behind the result above, we recently launched Mathesis ([configured Mathesis URL]). You may submit a short note or a conjecture bothering you, and our review pipeline maps it against existing formal libraries to suggest further directions and formalization targets and assigns a DOI to protect your priority and authorship. No work-plan paragraph or trivial next case.",
+        "Use the exact signature: [configured firstcontact_signature]. The final period in this instruction is not part of the signature; use signature_exact below. Use only the configured affiliation line.",
+        "Apart from the opening's single sentence that the result came out of trureturing and was verified in Lean, remove routine process/AI/pipeline text, including for verification, no fresh Lean build, kernel-checked and in the dossier. Keep verification scope in internal evidence. Answer direct process questions truthfully; preserve applicable manuscript disclosures. Do not promise personal commitments or invent collaboration agreement."
+      ]
+    },
+    {
+      "id": "note",
+      "instructions": [
+        "Normally use attachments: [] if the body carries the full short argument. Only when the argument is too long, provide a concise academic note, normally 1–2 pages, and mention it in one short sentence without replacing the useful body argument.",
+        "Read the matching note.tex whenever note.pdf is attached. Before editing, preserve a durable copy of the entire existing polish directory under the item/version history. Never edit the note of a HOLD letter merely to make its presentation pass.",
+        "Note authors: the configured authors. Use the configured author affiliations.",
+        "Use a Formal verification. paragraph of ONE sentence with a LaTeX href to the corresponding verified Lean URL. For multiple results identify their source links precisely within that sentence. Remove routine process/AI/pipeline sections; keep any applicable disclosure required by current user/manuscript instructions.",
+        "Check exact source references, mathematical correctness, quantifiers and note/body consistency. Build with two pdflatex passes in an item-owned scratch build directory, require no errors or undefined references, inspect rendered pages, then preserve note.tex and final note.pdf and record page count. Rendering/build tools are deployment dependencies, not supplied by the stdlib skeleton.",
+        "Delete only the completed reproducible build directory after preserving the final PDF, sources and concise validation evidence. Final PDF bytes, filename and media type are bound into the approved packet. Do not attach third-party source PDFs or raw build logs."
+      ]
+    },
+    {
+      "id": "submit_for_review",
+      "instructions": [
+        "Persist the final immutable packet and research.json. Research evidence identifies item, version, content_hash, workflow_hash, exact source quotation/location, convention check, independent calculation and limits, journal/latest-version/later-literature searches, novelty, closing-question check, each recipient's identity/address/title/life evidence, contact snapshot revision, Lean commit/path/declaration/zero-gap evidence, merge author intersection and note validation.",
+        "Return research-checked only when every required check is supported; otherwise held with a precise reason, evidence, owner and release condition. No skipped check may be described as verified.",
+        "Enqueue this version for Claude. Codex cannot approve itself, patch an approved packet, create send authorization, or invoke a transport. A bounce is revised as a new version; a hold requires explicit release evidence.",
+        "Final concise report: item PASS-to-review|HOLD — core verification and limit; recipients/greeting; changes; note y/n and page count. PASS-to-review is not Claude approval or permission to send."
+      ]
+    }
+  ],
+  "signature_exact": "[configured firstcontact_signature]",
+  "closing_suffix_exact": "we'd be glad to look at it together if you're interested.",
+  "hold_codes": [
+    "wrong_math",
+    "trivial",
+    "straw_man",
+    "wrong_domain",
+    "already_settled",
+    "unverifiable_central_claim",
+    "literature_unavailable",
+    "no_current_confirmed_author",
+    "unresolved_life_or_identity",
+    "declined",
+    "active_reply_thread",
+    "duplicate_or_uncertain_send",
+    "user_decision",
+    "stale_policy",
+    "lean_not_on_dev_or_gapped",
+    "no_genuinely_open_question",
+    "note_invalid"
+  ],
+  "artifact_contract": {
+    "packet": "Versioned canonical channel envelope; see queue.py validate_packet and tests/fixtures/letter.json. No Mail IDs or local absolute attachment paths.",
+    "research": "Report references immutable item/version/content/workflow, with evidence for all checks above. Skeleton stores a report reference; production validator must validate its full schema and evidence.",
+    "review": "Claude JSON schema and trust boundary in review.md; only PASS on exact bytes may approve.",
+    "policy_digest": "Use queue.load_workflow_digests(): SHA256 of canonical JSON containing this workflow and a review manifest with the exact UTF-8 shared review.md string. Any policy edit requires rechecking and new review."
+  },
+  "note_pipeline": {
+    "every_resolved_result_requires_short_note": true,
+    "reuse_existing_note": true,
+    "producer": "managed research/shortnote task",
+    "publication": "scripts/short_notes/service.py; explicit selection required",
+    "mailbox": "microsoft-graph; production resumed 2026-11-01; routine mail requires exact independent review, fresh mailbox checks and actual Sent readback; user-decision letters remain owner drafts"
+  },
+  "registry": {
+    "authority": "docs/REGISTRY.md; tables/refusals.json (3), contacts.json (1), positive.json (2)",
+    "order": "Check every intended To/Cc address and verified alias in table 3. Register an eligible person in table 1 before admission; inputs.recipient_emails must cover the complete To/Cc set. Existing contacted people continue their existing thread, with no repeat cold contact.",
+    "updates": "A proposed draft is not a sent event. Only an actual sent receipt updates sent status. Every incoming response updates table 1; exact positive feedback also enters table 2 with evidence and context; refusals update 3 and 1. Praise never clears a boundary.",
+    "concurrency": "CMA proposes an index patch with evidence; only the operator/coordinator reconciles and commits shared tables. Agents must not push shared state concurrently.",
+    "local_only": "Keep local mail source, environments and calculations local. The remote map stores relative workspace pointers. Only explicitly selected CMA inputs and required task deliverables use private Releases; never mirror mail."
+  }
+}

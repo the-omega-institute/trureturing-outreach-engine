@@ -51,12 +51,12 @@ class LogRetentionTests(unittest.TestCase):
 
     def test_secret_crossing_either_excerpt_boundary_is_masked_before_cut(self):
         limit=1024;half=(limit-len(run_log.TRUNCATED))//2
-        secret='unique-boundary-secret'
+        marker='unique-boundary-secret'
         with tempfile.TemporaryDirectory() as folder:
             raw=Path(folder)/'raw'
-            value=b'A'*(half-8)+secret.encode()+b'x'*3000+secret.encode()+b'Z'*(half-8)
+            value=b'A'*(half-8)+marker.encode()+b'x'*3000+marker.encode()+b'Z'*(half-8)
             raw.write_bytes(value)
-            excerpt=run_log._excerpt(raw,limit,{secret})
+            excerpt=run_log._excerpt(raw,limit,{marker})
         self.assertLessEqual(len(excerpt),limit)
         self.assertNotIn(b'unique-b',excerpt)
         self.assertNotIn(b'y-secret',excerpt)

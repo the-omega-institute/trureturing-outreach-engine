@@ -452,11 +452,11 @@ class RetentionBatchTests(unittest.TestCase):
                 finally: ledger.tasks.close()
 
     def test_s1_registered_multiline_secret_masks_native_crlf_and_excerpt_boundaries(self):
-        secret = 'MULTILINE-SECRET-FIRST\nMULTILINE-SECRET-LAST'
-        wire = secret.replace('\n', '\r\n').encode()
+        marker = 'MULTILINE-SECRET-FIRST\nMULTILINE-SECRET-LAST'
+        wire = marker.replace('\n', '\r\n').encode()
         public = io.StringIO(); captured = []
         def entry():
-            run_log.register_secret(secret)
+            run_log.register_secret(marker)
             os.write(1, wire + b'\n')
         with patch.dict(os.environ, {'OUTREACH_PUBLIC_LOG':'1'}), \
                 patch.object(run_log, '_upload', side_effect=lambda path,tick:captured.append(path.read_bytes())), \
@@ -467,7 +467,7 @@ class RetentionBatchTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as root:
             raw = Path(root)/'raw'
             raw.write_bytes(b'A'*(half-10)+wire+b'x'*3000+wire+b'Z'*(half-10))
-            excerpt = run_log._excerpt(raw, limit, {secret})
+            excerpt = run_log._excerpt(raw, limit, {marker})
         self.assertNotIn(b'MULTILINE-', excerpt)
         self.assertNotIn(b'ECRET-LAST', excerpt)
         self.assertLessEqual(len(excerpt), limit)

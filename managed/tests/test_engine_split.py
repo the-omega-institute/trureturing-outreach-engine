@@ -165,18 +165,18 @@ class HostedShortNoteImportTest(unittest.TestCase):
 
 
 class MathesisOnceTest(unittest.TestCase):
-    ACCOUNT = 'e1327962@u.nus.edu'
+    ACCOUNT = 'owner@example.invalid'
     PARAGRAPH = ("If you'd like to try the system behind the result above, we recently launched Mathesis "
                  "(https://mathesis-omega-research.apps.chrono-ai.fun/).")
 
-    def sent(self, text, at='2026-11-20T10:00:00Z', mid='<a@u.nus.edu>', html=False):
+    def sent(self, text, at='2026-11-20T10:00:00Z', mid='<a@example.invalid>', html=False):
         return {'from': {'emailAddress': {'address': self.ACCOUNT}}, 'isDraft': False,
                 'sentDateTime': at, 'internetMessageId': mid,
                 'body': {'contentType': 'html' if html else 'text', 'content': text}}
 
     def test_own_paragraph_counts_and_quoted_history_does_not(self):
         from managed.mailbox import mathesis_introduced
-        quoted = self.sent('Dear Professor X,\n\nThanks.\n\nFrom: Wenlin\n' + self.PARAGRAPH)
+        quoted = self.sent('Dear Professor X,\n\nThanks.\n\nFrom: Owner\n' + self.PARAGRAPH)
         self.assertIsNone(mathesis_introduced([quoted], self.ACCOUNT))
         incoming = {**self.sent(self.PARAGRAPH), 'from': {'emailAddress': {'address': 'x@example.org'}}}
         self.assertIsNone(mathesis_introduced([incoming], self.ACCOUNT))
@@ -192,12 +192,12 @@ class MathesisOnceTest(unittest.TestCase):
         from managed.mailbox import GraphMailbox
         from managed.queue import GateError
         box = GraphMailbox.__new__(GraphMailbox)
-        box.settings = {'team_addresses': ['auric@aelf.io']}
+        box.settings = {'team_addresses': ['team@example.invalid']}
         earlier = {**self.sent('Dear X,\n\n' + self.PARAGRAPH, mid='<earlier>'), 'id': 'm1'}
         box.recipient_history = lambda recipient: [{'folder': 'sentitems', 'id': 'm1', 'isDraft': False,
                                                     'conversationId': 'other'}]
         box.message = lambda identity: earlier
-        packet = {'body': 'Dear X,\n\n' + self.PARAGRAPH, 'to': ['x@example.org'], 'cc': ['auric@aelf.io'],
+        packet = {'body': 'Dear X,\n\n' + self.PARAGRAPH, 'to': ['x@example.org'], 'cc': ['team@example.invalid'],
                   'thread_id': 'current'}
         with self.assertRaisesRegex(GateError, 'Mathesis was already introduced'):
             box._require_mathesis_not_introduced(packet, [], self.ACCOUNT)

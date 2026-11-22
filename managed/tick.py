@@ -174,13 +174,18 @@ def allowed(ledger,lane,key):
     return tick.allow(lane,key) if tick else True
 
 
-def units(ledger,lane,rows,key=lambda r:r['id'],timed=True,preserve_order=False):
+def units(ledger,lane,rows,key=lambda r:r['id'],timed=True,preserve_order=False,keep_pending=False):
+    """Yield the rows the budget allows; the rest become the lane's deferred work.
+
+    keep_pending: a later pass over the same lane in this tick adds to the
+    deferred keys of the earlier pass instead of replacing them.
+    """
     tick=getattr(ledger,'tick',None)
     if tick:
         priority={k:i for i,k in enumerate(tick.previous.get(lane,[]))}
         if not preserve_order:
             rows=sorted(rows,key=lambda r:priority.get(key(r),len(priority)))
-        tick.pending[lane]=[]
+        if not keep_pending:tick.pending[lane]=[]
     for row in rows:
         with unit(ledger,lane,key(row),lane if timed else None) as ready:
             if ready:yield row

@@ -254,9 +254,10 @@ class TickBudgetTests(unittest.TestCase):
             calls.append('sent-events')
             raise RuntimeError('Synthetic mailbox failure')
         with patch('managed.sent_events.reconcile',side_effect=fail), \
-                patch('managed.mathesis_delivery.advance',side_effect=lambda *args:calls.append('mathesis')):
+                patch('managed.mathesis_delivery.advance',side_effect=lambda *args,again=False,**kwargs:
+                      calls.append('mathesis-again' if again else 'mathesis')):
             log,status=self.run_tick(mail=lambda *args:calls.append('delivery'))
-        self.assertEqual(calls,['delivery','sent-events','mathesis'])
+        self.assertEqual(calls,['delivery','sent-events','mathesis','mathesis-again'])
         self.assertIn('"status": "error"',log)
         self.assertIn('tick-phase final-save',log)
         self.assertIn({'connector':'sent-events','error':'RuntimeError'},status['connector_errors'])

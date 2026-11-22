@@ -74,7 +74,7 @@ def phase_timing(name, seconds, count):
         'restore', 'ingest', 'oracle-capacity', 'mailbox-intake', 'pipeline',
         'credit-recovery', 'execution-recovery', 'pool-health', 'pool-idle',
         'approved', 'advance', 'firstcontact-history', 'automation', 'delivery',
-        'sent-events', 'mathesis', 'formalization-requests', 'prior-work-issues',
+        'sent-events', 'mathesis', 'mathesis-delivery', 'formalization-requests', 'prior-work-issues',
         'maintenance', 'owner-drafts', 'final-save',
     }:
         emit(f'tick-phase {name} {seconds:.3f}s units={count:d}')

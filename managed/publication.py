@@ -100,7 +100,8 @@ def identities(row, metadata=None):
     return values - {None}
 
 
-def exclusion(row, tasks, table, decision, metadata=None, *, result_id=None):
+def exclusion_scope(row, tasks, metadata=None, *, result_id=None):
+    """The source rows, identities and related notes the exclusion check reads."""
     parents = lineage(row, tasks)
     selected = set().union(*(identities(r) for r in parents), identities(row, metadata))
     if result_id:
@@ -110,6 +111,81 @@ def exclusion(row, tasks, table, decision, metadata=None, *, result_id=None):
     if result_id:
         # Public issue filing is result-wide, including holds pinned to another note for that result.
         selected.update(task['id'] for task in related)
+    return parents, selected, related
+
+
+def exclusion(row, tasks, table, decision, metadata=None, *, result_id=None):
+    return excluded_by(*exclusion_scope(row, tasks, metadata, result_id=result_id), table, decision, metadata)
+
+
+def exclusion_inputs(scope, table, decision, metadata=None):
+    """Digest every value excluded_by() reads for one scope.
+
+    The lineage, the selected identities, each source/related row's review
+    verdict and joint-work fields, the holds table and the decision determine
+    the answer. Creators come from the note metadata, which the exact result
+    fixes, so callers compare the result hash separately.
+    """
+    parents, selected, related = scope
+
+    def facts(task):
+        data, inputs = task['data'], task['request']['inputs']
+        return [task['id'], data.get('review', {}).get('verdict'),
+                [[obj.get('joint_work'), obj.get('authorship')] for obj in (inputs, data, data.get('result', {}))]]
+
+    note = {'id': metadata['id'], 'problem_ids': metadata['problem_ids']} if metadata else None
+    return digest({'selected': sorted(canonical(value) for value in selected),
+                   'parents': [facts(r) for r in parents],
+                   'related': [facts(r) for r in related], 'holds': table.get('holds', []),
+                   'decision': decision, 'note': note})
+
+
+def check_exclusion(row, tasks, table, decision, metadata=None):
+    """Return the exclusion reason and, when excluded, the digest of its inputs."""
+    scope = exclusion_scope(row, tasks, metadata)
+    reason = excluded_by(*scope, table, decision, metadata)
+    if not reason:
+        return None, None
+    inputs = {'exclusion_inputs': exclusion_inputs(scope, table, decision, metadata)}
+    if metadata:
+        # Recomputing the digest needs the note identities the package supplied.
+        inputs['exclusion_note'] = {'id': metadata['id'], 'problem_ids': metadata['problem_ids']}
+    return reason, inputs
+
+
+def exclusion_unchanged(old, row, tasks, table, decision, result_hash, decision_hash):
+    """True while nothing the recorded exclusion read has changed.
+
+    A lifted hold, a changed verdict, joint-work field, lineage or related
+    note, a new decision or a new result changes the digest and is evaluated
+    again. Exclusions recorded before the digest existed are evaluated once.
+    """
+    if not (old.get('phase') == 'excluded' and old.get('exclusion_inputs')
+            and old.get('result_hash') == result_hash and old.get('decision_hash') == decision_hash):
+        return False
+    note = old.get('exclusion_note')
+    try:
+        return exclusion_inputs(exclusion_scope(row, tasks, note), table, decision, note) == old['exclusion_inputs']
+    except (ValueError, KeyError, TypeError, AttributeError):
+        return False
+
+
+class Snapshot:
+    """Read-only task view over rows already loaded for this pass."""
+
+    def __init__(self, rows):
+        self.rows = rows
+        self.by_id = {row['id']: row for row in rows}
+
+    def get(self, task_id):
+        require(task_id in self.by_id, 'Unknown task')
+        return self.by_id[task_id]
+
+    def all(self):
+        return self.rows
+
+
+def excluded_by(parents, selected, related, table, decision, metadata=None):
     for hold in table.get('holds', []):
         targets = {hold.get(k) for k in ('legacy_id', 'task_id', 'note_id', 'id')}
         targets.update(hold.get('problem_ids', []))
@@ -326,11 +402,16 @@ def advance(ledger, config, root, folder, gh=None, secret=None):
     rows.sort(key=lambda r: (r['id'] not in correspondence, not r['request']['inputs'].get('owner_ids'),
                              deferred.get(r['id'], len(deferred)), r['kind'] != 'mathesis'))
     decision_hash = digest(decision)
+    snapshot = Snapshot(all_rows)
     attempts, retries = [], []
     for row in rows:
         old = row['data'].get('publication_loop', {})
         result_hash = digest(row['data']['result'])
         if old.get('phase') == 'queued' and old.get('result_hash') == result_hash:
+            continue
+        # Re-recording an unchanged exclusion took ~5 s per row on every tick
+        # (2026-11-23) and starved Mathesis delivery in the same stage.
+        if exclusion_unchanged(old, row, snapshot, table, decision, result_hash, decision_hash):
             continue
         binding = [result_hash, decision_hash]
         retry_at = recheck.next_at(ledger.tasks, 'publication', row['id'], binding)
@@ -365,9 +446,9 @@ def advance(ledger, config, root, folder, gh=None, secret=None):
                  'decision_ref': decision['decision_ref'], 'decision_hash': decision_hash}
         step = 'exclusion'
         try:
-            reason = exclusion(row, ledger.tasks, table, decision)
+            reason, inputs = check_exclusion(row, ledger.tasks, table, decision)
             if reason:
-                record(ledger, row['id'], {**state, 'phase': 'excluded', 'reason': reason})
+                record(ledger, row['id'], {**state, 'phase': 'excluded', 'reason': reason, **inputs})
                 continue
             step = 'source-gate'
             source_gate(row, ledger.tasks, root)
@@ -382,9 +463,9 @@ def advance(ledger, config, root, folder, gh=None, secret=None):
                 if key in queued:
                     continue
                 step = 'exclusion'
-                reason = exclusion(row, ledger.tasks, table, decision, metadata)
+                reason, inputs = check_exclusion(row, ledger.tasks, table, decision, metadata)
                 if reason:
-                    record(ledger, row['id'], {**state, 'phase': 'excluded', 'reason': reason})
+                    record(ledger, row['id'], {**state, 'phase': 'excluded', 'reason': reason, **inputs})
                     continue
                 state.update(note_id=metadata['id'], revision=metadata['revision'],
                              problem_ids=metadata['problem_ids'], creators=metadata['creators'])

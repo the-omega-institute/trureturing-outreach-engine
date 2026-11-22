@@ -141,6 +141,26 @@ def ledger_agents(rows):
     return frozenset(found)
 
 
+def readoption_refusal(entry, rows):
+    """Why a cleanup-list Sandbox may not return to the pool, or None.
+
+    Only a soft rotation whose retirement CMA declined (other Agents or
+    Workspaces remain) is still a usable Sandbox. Retired or retiring,
+    failed, corrupt and stalled Sandboxes stay on the cleanup list, as does
+    one with an unresolved cleanup error or a live Agent of ours.
+    """
+    cleanup = entry.get('cleanup') or {}
+    if not entry.get('rotated') or entry.get('state') != 'retiring':
+        return 'not a rotated Sandbox'
+    if entry.get('corrupt') or entry.get('stalled'):
+        return 'corrupt or stalled'
+    if cleanup.get('sandbox_retired') is not False or not cleanup.get('reason') or entry.get('cleanup_error'):
+        return 'CMA has not retained it'
+    if any(live_reference(row, entry) for row in rows):
+        return 'a live Agent of ours references it'
+    return None
+
+
 def summary(tasks, rows=None):
     record=tasks.db.execute("SELECT payload FROM pipeline_state WHERE key='sandbox_pool'").fetchone()
     rows=tasks.all() if rows is None else rows
@@ -322,8 +342,27 @@ class SandboxPool:
                 'idle' if entry.get('state') in {'active','pausing'} and
                 now-entry['idle_since']>=self.idle_seconds else None)
         if not reason:return False
+        if reason=='idle' and self.awaited(entry,rows):return False
         self.failed_entry(entry['sandbox_id'],entry.get('workspace_id'),rotated=reason)
         return True
+
+    def awaited(self, entry, rows):
+        """The group's last usable Sandbox is not idle while its queued work waits.
+
+        Placement can fall behind for longer than the idle grace (2026-11-23: the
+        advance stage ran out of tick budget). Once the quota evidence expired,
+        the notes group's only Sandbox was rotated 'idle' beside 258 queued
+        tasks and the account could not create a replacement.
+        A peer counts only once this health pass has observed it active: its
+        saved state may predate a failure found later in the same pass.
+        """
+        if self.paused:return False
+        group=entry.get('group') if self.group_limits else None
+        if any(e is not entry and (e.get('group') if self.group_limits else None)==group and
+               e.get('state')=='active' and not self.draining(e) and not e.get('intent') and
+               (self.observed.get(e['sandbox_id']) or {}).get('status')=='active' for e in self.entries):
+            return False
+        return any(r['state']=='queued' and self.kinds.get(r['kind']) and self.group(r)==group for r in rows)
 
     def cleanup_entry(self, cma, entry, status, rows, now):
         sandbox_id=entry['sandbox_id']

@@ -318,8 +318,8 @@ def own_text(text):
 def mathesis_introduced(messages, account):
     """Earliest Sent message whose own text already carries the Mathesis link.
 
-    Wenlin 2026-11-22: each correspondent is introduced to Mathesis once; later
-    letters must not append the standing paragraph again.
+    Owner decision 2026-11-22: each correspondent is introduced to Mathesis
+    once; later letters must not append the standing paragraph again.
     """
     found = []
     for message in messages:

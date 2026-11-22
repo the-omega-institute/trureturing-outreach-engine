@@ -444,12 +444,21 @@ def migrate_legacy_deliveries(ledger, config, root, folder, client, secret, limi
     return summary
 
 
-def advance(ledger, config, root, folder, client=None, secret=None, note_gh=None):
-    """Persist intent, deliver, GET the receipt, then finish. Never await review."""
+def advance(ledger, config, root, folder, client=None, secret=None, note_gh=None, *, attempted=None, again=False):
+    """Persist intent, deliver, GET the receipt, then finish. Never await review.
+
+    The tick calls this twice around publication with one `attempted` set: the
+    first pass takes existing deliveries, the second (`again`) only rows not
+    yet given a slot. deliveries_per_tick bounds both passes together. The
+    legacy migration has no budget checks of its own, so it stays after
+    publication as before: in the second pass, or in a single plain call.
+    """
     settings = config.get('mathesis', {})
     test = settings.get('test_only') is True
     require(not test or getattr(ledger.releases, 'tag', None) == TEST_TAG,
             'Synthetic acceptance cannot operate on the production ledger')
+    slots = max(0, settings.get('deliveries_per_tick', 4) - len(attempted or ()))
+    migrate = attempted is None or again
     active = not config['paused'] and config['kinds'].get('mathesis') and settings.get('mode') == 'deliver'
     secret = secret or os.environ.get('OUTREACH_REVIEW_KEY')
     identity_verified = False
@@ -457,7 +466,7 @@ def advance(ledger, config, root, folder, client=None, secret=None, note_gh=None
     revisions = note_revisions.Revisions(ledger.tasks, all_rows)
     legacy_candidates = [r for r in all_rows if _legacy_migration_state(r) is not None
                          and not revisions.reason(r)]
-    if active and legacy_candidates and not test:
+    if active and legacy_candidates and not test and migrate:
         if client is None:
             token = os.environ.get('MATHESIS_ACCESS_TOKEN') or os.environ.get('CMA_ACCESS_TOKEN')
             require(token, 'Mathesis submitting identity is unavailable')
@@ -481,17 +490,20 @@ def advance(ledger, config, root, folder, client=None, secret=None, note_gh=None
         return (active and value.get('phase') == 'delivered'
                 and envelope.get('metadata', {}).get('schema') == 'mathesis.pre-reviewed-delivery.v1'
                 and value.get('public_link', {}).get('phase') != 'queued')
-    rows = [r for r in all_rows if r['kind'] == 'mathesis' and needs_delivery(r)]
+    rows = [r for r in all_rows if r['kind'] == 'mathesis' and needs_delivery(r)
+            and r['id'] not in (attempted or ())]
     correspondence = linked_contacts(all_rows, root, config) if rows else {}
     # New deliveries before re-polling already delivered collections.
     rows.sort(key=lambda r: (r['id'] not in correspondence,
                              r['data'].get('mathesis_delivery', {}).get('phase') == 'delivered', r['updated']))
-    batch = rows[:settings.get('deliveries_per_tick', 4)]
+    batch = rows[:slots]
+    if attempted is not None:
+        attempted.update(r['id'] for r in batch)
     if correspondence:
         tick = getattr(ledger, 'tick', None)
         deferred = {key: i for i, key in enumerate(tick.previous.get('mathesis', []))} if tick else {}
         batch.sort(key=lambda r: (r['id'] not in correspondence, deferred.get(r['id'], len(deferred))))
-    for original in units(ledger, 'mathesis', batch, preserve_order=bool(correspondence)):
+    for original in units(ledger, 'mathesis', batch, preserve_order=bool(correspondence), keep_pending=again):
         row = ledger.tasks.get(original['id'])
         delivery = copy.deepcopy(row['data']['mathesis_delivery'])
         envelope = delivery.get('collection_envelope', delivery['envelope'])

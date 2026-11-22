@@ -483,8 +483,10 @@ def advance(ledger, config, root, folder, client=None, secret=None, note_gh=None
                 and value.get('public_link', {}).get('phase') != 'queued')
     rows = [r for r in all_rows if r['kind'] == 'mathesis' and needs_delivery(r)]
     correspondence = linked_contacts(all_rows, root, config) if rows else {}
-    rows.sort(key=lambda r: (r['id'] not in correspondence, r['updated']))
-    batch = rows[:4]
+    # New deliveries before re-polling already delivered collections.
+    rows.sort(key=lambda r: (r['id'] not in correspondence,
+                             r['data'].get('mathesis_delivery', {}).get('phase') == 'delivered', r['updated']))
+    batch = rows[:settings.get('deliveries_per_tick', 4)]
     if correspondence:
         tick = getattr(ledger, 'tick', None)
         deferred = {key: i for i, key in enumerate(tick.previous.get('mathesis', []))} if tick else {}

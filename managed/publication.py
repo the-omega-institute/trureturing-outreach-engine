@@ -344,8 +344,11 @@ def advance(ledger, config, root, folder, gh=None, secret=None):
         else:
             attempts.append((row, binding, False))
     if retries:
-        _, row, binding = min(retries, key=lambda item: item[0])
-        attempts.append((row, binding, True))
+        # New rows keep precedence; then several due retries, oldest due
+        # first, so a backlog of failures clears instead of one per tick.
+        retries.sort(key=lambda item: item[0])
+        limit = config['mathesis'].get('max_publication_retries_per_tick', 3)
+        attempts += [(row, binding, True) for _, row, binding in retries[:limit]]
 
     remaining = config['mathesis'].get('max_publications_per_tick', 2)
     first_failures = 0

@@ -1,8 +1,8 @@
 name: Delivery
 
 on:
-  schedule:
-    - cron: '19 * * * *'
+  # Scheduled delivery runs as the Coordinator's delivery job; a separate
+  # schedule here would queue in the single-writer group and cancel a tick.
   workflow_dispatch:
     inputs:
       action:

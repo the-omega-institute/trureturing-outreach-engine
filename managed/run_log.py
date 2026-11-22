@@ -115,7 +115,10 @@ def public_run(entry, action, *, tick=False, persist=True):
             detailed = log.read()
             for secret in sorted(secrets, key=len, reverse=True):
                 detailed = detailed.replace(secret, '[redacted]')
-            path.write_text(detailed, encoding='utf-8')
+            # GitHub rejects empty release assets, so a quiet successful step
+            # still records which action ran, when, and how it ended.
+            header = f'{action} {stamp} incident-{incident} exit={result}\n'
+            path.write_text(header + detailed, encoding='utf-8')
             if persist:
                 try:
                     _upload(path, tick)

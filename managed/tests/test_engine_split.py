@@ -124,6 +124,16 @@ class PublicLogTests(unittest.TestCase):
             self.assertNotIn(value, public)
             self.assertIn(value, detailed[0])
 
+    def test_quiet_success_still_uploads_a_nonempty_private_log(self):
+        public = io.StringIO()
+        sizes = []
+        with patch.dict(os.environ, {'OUTREACH_PUBLIC_LOG': '1'}), \
+                patch.object(run_log, '_upload', side_effect=lambda path, tick: sizes.append(path.stat().st_size)), \
+                redirect_stdout(public), redirect_stderr(public):
+            self.assertEqual(run_log.public_run(lambda: 0, 'checkout'), 0)
+        self.assertGreater(sizes[0], 0)
+        self.assertRegex(public.getvalue(), r'^checkout complete [\d.]+s\n$')
+
     def test_uncaught_exception_has_an_opaque_incident_and_private_traceback(self):
         public = io.StringIO()
         detailed = []

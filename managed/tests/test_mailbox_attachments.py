@@ -29,6 +29,11 @@ def message(identity, conversation='blocked'):
 
 
 class AttachmentReleases(Releases, GitHubReleases):
+    def prune_snapshots(self,keep,protect=()):
+        # Control snapshots use the in-memory adapter; run() below models only
+        # the separate task-attachment Releases API.
+        return 0
+
     def __init__(self):
         super().__init__()
         self.repo = 'fixture/repo'

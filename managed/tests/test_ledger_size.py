@@ -217,7 +217,8 @@ class CheckpointTests(unittest.TestCase):
         self.remote.ensure=lambda:None
         pruned=[]
         def prune(keep,protect):
-            self.assertEqual(self.observed()['state'],'held')
+            self.assertEqual(protect,{self.remote.body['snapshot']['name']})
+            self.assertEqual(self.observed(),self.ledger.tasks.get('job-1'))
             pruned.append((keep,protect))
         self.remote.prune_snapshots=prune
         def progress(*args,**kwargs):
@@ -242,7 +243,7 @@ class CheckpointTests(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError,'tick interrupted'):control.main(args)
             else:control.main(args)
         self.assertEqual(self.observed()['state'],'held')
-        self.assertEqual(len(pruned),0 if fail else 1)
+        self.assertEqual(len(pruned),2 if fail else 3)
         self.assertEqual(self.remote.uploads,3)  # Includes the one-time workflow migration checkpoint.
 
     def test_main_forces_final_snapshot_before_pruning(self):self.run_main_tick()

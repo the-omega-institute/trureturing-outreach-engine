@@ -45,7 +45,12 @@ class CorrespondenceTests(PoolFixture, unittest.TestCase):
         return self.ledger.tasks.update(row['id'], row['revision'], state, data)
 
     def linked(self):
-        return correspondence.linked_contacts(self.ledger.tasks.all(), self.root, self.cfg)
+        rows=self.ledger.tasks.all();projected=self.ledger.tasks.lane_rows()
+        linked=correspondence.linked_contacts(rows,self.root,self.cfg)
+        compact=correspondence.linked_contacts(projected,self.root,self.cfg)
+        self.assertEqual(compact,linked)
+        self.assertEqual(lanes.summary(projected,self.cfg,compact),lanes.summary(rows,self.cfg,linked))
+        return linked
 
     def test_classifies_table_evidence_and_open_reply_by_exact_problem_id(self):
         self.queue('a-conversation', problem_ids=['discussion'])

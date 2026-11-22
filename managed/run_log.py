@@ -2,6 +2,7 @@
 from contextlib import ExitStack, redirect_stderr, redirect_stdout
 from contextvars import ContextVar
 from datetime import datetime, timezone
+import hashlib
 import os
 from pathlib import Path
 import re
@@ -15,10 +16,47 @@ from .location import hosted
 
 OUTPUT = ContextVar('public_output', default=None)
 SECRETS = ContextVar('private_secrets', default=None)
+PRIVATE_LOG_BYTES = 2 * 1024 * 1024
+TICK_LOGS_KEPT = 3
+RUN_LOGS_KEPT = 3  # Runs per workflow, including every step log in each run.
+_LOCAL_RUN = uuid4().hex[:24]
+TRUNCATED = b'\n[... private log truncated; beginning and end retained ...]\n'
 
 
 def enabled():
     return hosted() or os.environ.get('OUTREACH_PUBLIC_LOG', '0') == '1'
+
+
+def coordinator_run_id():
+    """Share one retention unit across the separate Actions step processes."""
+    run = os.environ.get('GITHUB_RUN_ID')
+    if run:
+        return hashlib.sha256((run+':'+os.environ.get('GITHUB_RUN_ATTEMPT','1')).encode()).hexdigest()[:24]
+    return _LOCAL_RUN
+
+
+LOG_NAME = re.compile(r'(?:run|tick)-log-\d{8}T\d{12}Z-(?:workflow-([a-f0-9]{24})-)?run-([a-f0-9]{24})-[a-f0-9]{12}\.log')
+
+
+def log_run_id(name):
+    match = LOG_NAME.fullmatch(name)
+    # Legacy logs have no verified run binding; never group them by guesswork.
+    return match[2] if match else name
+
+
+def log_workflow_id(name):
+    match = LOG_NAME.fullmatch(name)
+    # Historical names use the shared migration window until they age out.
+    return match[1] if match else None
+
+
+def log_name(*, tick=False):
+    stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
+    workflow = (os.environ.get('GITHUB_WORKFLOW_REF') or '').split('@',1)[0]
+    workflow = workflow or os.environ.get('GITHUB_WORKFLOW') or 'local'
+    workflow_id = hashlib.sha256(workflow.encode()).hexdigest()[:24]
+    prefix = 'tick-log' if tick else 'run-log'
+    return f'{prefix}-{stamp}-workflow-{workflow_id}-run-{coordinator_run_id()}-{uuid4().hex[:12]}.log'
 
 
 def register_secret(value):
@@ -53,8 +91,43 @@ def _upload(path, tick):
     releases = Releases()
     releases.require_private()
     releases.ensure()
-    releases.upload(path)
-    releases.prune_logs(200 if tick else 40, tick=tick)
+    # Reserve space before uploading, including at the release's asset cap.
+    try:releases.prune_logs(TICK_LOGS_KEPT if tick else RUN_LOGS_KEPT, tick=tick,incoming=path.name)
+    except Exception as exc:print('connector-error log-prune '+type(exc).__name__,file=sys.stderr)
+    releases.upload_retained(path)
+
+
+def _excerpt(raw, limit, secrets):
+    """Read a bounded head/tail, redacting before cutting either boundary."""
+    variants = set()
+    for secret in secrets:
+        normalized = secret.replace('\r\n','\n')
+        variants.update(value.encode('utf-8') for value in
+                        (secret, normalized, normalized.replace('\n','\r\n')) if value)
+    def redact(value):
+        for encoded in sorted(variants,key=len,reverse=True):
+            # Equal byte lengths keep the head/tail boundary fixed even when
+            # several secrets cross it. Mask before slicing off the overlap.
+            replacement=(b'[redacted]'+b'*'*len(encoded))[:len(encoded)]
+            value=value.replace(encoded,replacement)
+        return value.decode('utf-8',errors='replace').encode('utf-8')
+    def head(value,size):return value[:size].decode('utf-8',errors='ignore').encode('utf-8')
+    def tail(value,size):return value[-size:].decode('utf-8',errors='ignore').encode('utf-8')
+    # Read enough overlap to redact secrets crossing an excerpt boundary.
+    overlap=max(map(len,variants),default=0)
+    with raw.open('rb') as stream:
+        size=stream.seek(0,os.SEEK_END);stream.seek(0)
+        if size<=limit:
+            value=redact(stream.read(limit))
+            if len(value)<=limit:return value
+            beginning=ending=value
+        else:
+            half=(limit-len(TRUNCATED))//2
+            beginning=redact(stream.read(half+overlap))
+            stream.seek(max(0,size-half-overlap))
+            ending=redact(stream.read(half+overlap))
+        half=(limit-len(TRUNCATED))//2
+        return head(beginning,half)+TRUNCATED+tail(ending,half)
 
 
 def public_run(entry, action, *, tick=False, persist=True):
@@ -62,10 +135,9 @@ def public_run(entry, action, *, tick=False, persist=True):
     if not enabled() or OUTPUT.get() is not None:
         return entry()
     started = time.monotonic()
-    incident = uuid4().hex[:12]
-    stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
-    prefix = 'tick-log' if tick else 'run-log'
-    name = f'{prefix}-{stamp}-{incident}.log'
+    name = log_name(tick=tick)
+    stamp = name.split('-')[2]
+    incident = name.rsplit('-',1)[1][:-4]
     diagnostic = None
     result = 0
     with tempfile.TemporaryDirectory() as directory:
@@ -111,14 +183,12 @@ def public_run(entry, action, *, tick=False, persist=True):
                         kind = 'Exception'
                     diagnostic = f'{kind} incident-{incident}'
                     result = exc.code if isinstance(exc, SystemExit) and isinstance(exc.code, int) else 1
-            log.seek(0)
-            detailed = log.read()
-            for secret in sorted(secrets, key=len, reverse=True):
-                detailed = detailed.replace(secret, '[redacted]')
+            sys.stdout.flush();sys.stderr.flush();log.flush()
             # GitHub rejects empty release assets, so a quiet successful step
             # still records which action ran, when, and how it ended.
             header = f'{action} {stamp} incident-{incident} exit={result}\n'
-            path.write_text(header + detailed, encoding='utf-8')
+            header=header.encode('utf-8')
+            path.write_bytes(header + _excerpt(raw,PRIVATE_LOG_BYTES-len(header),secrets))
             if persist:
                 try:
                     _upload(path, tick)

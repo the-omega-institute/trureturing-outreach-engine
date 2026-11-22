@@ -327,6 +327,8 @@ def resolve(row, mailbox, ledger, root):
                                     'message_id': latest['internetMessageId'], 'evidence_ref': 'graph:thread:' + latest['id']}}
     if latest_sent is not None:
         resolved['latest_sent_message_id'] = latest_sent['internetMessageId']
+    from .mailbox import mathesis_introduced
+    resolved['mathesis_introduced'] = mathesis_introduced(all_messages, account) or False
     if sent:
         evidence = max(sent, key=lambda m: instant(m['sentDateTime']))
         resolved['sent_evidence'] = {'thread_id': evidence['conversationId'], 'message_id': evidence['internetMessageId']}

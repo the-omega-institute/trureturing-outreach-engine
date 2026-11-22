@@ -120,6 +120,8 @@ def _delivery_terminal(exc, row, mailbox, packet, queue):
         return True
     if blocker.startswith('Current conversation has an active table-3 refusal: '):
         return True
+    if blocker.startswith('Mathesis was already introduced to this correspondent'):
+        return True
     if (blocker.startswith('A newer incoming message from ')
             and blocker.endswith(' in another conversation requires a new reply/review')):
         return True

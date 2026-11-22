@@ -302,6 +302,39 @@ def body_text(value):
     return body.get('content', '').replace('\r\n','\n').rstrip('\n')
 
 
+MATHESIS_MARKER = 'mathesis-omega-research'
+_QUOTED_HISTORY = re.compile(
+    r'^(?:From: |-----Original Message|_{20,}|On .{1,240} wrote:|Le .{1,240} a écrit|'
+    r'În .{1,240} a scris:|Am .{1,240} schrieb|El .{1,240} escribió)', re.M)
+
+
+def own_text(text):
+    """Text we wrote ourselves, without the quoted history below it."""
+    text = text or ''
+    match = _QUOTED_HISTORY.search(text)
+    return text[:match.start()] if match else text
+
+
+def mathesis_introduced(messages, account):
+    """Earliest Sent message whose own text already carries the Mathesis link.
+
+    Wenlin 2026-11-22: each correspondent is introduced to Mathesis once; later
+    letters must not append the standing paragraph again.
+    """
+    found = []
+    for message in messages:
+        if message.get('isDraft') or address(message.get('from', {})) != account:
+            continue
+        body = message.get('body') or {}
+        content = body.get('content') or ''
+        if body.get('contentType', '').lower() == 'html':
+            content = re.sub(r'<[^>]+>', ' ', content)
+        if MATHESIS_MARKER in own_text(content).casefold():
+            found.append({'sent_at': message.get('sentDateTime') or '',
+                          'message_id': message.get('internetMessageId') or ''})
+    return min(found, key=lambda item: item['sent_at']) if found else None
+
+
 def reply_recipient_exception(packet, latest, account, thread=(), team=()):
     """Keep reply-all, allowing literal latest-body additions/redirects and
     re-adding people we ourselves addressed earlier in the same thread."""
@@ -777,6 +810,25 @@ class GraphMailbox:
                         'A newer incoming message from ' + recipient +
                         ' in another conversation requires a new reply/review')
 
+    def _require_mathesis_not_introduced(self, packet, rows, account):
+        """Refuse a reply that would introduce Mathesis to someone a second time."""
+        team = {a.casefold() for a in self.settings.get('team_addresses', ())}
+        prior = mathesis_introduced(rows, account)
+        recipients = sorted({a.casefold() for a in packet['to']} - team - {account})
+        for recipient in recipients:
+            if prior:
+                break
+            for row in self.recipient_history(recipient):
+                if (row.get('folder') != 'sentitems' or row.get('isDraft')
+                        or row.get('conversationId') == packet['thread_id'] or not row.get('id')):
+                    continue
+                prior = mathesis_introduced([self.message(row['id'])], account)
+                if prior:
+                    break
+        require(not prior, 'Mathesis was already introduced to this correspondent in '
+                + (prior or {}).get('message_id', '') + ' at ' + (prior or {}).get('sent_at', '')
+                + '; revise the letter without the Mathesis paragraph')
+
     def _check_attachment_limit(self, total):
         limit = self.settings.get('max_total_attachment_bytes', DEFAULT_TOTAL_ATTACHMENT_BYTES)
         require(type(limit) is int and limit >= 0, 'Invalid mailbox.max_total_attachment_bytes')
@@ -819,6 +871,8 @@ class GraphMailbox:
             expected_sent=request['inputs'].get('latest_sent_message_id')
             require((latest_sent or {}).get('internetMessageId') == expected_sent,
                     'Actual Sent changed or its source identity was not captured')
+            if MATHESIS_MARKER in own_text(packet['body']).casefold():
+                self._require_mathesis_not_introduced(packet, rows, account)
         now=self.clock()
         return {'checked_at':now,'expires_at':now+60,'complete':True,'paused':False,
                 'contacts':{a:'clear' for a in packet['to']+packet['cc']}, **evidence}
@@ -1213,7 +1267,7 @@ def preserve_attachments(thread, ledger, identity, *, fetch=None, listings=None,
     return True
 
 
-REPLY_OWNER_RULE=('Route routing.mail=owner (a draft for the owner to send herself) whenever the latest incoming message or the needed reply touches anything personal, asks about us or the project (who we are, affiliation, how the results are produced, tools/AI, funding, plans, motives), or concerns meetings/calls, invitations, collaboration terms, byline order or submission timing. Purely academic mathematics, including a letter produced from an answered decision, may use routing.mail=auto after exact independent review and fresh mailbox checks. When unsure, choose owner. (User 2026-11-18.) Academic includes: technical progress, checks and corrections on a joint manuscript; corrections to a paper, note or OEIS entry; adding requested references; welcoming further mathematical questions or ideas without new commitments. Reserve owner for the listed personal/about-us/meeting/byline/submission-timing topics; never route an academic letter owner merely because it concerns joint work or the correspondent offered more problems. (User 2026-11-19.)')
+REPLY_OWNER_RULE=('Route routing.mail=owner (a draft for the owner to send herself) whenever the latest incoming message or the needed reply touches anything personal, asks about us or the project (who we are, affiliation, how the results are produced, tools/AI, funding, plans, motives), or concerns meetings/calls, invitations, collaboration terms, byline order or submission timing. Purely academic mathematics, including a letter produced from an answered decision, may use routing.mail=auto after exact independent review and fresh mailbox checks. When unsure, choose owner. (User 2026-11-18.) Academic includes: technical progress, checks and corrections on a joint manuscript; corrections to a paper, note or OEIS entry; adding requested references; welcoming further mathematical questions or ideas without new commitments. Reserve owner for the listed personal/about-us/meeting/byline/submission-timing topics; never route an academic letter owner merely because it concerns joint work or the correspondent offered more problems. (User 2026-11-19.) Introduce Mathesis at most once per correspondent: when inputs.mathesis_introduced is set, or the thread or mailbox history shows an earlier letter of ours carrying the Mathesis link, omit the Mathesis paragraph entirely; never append it mechanically to follow-ups. (User 2026-11-22.)')
 
 
 NDR_SENDERS={'postmaster', 'mailer-daemon', 'mail delivery subsystem'}
@@ -1613,6 +1667,7 @@ def intake(ledger, config, root, mailbox, revision=None, now=None):
             link={'thread_id':conversation,'latest_inbound_message_id':latest['internetMessageId']}
             inputs={'automation_contract':1,**link,**({'latest_sent_message_id':latest_sent['internetMessageId']} if latest_sent else {}),
                     'thread':thread,'owner_ids':owners,'user_decision_ever':False,
+                    'mathesis_introduced':mathesis_introduced(thread,account) or False,
                     'mailbox_observation':{'email':sender,'at':latest['receivedDateTime'],
                                            'message_id':latest['internetMessageId'],'evidence_ref':'graph:inbox:'+latest['id']},
                     'instructions':'Read the complete current thread. Decide whether any reply is needed. '

@@ -309,7 +309,7 @@ class PublicationTests(unittest.TestCase):
         self.assertNotIn(secret, canonical(work))
         self.assertNotIn(secret, '\n'.join(self.ledger.tasks.db.iterdump()))
 
-    def test_new_rows_precede_only_the_oldest_due_failed_retry(self):
+    def test_new_rows_precede_due_failed_retries_oldest_first(self):
         now = 1_000
         self.ledger.tasks.clock = lambda: now
         register = self.gh.register_note
@@ -332,10 +332,11 @@ class PublicationTests(unittest.TestCase):
             now += p.recheck.RECHECK_SECONDS
             calls.clear()
             self.run_publication()
-        self.assertEqual(calls, ['untouched', 'earlier'])
+        self.assertEqual(calls, ['untouched', 'earlier', 'later'])
         self.assertEqual(self.row('untouched')['data']['publication_loop']['phase'], 'queued')
         self.assertEqual(self.row('earlier')['data']['publication_loop']['consecutive_failures'], 2)
-        self.assertEqual(self.row('later')['data']['publication_loop']['consecutive_failures'], 1)
+        # Both due failures were retried this tick (bounded by max_publication_retries_per_tick).
+        self.assertEqual(self.row('later')['data']['publication_loop']['consecutive_failures'], 2)
 
     def test_failure_backoff_grows_after_readback_and_resets_for_new_result(self):
         self.prepared(prior_text=b'No labeled prior-work check')

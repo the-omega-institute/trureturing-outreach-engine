@@ -65,3 +65,28 @@ jobs:
         env:
           PAGES_TOKEN: ${{ secrets.PAGES_TOKEN }}
         run: python3 -m managed.hosted pages
+
+  # Delivery runs inside the same run after the tick. As a separate workflow
+  # in the shared single-writer group it stayed pending and was cancelled by
+  # the next scheduled tick, so queued publications never moved.
+  delivery:
+    needs: coordinator
+    if: ${{ (inputs.action || 'tick') == 'tick' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Prepare data
+        run: python3 -m managed.hosted checkout
+      - name: Process delivery queue
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
+          PAGES_TOKEN: ${{ secrets.PAGES_TOKEN }}
+          OUTREACH_NOTE_REQUEST: ${{ secrets.OUTREACH_NOTE_REQUEST }}
+          NOTE_ACTION: drain
+        run: python3 -m managed.hosted notes

@@ -449,16 +449,16 @@ def advance(ledger, config, root, folder, client=None, secret=None, note_gh=None
 
     The tick calls this twice around publication with one `attempted` set: the
     first pass takes existing deliveries, the second (`again`) only rows not
-    yet given a slot. deliveries_per_tick bounds both passes together, and the
-    legacy migration runs only in the first.
+    yet given a slot. deliveries_per_tick bounds both passes together. The
+    legacy migration has no budget checks of its own, so it stays after
+    publication as before: in the second pass, or in a single plain call.
     """
     settings = config.get('mathesis', {})
     test = settings.get('test_only') is True
     require(not test or getattr(ledger.releases, 'tag', None) == TEST_TAG,
             'Synthetic acceptance cannot operate on the production ledger')
     slots = max(0, settings.get('deliveries_per_tick', 4) - len(attempted or ()))
-    if again and not slots:
-        return
+    migrate = attempted is None or again
     active = not config['paused'] and config['kinds'].get('mathesis') and settings.get('mode') == 'deliver'
     secret = secret or os.environ.get('OUTREACH_REVIEW_KEY')
     identity_verified = False
@@ -466,7 +466,7 @@ def advance(ledger, config, root, folder, client=None, secret=None, note_gh=None
     revisions = note_revisions.Revisions(ledger.tasks, all_rows)
     legacy_candidates = [r for r in all_rows if _legacy_migration_state(r) is not None
                          and not revisions.reason(r)]
-    if active and legacy_candidates and not test and not again:
+    if active and legacy_candidates and not test and migrate:
         if client is None:
             token = os.environ.get('MATHESIS_ACCESS_TOKEN') or os.environ.get('CMA_ACCESS_TOKEN')
             require(token, 'Mathesis submitting identity is unavailable')

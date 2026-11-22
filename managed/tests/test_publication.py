@@ -733,7 +733,7 @@ class PublicationTests(unittest.TestCase):
         `register_seconds` in GitHub registration. Only external I/O is faked.
         """
         from managed.tick import Tick
-        now = [0.0]
+        now = self.tick_now = [0.0]
         tick = Tick(600, clock=lambda: now[0]); tick.bind(self.ledger)
         register = self.gh.register_note
 
@@ -792,6 +792,39 @@ class PublicationTests(unittest.TestCase):
         self.assertEqual(self.client.posts, 1)
         self.assertEqual(self.row()['data']['mathesis_delivery']['phase'], 'delivered')
         self.assertFalse(tick.pending.get('mathesis'))
+
+    def test_legacy_migration_stays_after_publication(self):
+        # Three unfinished legacy migrations whose status reads time out, and
+        # a slow owner check: migration alone spends 220 s.
+        for index in range(3):
+            row = self.ledger.tasks.add(request(f'legacy-{index}', kind='mathesis'))
+            self.ledger.tasks.update(row['id'], row['revision'], 'verified', {'mathesis_delivery': {
+                'phase': 'delivered', 'envelope': {'metadata': {'schema': 'mathesis.manuscript-delivery.v1'}},
+                'receipt': {'submission': f'legacy-submission-{index}', 'version': 1}}})
+
+        def slow_owner():
+            self.tick_now[0] += 40
+            return 'verified-owner'
+
+        def status_timeout(submission, version):
+            self.tick_now[0] += 60
+            raise TimeoutError('Mathesis status read timed out')
+
+        self.client.verify_owner, self.client.status = slow_owner, status_timeout
+        self.prepared()  # A new note to publish this tick
+        self.config['mathesis']['deliveries_per_tick'] = 1
+        tick, ended, _ = self.real_tick(earlier_seconds=480)
+        # Publication ran first and queued the note, as before the two passes.
+        self.assertEqual(self.row()['data'].get('publication_loop', {}).get('phase'), 'queued')
+        # Migration then ran after it, unchanged, and recorded each failure.
+        self.assertEqual(ended, 480 + 40 + 3 * 60)
+        for index in range(3):
+            migration = self.row(f'legacy-{index}')['data']['mathesis_delivery']['legacy_migration']
+            self.assertEqual(migration['last_error']['type'], 'TimeoutError')
+        # Its new delivery waits for the next tick with priority.
+        self.assertEqual(self.client.posts, 0)
+        self.assertEqual(self.row()['data']['mathesis_delivery']['phase'], 'ready')
+        self.assertEqual(tick.pending['mathesis'], ['mathesis-1'])
 
     def test_both_delivery_passes_share_deliveries_per_tick(self):
         self.prepared(); self.run_publication()

@@ -174,12 +174,6 @@ def allowed(ledger,lane,key):
     return tick.allow(lane,key) if tick else True
 
 
-def time_left(ledger):
-    """Whether the current stage could still start a unit; records nothing."""
-    tick=getattr(ledger,'tick',None)
-    return tick is None or tick.clock()<tick.limit()
-
-
 def units(ledger,lane,rows,key=lambda r:r['id'],timed=True,preserve_order=False,keep_pending=False):
     """Yield the rows the budget allows; the rest become the lane's deferred work.
 

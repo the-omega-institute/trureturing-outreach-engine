@@ -33,7 +33,7 @@ from .tasks import (ACTIVE, KINDS, Tasks, POLICY_IDENTITY_MISMATCH, WORKFLOW_CHA
                     owners, policy_mismatch_hold, unstarted, validate_request, validate_review_edit, validate_review_rebind)
 from .registry import email, firstcontact_gate
 from .thread_staging import effective_inputs, LEGACY_RESOLUTION_REASON
-from .tick import Tick, artifact_io_budget, artifact_io_timeout, measure, phase, time_left, unit, units
+from .tick import Tick, artifact_io_budget, artifact_io_timeout, measure, phase, unit, units
 from .lanes import at_share, interleave, lane as lane_of, summary as lane_summary, validate as validate_lanes
 from . import note_closure, note_revisions, recheck
 from .formalization_requests import BACKFILL_PREFIX
@@ -3406,15 +3406,15 @@ def run_tick(ledger,config,folder,tick,oracle_fetcher=None):
             elif name=='mathesis':
                 # Existing deliveries go first: publication used ~170 s per
                 # tick on 2026-11-22/23 and every ready delivery after it was
-                # deferred for hours. A second pass sends what publication
-                # selected this tick; both passes share deliveries_per_tick.
+                # deferred for hours. The second pass runs where delivery ran
+                # before: it sends what publication selected this tick and
+                # owns the legacy migration. Both share deliveries_per_tick.
                 delivered=set()
                 with phase(ledger,'mathesis-delivery'):
                     deliver_mathesis(ledger,config,ROOT,folder,attempted=delivered)
                 publish_notes(ledger,config,ROOT,folder)
-                if time_left(ledger):
-                    with phase(ledger,'mathesis-delivery'):
-                        deliver_mathesis(ledger,config,ROOT,folder,attempted=delivered,again=True)
+                with phase(ledger,'mathesis-delivery'):
+                    deliver_mathesis(ledger,config,ROOT,folder,attempted=delivered,again=True)
             elif name=='formalization-requests':
                 file_formalization(ledger,config)
             elif name=='prior-work-issues':

@@ -353,11 +353,14 @@ class SandboxPool:
         advance stage ran out of tick budget). Once the quota evidence expired,
         the notes group's only Sandbox was rotated 'idle' beside 258 queued
         tasks and the account could not create a replacement.
+        A peer counts only once this health pass has observed it active: its
+        saved state may predate a failure found later in the same pass.
         """
         if self.paused:return False
         group=entry.get('group') if self.group_limits else None
         if any(e is not entry and (e.get('group') if self.group_limits else None)==group and
-               e.get('state')=='active' and not self.draining(e) for e in self.entries):
+               e.get('state')=='active' and not self.draining(e) and not e.get('intent') and
+               (self.observed.get(e['sandbox_id']) or {}).get('status')=='active' for e in self.entries):
             return False
         return any(r['state']=='queued' and self.kinds.get(r['kind']) and self.group(r)==group for r in rows)
 

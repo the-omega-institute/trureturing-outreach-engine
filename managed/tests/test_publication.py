@@ -708,7 +708,7 @@ class PublicationTests(unittest.TestCase):
         self.assertEqual(selected['previous_version'], 1)
         self.assertEqual(selected['version'], 2)
 
-    def test_tick_calls_publication_before_existing_delivery(self):
+    def test_tick_delivers_existing_then_publishes_then_delivers_new_selections(self):
         from managed.tick import Tick
         order = []
         tick = Tick(); tick.bind(self.ledger)
@@ -720,34 +720,36 @@ class PublicationTests(unittest.TestCase):
                 patch('managed.pipeline.reconcile'), patch('managed.automation.reconcile'), \
                 patch('managed.delivery.advance'), \
                 patch('managed.publication.advance', side_effect=lambda *a: order.append('select')), \
-                patch('managed.mathesis_delivery.advance', side_effect=lambda *a: order.append('deliver')), \
+                patch('managed.mathesis_delivery.advance',
+                      side_effect=lambda *a, again=False, **k: order.append('deliver-new' if again else 'deliver')), \
                 patch.object(self.remote, 'prune_snapshots', create=True):
             control.run_tick(self.ledger, self.config, self.folder, tick)
-        self.assertEqual(order, ['select', 'deliver'])
+        self.assertEqual(order, ['deliver', 'select', 'deliver-new'])
 
-    def tick_with_heavy_publication(self, environment=None):
-        """Run one real tick whose publication backlog alone exhausts the budget."""
+    def real_tick(self, register_seconds=0, earlier_seconds=0):
+        """One real tick on a fake 600 s clock with real publication and delivery.
+
+        The advance stage uses `earlier_seconds`; each new publication spends
+        `register_seconds` in GitHub registration. Only external I/O is faked.
+        """
         from managed.tick import Tick
-        self.prepared(); self.run_publication()
-        self.assertEqual(self.row()['data']['mathesis_delivery']['phase'], 'ready')
-        for index in range(5):
-            name = f'backlog-{index}'
-            self.prepared(name, kind='shortnote', handoff=False,
-                          metadata={**self.metadata, 'id': name, 'problem_ids': ['problem-' + name]})
-        self.config['mathesis']['max_publications_per_tick'] = 5
         now = [0.0]
         tick = Tick(600, clock=lambda: now[0]); tick.bind(self.ledger)
         register = self.gh.register_note
 
         def slow_registration(metadata):
-            now[0] += 150  # GitHub work for each new publication
-            return register(metadata)
+            now[0] += register_seconds
+            catalog = register(metadata)
+            (self.root / 'tables/publications.json').write_text(json.dumps(self.gh.catalog))
+            return catalog
 
-        with patch.dict('os.environ', {'OUTREACH_REVIEW_KEY': 'secret', 'MATHESIS_ACCESS_TOKEN': 'fixture',
-                                       **(environment or {})}), \
+        def earlier_work(*args, **kwargs):
+            now[0] += earlier_seconds
+
+        with patch.dict('os.environ', {'OUTREACH_REVIEW_KEY': 'secret', 'MATHESIS_ACCESS_TOKEN': 'fixture'}), \
                 patch('managed.control.ROOT', self.root), \
                 patch('managed.control.subprocess.check_output', return_value='a' * 40), \
-                patch('managed.control.CMA'), patch('managed.control.advance'), \
+                patch('managed.control.CMA'), patch('managed.control.advance', side_effect=earlier_work), \
                 patch('managed.control.refresh_oracle_capacity'), \
                 patch('managed.mailbox.configured'), patch('managed.mailbox.intake'), \
                 patch('managed.pipeline.reconcile'), patch('managed.automation.reconcile'), \
@@ -760,26 +762,48 @@ class PublicationTests(unittest.TestCase):
                 patch.object(self.remote, 'prune_snapshots', create=True), \
                 patch('sys.stderr', new_callable=io.StringIO) as log:
             control.run_tick(self.ledger, self.config, self.folder, tick)
-        # Publication alone used the whole budget and deferred part of its backlog.
-        self.assertGreaterEqual(now[0], tick.deadline)
-        self.assertTrue(tick.pending['publication'])
-        return tick, log.getvalue()
+        return tick, now[0], log.getvalue()
 
-    def test_ready_delivery_is_attempted_when_publication_exhausts_the_tick(self):
-        tick, log = self.tick_with_heavy_publication()
+    def test_ready_delivery_precedes_publication_that_overruns_the_tick(self):
+        self.prepared(); self.run_publication()
+        self.assertEqual(self.row()['data']['mathesis_delivery']['phase'], 'ready')
+        for index in range(5):
+            name = f'backlog-{index}'
+            self.prepared(name, kind='shortnote', handoff=False,
+                          metadata={**self.metadata, 'id': name, 'problem_ids': ['problem-' + name]})
+        self.config['mathesis']['max_publications_per_tick'] = 5
+        # 160 s per publication ends the last unit 40 s past the deadline,
+        # beyond any grace a delivery slice after publication could have.
+        tick, ended, log = self.real_tick(register_seconds=160)
+        self.assertGreater(ended, tick.deadline + 30)
+        self.assertTrue(tick.pending['publication'])
         self.assertEqual(self.client.posts, 1)
         row = self.row()
-        self.assertEqual(row['state'], 'verified')
-        self.assertEqual(row['data']['mathesis_delivery']['phase'], 'delivered')
+        self.assertEqual((row['state'], row['data']['mathesis_delivery']['phase']), ('verified', 'delivered'))
         self.assertFalse(tick.pending.get('mathesis'))
         self.assertIn('tick-phase mathesis-delivery', log)
 
-    def test_without_the_delivery_slice_publication_starves_delivery(self):
-        # The production regression: publication used the stage, delivery deferred.
-        tick, _ = self.tick_with_heavy_publication({'OUTREACH_MATHESIS_DELIVERY_RESERVE_SECONDS': '0'})
-        self.assertEqual(self.client.posts, 0)
-        self.assertEqual(self.row()['data']['mathesis_delivery']['phase'], 'ready')
-        self.assertEqual(tick.pending['mathesis'], ['mathesis-1'])
+    def test_delivery_selected_late_in_a_tick_still_goes_out_that_tick(self):
+        self.prepared()
+        # Earlier stages used 480 s of 600; publication then selects the first delivery.
+        tick, ended, _ = self.real_tick(register_seconds=30, earlier_seconds=480)
+        self.assertEqual(ended, 510)
+        self.assertEqual(self.row()['data']['publication_loop']['phase'], 'queued')
+        self.assertEqual(self.client.posts, 1)
+        self.assertEqual(self.row()['data']['mathesis_delivery']['phase'], 'delivered')
+        self.assertFalse(tick.pending.get('mathesis'))
+
+    def test_both_delivery_passes_share_deliveries_per_tick(self):
+        self.prepared(); self.run_publication()
+        self.prepared('beta', metadata={**self.metadata, 'id': 'beta', 'problem_ids': ['problem-beta']})
+        self.config['mathesis']['deliveries_per_tick'] = 1
+        self.real_tick()
+        self.assertEqual(self.client.posts, 1)
+        self.assertEqual(self.row()['data']['mathesis_delivery']['phase'], 'delivered')
+        self.assertEqual(self.row('beta')['data']['mathesis_delivery']['phase'], 'ready')
+        self.real_tick()
+        self.assertEqual(self.client.posts, 2)
+        self.assertEqual(self.row('beta')['data']['mathesis_delivery']['phase'], 'delivered')
 
     def test_delivery_batch_takes_new_deliveries_oldest_first_before_repolls(self):
         now = [1_000.0]

@@ -389,13 +389,14 @@ class SandboxGroupTests(PoolFixture, unittest.TestCase):
         self.tick()
         self.assertEqual(self.ledger.tasks.get(row['id']), row)
 
-    def idle_past_quota_evidence(self, paused=False, extra_notes=False):
+    def idle_past_quota_evidence(self, paused=False, extra_notes=False, spare_status='active'):
         """Health and idle passes after the quota evidence and idle grace expired."""
         entries = self.tagged_entries()
         if extra_notes:
             entries.append({**entries[0], 'sandbox_id': 'sbx_spare', 'workspace_id': 'wks_spare'})
             self.ledger.tasks.db.execute('UPDATE pipeline_state SET payload=? WHERE key=?',
                                          (canonical(entries), 'sandbox_pool'))
+            self.cma.statuses['sbx_spare'] = {'status': spare_status}
         self.ledger.tasks.db.execute('INSERT INTO pipeline_state VALUES(?,?)', (
             'sandbox_pool_capacity', canonical({'groups': {'notes': self.now, 'mail': self.now}})))
         # Placement fell behind (advance ran out of tick budget); only health runs.
@@ -403,7 +404,7 @@ class SandboxGroupTests(PoolFixture, unittest.TestCase):
         pool = SandboxPool(self.ledger, self.cfg['sandbox_pool'], self.cfg['kinds'], paused=paused)
         pool.health(self.cma)
         pool.idle(self.cma)
-        rotated = {e['sandbox_id']: e['rotated'] for e in self.state('sandbox_pool_cleanup')}
+        rotated = {e['sandbox_id']: e.get('rotated') for e in self.state('sandbox_pool_cleanup')}
         return pool, entries, rotated
 
     def test_group_keeps_its_last_sandbox_while_its_queued_work_waits(self):
@@ -434,5 +435,16 @@ class SandboxGroupTests(PoolFixture, unittest.TestCase):
     def test_only_the_last_usable_sandbox_of_the_group_is_kept(self):
         self.queue('waiting', 'shortnote')
         _, (notes, mail, spare), rotated = self.idle_past_quota_evidence(extra_notes=True)
-        self.assertEqual(rotated, {notes['sandbox_id']: 'idle', mail['sandbox_id']: 'idle'})
-        self.assertEqual([e['sandbox_id'] for e in self.state()], [spare['sandbox_id']])
+        [kept] = [e['sandbox_id'] for e in self.state()]
+        [other] = {notes['sandbox_id'], spare['sandbox_id']} - {kept}
+        self.assertEqual(rotated, {other: 'idle', mail['sandbox_id']: 'idle'})
+
+    def test_peer_that_failed_since_the_last_pass_does_not_count_as_usable(self):
+        waiting = self.queue('waiting', 'shortnote')
+        pool, (notes, mail, spare), rotated = self.idle_past_quota_evidence(extra_notes=True,
+                                                                            spare_status='failed')
+        # The healthy Sandbox is kept; its failed peer follows failure cleanup.
+        self.assertEqual(rotated, {mail['sandbox_id']: 'idle', spare['sandbox_id']: None})
+        self.assertEqual(self.state('sandbox_pool_cleanup')[-1]['state'], 'failed')
+        self.assertEqual([e['sandbox_id'] for e in self.state()], [notes['sandbox_id']])
+        self.assertEqual(pool.slot(waiting), (True, self.state()[0]))

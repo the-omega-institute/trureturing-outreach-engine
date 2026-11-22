@@ -426,35 +426,43 @@ def reconcile(ledger, config, root, now=None, revision=None):
             day += timedelta(days=1)
 
 
-def status(tasks, root, config=None):
+def status(tasks, root, config=None, *, compact=False):
     """Compact status for the operator; no credential or mailbox access."""
     baseline = tasks.db.execute("SELECT payload FROM pipeline_state WHERE key='baseline'").fetchone()
-    sources = tasks.db.execute('SELECT * FROM pipeline_sources').fetchall()
-    rows = [r for r in tasks.all() if r['state'] != 'superseded']
+    sources = tasks.db.execute('SELECT result_id,baseline,task_id FROM pipeline_sources')
+    counts=tasks.db.execute("""SELECT
+        COALESCE(SUM(kind='shortnote' AND json_extract(request,'$.inputs.pipeline.scenario')=3
+                     AND COALESCE(json_extract(request,'$.inputs.note_round'),'')!='draft'),0),
+        COALESCE(SUM(json_extract(request,'$.inputs.pipeline.scenario') IN (2,4,5)),0)
+        FROM tasks WHERE state!='superseded'""").fetchone()
     contacts = read(root,'contacts')['contacts']
-    waits = []
+    waits = [];wait_counts={};observed=waiting=0
+    def wait(value):
+        if compact:
+            reason=value['reason'];wait_counts[reason]=wait_counts.get(reason,0)+1
+        else:waits.append(value)
     for source in sources:
+        observed+=1;waiting+=not source['baseline'] and not source['task_id']
         if not source['task_id']:
             continue
-        note = tasks.get(source['task_id'])
+        note = tasks.db.execute('SELECT state FROM tasks WHERE id=?',(source['task_id'],)).fetchone()
+        require(note is not None,'Unknown task')
         if note['state'] not in {'approved','handoff-ready','verified'}:
             continue
         matches=[p for p in contacts if source['result_id'] in p.get('problem_ids',[])]
         if not matches:
-            waits.append({'result_id':source['result_id'],'reason':'No verified author contact registered for this result'})
+            wait({'result_id':source['result_id'],'reason':'No verified author contact registered for this result'})
         for person in matches:
             gate=preflight(person['email'],person['name'],root)
             if not gate['allowed']:
-                waits.append({'result_id':source['result_id'],'contact_id':gate['contact_id'],'reason':', '.join(gate['reasons'])})
+                wait({'result_id':source['result_id'],'contact_id':gate['contact_id'],'reason':', '.join(gate['reasons'])})
     return {'baseline':json.loads(baseline['payload']) if baseline else None,
-            'observed_results':len(sources),
-            'new_results_waiting':sum(not r['baseline'] and not r['task_id'] for r in sources),
-            'source_notes':sum(r['kind']=='shortnote'
-                               and r['request']['inputs'].get('pipeline',{}).get('scenario')==3
-                               and r['request']['inputs'].get('note_round') != 'draft'
-                               for r in rows),
-            'derived_tasks':sum(r['request']['inputs'].get('pipeline',{}).get('scenario') in {2,4,5} for r in rows),
-            'outreach_waits':waits,
+            'observed_results':observed,
+            'new_results_waiting':waiting,
+            'source_notes':counts[0],
+            'derived_tasks':counts[1],
+            **({'outreach_wait_count':sum(wait_counts.values()),'outreach_waits_by_reason':wait_counts}
+               if compact else {'outreach_waits':waits}),
             'mailbox_feedback': ('microsoft-graph configured; ' +
                 ('production paused' if config.get('paused') else 'per-message live receipts required')
                 if config and config.get('mailbox_adapter') == 'microsoft-graph'

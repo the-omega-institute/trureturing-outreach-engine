@@ -18,6 +18,7 @@ from pathlib import Path
 import subprocess
 import sys
 import shutil
+import sqlite3
 import tempfile
 import time
 import zipfile
@@ -219,16 +220,46 @@ class Releases:
         raw = self.run('api', f'repos/{self.repo}', '--jq', '.private')
         require(raw.strip() == b'true', 'Private data operations require a private repository')
 
-    def prune_logs(self, keep, *, tick):
+    def prune_logs(self, keep, *, tick, incoming=None):
+        from .run_log import log_run_id, log_workflow_id
         release = self.release()
+        if release is None:return 0
         prefix = 'tick-log-' if tick else 'run-log-'
         query = f'.[]|select(.name|startswith("{prefix}"))|[.id,.name]|@tsv'
         raw = self.run('api', '--paginate', f'repos/{self.repo}/releases/{release["id"]}/assets',
                        '--jq', query)
         assets = sorted((line.split('	') for line in raw.decode().splitlines() if line),
                         key=lambda row: row[1])
-        for asset_id, _ in assets[:max(len(assets) - keep, 0)]:
+        names=[row[1] for row in assets]
+        if incoming:names.append(incoming)
+        # Tick files have one window; step logs have a run window per workflow.
+        retained={}
+        for name in sorted(names,reverse=True):
+            workflow=None if tick else log_workflow_id(name)
+            group=name if tick else log_run_id(name)
+            # Bound names also advance the old shared window, so historical
+            # logs without workflow metadata age out rather than live forever.
+            for scope in ((workflow,None) if workflow is not None else (None,)):
+                groups=retained.setdefault(scope,set())
+                if len(groups)<keep:groups.add(group)
+        victims=[row for row in assets if (row[1] if tick else log_run_id(row[1])) not in
+                 retained[None if tick else log_workflow_id(row[1])]]
+        for asset_id, _ in victims:
             self.run('api', '-X', 'DELETE', f'repos/{self.repo}/releases/assets/{asset_id}')
+        return len(victims)
+
+    def evict_oldest_log(self,protect=()):
+        """At capacity, sacrifice one diagnostic before durable input assets."""
+        rel=self.release()
+        if rel is None:return 0
+        raw=self.run('api','--paginate',f'repos/{self.repo}/releases/{rel["id"]}/assets',
+                     '--jq','.[]|[.id,.name,.created_at]|@tsv')
+        rows=(line.split('\t') for line in raw.decode().splitlines() if line)
+        oldest=min((row for row in rows if row[1].startswith(('tick-log-','run-log-')) and row[1] not in protect),
+                   key=lambda row:(row[2],row[1]),default=None)
+        if oldest is None:return 0
+        self.run('api','-X','DELETE',f'repos/{self.repo}/releases/assets/{oldest[0]}')
+        return 1
 
     def fetch_workflow_revision(self, revision, *, engine=False):
         """Restore a historical pin into the checkout that owns it."""
@@ -246,35 +277,90 @@ class Releases:
         # Duplicate content is a replay, never a clobber of a prior request.
         rel=self.release();old=next((a for a in rel['assets'] if a['name']==path.name),None)
         if old:
-            require(old.get('digest')=='sha256:'+hashlib.sha256(path.read_bytes()).hexdigest(),'Existing immutable asset differs')
+            with path.open('rb') as stream:sha=hashlib.file_digest(stream,'sha256').hexdigest()
+            require(old.get('digest')=='sha256:'+sha,'Existing immutable asset differs')
             return
         self.run('release','upload',self.tag,str(path),'--repo',self.repo)
+
+    def upload_retained(self,path,protect=()):
+        """Retry only an explicit capacity rejection, preserving pending work."""
+        from .run_log import TICK_LOGS_KEPT, RUN_LOGS_KEPT, log_name
+        try:self.upload(path)
+        except RuntimeError as exc:
+            if 'file_count limited' not in str(exc):raise
+            # Stop once a cleanup frees space; an optional later cleanup must
+            # not prevent a now-possible checkpoint or diagnostics upload.
+            incoming=path.name if path.name.startswith('run-log-') else log_name()
+            for cleanup in (lambda:self.prune_logs(TICK_LOGS_KEPT,tick=True,
+                                                  incoming=path.name if path.name.startswith('tick-log-') else None),
+                            lambda:self.prune_logs(RUN_LOGS_KEPT,tick=False,incoming=incoming),
+                            lambda:self.prune_snapshots(SNAPSHOTS_KEPT,{path.name,*protect}),
+                            lambda:self.evict_oldest_log({path.name,*protect}),
+                            self.prune_ingested):
+                if cleanup():break
+            self.upload(path)
+    def snapshot_rows(self,rel):
+        raw=self.run('api','--paginate',f'repos/{self.repo}/releases/{rel["id"]}/assets',
+                     '--jq','.[]|select(.name|startswith("state-"))|[.id,.name]|@tsv')
+        return [line.split('\t') for line in raw.decode().splitlines() if line.strip()]
+
     def prune_snapshots(self,keep,protect=()):
-        """Delete the oldest superseded ledger snapshots. A release holds at most
-        1000 assets; the current snapshot carries the append-only event history."""
+        """Delete superseded snapshots while preserving the committed chain."""
         rel=self.release()
         if rel is None:return 0
-        raw=self.run('api','--paginate',f'repos/{self.repo}/releases/{rel["id"]}/assets',
-                     '--jq','.[]|select(.name|startswith("state-"))|[.id,.name,.created_at]|@tsv')
-        rows=sorted((line.split('\t') for line in raw.decode().splitlines() if line.strip()),key=lambda r:r[2])
-        victims=[r for r in rows[:max(len(rows)-keep,0)] if r[1] not in set(protect)]
+        try:pointer=json.loads(rel.get('body') or '{}')
+        except (TypeError,ValueError):return 0
+        if not isinstance(pointer,dict) or pointer.get('schema_version')!=1:return 0
+        if not isinstance(pointer.get('snapshot'),dict):return 0
+        current=(pointer.get('snapshot') or {}).get('name')
+        if not current:return 0
+        rows=self.snapshot_rows(rel)
+        protected=set(protect)
+        protected.add(current)
+        protected.update(item['name'] for item in pointer.get('run_history',[])[:max(keep-1,0)])
+        victims=[r for r in rows if r[1] not in protected]
         deleted=0
-        for asset_id,_,_ in units(self,'snapshot-prune',victims,key=lambda r:r[0]):
+        for asset_id,_ in units(self,'snapshot-prune',victims,key=lambda r:r[0]):
             self.run('api','-X','DELETE',f'repos/{self.repo}/releases/assets/{asset_id}');deleted+=1
         return deleted
-    def prune_ingested(self,known,min_age_seconds=86400,now=None):
-        """Prune old control inputs already handled by ingest (digests in `known`)."""
+    def snapshot_receipts(self,snapshot):
+        """Read receipts from verified immutable bytes, without migrating them."""
+        with tempfile.TemporaryDirectory() as folder:
+            path=self.download(snapshot['name'],folder)
+            with path.open('rb') as stream:
+                require(hashlib.file_digest(stream,'sha256').hexdigest()==snapshot['sha256'],
+                        'Control snapshot mismatch')
+            db=sqlite3.connect(path.as_uri()+'?mode=ro',uri=True)
+            try:
+                if not db.execute("SELECT 1 FROM sqlite_master WHERE name='input_asset_receipts'").fetchone():return {}
+                return dict(db.execute('SELECT identity,generation FROM input_asset_receipts'))
+            finally:db.close()
+
+    def prune_ingested(self,receipts=None):
+        """Delete only identities receipted in the oldest retained run final."""
         rel=self.release()
         if rel is None:return 0
+        pointer=json.loads(rel.get('body') or '{}')
+        if not pointer.get('snapshot'):return 0
+        history=pointer.get('run_history',[])
+        if len(history)<SNAPSHOTS_KEPT-1:return 0
+        if receipts is None:receipts=self.snapshot_receipts(pointer['snapshot'])
+        if not receipts:return 0
+        oldest_generation=history[-1].get('generation')
+        if oldest_generation is not None:
+            receipts={identity:first for identity,first in receipts.items() if first<=oldest_generation}
+            if not receipts:return 0
+        oldest=self.snapshot_receipts(history[-1])
+        covered={identity for identity,first in receipts.items() if oldest.get(identity)==first}
+        if not covered:return 0
         raw=self.run('api','--paginate',f'repos/{self.repo}/releases/{rel["id"]}/assets',
                      '--jq','.[]|[.id,.name,.created_at,(.digest // "")]|@tsv')
-        cutoff=(time.time() if now is None else now)-min_age_seconds
         victims=[]
         for line in raw.decode().splitlines():
             if not line.strip():continue
             asset_id,name,created,asset_digest=(line.split('\t')+['',''])[:4]
-            if (name.startswith(INPUT_PREFIXES) and name.endswith('.json') and asset_digest in known and
-                    datetime.fromisoformat(created.replace('Z','+00:00')).timestamp()<cutoff):
+            identity=input_identity({'id':asset_id,'name':name,'digest':asset_digest})
+            if name.startswith(INPUT_PREFIXES) and name.endswith('.json') and identity in covered:
                 victims.append((asset_id,name))
         deleted=0
         for asset_id,_ in units(self,'input-prune',victims,key=lambda r:r[0]):
@@ -320,7 +406,7 @@ class Releases:
         self.run('release','edit',self.tag,'--repo',self.repo,'--notes-file',str(path))
 
 
-SNAPSHOTS_KEPT=150
+SNAPSHOTS_KEPT=3
 INPUT_PREFIXES=('request-','local-result-','submission-review-','review-','decision-','draft-revision-','mathesis-','prompt-requeue-','failed-requeue-','pool-adopt-',BACKFILL_PREFIX+'-',PRIOR_WORK_BACKFILL+'-')
 SAVE_INTERVAL=45
 INGEST_REJECTION_LIMIT=3
@@ -335,10 +421,18 @@ def given_up_digests(rejections):
     return {sha for sha,entry in rejections.items() if entry['attempts']>=INGEST_REJECTION_LIMIT}
 
 
+def input_identity(asset):
+    # A new asset (even with equal bytes or a reused name) needs its own receipt.
+    return canonical([str(asset.get('id','')),asset['name'],asset.get('digest')])
+
+
 class Ledger:
     def __init__(self,releases,folder,clock=time.monotonic):
+        from .run_log import coordinator_run_id
         self.releases=releases;self.folder=Path(folder)
         self.clock=clock;self.last_saved_at=None;self.saved_version=None
+        self.run_id=coordinator_run_id();self.published_run=None;self.run_history=[]
+        self.connector_errors=[];self.snapshot=None
         rel=releases.release();self.generation=0;self.current=None
         if rel:
             pointer=json.loads(rel.get('body') or '{}')
@@ -346,9 +440,13 @@ class Ledger:
             snap=pointer.get('snapshot')
             if snap:
                 path=releases.download(snap['name'],self.folder)
-                require(hashlib.sha256(path.read_bytes()).hexdigest()==snap['sha256'],'Control snapshot mismatch')
+                with path.open('rb') as stream:
+                    require(hashlib.file_digest(stream,'sha256').hexdigest()==snap['sha256'],'Control snapshot mismatch')
                 path.rename(self.folder/'state.sqlite3')
                 self.generation=pointer['generation'];self.current=snap['name']
+                self.snapshot={**snap,'generation':self.generation,'run_id':pointer.get('run_id')}
+                self.published_run=pointer.get('run_id')
+                self.run_history=pointer.get('run_history',[])[:SNAPSHOTS_KEPT-1]
         self.tasks=Tasks(self.folder/'state.sqlite3')
     def version(self):
         # Queue writes use a second connection to this same SQLite file.
@@ -363,29 +461,56 @@ class Ledger:
         and deterministic derivations may use ordinary debounced saves.
         """
         version=self.version()
-        if version==self.saved_version:return False
+        if version==self.saved_version and self.published_run==self.run_id:return False
         if not force and self.last_saved_at is not None and self.clock()-self.last_saved_at<SAVE_INTERVAL:
             return False
-        path=self.folder/'next.sqlite3';self.tasks.snapshot(path)
-        sha=hashlib.sha256(path.read_bytes()).hexdigest()
-        target=path.with_name('state-'+sha+'.sqlite3');path.rename(target)
-        try:self.releases.upload(target)
-        except RuntimeError as exc:
-            if 'file_count limited' not in str(exc) or not hasattr(self.releases,'prune_snapshots'):raise
-            self.releases.prune_snapshots(SNAPSHOTS_KEPT,{self.current} if self.current else ())
-            self.releases.upload(target)
         generation=self.generation+1
+        path=self.folder/'next.sqlite3';self.tasks.snapshot(path)
+        with path.open('rb') as stream:sha=hashlib.file_digest(stream,'sha256').hexdigest()
+        target=path.with_name('state-'+sha+'.sqlite3')
+        if target.name==self.current and self.published_run==self.run_id:
+            # A fresh process has no saved_version yet. Repointing at the same
+            # bytes within the same run adds no new checkpoint or coverage.
+            path.unlink();self.saved_version=version;self.last_saved_at=self.clock()
+            return False
+        path.rename(target)
+        upload=getattr(self.releases,'upload_retained',self.releases.upload)
+        upload(target)
+        history=self.run_history
+        if self.snapshot and self.published_run!=self.run_id:
+            # The previous live pointer is the last committed snapshot of that
+            # run, including a run interrupted before its final-save phase.
+            history=[self.snapshot,*history][:SNAPSHOTS_KEPT-1]
         self.releases.pointer({'schema_version':1,'generation':generation,
-            'snapshot':{'name':target.name,'sha256':sha}},self.folder)
+            'snapshot':{'name':target.name,'sha256':sha},
+            'run_id':self.run_id,'run_history':history},self.folder)
         self.generation=generation;self.current=target.name
+        self.snapshot={'name':target.name,'sha256':sha,'generation':generation,'run_id':self.run_id}
+        self.published_run=self.run_id;self.run_history=history
         self.saved_version=version;self.last_saved_at=self.clock()
-        target.unlink()
+        try:target.unlink()
+        except OSError:pass  # Local cleanup cannot invalidate a committed save.
+        if hasattr(self.releases,'prune_snapshots'):
+            # Part of publication, outside the optional maintenance deadline.
+            try:self.releases.prune_snapshots(SNAPSHOTS_KEPT,{self.current})
+            except Exception as exc:
+                # The pointer is already live. Maintenance cannot turn a
+                # durable intent into a failed save and skip the following call.
+                try:
+                    self.connector_errors.append({'connector':'snapshot-prune','error':str(exc)[:300]})
+                    self.tasks.db.execute('INSERT OR REPLACE INTO pipeline_state VALUES(?,?)',
+                                          ('connector_errors',canonical(self.connector_errors)))
+                except Exception:pass
+                try:print('connector-error snapshot-prune '+type(exc).__name__,file=sys.stderr)
+                except Exception:pass
         return True
-    def ingested_digests(self):
-        known={'sha256:'+r[0] for r in self.tasks.db.execute('SELECT request_hash FROM tasks UNION SELECT id FROM control_events')}
-        known.update('sha256:'+digest(r['data']['mathesis_delivery']['envelope']) for r in self.tasks.all()
-                     if r['data'].get('mathesis_delivery',{}).get('envelope'))
-        return known | given_up_digests(ingest_rejections(self.tasks))
+
+    def ingestion_receipts(self):
+        return dict(self.tasks.db.execute('SELECT identity,generation FROM input_asset_receipts'))
+
+    def receipt_input(self,asset):
+        self.tasks.db.execute('INSERT OR IGNORE INTO input_asset_receipts VALUES(?,?)',
+                              (input_identity(asset),self.generation+1))
 
     def save_ingest_rejections(self,rejections):
         if rejections:
@@ -412,8 +537,18 @@ class Ledger:
         present={a.get('digest') for a in assets}
         retained={sha:entry for sha,entry in rejections.items() if sha in present}
         if retained!=rejections:self.save_ingest_rejections(retained)
-        known=self.ingested_digests()
-        assets=[a for a in assets if a.get('digest') not in known]
+        present_identities={input_identity(a) for a in assets}
+        known=self.ingestion_receipts()
+        self.tasks.db.executemany('DELETE FROM input_asset_receipts WHERE identity=?',
+                                  ((identity,) for identity in known if identity not in present_identities))
+        # Legacy snapshots have no receipts. Give-ups remain authoritative;
+        # seed fresh identity coverage without retrying or changing counters.
+        given_up=given_up_digests(retained)
+        for asset in assets:
+            identity=input_identity(asset)
+            if identity not in known and asset.get('digest') in given_up:
+                self.receipt_input(asset);known[identity]=self.generation+1
+        assets=[a for a in assets if input_identity(a) not in known]
         ordered=sorted(assets,key=lambda a:(next(i for i,p in enumerate(prefixes) if a['name'].startswith(p)),a['name']))
         failed_this_tick=set()
         for asset in units(self,'ingest',ordered,key=lambda a:digest(a['name'])):
@@ -454,6 +589,8 @@ class Ledger:
                         from .mathesis_delivery import ingest, TEST_TAG
                         ingest(self.tasks,value,review_secret,test=getattr(self.releases,'tag',None)==TEST_TAG)
                     else:self.tasks.verdict(value,review_secret,preserve_packet=self.preserve_review_packet)
+                else:continue  # No review key: this asset has not been consumed.
+                self.receipt_input(asset)
             except (ValueError,KeyError,TypeError) as exc:
                 error=str(exc)[:300]
                 if asset_digest:
@@ -461,6 +598,8 @@ class Ledger:
                     attempts=retained.get(asset_digest,{}).get('attempts',0)+1
                     retained[asset_digest]={'attempts':attempts,'error':error}
                     self.save_ingest_rejections(retained)
+                    if attempts>=INGEST_REJECTION_LIMIT:
+                        self.receipt_input(asset)
                     if attempts==INGEST_REJECTION_LIMIT:
                         error+=f'; giving up after {INGEST_REJECTION_LIMIT} attempts'
                 errors.append({'asset':name,'error':error})
@@ -3172,7 +3311,7 @@ def run_tick(ledger,config,folder,tick,oracle_fetcher=None):
     from .publication import advance as publish_notes
     from .formalization_requests import advance as file_formalization
     from .prior_work_issues import advance as file_prior_work
-    connector_errors=[];mailbox=None;oracle_capacity=None;sent_messages=[]
+    connector_errors=ledger.connector_errors;mailbox=None;oracle_capacity=None;sent_messages=[]
     def record_errors():
         db=ledger.tasks.db;value=canonical(connector_errors)
         old=db.execute("SELECT payload FROM pipeline_state WHERE key='connector_errors'").fetchone()
@@ -3266,7 +3405,7 @@ def run_tick(ledger,config,folder,tick,oracle_fetcher=None):
                         # checkpoint and must finish even after exhaustion.
                         ledger.releases.tick=tick
                         try:ledger.releases.prune_snapshots(SNAPSHOTS_KEPT,{ledger.current})
-                        except RuntimeError as exc:
+                        except Exception as exc:
                             connector_errors.append({'connector':'snapshot-prune','error':str(exc)[:300]})
                         finally:ledger.releases.tick=None
                 with unit(ledger,'maintenance','input-prune') as ready:
@@ -3274,8 +3413,8 @@ def run_tick(ledger,config,folder,tick,oracle_fetcher=None):
                     # 1000-asset release limit blocks new reviews and requests.
                     if ready and hasattr(ledger.releases,'prune_ingested'):
                         ledger.releases.tick=tick
-                        try:ledger.releases.prune_ingested(ledger.ingested_digests())
-                        except RuntimeError as exc:
+                        try:ledger.releases.prune_ingested(ledger.ingestion_receipts())
+                        except Exception as exc:
                             connector_errors.append({'connector':'input-prune','error':str(exc)[:300]})
                         finally:ledger.releases.tick=None
     with phase(ledger,'owner-drafts'),finished(tick,'owner-drafts'):
@@ -3286,12 +3425,34 @@ def run_tick(ledger,config,folder,tick,oracle_fetcher=None):
     return ingest_errors,connector_errors
 
 
+def status_summary(tasks,config,ingest_errors=None,connector_errors=None):
+    """Bounded operator view shared by tick and status --compact."""
+    from .pipeline import status as pipeline_status
+    rows=tasks.lane_rows()
+    counts=tasks.counts()
+    stored=tasks.db.execute("SELECT payload FROM pipeline_state WHERE key='connector_errors'").fetchone()
+    rejected=ingest_rejections(tasks)
+    return {'schema_version':1,'paused':config['paused'],
+            'counts':counts,'counts_by_kind':tasks.counts('kind'),
+            'lanes':lane_summary(rows,config,linked_contacts(rows,ROOT,config)),
+            'pipeline':pipeline_status(tasks,ROOT,config,compact=True),
+            'errors':{'failed':counts.get('failed',0),'held':counts.get('held',0),
+                      'ingest_rejected':len(given_up_digests(rejected))},
+            'admission_errors':ingest_errors if ingest_errors is not None else [
+                {'digest':sha,**entry} for sha,entry in rejected.items()],
+            'connector_errors':connector_errors if connector_errors is not None else
+                (json.loads(stored[0]) if stored else [])}
+
+
 def _main(argv=None):
     from .automation import submission_rounds
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output',type=Path)
     commands=parser.add_subparsers(dest='action',required=True)
-    commands.add_parser('doctor');commands.add_parser('status');commands.add_parser('reviews');commands.add_parser('work');commands.add_parser('tick')
+    commands.add_parser('doctor')
+    p=commands.add_parser('status');p.add_argument('--compact',action='store_true',
+                                                help='Aggregate status without loading task payloads')
+    commands.add_parser('reviews');commands.add_parser('work');commands.add_parser('tick')
     p=commands.add_parser('review-digest',
                           description='Review inventory. A PASS on an awaiting reply or first contact may include a signed edited_body.')
     p.add_argument('--work',type=Path,required=True);p.add_argument('--format',choices=['text','json'],default='text')
@@ -3496,13 +3657,17 @@ def _main(argv=None):
                     result={'paused':config['paused'],'mailbox_adapter':config.get('mailbox_adapter'),
                             'automatic_mail_enabled':config.get('automation',{}).get('automatic_mail',False),
                             **work(ledger.tasks,ROOT,config)}
+                elif args.action=='tick' or getattr(args,'compact',False):
+                    result=status_summary(ledger.tasks,config,
+                                          ingest_errors if tick else None,connector_errors if tick else None)
                 else:
                     from .prior_work_issues import inventory_view as prior_work_view
-                    result={'schema_version':1,'paused':config['paused'],'tasks':ledger.tasks.all(),
+                    rows=ledger.tasks.all()
+                    result={'schema_version':1,'paused':config['paused'],'tasks':rows,
                             'admission_errors':ingest_errors,
                             'connector_errors':connector_errors,
                             **prior_work_view(ledger.tasks),
-                            'counts':{s:sum(r['state']==s for r in ledger.tasks.all()) for s in sorted({r['state'] for r in ledger.tasks.all()})}}
+                            'counts':ledger.tasks.counts()}
                     from .pipeline import status as pipeline_status
                     result['pipeline']=pipeline_status(ledger.tasks,ROOT,config)
                     migration=ledger.tasks.db.execute(

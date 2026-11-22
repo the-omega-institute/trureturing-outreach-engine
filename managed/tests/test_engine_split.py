@@ -122,7 +122,10 @@ class PublicLogTests(unittest.TestCase):
         self.assertRegex(public, r'tick complete [\d.]+s')
         for value in planted:
             self.assertNotIn(value, public)
-            self.assertIn(value, detailed[0])
+        for value in (planted[0],planted[-1]):self.assertIn(value,detailed[0])
+        for value in planted[1:-1]:self.assertNotIn(value,detailed[0])
+        self.assertNotIn('"tasks":',detailed[0])
+        self.assertIn('"counts_by_kind":',detailed[0])
 
     def test_quiet_success_still_uploads_a_nonempty_private_log(self):
         public = io.StringIO()

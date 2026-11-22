@@ -24,9 +24,13 @@ class Clock:
 
 class Remote(Releases):
     repo='fixture/repo'
+    upload_retained=control.Releases.upload_retained
     def __init__(self):super().__init__();self.files={};self.downloaded=[]
     def ensure(self):pass
     def prune_snapshots(self,*args):pass
+    def prune_logs(self,*args,**kwargs):pass
+    def evict_oldest_log(self,*args):return 0
+    def prune_ingested(self,receipts=None):pass
     def download(self,name,folder):
         self.downloaded.append(name)
         return super().download(name,folder)
@@ -511,7 +515,7 @@ class TickBudgetTests(unittest.TestCase):
             pruned.append(args)
         self.remote.upload=upload_at_limit;self.remote.prune_snapshots=prune
         self.run_tick(5)
-        self.assertFalse(limited);self.assertEqual(len(pruned),1)
+        self.assertFalse(limited);self.assertEqual(len(pruned),3)
         self.assertEqual(self.rows()['a']['state'],'awaiting-review')
 
 

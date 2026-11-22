@@ -233,6 +233,7 @@ class Tasks:
           id TEXT NOT NULL, state TEXT NOT NULL, revision INTEGER NOT NULL,
           at REAL NOT NULL, data TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS control_events(id TEXT PRIMARY KEY, payload TEXT NOT NULL);
+        CREATE TABLE IF NOT EXISTS input_asset_receipts(identity TEXT PRIMARY KEY, generation INTEGER NOT NULL);
         CREATE TABLE IF NOT EXISTS pipeline_sources(result_id TEXT PRIMARY KEY,
           identity TEXT NOT NULL, payload TEXT NOT NULL, baseline INTEGER NOT NULL,
           task_id TEXT);
@@ -274,6 +275,51 @@ class Tasks:
         for key in ['request','data']:result[key]=json.loads(result[key])
         return result
     def all(self):return [self.get(r[0]) for r in self.db.execute('SELECT id FROM tasks ORDER BY rowid')]
+
+    def counts(self,column='state'):
+        require(column in {'state','kind'},'Unknown task count column')
+        return dict(self.db.execute(f'SELECT {column},COUNT(*) FROM tasks GROUP BY {column} ORDER BY {column}'))
+
+    def lane_rows(self):
+        """Project only lane/lineage fields in SQLite, excluding bulky payloads.
+
+        Keep the shape consumed by correspondence.linked_contacts and lanes;
+        neither prompts, thread bodies, results nor execution history cross
+        the Python boundary. SQLite's page cache stays bounded as it scans.
+        """
+        def field(column,path):return f"json_extract({column},'$.{path}')"
+        def obj(fields):
+            return 'json_object('+','.join(f"'{key}',{value}" for key,value in fields.items())+')'
+        def ids(column,path):
+            return {key:field(column,f'{path}.{key}') for key in
+                    ('result_id','problem_id','id','result_ids','problem_ids')}
+        inputs=ids('request','inputs')
+        inputs.update({key:field('request','inputs.'+key) for key in ('owner_ids','reply_origin_task_id')})
+        inputs['mailbox_observation']=obj({'email':"COALESCE("+field('request','inputs.mailbox_observation.email')+",'')"})
+        inputs['pipeline']=obj({**ids('request','inputs.pipeline'),
+                                'note_task_id':field('request','inputs.pipeline.note_task_id')})
+        inputs['result']=obj(ids('request','inputs.result'))
+        inputs['automation_parent']=obj({'task_id':field('request','inputs.automation_parent.task_id')})
+        inputs['note_sources']=("json((SELECT json_group_array(json_object('task_id',json_extract(value,'$.task_id'))) "
+                                "FROM json_each(request,'$.inputs.note_sources')))")
+        delivery={}
+        for envelope in ('collection_envelope','envelope'):
+            path='mathesis_delivery.'+envelope+'.metadata'
+            delivery[envelope]=obj({'metadata':obj({
+                'origin':obj(ids('data',path+'.origin')),
+                'review':obj({'record':obj(ids('data',path+'.review.record'))})})})
+        # problem_ids prefers collection_envelope when present; preserve its
+        # absence so the projected envelope has the same fallback semantics.
+        for envelope in delivery:
+            delivery[envelope]=("CASE WHEN json_extract(data,'$.mathesis_delivery."+envelope+
+                                "') IS NOT NULL AND json_extract(data,'$.mathesis_delivery."+envelope+
+                                "') != '{}' THEN "+delivery[envelope]+" ELSE NULL END")
+        data=obj({'pool_group':field('data','pool_group'),'pool_lane':field('data','pool_lane'),
+                  'publication_loop':obj(ids('data','publication_loop')),
+                  'mathesis_delivery':obj(delivery)})
+        request=obj({'inputs':obj(inputs)})
+        return [{**dict(row),'request':json.loads(row['request']),'data':json.loads(row['data'])}
+                for row in self.db.execute(f'SELECT id,owner,kind,state,{request} AS request,{data} AS data FROM tasks ORDER BY rowid')]
     def add(self,request):
         validate_request(request)
         with self.tx():

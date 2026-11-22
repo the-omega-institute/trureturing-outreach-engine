@@ -388,3 +388,51 @@ class SandboxGroupTests(PoolFixture, unittest.TestCase):
         self.assertEqual(pool.slot(row), (True, mail))
         self.tick()
         self.assertEqual(self.ledger.tasks.get(row['id']), row)
+
+    def idle_past_quota_evidence(self, paused=False, extra_notes=False):
+        """Health and idle passes after the quota evidence and idle grace expired."""
+        entries = self.tagged_entries()
+        if extra_notes:
+            entries.append({**entries[0], 'sandbox_id': 'sbx_spare', 'workspace_id': 'wks_spare'})
+            self.ledger.tasks.db.execute('UPDATE pipeline_state SET payload=? WHERE key=?',
+                                         (canonical(entries), 'sandbox_pool'))
+        self.ledger.tasks.db.execute('INSERT INTO pipeline_state VALUES(?,?)', (
+            'sandbox_pool_capacity', canonical({'groups': {'notes': self.now, 'mail': self.now}})))
+        # Placement fell behind (advance ran out of tick budget); only health runs.
+        self.now += CAPACITY_BLOCK_SECONDS + 600
+        pool = SandboxPool(self.ledger, self.cfg['sandbox_pool'], self.cfg['kinds'], paused=paused)
+        pool.health(self.cma)
+        pool.idle(self.cma)
+        rotated = {e['sandbox_id']: e['rotated'] for e in self.state('sandbox_pool_cleanup')}
+        return pool, entries, rotated
+
+    def test_group_keeps_its_last_sandbox_while_its_queued_work_waits(self):
+        waiting = self.queue('waiting', 'shortnote')
+        pool, (notes, mail), rotated = self.idle_past_quota_evidence()
+        # The mail group has no queued work and still rotates its idle Sandbox.
+        self.assertEqual(rotated, {mail['sandbox_id']: 'idle'})
+        self.assertEqual([e['sandbox_id'] for e in self.state()], [notes['sandbox_id']])
+        self.assertIn(notes['sandbox_id'], pool.available)
+        self.assertEqual(pool.slot(waiting), (True, self.state()[0]))
+        # Without waiting work the same Sandbox rotates as idle.
+        self.ledger.tasks.update('waiting', waiting['revision'], 'failed', {})
+        pool = SandboxPool(self.ledger, self.cfg['sandbox_pool'], self.cfg['kinds'])
+        pool.health(self.cma)
+        self.assertEqual(self.state(), [])
+        self.assertEqual(self.state('sandbox_pool_cleanup')[-1]['rotated'], 'idle')
+
+    def test_idle_rotation_is_unchanged_when_paused(self):
+        self.queue('waiting', 'shortnote')
+        _, (notes, mail), rotated = self.idle_past_quota_evidence(paused=True)
+        self.assertEqual(rotated, {notes['sandbox_id']: 'idle', mail['sandbox_id']: 'idle'})
+
+    def test_idle_rotation_is_unchanged_for_disabled_kinds(self):
+        self.queue('waiting', 'mathesis')  # The notes group's mathesis kind is not enabled.
+        _, (notes, mail), rotated = self.idle_past_quota_evidence()
+        self.assertEqual(rotated, {notes['sandbox_id']: 'idle', mail['sandbox_id']: 'idle'})
+
+    def test_only_the_last_usable_sandbox_of_the_group_is_kept(self):
+        self.queue('waiting', 'shortnote')
+        _, (notes, mail, spare), rotated = self.idle_past_quota_evidence(extra_notes=True)
+        self.assertEqual(rotated, {notes['sandbox_id']: 'idle', mail['sandbox_id']: 'idle'})
+        self.assertEqual([e['sandbox_id'] for e in self.state()], [spare['sandbox_id']])

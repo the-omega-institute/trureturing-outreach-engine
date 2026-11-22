@@ -1669,9 +1669,12 @@ def adopt_pool_sandbox(ledger,value,secret):
     """Apply an operator-signed adoption of an existing CMA Sandbox into a pool group.
 
     Used when the account Sandbox quota is held by Sandboxes CMA cannot retire
-    and a healthy Sandbox of ours exists outside the pool (Wenlin 2026-11-22:
-    use the 2026-11-20 Sandbox for replies; replies and first contacts keep
-    separate Sandboxes). Pool health verifies the Sandbox on the next tick.
+    and a healthy Sandbox of ours exists outside the pool (owner decision
+    2026-11-22: replies and first contacts keep separate Sandboxes). Pool
+    health verifies the Sandbox on the next tick.
+    A Sandbox on the cleanup list returns only from a rotation CMA retained
+    (sandbox_pool.readoption_refusal); it leaves that list in the same
+    transaction and keeps its placement count.
     """
     require(bool(secret),'Recovery verification key is not configured')
     require(set(value)=={'schema_version','sandbox_id','workspace_id','group','reason','signature'}
@@ -1694,11 +1697,22 @@ def adopt_pool_sandbox(ledger,value,secret):
         entries=json.loads(row[0]) if row else []
         require(not any(e.get('sandbox_id')==value['sandbox_id'] for e in entries),'Sandbox is already in the pool')
         cleanup=db.execute("SELECT payload FROM pipeline_state WHERE key='sandbox_pool_cleanup'").fetchone()
-        require(not any(e.get('sandbox_id')==value['sandbox_id'] for e in (json.loads(cleanup[0]) if cleanup else [])),
-                'Sandbox is on the cleanup list')
-        entries.append({'sandbox_id':value['sandbox_id'],'workspace_id':value['workspace_id'],
-                        'created_by_task':'operator-adopt-'+event[:16],'state':'active',
-                        'idle_since':ledger.tasks.clock(),'agents_placed':0,'group':value['group']})
+        cleanup=json.loads(cleanup[0]) if cleanup else []
+        prior=next((e for e in cleanup if e.get('sandbox_id')==value['sandbox_id']),None)
+        entry={'sandbox_id':value['sandbox_id'],'workspace_id':value['workspace_id'],
+               'created_by_task':'operator-adopt-'+event[:16],'state':'active',
+               'idle_since':ledger.tasks.clock(),'agents_placed':0,'group':value['group']}
+        if prior is not None:
+            from .sandbox_pool import readoption_refusal
+            refusal=readoption_refusal(prior,ledger.tasks.all())
+            if refusal is None and prior.get('workspace_id') not in (None,value['workspace_id']):
+                refusal='workspace differs'
+            require(refusal is None,'Sandbox is on the cleanup list: '+str(refusal))
+            cleanup.remove(prior)
+            entry.update(agents_placed=prior.get('agents_placed',0),
+                         readopted={'rotated':prior['rotated'],'cleanup_reason':prior['cleanup']['reason']})
+            db.execute('INSERT OR REPLACE INTO pipeline_state VALUES(?,?)',('sandbox_pool_cleanup',canonical(cleanup)))
+        entries.append(entry)
         db.execute('INSERT OR REPLACE INTO pipeline_state VALUES(?,?)',('sandbox_pool',canonical(entries)))
         db.execute('INSERT INTO control_events VALUES(?,?)',(event,canonical(value)))
 

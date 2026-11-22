@@ -148,3 +148,14 @@ class PublicLogTests(unittest.TestCase):
         self.assertRegex(public.getvalue(), r'^ValueError incident-[a-f\d]{12}\ncontrol failed [\d.]+s\n$')
         self.assertIn('Traceback', detailed[0])
         self.assertIn('unreleased subject and correspondence filename', detailed[0])
+
+
+class HostedShortNoteImportTest(unittest.TestCase):
+    def test_hosted_pages_and_notes_can_import_the_short_note_service(self):
+        import subprocess
+        import sys
+        result = subprocess.run(
+            [sys.executable, '-c', 'from scripts.short_notes import service; print(service.w.__name__)'],
+            cwd=Path(__file__).resolve().parents[2], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue(result.stdout.strip().endswith('workflow'))

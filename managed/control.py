@@ -321,7 +321,7 @@ class Releases:
 
 
 SNAPSHOTS_KEPT=150
-INPUT_PREFIXES=('request-','local-result-','submission-review-','review-','decision-','draft-revision-','mathesis-','prompt-requeue-','failed-requeue-',BACKFILL_PREFIX+'-',PRIOR_WORK_BACKFILL+'-')
+INPUT_PREFIXES=('request-','local-result-','submission-review-','review-','decision-','draft-revision-','mathesis-','prompt-requeue-','failed-requeue-','pool-adopt-',BACKFILL_PREFIX+'-',PRIOR_WORK_BACKFILL+'-')
 SAVE_INTERVAL=45
 INGEST_REJECTION_LIMIT=3
 
@@ -435,6 +435,8 @@ class Ledger:
                     requeue_large_task(self,value)
                 elif name.startswith('failed-requeue-'):
                     requeue_failed_task(self,value,review_secret)
+                elif name.startswith('pool-adopt-'):
+                    adopt_pool_sandbox(self,value,review_secret)
                 elif name.startswith('local-result-'):
                     from .local_run import ingest
                     ingest(self,value,review_secret)
@@ -1522,6 +1524,44 @@ def requeue_large_task(ledger,value):
     with ledger.tasks.tx():
         ledger.tasks._update(row['id'],row['revision'],'queued',queued)
         ledger.tasks.db.execute('INSERT INTO control_events VALUES(?,?)',(event,canonical(value)))
+
+
+def adopt_pool_sandbox(ledger,value,secret):
+    """Apply an operator-signed adoption of an existing CMA Sandbox into a pool group.
+
+    Used when the account Sandbox quota is held by Sandboxes CMA cannot retire
+    and a healthy Sandbox of ours exists outside the pool (Wenlin 2026-11-22:
+    use the 2026-11-20 Sandbox for replies; replies and first contacts keep
+    separate Sandboxes). Pool health verifies the Sandbox on the next tick.
+    """
+    require(bool(secret),'Recovery verification key is not configured')
+    require(set(value)=={'schema_version','sandbox_id','workspace_id','group','reason','signature'}
+            and value['schema_version']==1,'Invalid pool adoption request')
+    signed={k:v for k,v in value.items() if k!='signature'}
+    signature=hmac.new(secret.encode(),canonical(signed).encode(),hashlib.sha256).hexdigest()
+    require(isinstance(value['signature'],str) and hmac.compare_digest(signature,value['signature']),
+            'Pool adoption signature failed')
+    require(all(isinstance(value[k],str) and value[k].strip() for k in ('sandbox_id','workspace_id','group','reason')),
+            'Pool adoption needs sandbox, workspace, group and reason')
+    require(value['sandbox_id'].startswith('sbx_') and value['workspace_id'].startswith('wks_'),'Invalid CMA identifiers')
+    from .location import settings
+    groups={g['name'] for g in (settings('sandbox_pool') or {}).get('groups',[])}
+    require(value['group'] in groups,'Unknown pool group '+value['group'])
+    event=digest(value)
+    with ledger.tasks.tx():
+        db=ledger.tasks.db
+        if db.execute('SELECT 1 FROM control_events WHERE id=?',(event,)).fetchone():return
+        row=db.execute("SELECT payload FROM pipeline_state WHERE key='sandbox_pool'").fetchone()
+        entries=json.loads(row[0]) if row else []
+        require(not any(e.get('sandbox_id')==value['sandbox_id'] for e in entries),'Sandbox is already in the pool')
+        cleanup=db.execute("SELECT payload FROM pipeline_state WHERE key='sandbox_pool_cleanup'").fetchone()
+        require(not any(e.get('sandbox_id')==value['sandbox_id'] for e in (json.loads(cleanup[0]) if cleanup else [])),
+                'Sandbox is on the cleanup list')
+        entries.append({'sandbox_id':value['sandbox_id'],'workspace_id':value['workspace_id'],
+                        'created_by_task':'operator-adopt-'+event[:16],'state':'active',
+                        'idle_since':ledger.tasks.clock(),'agents_placed':0,'group':value['group']})
+        db.execute('INSERT OR REPLACE INTO pipeline_state VALUES(?,?)',('sandbox_pool',canonical(entries)))
+        db.execute('INSERT INTO control_events VALUES(?,?)',(event,canonical(value)))
 
 
 def requeue_failed_task(ledger,value,secret):
@@ -3265,6 +3305,8 @@ def _main(argv=None):
     commands.add_parser('mathesis-test')
     p=commands.add_parser('requeue-large');p.add_argument('--task',required=True)
     p=commands.add_parser('requeue-failed');p.add_argument('--task',required=True);p.add_argument('--reason',required=True)
+    p=commands.add_parser('pool-adopt');p.add_argument('--sandbox',required=True);p.add_argument('--workspace',required=True)
+    p.add_argument('--group',required=True);p.add_argument('--reason',required=True)
     p=commands.add_parser('enqueue');p.add_argument('request',type=Path)
     p=commands.add_parser('review');p.add_argument('envelope',type=Path)
     p=commands.add_parser('decision');p.add_argument('envelope',type=Path)
@@ -3303,6 +3345,13 @@ def _main(argv=None):
                 envelope['signature']=hmac.new(secret.encode(),canonical(envelope).encode(),hashlib.sha256).hexdigest()
                 result=stage(envelope,'failed-requeue',releases,folder)
             finally:ledger.tasks.close()
+        elif args.action=='pool-adopt':
+            require(args.reason.strip(),'Pool adoption needs a reason')
+            envelope={'schema_version':1,'sandbox_id':args.sandbox,'workspace_id':args.workspace,
+                      'group':args.group,'reason':args.reason}
+            secret=review_key()
+            envelope['signature']=hmac.new(secret.encode(),canonical(envelope).encode(),hashlib.sha256).hexdigest()
+            result=stage(envelope,'pool-adopt',releases,folder)
         elif args.action=='todo':
             from .owner_todo import owner_todo, render_markdown
             value=owner_todo(json.loads(args.work.read_text()),ROOT)

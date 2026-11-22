@@ -33,9 +33,9 @@ jobs:
     environment: outreach-runtime
     runs-on: ubuntu-latest
     timeout-minutes: 18
-    env:
-      OUTREACH_CREDENTIAL_FILE: ${{ runner.temp }}/outreach-runtime.env
     steps:
+      - name: Locate runtime credentials
+        run: echo "OUTREACH_CREDENTIAL_FILE=$RUNNER_TEMP/outreach-runtime.env" >> "$GITHUB_ENV"
       - uses: actions/checkout@v4
         with:
           persist-credentials: false

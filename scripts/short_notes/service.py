@@ -24,7 +24,12 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-import workflow as w
+# ``managed.hosted`` imports this module as ``scripts.short_notes.service``;
+# CI and the tests run it as a script from its own directory.
+try:
+    from . import workflow as w
+except ImportError:
+    import workflow as w
 from managed.location import DATA_ROOT, settings
 
 CATALOG = DATA_ROOT / 'tables/publications.json'

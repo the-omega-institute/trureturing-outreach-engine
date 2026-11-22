@@ -2330,6 +2330,17 @@ def stage_reserves(budget):
             'pipeline':min(float(env('OUTREACH_PIPELINE_RESERVE_SECONDS','30')),0.05*budget)}
 
 
+def mathesis_delivery_reserve(stage_seconds):
+    """Part of the mathesis stage's slice kept for Mathesis delivery.
+
+    Publication runs first in the stage and could use all of it: on
+    2026-11-22/23 the publication loop used ~170 s per tick and every ready
+    Mathesis delivery was deferred by the budget for hours. The slice is a
+    floor nested in the mathesis stage, so other stages' shares are unchanged.
+    """
+    return min(float(os.environ.get('OUTREACH_MATHESIS_DELIVERY_RESERVE_SECONDS','45')),0.5*stage_seconds)
+
+
 def dispatch_order(rows, config=None, correspondence=(), deferred=None):
     """Order CMA work, giving the reply lane the first queued admission pass."""
     # Advance running/finished work first: collecting results and retiring their
@@ -3326,11 +3337,20 @@ def run_tick(ledger,config,folder,tick,oracle_fetcher=None):
     # never reached repairs or queued work, so its slice is reserved on every
     # tick, whatever the rotation. Deferred intake units resume next tick.
     budget=tick.deadline-tick.started
-    for stage,seconds in stage_reserves(budget).items():
+    reserves=stage_reserves(budget)
+    for stage,seconds in reserves.items():
         # Sent Items recording is cheap but ran 0 pages per tick once setup and
         # the other reserves exceeded the budget; give it a floor (2026-11-15).
         tick.reserve(stage,seconds,floor=stage=='sent-events',dedicated=stage in {'mailbox-intake','pipeline'},
                      hold=stage!='pipeline')
+    if ledger.tasks.db.execute("""
+            SELECT 1 FROM tasks WHERE kind='mathesis'
+            AND json_extract(data, '$.mathesis_delivery.phase') IN ('ready','pending','conflict') LIMIT 1
+            """).fetchone():
+        # Publication precedes delivery in the mathesis stage; keep part of the
+        # stage for delivery so it attempts at least one row per tick.
+        tick.reserve('mathesis-delivery',mathesis_delivery_reserve(reserves['mathesis']),floor=True,
+                     within='mathesis')
     if not config['paused'] and ledger.tasks.db.execute("""
             SELECT 1 FROM tasks WHERE state='owner-draft'
             AND json_extract(data, '$.draft_receipt.remote_id') IS NOT NULL LIMIT 1
@@ -3391,7 +3411,8 @@ def run_tick(ledger,config,folder,tick,oracle_fetcher=None):
                     connector_errors.append({'connector':'sent-events','error':sent_status['error']})
             elif name=='mathesis':
                 publish_notes(ledger,config,ROOT,folder)
-                deliver_mathesis(ledger,config,ROOT,folder)
+                with phase(ledger,'mathesis-delivery'),finished(tick,'mathesis-delivery'):
+                    deliver_mathesis(ledger,config,ROOT,folder)
             elif name=='formalization-requests':
                 file_formalization(ledger,config)
             elif name=='prior-work-issues':

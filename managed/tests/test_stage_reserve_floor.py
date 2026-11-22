@@ -43,6 +43,41 @@ class StageReserveFloorTests(unittest.TestCase):
         clock.now=600+RESERVE_GRACE+0.5
         self.assertFalse(tick.allow('sent-events','c'))
 
+    def test_nested_delivery_floor_survives_publication_using_its_stage(self):
+        clock,tick=self.make()
+        tick.reserve('mathesis-delivery',45,floor=True,within='mathesis')
+        # Other stages hold only the mathesis stage's own reserve.
+        tick.current='advance'
+        self.assertEqual(tick.limit(),600-(90+90+30))
+        tick.finished.update({'advance','delivery','sent-events'})
+        # Publication runs first in the stage and leaves the delivery slice.
+        tick.current='mathesis'
+        self.assertEqual(tick.limit(),600-45)
+        clock.now=554;self.assertTrue(tick.allow('publication','new-1'))
+        clock.now=556;self.assertFalse(tick.allow('publication','new-2'))
+        # Even after publication's last unit overran the deadline, delivery
+        # gets its own slice, capped like every floor.
+        clock.now=610;tick.current='mathesis-delivery'
+        self.assertTrue(tick.allow('mathesis','ready-1'))
+        clock.now=600+RESERVE_GRACE+0.5
+        self.assertFalse(tick.allow('mathesis','ready-2'))
+        self.assertEqual(tick.pending,{'publication':['new-2'],'mathesis':['ready-2']})
+
+    def test_running_stage_does_not_hold_its_reserve_against_its_nested_slice(self):
+        clock,tick=self.make()
+        tick.reserve('mathesis-delivery',45,floor=True,within='mathesis')
+        tick.finished.update({'advance','delivery'})
+        clock.now=400;tick.current='mathesis-delivery'
+        # sent-events still holds 30; the enclosing mathesis stage holds nothing.
+        self.assertEqual(tick.limit(),600-30)
+
+    def test_exhausted_nested_slice_rotates_with_its_stage(self):
+        clock=Clock();tick=Tick(100,clock);tick.order(['advance','mathesis'])
+        tick.reserve('mathesis-delivery',10,floor=True,within='mathesis')
+        clock.now=100+RESERVE_GRACE+1;tick.current='mathesis-delivery'
+        self.assertFalse(tick.allow('mathesis','late'))
+        self.assertEqual(tick.resume,'mathesis')
+
     def test_budget_unchanged_without_reserves(self):
         clock=Clock();tick=Tick(100,clock)
         clock.now=99;self.assertTrue(tick.allow('x','a'))

@@ -2,6 +2,7 @@
 import base64
 import copy
 import hashlib
+import io
 import json
 from pathlib import Path
 import subprocess
@@ -497,6 +498,84 @@ class PublicationTests(unittest.TestCase):
         self.assertEqual(self.gh.releases, {})
         self.assertEqual(automation.work(self.ledger.tasks, self.root)['publication_failures'], [])
 
+    def checked_exclusions(self, runs=1):
+        """Run publication and return the task IDs whose exclusion was evaluated."""
+        calls, check = [], p.check_exclusion
+
+        def observe(row, *args, **kwargs):
+            calls.append(row['id'])
+            return check(row, *args, **kwargs)
+
+        with patch.object(p, 'check_exclusion', side_effect=observe):
+            for _ in range(runs):
+                self.run_publication()
+        return calls
+
+    def test_unchanged_exclusion_is_not_reevaluated_until_its_hold_is_lifted(self):
+        self.prepared()
+        self.table['holds'].append({'task_id': 'mathesis-1', 'decision': 'HOLD'}); self.write_decisions()
+        self.assertEqual(self.checked_exclusions(), ['mathesis-1'])
+        excluded = self.row()
+        loop = excluded['data']['publication_loop']
+        self.assertEqual((loop['phase'], loop['reason']), ('excluded', 'held in tables/decisions.json'))
+        self.assertEqual(self.checked_exclusions(runs=2), [])
+        self.assertEqual(self.row(), excluded)  # not re-recorded: same revision and updated time
+        # An unrelated new note is evaluated (before and after packaging) on its
+        # own; the exclusion stays settled.
+        self.prepared('other', metadata={**self.metadata, 'id': 'other', 'problem_ids': ['other']})
+        self.assertEqual(self.checked_exclusions(), ['other', 'other'])
+        self.assertEqual(self.row(), excluded)
+        # Records from before the input digest are evaluated once more.
+        data = copy.deepcopy(excluded['data']); del data['publication_loop']['exclusion_inputs']
+        excluded = self.ledger.tasks.update('mathesis-1', excluded['revision'], excluded['state'], data)
+        self.assertEqual(self.checked_exclusions(runs=2), ['mathesis-1'])
+        # Lifting the hold is a changed input: the row is evaluated and published.
+        self.table['holds'].pop(); self.write_decisions()
+        self.assertEqual(self.checked_exclusions(), ['mathesis-1', 'mathesis-1'])
+        self.assertEqual(self.row()['data']['publication_loop']['phase'], 'queued')
+        self.assertIn('mathesis_delivery', self.row()['data'])
+
+    def test_changed_source_verdict_reevaluates_a_settled_exclusion(self):
+        parent = self.ledger.tasks.add(request('note-0', kind='shortnote'))
+        parent = self.ledger.tasks.update('note-0', parent['revision'], 'revising', {'review': {'verdict': 'HOLD'}})
+        self.prepared(inputs={'automation_parent': {'task_id': 'note-0', 'result_hash': 'not-used',
+                                                    'purpose': 'revision'}})
+        self.assertEqual(self.checked_exclusions(), ['mathesis-1'])
+        self.assertEqual(self.row()['data']['publication_loop']['reason'], 'task or source note is held')
+        self.assertEqual(self.checked_exclusions(), [])
+        self.ledger.tasks.update('note-0', parent['revision'], 'revising', {'review': {'verdict': 'BOUNCE'}})
+        self.assertEqual(self.checked_exclusions(), ['mathesis-1'])
+        self.assertNotEqual(self.row()['data']['publication_loop']['phase'], 'excluded')
+
+    def test_package_exclusion_skips_downloads_until_the_decision_changes(self):
+        creators = [*self.metadata['creators'], {'name': 'Joint Author'}]
+        self.prepared(metadata={**self.metadata, 'creators': creators})
+        self.run_publication()
+        loop = self.row()['data']['publication_loop']
+        self.assertEqual((loop['phase'], loop['reason']), ('excluded', 'joint work needs its own publication decision'))
+        self.assertEqual(loop['exclusion_note'], {'id': 'alpha', 'problem_ids': ['problem-alpha']})
+        with patch.object(p, 'package', wraps=p.package) as package:
+            self.assertEqual(self.checked_exclusions(runs=2), [])
+        package.assert_not_called()
+        self.table['short_note_publication']['independent_authors'].append('Joint Author'); self.write_decisions()
+        self.assertEqual(self.checked_exclusions(), ['mathesis-1', 'mathesis-1'])
+        self.assertEqual(self.row()['data']['publication_loop']['phase'], 'queued')
+
+    def test_exclusion_settles_after_its_own_record_drops_note_identities(self):
+        with patch.object(self.gh, 'register_note', side_effect=RuntimeError('SHA conflict')):
+            self.prepared(); self.run_publication()
+        loop = self.row()['data']['publication_loop']
+        self.assertEqual((loop['phase'], loop['note_id']), ('pending', 'alpha'))
+        self.table['holds'].append({'note_id': 'alpha', 'decision': 'HOLD'}); self.write_decisions()
+        with patch.object(self.ledger.tasks, 'clock', return_value=loop['next_retry_at']):
+            # The saved note ID matches first; the excluded record no longer has
+            # it, so the next pass reads the package's note ID; then it settles.
+            self.assertEqual(self.checked_exclusions(runs=3), ['mathesis-1', 'mathesis-1', 'mathesis-1'])
+            loop = self.row()['data']['publication_loop']
+            self.assertEqual((loop['phase'], loop['exclusion_note']['id']), ('excluded', 'alpha'))
+            self.assertEqual(self.checked_exclusions(runs=2), [])
+        self.assertNotIn('mathesis_delivery', self.row()['data'])
+
     def test_stale_pass_changed_release_and_unreviewed_package_never_publish(self):
         row = self.prepared()
         original = copy.deepcopy(row['data'])
@@ -645,6 +724,92 @@ class PublicationTests(unittest.TestCase):
                 patch.object(self.remote, 'prune_snapshots', create=True):
             control.run_tick(self.ledger, self.config, self.folder, tick)
         self.assertEqual(order, ['select', 'deliver'])
+
+    def tick_with_heavy_publication(self, environment=None):
+        """Run one real tick whose publication backlog alone exhausts the budget."""
+        from managed.tick import Tick
+        self.prepared(); self.run_publication()
+        self.assertEqual(self.row()['data']['mathesis_delivery']['phase'], 'ready')
+        for index in range(5):
+            name = f'backlog-{index}'
+            self.prepared(name, kind='shortnote', handoff=False,
+                          metadata={**self.metadata, 'id': name, 'problem_ids': ['problem-' + name]})
+        self.config['mathesis']['max_publications_per_tick'] = 5
+        now = [0.0]
+        tick = Tick(600, clock=lambda: now[0]); tick.bind(self.ledger)
+        register = self.gh.register_note
+
+        def slow_registration(metadata):
+            now[0] += 150  # GitHub work for each new publication
+            return register(metadata)
+
+        with patch.dict('os.environ', {'OUTREACH_REVIEW_KEY': 'secret', 'MATHESIS_ACCESS_TOKEN': 'fixture',
+                                       **(environment or {})}), \
+                patch('managed.control.ROOT', self.root), \
+                patch('managed.control.subprocess.check_output', return_value='a' * 40), \
+                patch('managed.control.CMA'), patch('managed.control.advance'), \
+                patch('managed.control.refresh_oracle_capacity'), \
+                patch('managed.mailbox.configured'), patch('managed.mailbox.intake'), \
+                patch('managed.pipeline.reconcile'), patch('managed.automation.reconcile'), \
+                patch('managed.delivery.advance'), \
+                patch('managed.publication.Publications', return_value=self.gh), \
+                patch.object(self.gh, 'register_note', side_effect=slow_registration), \
+                patch.object(p.notes.w, 'GitHub', return_value=self.gh), \
+                patch('managed.mathesis_delivery.Mathesis', return_value=self.client), \
+                patch('managed.mathesis_delivery.gate'), \
+                patch.object(self.remote, 'prune_snapshots', create=True), \
+                patch('sys.stderr', new_callable=io.StringIO) as log:
+            control.run_tick(self.ledger, self.config, self.folder, tick)
+        # Publication alone used the whole budget and deferred part of its backlog.
+        self.assertGreaterEqual(now[0], tick.deadline)
+        self.assertTrue(tick.pending['publication'])
+        return tick, log.getvalue()
+
+    def test_ready_delivery_is_attempted_when_publication_exhausts_the_tick(self):
+        tick, log = self.tick_with_heavy_publication()
+        self.assertEqual(self.client.posts, 1)
+        row = self.row()
+        self.assertEqual(row['state'], 'verified')
+        self.assertEqual(row['data']['mathesis_delivery']['phase'], 'delivered')
+        self.assertFalse(tick.pending.get('mathesis'))
+        self.assertIn('tick-phase mathesis-delivery', log)
+
+    def test_without_the_delivery_slice_publication_starves_delivery(self):
+        # The production regression: publication used the stage, delivery deferred.
+        tick, _ = self.tick_with_heavy_publication({'OUTREACH_MATHESIS_DELIVERY_RESERVE_SECONDS': '0'})
+        self.assertEqual(self.client.posts, 0)
+        self.assertEqual(self.row()['data']['mathesis_delivery']['phase'], 'ready')
+        self.assertEqual(tick.pending['mathesis'], ['mathesis-1'])
+
+    def test_delivery_batch_takes_new_deliveries_oldest_first_before_repolls(self):
+        now = [1_000.0]
+
+        def clock():
+            now[0] += 1
+            return now[0]
+
+        self.ledger.tasks.clock = clock
+        self.prepared(); self.run_publication()
+        with patch('managed.mathesis_delivery.gate'):
+            mathesis_delivery.advance(self.ledger, self.config, self.root, self.folder, self.client, 'secret', self.gh)
+        delivered = self.row()
+        data = copy.deepcopy(delivered['data'])
+        data['mathesis_delivery']['public_link'] = {'phase': 'pending', 'reason': 'Resume to queue the public reading link'}
+        self.ledger.tasks.update(delivered['id'], delivered['revision'], delivered['state'], data)
+        for name in ('beta', 'gamma'):
+            self.prepared(name, metadata={**self.metadata, 'id': name, 'problem_ids': ['problem-' + name]})
+        self.run_publication()
+        self.config['mathesis']['deliveries_per_tick'] = 1
+        phases = []
+        for _ in range(3):
+            with patch('managed.mathesis_delivery.gate'):
+                mathesis_delivery.advance(self.ledger, self.config, self.root, self.folder, self.client, 'secret',
+                                          self.gh)
+            phases.append([self.row(name)['data']['mathesis_delivery'].get('public_link', {}).get('phase')
+                           for name in ('beta', 'gamma', 'mathesis-1')])
+        self.assertEqual(phases, [['queued', None, 'pending'], ['queued', 'queued', 'pending'],
+                                  ['queued', 'queued', 'queued']])
+        self.assertEqual(self.client.posts, 3)
 
     def test_registration_uses_current_table_sha_and_preserves_existing_pause(self):
         gh = p.Publications('fixture/repo')

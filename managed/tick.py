@@ -40,6 +40,7 @@ class Tick:
         self.deadline=self.started+seconds;self.previous={};self.pending={}
         self.count=0;self.exhausted=False;self.resume=None;self.stages=[];self.current=None;self.timings={}
         self.reserves={};self.finished=set();self.stage_started={};self.floors=set();self.dedicated=set();self.unheld=set()
+        self.parents={}
 
     def bind(self,ledger):
         self.ledger=ledger;ledger.tick=self
@@ -53,11 +54,14 @@ class Tick:
         self.stages=names[offset:]+names[:offset]
         return self.stages
 
-    def reserve(self,stage,seconds,floor=False,*,dedicated=False,hold=True):
+    def reserve(self,stage,seconds,floor=False,*,dedicated=False,hold=True,within=None):
         """Keep `seconds` of the budget for a stage until it has run.
 
         A floor extends the shared limit within RESERVE_GRACE. A dedicated
         slice uses its own deadline from the first unit, even after an overrun.
+        A slice `within` a parent stage runs inside that stage and is part of
+        its reserve: other stages hold only the parent's seconds, and the
+        parent's own work before the slice leaves it `seconds`.
         """
         require(math.isfinite(seconds) and seconds>=0,'Invalid stage reserve seconds')
         self.reserves[stage]=seconds
@@ -66,6 +70,14 @@ class Tick:
         # A short dedicated slice may run on its own deadline without taking
         # shared time from the stages before it.
         if not hold:self.unheld.add(stage)
+        if within is not None:self.parents[stage]=within
+
+    def held(self,stage):
+        if stage==self.current or stage in self.finished or stage in self.unheld:return False
+        # The running parent of a nested slice does not hold time against it.
+        if stage==self.parents.get(self.current):return False
+        # A nested slice is held only by its parent's own earlier work.
+        return self.parents.get(stage,self.current)==self.current
 
     def limit(self):
         if self.current in self.dedicated or self.current in self.floors:
@@ -75,8 +87,7 @@ class Tick:
             if self.current in self.dedicated:
                 return stage_limit
         # Shared work leaves time for the stages that still have reserves.
-        held=sum(seconds for stage,seconds in self.reserves.items()
-                 if stage!=self.current and stage not in self.finished and stage not in self.unheld)
+        held=sum(seconds for stage,seconds in self.reserves.items() if self.held(stage))
         limit=self.deadline-held
         # A floor stage always gets its own slice from its first unit, even
         # when setup plus the other stages' reserves already exceed the budget
@@ -93,9 +104,11 @@ class Tick:
                 # Give later phases a turn before another large result batch.
                 # A stage exhausted while running last only got leftover time;
                 # start the next tick with it so it cannot stay last forever.
-                if self.current in self.stages:
-                    index=self.stages.index(self.current)
-                    self.resume=(self.current if index==len(self.stages)-1 else
+                # A nested slice rotates with the stage that contains it.
+                stage=self.parents.get(self.current,self.current)
+                if stage in self.stages:
+                    index=self.stages.index(stage)
+                    self.resume=(stage if index==len(self.stages)-1 else
                                  self.stages[(index+1)%len(self.stages)])
             pending=self.pending.setdefault(lane,[])
             if key not in pending:pending.append(key)

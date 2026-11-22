@@ -16,7 +16,7 @@ permissions:
 env:
   OUTREACH_DATA_ROOT: ${{ github.workspace }}/data
   OUTREACH_DATA_REPO: ${{ secrets.OUTREACH_DATA_REPO }}
-  OUTREACH_DATA_BRANCH: ${{ secrets.OUTREACH_DATA_BRANCH }}
+  OUTREACH_DATA_BRANCH: ${{ vars.OUTREACH_DATA_BRANCH }}
   OUTREACH_ENGINE_REPO: ${{ github.repository }}
   OUTREACH_PUBLIC_LOG: '1'
   GH_TOKEN: ${{ secrets.OUTREACH_DATA_TOKEN }}

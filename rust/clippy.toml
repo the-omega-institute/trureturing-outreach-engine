@@ -1,5 +1,6 @@
 # Pure engine logic receives time and randomness through explicit inputs/ports.
 disallowed-methods = [
+    { path = "serde_json::Map::remove", reason = "preserve_order remove swaps entries; use shift_remove." },
     { path = "std::time::SystemTime::now", reason = "Receive wall-clock time through a port." },
     { path = "std::time::Instant::now", reason = "Receive monotonic time through a port." },
 ]

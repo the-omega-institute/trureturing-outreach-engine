@@ -356,7 +356,7 @@ fn workflow_formula_matches_python() {
             .clone();
         files.extend(vector["overrides"].as_object().unwrap().clone());
         for path in vector["missing"].as_array().unwrap() {
-            files.remove(path.as_str().unwrap());
+            files.shift_remove(path.as_str().unwrap());
         }
         let result = workflow(
             text(vector, "kind"),

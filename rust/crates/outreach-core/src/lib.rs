@@ -8,9 +8,11 @@ mod status;
 mod text;
 pub use digest::review_digest;
 pub use exceptions::{exceptions, render_exceptions};
+pub use lanes::validate as validate_lanes;
 use outreach_canon::{Error, Result, Value};
 pub use reviews::reviews;
 pub use status::{StatusInput, status};
+pub const OWNER_QUESTION_AGE: f64 = 2.0 * 86400.0;
 pub use text::{casefold, py_str, truth};
 
 pub fn object<const N: usize>(fields: [(&str, Value); N]) -> Value {
@@ -37,8 +39,8 @@ pub fn regex(pattern: &str) -> Result<regex::Regex> {
 }
 /// Filesystem-free environment. Table values and workflow hashes are supplied
 /// by the CLI; empty tables are explicit fixtures, never silent I/O fallbacks.
-pub struct Environment {
+pub struct Environment<'a> {
     pub config: Value,
     pub tables: Value,
-    pub workflows: Value,
+    pub workflow: &'a dyn Fn(&str) -> Result<Value>,
 }

@@ -12,9 +12,14 @@ pub struct StatusInput {
     pub old_questions: i64,
 }
 pub fn status(input: StatusInput, env: &Environment) -> Result<Value> {
+    if env.config.get("paused").is_none() {
+        return Err(Error::new("Missing paused"));
+    }
     let mut waits = Value::Object(Default::default());
     let mut waiting = 0;
-    let persons = registry::people(&env.tables);
+    if !env.tables["contacts"]["contacts"].is_array() {
+        return Err(Error::new("Missing contacts list"));
+    }
     for source in &input.sources {
         if !truth(&source["baseline"]) && !truth(&source["task_id"]) {
             waiting += 1;
@@ -36,6 +41,7 @@ pub fn status(input: StatusInput, env: &Environment) -> Result<Value> {
             vec!["No verified author contact registered for this result".to_owned()]
         } else {
             let mut reasons = Vec::new();
+            let persons = registry::people(&env.tables)?;
             for p in contacts {
                 let found =
                     registry::preflight(s(&p["email"]), s(&p["name"]), &env.tables, &persons)?;

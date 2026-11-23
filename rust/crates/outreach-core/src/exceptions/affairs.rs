@@ -9,15 +9,19 @@ fn active_action(a: &Value) -> bool {
 }
 fn describe(a: &Value) -> String {
     if a.is_object() {
-        py_str(fallback(&[
+        let value = fallback(&[
             &a["summary"],
             &a["quote"],
             &a["what"],
             &a["text"],
             &a["obligation"],
             &a["reason"],
-            &string(""),
-        ]))
+        ]);
+        if truth(value) {
+            py_str(value)
+        } else {
+            String::new()
+        }
     } else {
         py_str(a)
     }
@@ -27,7 +31,7 @@ pub(super) fn affairs(
     env: &Environment,
     persons: &[Value],
     items: &mut Vec<Value>,
-) {
+) -> Result<()> {
     let terminal = [
         "superseded",
         "answered-by-mail",
@@ -43,10 +47,42 @@ pub(super) fn affairs(
         .iter()
         .filter(|r| !terminal.contains(&s(&r["state"])))
         .collect();
-    let owner_labels = array(&env.config["identity"]["owner_labels"]);
-    let owner = owner_labels.first().map(s).unwrap_or("");
+    let threads = env.tables["threads"]["lines"]
+        .as_array()
+        .ok_or_else(|| Error::new("Missing threads lines list"))?;
+    let papers = env.tables["submissions"]["papers"]
+        .as_array()
+        .ok_or_else(|| Error::new("Missing submissions papers list"))?;
+    for row in threads.iter().chain(papers) {
+        outreach_model::required_str(row, "id")?;
+    }
+    let needs_owner = !threads.is_empty()
+        || !papers.is_empty()
+        || live
+            .iter()
+            .any(|r| ["awaiting-user", "owner-draft"].contains(&s(&r["state"])));
+    let empty_labels = vec![string("")];
+    let owner_labels = if needs_owner {
+        env.config["identity"]["owner_labels"]
+            .as_array()
+            .ok_or_else(|| Error::new("Missing owner_labels list"))?
+    } else {
+        &empty_labels
+    };
+    let owner = owner_labels
+        .first()
+        .and_then(Value::as_str)
+        .ok_or_else(|| Error::new("Missing owner label"))?;
+    let sources: BTreeMap<_, _> = array(&env.tables["threads"]["lines"])
+        .iter()
+        .chain(array(&env.tables["submissions"]["papers"]))
+        .map(|r| (s(&r["id"]), r))
+        .collect();
     let closed = ["closed", "declined", "stopped", "cancelled"];
-    for thread in array(&env.tables["threads"]["lines"]) {
+    for thread in threads {
+        if thread.get("stage").is_some_and(|v| !v.is_string()) {
+            return Err(Error::new("Thread stage must be a string"));
+        }
         if closed.contains(&s(&thread["stage"]).to_lowercase().as_str())
             || (!["us", owner].contains(&s(&thread["ball"]))
                 && !truth(&thread["our_open_promises"])
@@ -61,13 +97,14 @@ pub(super) fn affairs(
         }
         let mut addresses: BTreeSet<_> = std::iter::once(&thread["correspondent"])
             .chain(array(&thread["co_correspondents"]))
-            .map(|p| registry::address(&p["email"]))
-            .filter(|s| !s.is_empty())
-            .collect();
+            .filter(|p| truth(&p["email"]))
+            .map(|p| registry::email(&p["email"]))
+            .collect::<Result<_>>()?;
         addresses.extend(
             array(&thread["mail_match"]["emails"])
                 .iter()
-                .map(registry::address),
+                .map(registry::email)
+                .collect::<Result<Vec<_>>>()?,
         );
         let mut ids: BTreeSet<_> = std::iter::once(&thread["id"])
             .chain(array(&thread["owner_ids"]))
@@ -109,7 +146,13 @@ pub(super) fn affairs(
         if truth(&thread["job_ids"]) || truth(&thread["running_job_id"]) || matched {
             continue;
         }
-        affair_issue(thread, "threads", items);
+        let table =
+            if s(&thread["stage"]).to_lowercase().replace('_', "-") == "independent-submission" {
+                "submissions"
+            } else {
+                "threads"
+            };
+        affair_issue(sources[s(&thread["id"])], table, items);
     }
     for p in array(&env.tables["submissions"]["papers"]) {
         if ["submitted", "accepted", "published"].contains(&s(&p["stage"]))
@@ -124,8 +167,9 @@ pub(super) fn affairs(
         }) {
             continue;
         }
-        affair_issue(p, "submissions", items);
+        affair_issue(sources[s(&p["id"])], "submissions", items);
     }
+    Ok(())
 }
 fn affair_issue(source: &Value, table: &str, items: &mut Vec<Value>) {
     let action = truth(fallback(&[&source["next_action"], &source["next_step"]]))

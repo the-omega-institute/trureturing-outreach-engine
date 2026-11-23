@@ -61,7 +61,16 @@ fn repr(v: &Value) -> String {
                     '\n' => output.push_str("\\n"),
                     '\r' => output.push_str("\\r"),
                     '\t' => output.push_str("\\t"),
-                    c if c.is_control() => output.push_str(&format!("\\x{:02x}", c as u32)),
+                    c if !printable(c) => {
+                        let cp = c as u32;
+                        output.push_str(&if cp <= 0xff {
+                            format!("\\x{cp:02x}")
+                        } else if cp <= 0xffff {
+                            format!("\\u{cp:04x}")
+                        } else {
+                            format!("\\U{cp:08x}")
+                        });
+                    }
                     c => output.push(c),
                 }
             }
@@ -77,4 +86,58 @@ pub fn casefold(value: &str) -> String {
         .chars()
         .flat_map(|c| include!("casefold.rs"))
         .collect()
+}
+
+fn printable(c: char) -> bool {
+    let ranges: &[(u32, u32)] = include!("nonprintable.rs");
+    let cp = c as u32;
+    let i = ranges.partition_point(|(start, _)| *start <= cp);
+    i == 0 || cp > ranges[i - 1].1
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn every_unicode_category_and_casefold_scalar_matches_python() {
+        let vectors = outreach_canon::parse(include_str!("../../../vectors/unicode.json")).unwrap();
+        let vectors = &vectors["vectors"][0];
+        for r in vectors["ranges"].as_array().unwrap() {
+            let start = r["start"].as_u64().unwrap() as u32;
+            let end = r["end"].as_u64().unwrap() as u32;
+            for cp in start..=end {
+                if let Some(ch) = char::from_u32(cp) {
+                    assert_eq!(
+                        printable(ch),
+                        r["printable"].as_bool().unwrap(),
+                        "U+{cp:04X}"
+                    );
+                }
+            }
+            for (cp, key) in [(start, "first_repr"), (end, "last_repr")] {
+                if let Some(ch) = char::from_u32(cp) {
+                    assert_eq!(
+                        repr(&Value::String(ch.to_string())),
+                        r[key].as_str().unwrap(),
+                        "U+{cp:04X}"
+                    );
+                }
+            }
+        }
+        let folds: std::collections::BTreeMap<_, _> = vectors["casefold"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|v| (v[0].as_u64().unwrap() as u32, v[1].as_str().unwrap()))
+            .collect();
+        for cp in 0..=0x10ffff {
+            if let Some(ch) = char::from_u32(cp) {
+                let original = ch.to_string();
+                assert_eq!(
+                    casefold(&original),
+                    folds.get(&cp).copied().unwrap_or(&original),
+                    "U+{cp:04X}"
+                );
+            }
+        }
+    }
 }

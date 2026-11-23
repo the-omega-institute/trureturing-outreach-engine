@@ -1,5 +1,5 @@
 use crate::*;
-use outreach_canon::{canonical, digest};
+use outreach_canon::digest;
 
 pub fn matches_workflow(row: &Value, hash: &Value) -> bool {
     let request = &row["request"]["workflow_hash"];
@@ -34,34 +34,26 @@ pub fn reviewable(row: &Value) -> Result<bool> {
                 && result.get("formalization_gaps").is_some()
                 && result.get("value_assessment").is_some())))
 }
-pub fn reviews(rows: &[Value], events: &[Value]) -> Result<Value> {
+pub fn reviews(rows: Vec<Value>, events: &[Value]) -> Result<Value> {
     let mut output = Vec::new();
-    for row in rows {
-        if !reviewable(row)? {
+    let mut by_id: std::collections::BTreeMap<&str, Vec<&Value>> = Default::default();
+    for event in events {
+        by_id.entry(s(&event["id"])).or_default().push(event);
+    }
+    for mut row in rows {
+        if !reviewable(&row)? {
             continue;
         }
         let mut revision = row["revision"]
             .as_i64()
             .ok_or_else(|| Error::new("Invalid revision"))?;
         let mut expected = revision;
-        let review = &row["data"]["review"];
-        let review_event = if truth(review) {
-            Some(canonical(&object([(
-                "review",
-                string(if truth(&review["signed_review_hash"]) {
-                    py_str(&review["signed_review_hash"])
-                } else {
-                    digest(review)?
-                }),
-            )]))?)
-        } else {
-            None
-        };
-        let mut history: Vec<_> = events
-            .iter()
-            .filter(|e| {
-                e["id"] == row["id"] && e["revision"].as_i64().is_some_and(|r| r <= revision)
-            })
+        let mut history: Vec<_> = by_id
+            .get(s(&row["id"]))
+            .into_iter()
+            .flatten()
+            .copied()
+            .filter(|e| e["revision"].as_i64().is_some_and(|r| r <= revision))
             .collect();
         history.sort_by_key(|e| std::cmp::Reverse(e["revision"].as_i64().unwrap()));
         for event in history {
@@ -71,7 +63,7 @@ pub fn reviews(rows: &[Value], events: &[Value]) -> Result<Value> {
             }
             revision = number;
             expected = number - 1;
-            if review_event.as_deref() == event["raw_data"].as_str() && review_event.is_some() {
+            if event["reviewed"] == true {
                 break;
             }
         }
@@ -85,8 +77,8 @@ pub fn reviews(rows: &[Value], events: &[Value]) -> Result<Value> {
                     ("workflow_hash", row["request"]["workflow_hash"].clone()),
                 ]),
             ),
-            ("request", row["request"].clone()),
-            ("result", row["data"]["result"].clone()),
+            ("request", row["request"].take()),
+            ("result", row["data"]["result"].take()),
         ]);
         for (source, target) in [
             ("workflow_binding", "workflow_binding"),
@@ -98,7 +90,7 @@ pub fn reviews(rows: &[Value], events: &[Value]) -> Result<Value> {
                 item[target] = if source == "submission_review_requested" {
                     true.into()
                 } else {
-                    row["data"][source].clone()
+                    row["data"][source].take()
                 };
             }
         }

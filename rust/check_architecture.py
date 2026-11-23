@@ -15,6 +15,25 @@ ALLOWED = {
 }
 
 
+def check_decoder_source(source, label):
+    assert not re.search(r'serde_json\s*::\s*(?:from_\w+|Deserializer)', source), label
+    aliases = {'Value'} | set(re.findall(r'\bValue\s+as\s+(\w+)', source))
+    for alias in aliases:
+        assert not re.search(r'\bparse\s*::\s*<[^>]*\b' + re.escape(alias) + r'\s*>', source), label
+
+
+def check_decoder_guard():
+    for source in ['raw.parse::<Value>()', 'str::parse::<outreach_canon::Value>(raw)',
+                   'use outreach_canon::Value as Json; raw.parse::<Json>()',
+                   'serde_json::from_slice(raw)']:
+        try:
+            check_decoder_source(source, 'synthetic forbidden decoder')
+        except AssertionError:
+            continue
+        raise AssertionError('Decoder guard accepted ' + source)
+    check_decoder_source('CanonValue::parse(raw)?; state.parse::<TaskState>()?', 'allowed decoders')
+
+
 def check():
     metadata = json.loads(subprocess.check_output(
         ['cargo', 'metadata', '--locked', '--no-deps', '--format-version', '1'], cwd=ROOT, text=True))
@@ -34,7 +53,8 @@ def check():
     for path in (ROOT / 'crates').rglob('*.rs'):
         if 'outreach-canon' in path.parts:
             continue
-        assert not re.search(r'serde_json\s*::\s*(?:from_\w+|Deserializer)', path.read_text()), str(path)
+        check_decoder_source(path.read_text(), str(path))
+    check_decoder_guard()
     print('Workspace dependency direction and canon decoder boundary: passed')
 
 

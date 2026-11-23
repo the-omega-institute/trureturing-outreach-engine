@@ -40,7 +40,10 @@ pub(super) fn submissions(rows: &[Value], env: &Environment, items: &mut Vec<Val
     let mut matched = BTreeSet::new();
     let title = |v: &Value| text::compact(&casefold(if truth(v) { s(v) } else { "" }), usize::MAX);
     for task in rows.iter().filter(|r| r["kind"] == "submission") {
-        let mut inputs = task["request"]["inputs"].clone();
+        let mut inputs = task["request"].get("inputs").cloned().unwrap_or(object([]));
+        if !inputs.is_object() {
+            return Err(Error::new("Submission inputs must be an object"));
+        }
         if let Some(fields) = task["data"]["thread_inputs"].as_object() {
             inputs.as_object_mut().unwrap().extend(fields.clone());
         }

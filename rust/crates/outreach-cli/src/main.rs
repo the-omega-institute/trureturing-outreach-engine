@@ -1,18 +1,59 @@
 use outreach_canon::{CanonValue, SerializeOptions, Value, dumps, workflow};
 use outreach_core::{Environment, StatusInput, array, object, s};
 use outreach_ledger::Ledger;
-use outreach_model::TaskKind;
+use outreach_model::Task;
 use std::{
     env, fs,
     path::{Path, PathBuf},
     time::UNIX_EPOCH,
 };
-type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
-const HELP: &str = "Usage: outreach control <status --compact|reviews|review-digest|exceptions>\n  --snapshot PATH          Immutable, closed SQLite snapshot (no downloads)\n  --root PATH              Data root; defaults to OUTREACH_DATA_ROOT or engine root\n  --config PATH            Override root/config.json\n  --engine-root PATH       Public engine tree for live workflow inputs\n  --now UNIX_SECONDS       Explicit clock for reproducible question health\n  --work PATH              Work JSON; required for review-digest, optional for exceptions\n  --format json|text       digest defaults to text; exceptions defaults to json\n";
+#[derive(Debug)]
+enum Error {
+    Io(std::io::Error),
+    Ledger(outreach_ledger::Error),
+    Data(outreach_canon::Error),
+    Argument(String),
+}
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Io(e) => e.fmt(f),
+            Self::Ledger(e) => e.fmt(f),
+            Self::Data(e) => e.fmt(f),
+            Self::Argument(e) => f.write_str(e),
+        }
+    }
+}
+impl std::error::Error for Error {}
+impl From<std::io::Error> for Error {
+    fn from(e: std::io::Error) -> Self {
+        Self::Io(e)
+    }
+}
+impl From<outreach_ledger::Error> for Error {
+    fn from(e: outreach_ledger::Error) -> Self {
+        Self::Ledger(e)
+    }
+}
+impl From<outreach_canon::Error> for Error {
+    fn from(e: outreach_canon::Error) -> Self {
+        Self::Data(e)
+    }
+}
+impl From<String> for Error {
+    fn from(e: String) -> Self {
+        Self::Argument(e)
+    }
+}
+impl From<&str> for Error {
+    fn from(e: &str) -> Self {
+        Self::Argument(e.into())
+    }
+}
+type Result<T> = std::result::Result<T, Error>;
+const HELP: &str = "Usage: outreach control <status --compact|reviews|review-digest|exceptions>\n  --snapshot PATH          Immutable, closed SQLite snapshot (no downloads)\n  --root PATH              Data root; defaults to OUTREACH_DATA_ROOT or engine root\n  --engine-root PATH       Public engine tree for live workflow inputs\n  --now UNIX_SECONDS       Explicit clock for reproducible question health\n  --work PATH              Work JSON; required for review-digest, optional for exceptions\n  --format json|text       digest defaults to text; exceptions defaults to json\n";
 fn json(path: &Path) -> Result<Value> {
-    Ok(CanonValue::parse(&fs::read_to_string(path)?)?
-        .value()
-        .clone())
+    Ok(CanonValue::parse(&fs::read_to_string(path)?)?.into_value())
 }
 fn take(args: &mut Vec<String>, name: &str) -> Result<Option<String>> {
     if let Some(index) = args.iter().position(|a| a == name) {
@@ -44,31 +85,34 @@ fn run() -> Result<()> {
     }
     args.remove(0);
     let snapshot = take(&mut args, "--snapshot")?;
-    let engine = PathBuf::from(take(&mut args, "--engine-root")?.unwrap_or_else(|| {
-        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../..")
-            .to_string_lossy()
-            .into_owned()
-    }));
-    let engine = engine.canonicalize()?;
+    let engine =
+        match take(&mut args, "--engine-root")?.or_else(|| env::var("OUTREACH_ENGINE_ROOT").ok()) {
+            Some(path) => PathBuf::from(path),
+            None => env::current_dir()?
+                .ancestors()
+                .find(|p| p.join("managed/control.py").is_file())
+                .map(Path::to_path_buf)
+                .ok_or("Cannot locate engine tree; use --engine-root")?,
+        }
+        .canonicalize()?;
     let root = PathBuf::from(
         take(&mut args, "--root")?
             .or_else(|| env::var("OUTREACH_DATA_ROOT").ok())
             .unwrap_or_else(|| engine.to_string_lossy().into_owned()),
-    );
-    let root = root.canonicalize()?;
-    let config_path = take(&mut args, "--config")?
-        .map(PathBuf::from)
-        .unwrap_or_else(|| {
-            if root == engine && !root.join("config.json").is_file() {
-                root.join("private-data/config.json")
-            } else {
-                root.join("config.json")
-            }
-        });
+    )
+    .canonicalize()?;
+    let config_path = if root == engine
+        && env::var("GITHUB_ACTIONS").as_deref() != Ok("true")
+        && !root.join("config.json").is_file()
+    {
+        root.join("private-data/config.json")
+    } else {
+        root.join("config.json")
+    };
     let now = take(&mut args, "--now")?
         .map(|s| s.parse::<f64>())
-        .transpose()?;
+        .transpose()
+        .map_err(|e| Error::Argument(format!("Invalid --now: {e}")))?;
     let work = take(&mut args, "--work")?.map(PathBuf::from);
     let format = take(&mut args, "--format")?.unwrap_or_else(|| {
         if args.first().map(String::as_str) == Some("review-digest") {
@@ -96,49 +140,48 @@ fn run() -> Result<()> {
         return Err("--work/--format apply only to review-digest and exceptions".into());
     }
     let config = json(&config_path)?;
-    let mut tables = object([]);
-    for name in [
-        "contacts",
-        "refusals",
-        "decisions",
-        "submissions",
-        "threads",
-    ] {
-        let path = root.join("tables").join(format!("{name}.json"));
-        if path.is_file() {
-            tables[name] = json(&path)?;
-        } else if command == "exceptions" || (command == "status" && name == "contacts") {
-            return Err(format!("Missing table: {}", path.display()).into());
-        }
-    }
-    let mut workflows = object([]);
-    if ["exceptions", "review-digest"].contains(&command) {
-        for kind in TaskKind::ALL {
-            let value = workflow(kind.as_str(), false, |path| {
-                let overlay = root.join("policy/managed").join(path);
-                let path = if !path.ends_with(".py") && overlay.is_file() {
-                    overlay
-                } else {
-                    engine.join("managed").join(path)
-                };
-                match fs::read_to_string(path) {
-                    Ok(text) => Ok(Some(text)),
-                    Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),
-                    Err(e) => Err(outreach_canon::Error::new(e.to_string())),
-                }
-            });
-            workflows[kind.as_str()] = match value {
-                Ok(hash) => Value::String(hash),
-                Err(_) if command == "review-digest" => Value::Null,
-                Err(e) => return Err(e.into()),
+    outreach_core::validate_lanes(&config)?;
+    let workflow_source = |kind: &str| {
+        workflow(kind, false, |path| {
+            let overlay = root.join("policy/managed").join(path);
+            let path = if !path.ends_with(".py") && overlay.is_file() {
+                overlay
+            } else {
+                engine.join("managed").join(path)
             };
-        }
-    }
-    let environment = Environment {
-        config,
-        tables,
-        workflows,
+            match fs::read_to_string(path) {
+                Ok(text) => Ok(Some(text)),
+                Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),
+                Err(e) => Err(outreach_canon::Error::new(e.to_string())),
+            }
+        })
+        .map(Value::String)
     };
+    let mut environment = Environment {
+        config,
+        tables: object([]),
+        workflow: &workflow_source,
+    };
+    let read_table = |name: &str| json(&root.join("tables").join(format!("{name}.json")));
+    match command {
+        "exceptions" => {
+            for name in [
+                "contacts",
+                "refusals",
+                "decisions",
+                "submissions",
+                "threads",
+            ] {
+                environment.tables[name] = read_table(name)?;
+            }
+        }
+        "review-digest" => {
+            for name in ["contacts", "refusals"] {
+                environment.tables[name] = read_table(name).unwrap_or(Value::Null);
+            }
+        }
+        _ => {}
+    }
     let ledger = if command == "review-digest" || (command == "exceptions" && work.is_some()) {
         None
     } else {
@@ -150,6 +193,26 @@ fn run() -> Result<()> {
         "status" => {
             let ledger = ledger.as_ref().unwrap();
             let (source_notes, derived_tasks) = ledger.pipeline_counts()?;
+            let rows = ledger.lane_rows()?;
+            let sources = ledger.pipeline_sources()?;
+            environment.tables["contacts"] = read_table("contacts")?;
+            let need_correspondence = outreach_core::truth(
+                &environment.config["sandbox_pool"]["prioritize_correspondence_notes"],
+            ) && rows
+                .iter()
+                .any(|r| r["kind"] == "shortnote" || r["kind"] == "mathesis");
+            let need_preflight = sources.iter().any(|r| {
+                ["approved", "handoff-ready", "verified"].contains(&s(&r["state"]))
+                    && array(&environment.tables["contacts"]["contacts"])
+                        .iter()
+                        .any(|p| array(&p["problem_ids"]).contains(&r["result_id"]))
+            });
+            if need_correspondence || need_preflight {
+                environment.tables["refusals"] = read_table("refusals")?;
+            }
+            if need_preflight {
+                environment.tables["decisions"] = read_table("decisions")?;
+            }
             let now = match now {
                 Some(n) if n.is_finite() => n,
                 Some(_) => return Err("--now must be finite".into()),
@@ -157,10 +220,10 @@ fn run() -> Result<()> {
             };
             outreach_core::status(
                 StatusInput {
-                    rows: ledger.lane_rows()?,
+                    rows,
                     counts: ledger.counts(false)?,
                     counts_by_kind: ledger.counts(true)?,
-                    sources: ledger.pipeline_sources()?,
+                    sources,
                     source_notes,
                     derived_tasks,
                     baseline: ledger.state("baseline")?.unwrap_or(Value::Null),
@@ -168,14 +231,23 @@ fn run() -> Result<()> {
                     connector_errors: ledger
                         .state("connector_errors")?
                         .unwrap_or(Value::Array(vec![])),
-                    old_questions: ledger.old_owner_questions(now)?,
+                    old_questions: ledger
+                        .old_owner_questions(now - outreach_core::OWNER_QUESTION_AGE)?,
                 },
                 &environment,
             )?
         }
         "reviews" => {
             let ledger = ledger.as_ref().unwrap();
-            outreach_core::reviews(&ledger.task_values()?, &ledger.review_events()?)?
+            let tasks = ledger.tasks()?;
+            let events = ledger.review_events(&tasks)?;
+            outreach_core::reviews(
+                tasks
+                    .into_iter()
+                    .map(Task::into_value)
+                    .collect::<outreach_canon::Result<_>>()?,
+                &events,
+            )?
         }
         "review-digest" => {
             outreach_core::review_digest(&json(work.as_ref().unwrap())?, &environment)?
@@ -185,10 +257,18 @@ fn run() -> Result<()> {
                 Some(path) => json(&path)?,
                 None => object([(
                     "tasks",
-                    Value::Array(ledger.as_ref().unwrap().task_values()?),
+                    Value::Array(
+                        ledger
+                            .as_ref()
+                            .unwrap()
+                            .tasks()?
+                            .into_iter()
+                            .map(Task::into_value)
+                            .collect::<outreach_canon::Result<_>>()?,
+                    ),
                 )]),
             };
-            outreach_core::exceptions(&work, &environment)?
+            outreach_core::exceptions(work, &environment)?
         }
         _ => unreachable!(),
     };
@@ -220,7 +300,8 @@ fn run() -> Result<()> {
 #[allow(clippy::disallowed_methods)]
 fn wall_clock() -> Result<f64> {
     Ok(std::time::SystemTime::now()
-        .duration_since(UNIX_EPOCH)?
+        .duration_since(UNIX_EPOCH)
+        .map_err(|e| Error::Argument(e.to_string()))?
         .as_secs_f64())
 }
 fn main() {

@@ -1,0 +1,1664 @@
+[
+  {
+    "name": "describe-missing-fields",
+    "commands": [
+      [
+        "exceptions",
+        "--work",
+        "<work>"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>",
+        "--format",
+        "text"
+      ]
+    ],
+    "tables": {
+      "threads": {
+        "lines": [
+          {
+            "id": "t-describe",
+            "stage": "exchange",
+            "ball": "us",
+            "us_actions": [
+              {
+                "kind": "research"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "work": {
+      "tasks": []
+    }
+  },
+  {
+    "name": "submission-thread-evidence",
+    "commands": [
+      [
+        "exceptions",
+        "--work",
+        "<work>"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>",
+        "--format",
+        "text"
+      ]
+    ],
+    "tables": {
+      "threads": {
+        "lines": [
+          {
+            "id": "t-sub",
+            "stage": "independent-submission",
+            "ball": "us"
+          }
+        ]
+      }
+    },
+    "work": {
+      "tasks": []
+    }
+  },
+  {
+    "name": "failed-empty-reason",
+    "commands": [
+      [
+        "exceptions",
+        "--work",
+        "<work>"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>",
+        "--format",
+        "text"
+      ]
+    ],
+    "work": {
+      "tasks": [
+        {
+          "id": "f1",
+          "kind": "research",
+          "state": "failed",
+          "request": {
+            "inputs": {},
+            "workflow_hash": ""
+          },
+          "data": {
+            "reason": {}
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "submission-missing-inputs",
+    "commands": [
+      [
+        "exceptions",
+        "--work",
+        "<work>"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>",
+        "--format",
+        "text"
+      ]
+    ],
+    "failure": true,
+    "work": {
+      "tasks": [
+        {
+          "id": "s1",
+          "kind": "submission",
+          "state": "running",
+          "request": {
+            "kind": "submission",
+            "workflow_hash": ""
+          },
+          "data": {
+            "thread_inputs": {
+              "paper": {
+                "id": "p"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "digest-null-report-nbsp",
+    "commands": [
+      [
+        "review-digest",
+        "--work",
+        "<work>"
+      ],
+      [
+        "review-digest",
+        "--work",
+        "<work>",
+        "--format",
+        "json"
+      ]
+    ],
+    "work": {
+      "reviews": [
+        {
+          "binding": {
+            "task_id": "d1",
+            "task_revision": 1
+          },
+          "request": {
+            "id": "d1",
+            "kind": "reply",
+            "inputs": {
+              "note_round": [
+                "a\u00a0b"
+              ]
+            }
+          },
+          "result": {
+            "outcome": "hold",
+            "report": null,
+            "headline": "H"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "affair-paper-wins-id-collision",
+    "commands": [
+      [
+        "exceptions",
+        "--work",
+        "<work>"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>",
+        "--format",
+        "text"
+      ]
+    ],
+    "tables": {
+      "threads": {
+        "lines": [
+          {
+            "id": "same",
+            "stage": "exchange",
+            "ball": "us",
+            "next_action": "Checked next step"
+          }
+        ]
+      },
+      "submissions": {
+        "papers": [
+          {
+            "id": "same",
+            "title": "Synthetic paper",
+            "stage": "draft",
+            "next_action": ""
+          }
+        ]
+      }
+    },
+    "work": {
+      "tasks": []
+    }
+  },
+  {
+    "name": "digest-missing-kind",
+    "commands": [
+      [
+        "review-digest",
+        "--work",
+        "<work>"
+      ],
+      [
+        "review-digest",
+        "--work",
+        "<work>",
+        "--format",
+        "json"
+      ]
+    ],
+    "work": {
+      "reviews": [
+        {
+          "request": {
+            "id": "digest-missing-kind",
+            "inputs": {},
+            "workflow_hash": "stale"
+          },
+          "result": {
+            "headline": "Synthetic",
+            "report": "Checked"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "digest-unlisted-kind",
+    "commands": [
+      [
+        "review-digest",
+        "--work",
+        "<work>"
+      ],
+      [
+        "review-digest",
+        "--work",
+        "<work>",
+        "--format",
+        "json"
+      ]
+    ],
+    "work": {
+      "reviews": [
+        {
+          "request": {
+            "id": "digest-unlisted-kind",
+            "inputs": {},
+            "workflow_hash": "stale",
+            "kind": "future-kind"
+          },
+          "result": {
+            "headline": "Synthetic",
+            "report": "Checked"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "exceptions-no-workflow-needed",
+    "commands": [
+      [
+        "exceptions",
+        "--work",
+        "<work>"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>",
+        "--format",
+        "text"
+      ]
+    ],
+    "work": {
+      "tasks": []
+    },
+    "engine_files": {}
+  },
+  {
+    "name": "owner-draft-lazy-workflows",
+    "commands": [
+      [
+        "exceptions",
+        "--work",
+        "<work>"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>",
+        "--format",
+        "text"
+      ]
+    ],
+    "work": {
+      "tasks": [
+        {
+          "id": "owner",
+          "kind": "reply",
+          "state": "owner-draft",
+          "request": {
+            "kind": "reply",
+            "workflow_hash": "stale",
+            "inputs": {}
+          },
+          "data": {
+            "reason": {}
+          }
+        }
+      ]
+    },
+    "engine_files": {
+      "replies/workflow.json": "synthetic\n",
+      "replies/review.md": "synthetic\n",
+      "firstcontact/review.md": "synthetic\n",
+      "replies/voice.md": "synthetic\n",
+      "runtime.py": "synthetic\n",
+      "automation.json": "{\"schema_version\": 1, \"routing_contract\": {}, \"continuation\": {}, \"mail\": {}}"
+    }
+  },
+  {
+    "name": "owner-draft-missing-workflow",
+    "commands": [
+      [
+        "exceptions",
+        "--work",
+        "<work>"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>",
+        "--format",
+        "text"
+      ]
+    ],
+    "failure": true,
+    "work": {
+      "tasks": [
+        {
+          "id": "owner",
+          "kind": "reply",
+          "state": "owner-draft",
+          "request": {
+            "kind": "reply",
+            "workflow_hash": "stale",
+            "inputs": {}
+          },
+          "data": {
+            "reason": {}
+          }
+        }
+      ]
+    },
+    "engine_files": {}
+  },
+  {
+    "name": "owner-draft-empty-reason",
+    "commands": [
+      [
+        "exceptions",
+        "--work",
+        "<work>"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>",
+        "--format",
+        "text"
+      ]
+    ],
+    "work": {
+      "tasks": [
+        {
+          "id": "owner",
+          "kind": "reply",
+          "state": "owner-draft",
+          "request": {
+            "kind": "reply",
+            "workflow_hash": "stale",
+            "inputs": {}
+          },
+          "data": {
+            "reason": {}
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "digest-missing-workflow-is-local",
+    "commands": [
+      [
+        "review-digest",
+        "--work",
+        "<work>"
+      ],
+      [
+        "review-digest",
+        "--work",
+        "<work>",
+        "--format",
+        "json"
+      ]
+    ],
+    "work": {
+      "reviews": [
+        {
+          "request": {
+            "id": "r",
+            "kind": "reply",
+            "workflow_hash": "stale",
+            "inputs": {}
+          },
+          "result": {
+            "headline": "H",
+            "report": "ok"
+          }
+        }
+      ]
+    },
+    "engine_files": {}
+  },
+  {
+    "name": "digest-printability-categories",
+    "commands": [
+      [
+        "review-digest",
+        "--work",
+        "<work>"
+      ],
+      [
+        "review-digest",
+        "--work",
+        "<work>",
+        "--format",
+        "json"
+      ]
+    ],
+    "work": {
+      "reviews": [
+        {
+          "request": {
+            "id": "print",
+            "kind": "reply",
+            "inputs": {
+              "note_round": [
+                "a\u00a0b",
+                "\u200b",
+                "\ue000",
+                "\u0378",
+                "\u2028",
+                "\u2029",
+                "\udb40\udc01",
+                "\udbff\udfff"
+              ]
+            }
+          },
+          "result": {
+            "headline": "H",
+            "report": "ok"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "registry-invalid-email",
+    "commands": [
+      [
+        "exceptions",
+        "--work",
+        "<work>"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>",
+        "--format",
+        "text"
+      ]
+    ],
+    "failure": true,
+    "tables": {
+      "contacts": {
+        "contacts": [
+          {
+            "id": "c",
+            "name": "Synthetic Scholar",
+            "email": "INVALID",
+            "relationship": {}
+          }
+        ]
+      }
+    },
+    "work": {
+      "tasks": []
+    }
+  },
+  {
+    "name": "digest-registry-fallback",
+    "commands": [
+      [
+        "review-digest",
+        "--work",
+        "<work>"
+      ],
+      [
+        "review-digest",
+        "--work",
+        "<work>",
+        "--format",
+        "json"
+      ]
+    ],
+    "tables": {
+      "contacts": {
+        "contacts": [
+          {
+            "id": "c",
+            "name": "Synthetic Scholar",
+            "email": "INVALID",
+            "relationship": {}
+          }
+        ]
+      }
+    },
+    "work": {
+      "reviews": [
+        {
+          "request": {
+            "id": "fallback",
+            "owner": "c",
+            "kind": "reply",
+            "inputs": {}
+          },
+          "result": {
+            "headline": "H",
+            "report": "ok"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "digest-missing-refusals-fallback",
+    "commands": [
+      [
+        "review-digest",
+        "--work",
+        "<work>"
+      ],
+      [
+        "review-digest",
+        "--work",
+        "<work>",
+        "--format",
+        "json"
+      ]
+    ],
+    "remove_tables": [
+      "refusals"
+    ],
+    "tables": {
+      "contacts": {
+        "contacts": [
+          {
+            "id": "c",
+            "name": "Synthetic Scholar",
+            "email": "a@example.invalid",
+            "relationship": {}
+          }
+        ]
+      }
+    },
+    "work": {
+      "reviews": [
+        {
+          "request": {
+            "id": "fallback",
+            "owner": "c",
+            "kind": "reply",
+            "inputs": {}
+          },
+          "result": {
+            "headline": "H",
+            "report": "ok"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "digest-invalid-contacts-json",
+    "commands": [
+      [
+        "review-digest",
+        "--work",
+        "<work>"
+      ],
+      [
+        "review-digest",
+        "--work",
+        "<work>",
+        "--format",
+        "json"
+      ]
+    ],
+    "invalid_tables": [
+      "contacts"
+    ],
+    "work": {
+      "reviews": []
+    }
+  },
+  {
+    "name": "registry-missing-contact-name",
+    "commands": [
+      [
+        "exceptions",
+        "--work",
+        "<work>"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>",
+        "--format",
+        "text"
+      ]
+    ],
+    "failure": true,
+    "tables": {
+      "contacts": {
+        "contacts": [
+          {
+            "id": "c",
+            "email": "a@example.invalid"
+          }
+        ]
+      }
+    },
+    "work": {
+      "tasks": []
+    }
+  },
+  {
+    "name": "registry-email-wrong-type",
+    "commands": [
+      [
+        "exceptions",
+        "--work",
+        "<work>"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>",
+        "--format",
+        "text"
+      ]
+    ],
+    "failure": true,
+    "tables": {
+      "contacts": {
+        "contacts": [
+          {
+            "id": "c",
+            "name": "Synthetic Scholar",
+            "email": {},
+            "relationship": {}
+          }
+        ]
+      }
+    },
+    "work": {
+      "tasks": []
+    }
+  },
+  {
+    "name": "registry-invalid-alias",
+    "commands": [
+      [
+        "exceptions",
+        "--work",
+        "<work>"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>",
+        "--format",
+        "text"
+      ]
+    ],
+    "failure": true,
+    "tables": {
+      "contacts": {
+        "contacts": [
+          {
+            "id": "c",
+            "name": "Synthetic Scholar",
+            "email": "a@example.invalid",
+            "relationship": {
+              "aliases": [
+                "bad@alias"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "work": {
+      "tasks": []
+    }
+  },
+  {
+    "name": "mailbox-lower-graph-only",
+    "commands": [
+      [
+        "exceptions",
+        "--work",
+        "<work>"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>",
+        "--format",
+        "text"
+      ]
+    ],
+    "work": {
+      "tasks": [
+        {
+          "id": "sent",
+          "kind": "reply",
+          "state": "verified",
+          "request": {
+            "kind": "reply",
+            "inputs": {},
+            "workflow_hash": ""
+          },
+          "data": {
+            "sent_receipt": {
+              "remote_id": "s"
+            },
+            "packet": {
+              "to": [
+                {
+                  "emailAddress": {
+                    "address": " Stra\u00dfe@Example.Invalid "
+                  }
+                },
+                {
+                  "address": "ignored@example.invalid"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "packet-string-email-invalid",
+    "commands": [
+      [
+        "exceptions",
+        "--work",
+        "<work>"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>",
+        "--format",
+        "text"
+      ]
+    ],
+    "failure": true,
+    "work": {
+      "tasks": [
+        {
+          "id": "sent",
+          "kind": "reply",
+          "state": "verified",
+          "request": {
+            "kind": "reply",
+            "inputs": {},
+            "workflow_hash": ""
+          },
+          "data": {
+            "sent_receipt": {
+              "remote_id": "s"
+            },
+            "packet": {
+              "to": [
+                "Not an address"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "invalid-quota",
+    "commands": [
+      [
+        "status",
+        "--compact"
+      ],
+      [
+        "reviews"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>",
+        "--format",
+        "text"
+      ],
+      [
+        "review-digest",
+        "--work",
+        "<work>"
+      ],
+      [
+        "review-digest",
+        "--work",
+        "<work>",
+        "--format",
+        "json"
+      ]
+    ],
+    "failure": true,
+    "config": {
+      "kind_quota": "unequal"
+    },
+    "work": {}
+  },
+  {
+    "name": "followup-not-bool",
+    "commands": [
+      [
+        "status",
+        "--compact"
+      ],
+      [
+        "reviews"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>",
+        "--format",
+        "text"
+      ],
+      [
+        "review-digest",
+        "--work",
+        "<work>"
+      ],
+      [
+        "review-digest",
+        "--work",
+        "<work>",
+        "--format",
+        "json"
+      ]
+    ],
+    "failure": true,
+    "config": {
+      "followup_lane": 1
+    },
+    "work": {}
+  },
+  {
+    "name": "negative-max-active",
+    "commands": [
+      [
+        "status",
+        "--compact"
+      ],
+      [
+        "reviews"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>",
+        "--format",
+        "text"
+      ],
+      [
+        "review-digest",
+        "--work",
+        "<work>"
+      ],
+      [
+        "review-digest",
+        "--work",
+        "<work>",
+        "--format",
+        "json"
+      ]
+    ],
+    "failure": true,
+    "config": {
+      "max_active": -1
+    },
+    "work": {}
+  },
+  {
+    "name": "bool-max-active",
+    "commands": [
+      [
+        "status",
+        "--compact"
+      ],
+      [
+        "reviews"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>",
+        "--format",
+        "text"
+      ],
+      [
+        "review-digest",
+        "--work",
+        "<work>"
+      ],
+      [
+        "review-digest",
+        "--work",
+        "<work>",
+        "--format",
+        "json"
+      ]
+    ],
+    "failure": true,
+    "config": {
+      "max_active": true
+    },
+    "work": {}
+  },
+  {
+    "name": "unknown-quota-kind",
+    "commands": [
+      [
+        "status",
+        "--compact"
+      ],
+      [
+        "reviews"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>",
+        "--format",
+        "text"
+      ],
+      [
+        "review-digest",
+        "--work",
+        "<work>"
+      ],
+      [
+        "review-digest",
+        "--work",
+        "<work>",
+        "--format",
+        "json"
+      ]
+    ],
+    "failure": true,
+    "config": {
+      "kinds": {
+        "future": false
+      }
+    },
+    "work": {}
+  },
+  {
+    "name": "priority-not-bool",
+    "commands": [
+      [
+        "status",
+        "--compact"
+      ],
+      [
+        "reviews"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>",
+        "--format",
+        "text"
+      ],
+      [
+        "review-digest",
+        "--work",
+        "<work>"
+      ],
+      [
+        "review-digest",
+        "--work",
+        "<work>",
+        "--format",
+        "json"
+      ]
+    ],
+    "failure": true,
+    "config": {
+      "sandbox_pool": {
+        "prioritize_correspondence_notes": 1
+      }
+    },
+    "work": {}
+  },
+  {
+    "name": "group-sum-over-limit",
+    "commands": [
+      [
+        "status",
+        "--compact"
+      ]
+    ],
+    "failure": true,
+    "config": {
+      "kinds": {
+        "reply": true
+      },
+      "sandbox_pool": {
+        "groups": [
+          {
+            "name": "g",
+            "max_sandboxes": 2,
+            "kinds": [
+              "reply"
+            ]
+          }
+        ],
+        "max_sandboxes": 1,
+        "agents_per_sandbox": 1
+      }
+    }
+  },
+  {
+    "name": "empty-groups",
+    "commands": [
+      [
+        "status",
+        "--compact"
+      ]
+    ],
+    "failure": true,
+    "config": {
+      "kinds": {
+        "reply": true
+      },
+      "sandbox_pool": {
+        "groups": []
+      }
+    }
+  },
+  {
+    "name": "empty-group-kinds",
+    "commands": [
+      [
+        "status",
+        "--compact"
+      ]
+    ],
+    "failure": true,
+    "config": {
+      "kinds": {
+        "reply": true
+      },
+      "sandbox_pool": {
+        "groups": [
+          {
+            "name": "g",
+            "max_sandboxes": 2,
+            "kinds": []
+          }
+        ],
+        "max_sandboxes": 2
+      }
+    }
+  },
+  {
+    "name": "group-limit-not-int",
+    "commands": [
+      [
+        "status",
+        "--compact"
+      ]
+    ],
+    "failure": true,
+    "config": {
+      "kinds": {
+        "reply": true
+      },
+      "sandbox_pool": {
+        "groups": [
+          {
+            "name": "g",
+            "max_sandboxes": true,
+            "kinds": [
+              "reply"
+            ]
+          }
+        ],
+        "max_sandboxes": 2
+      }
+    }
+  },
+  {
+    "name": "missing-group-max",
+    "commands": [
+      [
+        "status",
+        "--compact"
+      ]
+    ],
+    "failure": true,
+    "config": {
+      "kinds": {
+        "reply": true
+      },
+      "sandbox_pool": {
+        "groups": [
+          {
+            "name": "g",
+            "max_sandboxes": 2,
+            "kinds": [
+              "reply"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "missing-config-max-active",
+    "commands": [
+      [
+        "status",
+        "--compact"
+      ],
+      [
+        "reviews"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>",
+        "--format",
+        "text"
+      ],
+      [
+        "review-digest",
+        "--work",
+        "<work>"
+      ],
+      [
+        "review-digest",
+        "--work",
+        "<work>",
+        "--format",
+        "json"
+      ]
+    ],
+    "failure": true,
+    "remove_config": [
+      "max_active"
+    ]
+  },
+  {
+    "name": "missing-owner-labels",
+    "commands": [
+      [
+        "exceptions",
+        "--work",
+        "<work>"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>",
+        "--format",
+        "text"
+      ]
+    ],
+    "failure": true,
+    "config": {
+      "identity": {}
+    },
+    "tables": {
+      "threads": {
+        "lines": [
+          {
+            "id": "t",
+            "ball": "us",
+            "stage": "exchange"
+          }
+        ]
+      }
+    },
+    "work": {}
+  },
+  {
+    "name": "root-owner-labels",
+    "commands": [
+      [
+        "exceptions",
+        "--work",
+        "<work>"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>",
+        "--format",
+        "text"
+      ]
+    ],
+    "config": {
+      "identity": {
+        "owner_labels": [
+          "local-owner"
+        ]
+      }
+    },
+    "tables": {
+      "threads": {
+        "lines": [
+          {
+            "id": "t",
+            "ball": "local-owner",
+            "stage": "exchange"
+          }
+        ]
+      }
+    },
+    "work": {}
+  },
+  {
+    "name": "publication-nonobject",
+    "commands": [
+      [
+        "exceptions",
+        "--work",
+        "<work>"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>",
+        "--format",
+        "text"
+      ]
+    ],
+    "failure": true,
+    "work": {
+      "publication_deliveries": [
+        7
+      ]
+    }
+  },
+  {
+    "name": "publication-missing-task-id",
+    "commands": [
+      [
+        "exceptions",
+        "--work",
+        "<work>"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>",
+        "--format",
+        "text"
+      ]
+    ],
+    "failure": true,
+    "work": {
+      "publication_deliveries": [
+        {
+          "state": "running"
+        }
+      ]
+    }
+  },
+  {
+    "name": "historical-unknown-state",
+    "commands": [
+      [
+        "reviews"
+      ]
+    ],
+    "historical_state": "legacy-future-state",
+    "rows": [
+      {
+        "id": "event",
+        "kind": "reply",
+        "state": "awaiting-review",
+        "data": {
+          "result": {
+            "outcome": "completed",
+            "report": "Synthetic"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "name": "reviews-no-table-reads",
+    "commands": [
+      [
+        "reviews"
+      ]
+    ],
+    "invalid_tables": [
+      "contacts",
+      "refusals",
+      "decisions",
+      "threads",
+      "submissions"
+    ]
+  },
+  {
+    "name": "digest-no-unrelated-table-reads",
+    "commands": [
+      [
+        "review-digest",
+        "--work",
+        "<work>"
+      ],
+      [
+        "review-digest",
+        "--work",
+        "<work>",
+        "--format",
+        "json"
+      ]
+    ],
+    "invalid_tables": [
+      "decisions",
+      "threads",
+      "submissions"
+    ],
+    "work": {
+      "reviews": []
+    }
+  },
+  {
+    "name": "status-no-unrelated-table-reads",
+    "commands": [
+      [
+        "status",
+        "--compact"
+      ]
+    ],
+    "invalid_tables": [
+      "refusals",
+      "decisions",
+      "threads",
+      "submissions"
+    ]
+  },
+  {
+    "name": "digest-nonobject-entry",
+    "commands": [
+      [
+        "review-digest",
+        "--work",
+        "<work>"
+      ],
+      [
+        "review-digest",
+        "--work",
+        "<work>",
+        "--format",
+        "json"
+      ]
+    ],
+    "failure": true,
+    "work": {
+      "reviews": [
+        7
+      ]
+    }
+  },
+  {
+    "name": "digest-nonobject-request",
+    "commands": [
+      [
+        "review-digest",
+        "--work",
+        "<work>"
+      ],
+      [
+        "review-digest",
+        "--work",
+        "<work>",
+        "--format",
+        "json"
+      ]
+    ],
+    "failure": true,
+    "work": {
+      "reviews": [
+        {
+          "request": [
+            7
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "digest-null-report-without-headline",
+    "commands": [
+      [
+        "review-digest",
+        "--work",
+        "<work>"
+      ],
+      [
+        "review-digest",
+        "--work",
+        "<work>",
+        "--format",
+        "json"
+      ]
+    ],
+    "failure": true,
+    "work": {
+      "reviews": [
+        {
+          "result": {
+            "report": null
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "digest-nonstring-headline",
+    "commands": [
+      [
+        "review-digest",
+        "--work",
+        "<work>"
+      ],
+      [
+        "review-digest",
+        "--work",
+        "<work>",
+        "--format",
+        "json"
+      ]
+    ],
+    "failure": true,
+    "work": {
+      "reviews": [
+        {
+          "result": {
+            "headline": 17
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "digest-unhashable-kind",
+    "commands": [
+      [
+        "review-digest",
+        "--work",
+        "<work>"
+      ],
+      [
+        "review-digest",
+        "--work",
+        "<work>",
+        "--format",
+        "json"
+      ]
+    ],
+    "failure": true,
+    "work": {
+      "reviews": [
+        {
+          "request": {
+            "kind": []
+          },
+          "result": {
+            "headline": "H"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "preexisting-shm-preserved",
+    "commands": [
+      [
+        "reviews"
+      ]
+    ],
+    "sidecars": {
+      "-shm": "synthetic side file: preserve every byte"
+    }
+  },
+  {
+    "name": "correspondence-status-no-decisions",
+    "commands": [
+      [
+        "status",
+        "--compact"
+      ]
+    ],
+    "invalid_tables": [
+      "decisions",
+      "threads",
+      "submissions"
+    ],
+    "config": {
+      "kinds": {
+        "reply": true,
+        "shortnote": true
+      },
+      "sandbox_pool": {
+        "prioritize_correspondence_notes": true,
+        "groups": [
+          {
+            "name": "g",
+            "max_sandboxes": 1,
+            "kinds": [
+              "reply",
+              "shortnote"
+            ]
+          }
+        ],
+        "max_sandboxes": 1,
+        "agents_per_sandbox": 2
+      }
+    },
+    "rows": [
+      {
+        "id": "note",
+        "kind": "shortnote",
+        "state": "queued"
+      }
+    ]
+  },
+  {
+    "name": "registry-email-python-regex-edge",
+    "commands": [
+      [
+        "exceptions",
+        "--work",
+        "<work>"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>",
+        "--format",
+        "text"
+      ]
+    ],
+    "tables": {
+      "contacts": {
+        "contacts": [
+          {
+            "id": "synthetic-dot",
+            "name": "Synthetic Scholar",
+            "email": "a@b.."
+          }
+        ]
+      }
+    },
+    "work": {
+      "tasks": []
+    }
+  }
+]

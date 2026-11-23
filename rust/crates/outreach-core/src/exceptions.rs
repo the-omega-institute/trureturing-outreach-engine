@@ -4,7 +4,7 @@ mod board;
 use affairs::affairs;
 use board::submissions;
 use outreach_canon::{SerializeOptions, canonical, digest, dumps};
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 const CHECKS: [&str; 6] = [
     "send-registry",
     "owner-draft",
@@ -31,7 +31,14 @@ fn line(value: &str) -> String {
 }
 fn error_type(value: &Value) -> Result<String> {
     if value.is_object() {
-        let name = fallback(&[&value["type"], &value["code"]]);
+        let empty = string("");
+        let name = if truth(&value["type"]) {
+            &value["type"]
+        } else if truth(&value["code"]) {
+            &value["code"]
+        } else {
+            &empty
+        };
         return Ok(
             if regex(r"^[A-Za-z][A-Za-z0-9_.]{0,49}$")?.is_match(&py_str(name)) {
                 py_str(name)
@@ -77,7 +84,10 @@ pub(super) fn add(
         ("evidence", string(evidence)),
     ]));
 }
-fn snapshot(work: &Value) -> Vec<Value> {
+fn snapshot(mut work: Value) -> Result<Vec<Value>> {
+    if !work.is_object() {
+        return Err(Error::new("Work must be an object"));
+    }
     let mut rows = Value::Object(Default::default());
     for section in [
         "tasks",
@@ -91,7 +101,18 @@ fn snapshot(work: &Value) -> Vec<Value> {
         "registry_updates",
         "parked_holds",
     ] {
-        for item in array(&work[section]) {
+        let section_items = work
+            .as_object_mut()
+            .unwrap()
+            .shift_remove(section)
+            .unwrap_or(Value::Array(vec![]));
+        let Value::Array(section_items) = section_items else {
+            return Err(Error::new("Work section must be a list"));
+        };
+        for mut item in section_items {
+            if !item.is_object() {
+                return Err(Error::new("Work entry must be an object"));
+            }
             let id = fallback(&[&item["id"], &item["task_id"], &item["binding"]["task_id"]]);
             if !truth(id) {
                 continue;
@@ -112,11 +133,19 @@ fn snapshot(work: &Value) -> Vec<Value> {
             let row = &mut rows[&key];
             for key in ["request", "kind", "state", "owner", "updated", "revision"] {
                 if !item[key].is_null() {
-                    row[key] = item[key].clone();
+                    row[key] = item.as_object_mut().unwrap().shift_remove(key).unwrap();
                 }
             }
-            if let Some(data) = item["data"].as_object() {
-                row["data"].as_object_mut().unwrap().extend(data.clone());
+            if let Some(data) = item
+                .as_object_mut()
+                .unwrap()
+                .shift_remove("data")
+                .filter(truth)
+            {
+                let Value::Object(data) = data else {
+                    return Err(Error::new("Task data must be an object"));
+                };
+                row["data"].as_object_mut().unwrap().extend(data);
             }
             for key in [
                 "result",
@@ -133,7 +162,7 @@ fn snapshot(work: &Value) -> Vec<Value> {
             .chain(RECOVERY)
             {
                 if !item[key].is_null() {
-                    row["data"][key] = item[key].clone();
+                    row["data"][key] = item.as_object_mut().unwrap().shift_remove(key).unwrap();
                 }
             }
             if !truth(&row["kind"]) {
@@ -145,11 +174,27 @@ fn snapshot(work: &Value) -> Vec<Value> {
         ("publication_deliveries", "publication_loop"),
         ("mathesis_deliveries", "mathesis_delivery"),
     ] {
-        for item in array(&work[section]) {
-            let key = py_str(&item["task_id"]);
+        let section_items = work
+            .as_object_mut()
+            .unwrap()
+            .shift_remove(section)
+            .unwrap_or(Value::Array(vec![]));
+        let Value::Array(section_items) = section_items else {
+            return Err(Error::new("Work section must be a list"));
+        };
+        for mut item in section_items {
+            if !item.is_object() {
+                return Err(Error::new("Work entry must be an object"));
+            }
+            let task_id = item
+                .as_object_mut()
+                .unwrap()
+                .shift_remove("task_id")
+                .ok_or_else(|| Error::new("Missing delivery task_id"))?;
+            let key = py_str(&task_id);
             if rows.get(&key).is_none() {
                 rows[&key] = object([
-                    ("id", item["task_id"].clone()),
+                    ("id", task_id),
                     ("kind", string("mathesis")),
                     ("state", item.get("state").cloned().unwrap_or(string(""))),
                     (
@@ -160,21 +205,20 @@ fn snapshot(work: &Value) -> Vec<Value> {
                 ]);
             }
             rows[&key]["data"][field] = Value::Object(
-                item.as_object()
-                    .unwrap()
-                    .iter()
+                std::mem::take(item.as_object_mut().unwrap())
+                    .into_iter()
                     .filter(|(k, _)| !["task_id", "state"].contains(&k.as_str()))
-                    .map(|(k, v)| (k.clone(), v.clone()))
                     .collect(),
             );
         }
     }
-    rows.as_object()
+    Ok(rows
+        .as_object_mut()
         .unwrap()
-        .values()
+        .into_iter()
+        .map(|(_, v)| v.take())
         .filter(|r| r["state"] != "superseded")
-        .cloned()
-        .collect()
+        .collect())
 }
 fn lineage<'a>(row: &'a Value, rows: &'a [Value]) -> std::result::Result<Vec<&'a Value>, String> {
     let mut row = row;
@@ -282,9 +326,15 @@ fn reviewed(row: &Value) -> Result<bool> {
         && review["binding"]["result_hash"] == digest(result)?
         && review["binding"]["workflow_hash"] == row["request"]["workflow_hash"])
 }
-pub fn exceptions(work: &Value, env: &Environment) -> Result<Value> {
-    let rows = snapshot(work);
-    let persons = registry::people(&env.tables);
+pub fn exceptions(work: Value, env: &Environment) -> Result<Value> {
+    let rows = snapshot(work)?;
+    for row in &rows {
+        if !row["request"]["inputs"].is_object() {
+            return Err(Error::new("Missing request inputs object"));
+        }
+    }
+    let persons = registry::people(&env.tables)?;
+    let mut current = BTreeMap::new();
     let mut items = Vec::new();
     for row in &rows {
         let data = &row["data"];
@@ -297,8 +347,8 @@ pub fn exceptions(work: &Value, env: &Environment) -> Result<Value> {
             let mut addresses: BTreeSet<_> = array(&packet["to"])
                 .iter()
                 .chain(array(&packet["cc"]))
-                .map(registry::address)
-                .collect();
+                .map(registry::packet_address)
+                .collect::<Result<_>>()?;
             if addresses.is_empty() {
                 addresses.extend(
                     array(&row["request"]["inputs"]["recipient_emails"])
@@ -425,7 +475,11 @@ pub fn exceptions(work: &Value, env: &Environment) -> Result<Value> {
             {
                 reasons.push("review no longer binds exact result");
             }
-            if !reviews::matches_workflow(row, &env.workflows[s(&row["kind"])]) {
+            let kind = s(&row["kind"]);
+            if !current.contains_key(kind) {
+                current.insert(kind, (env.workflow)(kind)?);
+            }
+            if !reviews::matches_workflow(row, &current[kind]) {
                 reasons.push("workflow review is stale");
             }
             if !reasons.is_empty() {
@@ -437,7 +491,11 @@ pub fn exceptions(work: &Value, env: &Environment) -> Result<Value> {
                     format!(
                         "{}; last_error={}",
                         reasons.join("; "),
-                        error_type(fallback(&[&data["last_error"], &data["reason"]]))?
+                        error_type(if truth(&data["last_error"]) {
+                            &data["last_error"]
+                        } else {
+                            &data["reason"]
+                        })?
                     ),
                     "data.review/draft_receipt/sent_receipt",
                 );
@@ -554,19 +612,23 @@ pub fn exceptions(work: &Value, env: &Environment) -> Result<Value> {
         }
     }
     submissions(&rows, env, &mut items)?;
-    affairs(&rows, env, &persons, &mut items);
+    affairs(&rows, env, &persons, &mut items)?;
     let research = regex(
         r"(?i)\b(?:new|further|additional|more)\s+(?:mathematical\s+)?research\b|\bnew\s+(?:idea|argument|proof|approach)\b|\bresearch\s+(?:needed|required)\b",
     )?;
+    let mut children: BTreeMap<&str, Vec<&Value>> = BTreeMap::new();
+    for row in &rows {
+        let parent = s(&row["request"]["inputs"]["automation_parent"]["task_id"]);
+        if !parent.is_empty() && row["state"] != "failed" {
+            children.entry(parent).or_default().push(row);
+        }
+    }
     for row in &rows {
         let data = &row["data"];
-        let children: Vec<_> = rows
-            .iter()
-            .filter(|r| {
-                r["request"]["inputs"]["automation_parent"]["task_id"] == row["id"]
-                    && r["state"] != "failed"
-            })
-            .collect();
+        let children = children
+            .get(s(&row["id"]))
+            .map(Vec::as_slice)
+            .unwrap_or(&[]);
         if row["state"] == "held"
             && ["reply", "research"].contains(&s(&row["kind"]))
             && research.is_match(&py_str(fallback(&[
@@ -597,7 +659,11 @@ pub fn exceptions(work: &Value, env: &Environment) -> Result<Value> {
                 &row["id"],
                 format!(
                     "Failed task has no requeue/recovery exit; last_error={}",
-                    error_type(fallback(&[&data["last_error"], &data["reason"]]))?
+                    error_type(if truth(&data["last_error"]) {
+                        &data["last_error"]
+                    } else {
+                        &data["reason"]
+                    })?
                 ),
                 "data.reason/last_error/continuation_id",
             );

@@ -29,17 +29,29 @@ cargo test --locked --workspace
 cargo install cargo-deny --version 0.20.2 --locked
 cargo deny --locked check
 python3 check_architecture.py
-python3 vectors/generate.py --check
-python3 -m unittest discover -s vectors
-python3 check_live_workflows.py
-python3 parity/compare.py
+python3.12 vectors/generate.py --check
+python3.12 -m unittest discover -s vectors
+python3.12 check_live_workflows.py
+python3.12 check_live_sql.py
+python3.12 parity/compare.py
 cargo run --locked -p outreach-cli -- --help
 ```
 
-Python 3.12 or later and its standard library suffice for the generator and its
-test. The checked-in vectors also reproduce under Python 3.15. Canon tests read
-the checked-in JSON files directly; ledger tests invoke Python to create their
-temporary synthetic database through the existing Python writer.
+Use **CPython 3.12** for generators, parity and Python suites; CI pins the same
+minor version. Its `unicodedata.unidata_version` is **15.0.0** (not 15.1).
+`unicode_vectors.py` records every code point's category/`str.isprintable()` range
+and every changed casefold, and generates the Rust tables. Rust tests check all
+1,112,064 Unicode scalars plus Python `repr` at every category-range boundary.
+Full casefold mappings include unchanged scalars implicitly, so newer Rust Unicode
+assignments cannot change this contract. Newer Python releases can change these
+vectors; the generator rejects a Unicode version mismatch instead of refreshing
+silently. Updating this pin requires regenerating and reviewing both tables and
+vectors. The separate NFKC registry helper still uses the pinned
+`unicode-normalization` crate's Unicode tables.
+
+Canon tests read committed JSON directly; ledger tests invoke Python to create
+a temporary synthetic database through the existing Python writer. No private
+inputs or current source snapshots enter committed vectors.
 
 The dependency audit allows MIT, Apache-2.0, BSD-3-Clause and Zlib licenses and denies
 advisories, yanked dependencies, duplicate dependency versions, wildcard versions,
@@ -151,6 +163,7 @@ private checkout or external service is used.
 | Ordered parse | 3 | First-occurrence key position, last value wins, nested duplicates and reserved marker keys |
 | Python equality | 1,550 | Bool/int/float equivalence, exact huge-int vs float comparisons, nested containers and key order |
 | Explicit depth bound | 1 | Python accepts depth 513; Rust deliberately rejects it |
+| Unicode text | Exhaustive | All Unicode categories, printable ranges, repr boundaries and all changed casefold mappings from CPython 3.12 |
 | Workflow formula | 298 | All seven kinds plus Python's fallback; synthetic text, each input changed/missing, automation scoping/reformatting and historical voice omission |
 
 The Python test regenerates every vector in memory and compares the complete file
@@ -161,11 +174,11 @@ example. It checks all seven kinds and the fallback without reading a private
 policy overlay or saving source snapshots. Changes to workflow text never require
 regenerating committed vectors; changes to the hashing formula require a Rust
 adaptation and may require new synthetic cases. CI runs on changes to `rust/`,
-`managed/`, or its own workflow. To refresh after an intentional byte-contract change:
+`managed/`, `scripts/short_notes/` (imported by publication), or its own workflow. To refresh after an intentional byte-contract change:
 
 ```sh
-python3 vectors/generate.py
-python3 vectors/generate.py --check
+python3.12 vectors/generate.py
+python3.12 vectors/generate.py --check
 cargo test --locked --workspace
 ```
 
@@ -191,21 +204,33 @@ rust/target/debug/outreach control exceptions --snapshot /path/snapshot.sqlite3 
 rust/target/debug/outreach control review-digest --work /path/work.json --root /path/data --format json
 ```
 
-`--root` defaults to `OUTREACH_DATA_ROOT`, then the engine root. Config comes from
-`root/config.json` (or `private-data/config.json` in the engine checkout), with an
-explicit `--config` override. Workflow inputs come from the current public
+`--root` defaults to `OUTREACH_DATA_ROOT`, then the engine root. Config comes
+from `root/config.json`, with `private-data/config.json` used only for a local
+engine checkout lacking the root file, matching `location.load_config`. Owner
+labels use that same config. Workflow inputs come from the current public
 `managed/` tree and the data root's `policy/managed/` overlay; Python source files
-always come from the engine. `--engine-root` selects another public source tree.
-`--now UNIX_SECONDS` injects the status clock. Use a closed snapshot: immutable
-SQLite deliberately ignores changes and WAL contents from a concurrently written
-database. The reader has no public connection/SQL escape hatch or write API.
+always come from the engine. Hashes are read when the matching view needs them:
+owner-draft reply/firstcontact rows in exceptions, and each eligible review in the
+digest. Unlisted/missing digest kinds use Python's research-source fallback.
+Missing digest workflow files suppress that item's change flag; missing required
+owner-draft workflow files fail the command, matching Python.
+
+`--engine-root` or `OUTREACH_ENGINE_ROOT` selects the public source tree. The
+default is discovered from the current directory's ancestors at runtime; an
+installed binary outside a checkout requires an explicit tree. No build-machine
+path is compiled into the default. `--now UNIX_SECONDS` injects the status clock.
+Use a closed snapshot: `Ledger::open` refuses existing `-wal` or `-journal` files,
+since immutable SQLite ignores pending changes in them. This is a deliberate
+stricter gate than the offline Python adapter. An existing `-shm` file is left
+untouched. The reader has no public connection/SQL escape hatch or write API.
 
 `review-digest` requires `--work` and defaults to **text**, matching Python. It
 does not synthesize the much broader `automation.work` inventory. `exceptions`
 accepts the same optional work file and defaults to compact **JSON**; without
 `--work`, it uses the snapshot's tasks. `reviews` preserves request/result field
 order, original row arrival order, review eligibility and event revision binding.
-Unknown task kinds/states fail closed. The model includes all 7 live kinds and
+Unknown current task kinds/states fail closed; historical event states remain
+opaque strings, as in Python. The model includes all 7 live kinds and
 26 live states, including owner-discarded and question-closed. Unknown task-data
 fields and pipeline payloads stay as canon values; known pipeline keys/prefixes
 are classified without imposing future payload schemas. TaskData round-trips the
@@ -218,24 +243,32 @@ with exact integer/float comparisons). `CanonValue` exposes no mutable inner
 value or conversion from an unchecked serde value. Programmatic output assembly
 continues to use `Value`; incoming adapter/model JSON uses canon exclusively.
 
-`python3 parity/compare.py` builds temporary SQLite fixtures with the live
-`Tasks` writer and test request helper. It also reuses every synthetic work/table
-snapshot exercised by `managed/tests/test_exceptions.py`. Extra scenarios cover
-all states/kinds, grouped quotas, correspondence ancestry, pipeline contact gates,
-Unicode digest text, workflow rebinding and review cleanup history. It runs the
-real Python `_main` dispatcher with only Release restore replaced by an immutable
-local reader, then compares stdout bytes against Rust. View builders and output
-serialization are not stubbed or frozen. **8 command variants × 61 fixtures =
-488 comparisons** currently pass. Every input snapshot is hashed before/after;
-sidecar creation is checked. All fixtures and command outputs live only in a
-TemporaryDirectory/captured subprocess output, and CI runs the same harness.
-Changes in live Python state/kind lists and helper behavior are exercised on each
-run. No file under `managed/` is changed.
+`python3.12 parity/compare.py` builds temporary SQLite fixtures with the live
+`Tasks` writer and test request helper. It reuses every synthetic work/table
+snapshot exercised by `managed/tests/test_exceptions.py`. The original suite
+checks **8 command variants × 61 fixtures = 488 successful byte comparisons**.
+`parity/review_findings.json` adds named, committed synthetic reproducers from the
+independent review (**51 fixtures, 120 comparisons, including 77 expected
+failures**), including all five inputs from the supplied generator, missing
+workflow inputs, registry fallbacks, mailbox lower/casefold distinctions, invalid
+configurations and historical event states. The harness compares successful
+stdout bytes and separately requires both implementations to fail for negative
+fixtures; Rust must return a nonzero exit other than 101, with no panic or signal.
+It hashes the snapshot and all preexisting side-file contents before and after.
+All generated databases and command outputs remain in a TemporaryDirectory or
+captured subprocess output and are removed. No file under `managed/` is changed.
+
+`check_live_sql.py` captures SQL emitted by live `Tasks.lane_rows`,
+`Tasks.owner_questions`, `Tasks.counts` (both columns), and `pipeline.status`, then
+compares it with the exact frozen read queries used by Rust, ignoring formatting
+whitespace. CI runs this alongside the live workflow check. The lane query now
+returns the same columns as Python; request/data cross the adapter individually,
+without a surrounding SQLite JSON re-serialization.
 
 For an operator's private snapshot, run locally:
 
 ```sh
-python3 rust/compare_private_snapshot.py /tmp/claude-501/ledger-state-EXAMPLE.sqlite3 --root /path/private-data
+python3.12 rust/compare_private_snapshot.py /path/snapshot.sqlite3 --root /path/private-data
 # Add --work /path/work.json for the digest and work-file exceptions variants.
 ```
 
@@ -246,13 +279,41 @@ four variants (status, reviews, JSON exceptions and text exceptions). It does no
 look for, download, or copy private snapshots. Private parity is operator-run and
 is not a claimed validation of this public slice.
 
-rusqlite is pinned to 0.41.1 with bundled SQLite and default features disabled;
-the unused cache/WebAssembly feature tree is excluded. Ordered serde JSON needs
+rusqlite is pinned to 0.41.1 with **bundled SQLite 3.54.1** and default
+features disabled; Python links to its interpreter/platform SQLite, whose version
+can differ (this machine's CPython 3.12 also reports 3.54.1). Parity tests use both
+engines but do not claim support for every older system SQLite version. The
+benchmark prints Python's SQLite version so its measurements can be interpreted.
+The unused cache/WebAssembly feature tree is excluded. Ordered serde JSON needs
 the permissive Zlib license (foldhash); license/advisory/source/duplicate checks
-remain enabled without exceptions. The 512-container / 4,300-integer-digit bounds
-from the first slice remain unchanged. Tests also verify that SQLite refuses
-writes/DDL, missing snapshots are not created, URI punctuation cannot override
-read-only flags, and every requested table can be read.
+remain enabled without exceptions. Clippy bans `serde_json::Map::remove` because
+it swaps entries with `preserve_order`; use `shift_remove`. Architecture checks
+also forbid `str::parse::<Value>()`, including re-exported/renamed `Value`.
+The 512-container / 4,300-integer-digit bounds remain unchanged. Reader tests
+verify SQLite rejects write SQL and refuses missing snapshots and pending side
+files, with all bytes preserved.
+
+## Local performance benchmark
+
+Run `python3.12 benchmark.py` from `rust/`. It builds release, creates 2,000
+synthetic tasks in a 98,652,160-byte closed ledger, and measures three independent
+subprocess runs per command and implementation, alternating execution order.
+Time is the median wall time; RSS is the largest child peak from `wait4`, excluding
+the parent and fixture builder. Stdout hashes must agree; time and peak RSS must
+both be at most 2× Python. This benchmark is intentionally outside CI, and removes
+its database and output files on completion.
+
+On Darwin arm64 / CPython 3.12.13 / SQLite 3.54.1:
+
+| Command | Python seconds / peak MiB | Rust release seconds / peak MiB | Rust/Python time / RSS |
+| --- | ---: | ---: | ---: |
+| exceptions | 1.136 / 307.1 | 0.457 / 420.4 | 0.40× / 1.37× |
+| reviews | 2.658 / 648.0 | 0.948 / 525.6 | 0.36× / 0.81× |
+
+The task adapter parses each request/data column once through canon and moves it
+into the view. Exceptions coalesces work sections by ownership, then builds its
+children map once. Reviews moves request/results into output and compares review
+markers inside SQLite without loading historical packet payloads.
 
 ## Known gaps and phase 2
 
@@ -272,3 +333,19 @@ read-only flags, and every requested table can be read.
 - Python accepts 513 nested arrays; Rust deliberately rejects beyond 512.
   Registry affiliation regexes use Rust's regex syntax; unsupported Python regex
   constructs produce an explicit error rather than silently skipping a gate.
+- `Ledger::tasks()` is the single full-task read path; `task_values()` has been
+  removed. It returns typed `Task`/`Request`/`TaskData`, which the current view
+  boundary consumes into ordered values without cloning payloads. Phase 2 still
+  needs dedicated projection DTOs for partial work files and typed `Review` and
+  `Binding` throughout core views; full coordinator request validation would
+  reject some partial inputs that Python intentionally accepts here.
+- Ledger and CLI now use error enums (`Io`, SQL/ledger, canon data, and argument or
+  snapshot errors), not `Box<dyn Error>`. Core uses canon's typed data error. Rust
+  reports errors with exit 2; exception class/message text is not a byte contract.
+  Config capacities and revisions use signed 64-bit integers; Python can represent
+  larger values, which Rust rejects explicitly. Typed ledger reads also reject
+  malformed/missing request IDs and current discriminants earlier than Python.
+- The two-day owner-question policy is in core. Pipeline scenario IDs remain in
+  the frozen SQL projection because it must track the live Python query exactly;
+  moving the selector into typed core policy is deferred to phase 2 with a
+  corresponding live-query parity check.

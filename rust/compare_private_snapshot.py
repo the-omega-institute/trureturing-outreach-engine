@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Local only: compare a private closed SQLite snapshot without retaining output.
 
-Usage: python3 rust/compare_private_snapshot.py /tmp/claude-501/ledger-state-X.sqlite3 --root /path/to/data
+Usage: python3 rust/compare_private_snapshot.py /path/snapshot.sqlite3 --root /path/to/data
 Optional --work /path/to/work.json includes review-digest and work exceptions.
 """
 from pathlib import Path

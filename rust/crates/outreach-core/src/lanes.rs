@@ -26,14 +26,14 @@ fn ids(values: &[&Value]) -> BTreeSet<String> {
     }
     result
 }
-fn linked(rows: &[Value], env: &Environment) -> BTreeSet<String> {
+fn linked(rows: &[Value], env: &Environment) -> Result<BTreeSet<String>> {
     let mut output = BTreeSet::new();
     if !truth(&env.config["sandbox_pool"]["prioritize_correspondence_notes"])
         || !rows.iter().any(note)
     {
-        return output;
+        return Ok(output);
     }
-    let persons = registry::people(&env.tables);
+    let persons = registry::people(&env.tables)?;
     let contact = |row: &Value| {
         let email = registry::address(&row["request"]["inputs"]["mailbox_observation"]["email"]);
         persons
@@ -139,7 +139,109 @@ fn linked(rows: &[Value], env: &Environment) -> BTreeSet<String> {
             output.insert(s(&row["id"]).into());
         }
     }
-    output
+    Ok(output)
+}
+pub fn validate(config: &Value) -> Result<()> {
+    if !config.is_object() {
+        return Err(Error::new("Config must be an object"));
+    }
+    if let Some(v) = config.get("followup_lane")
+        && !v.is_boolean()
+    {
+        return Err(Error::new("followup_lane must be a boolean"));
+    }
+    let pool = &config["sandbox_pool"];
+    if truth(pool) && !pool.is_object() {
+        return Err(Error::new("sandbox_pool must be an object"));
+    }
+    if pool.get("prioritize_correspondence_notes").is_some() {
+        validate_groups(config)?;
+    }
+    if let Some(v) = config.get("kind_quota") {
+        if v != "equal" {
+            return Err(Error::new("kind_quota must be equal"));
+        }
+        if config["max_active"].as_i64().is_none_or(|n| n < 0) {
+            return Err(Error::new("max_active must be a nonnegative integer"));
+        }
+        let kinds = config["kinds"]
+            .as_object()
+            .ok_or_else(|| Error::new("Missing kinds object"))?;
+        for kind in kinds.keys() {
+            kind.parse::<TaskKind>()?;
+        }
+    }
+    Ok(())
+}
+fn validate_groups(config: &Value) -> Result<()> {
+    let pool = &config["sandbox_pool"];
+    let priority = pool
+        .get("prioritize_correspondence_notes")
+        .unwrap_or(&Value::Bool(false));
+    if !priority.is_boolean() {
+        return Err(Error::new(
+            "prioritize_correspondence_notes must be a boolean",
+        ));
+    }
+    let Some(groups) = pool.get("groups") else {
+        return if truth(priority) {
+            Err(Error::new("Correspondence priority requires a reply group"))
+        } else {
+            Ok(())
+        };
+    };
+    let groups = groups
+        .as_array()
+        .filter(|a| !a.is_empty())
+        .ok_or_else(|| Error::new("Sandbox groups must be a nonempty list"))?;
+    let mut names = BTreeSet::new();
+    let mut members = BTreeSet::new();
+    let mut sum = 0_i64;
+    for group in groups {
+        let name = group["name"]
+            .as_str()
+            .filter(|s| !s.trim_matches(text::whitespace).is_empty())
+            .ok_or_else(|| Error::new("Invalid Sandbox group name"))?;
+        if !names.insert(name) {
+            return Err(Error::new("Duplicate Sandbox group name"));
+        }
+        let limit = group["max_sandboxes"]
+            .as_i64()
+            .filter(|n| *n > 0)
+            .ok_or_else(|| Error::new("Invalid Sandbox group capacity"))?;
+        sum = sum
+            .checked_add(limit)
+            .ok_or_else(|| Error::new("Sandbox capacity overflow"))?;
+        for kind in group["kinds"]
+            .as_array()
+            .filter(|a| !a.is_empty())
+            .ok_or_else(|| Error::new("Sandbox group kinds must be a nonempty list"))?
+        {
+            let kind = kind
+                .as_str()
+                .ok_or_else(|| Error::new("Invalid group kind"))?;
+            kind.parse::<TaskKind>()?;
+            if !members.insert(kind) {
+                return Err(Error::new("Task kind belongs to multiple Sandbox groups"));
+            }
+        }
+    }
+    let kinds = config["kinds"]
+        .as_object()
+        .ok_or_else(|| Error::new("Missing kinds object"))?;
+    if kinds
+        .iter()
+        .any(|(k, v)| truth(v) && !members.contains(k.as_str()))
+    {
+        return Err(Error::new("Enabled task kinds missing from Sandbox groups"));
+    }
+    if pool["max_sandboxes"].as_i64().is_none_or(|n| sum > n) {
+        return Err(Error::new("Sandbox group limits exceed max_sandboxes"));
+    }
+    if truth(priority) && !members.contains("reply") {
+        return Err(Error::new("Correspondence priority requires a reply group"));
+    }
+    Ok(())
 }
 pub fn summary(rows: &[Value], env: &Environment) -> Result<Value> {
     let config = &env.config;
@@ -147,6 +249,7 @@ pub fn summary(rows: &[Value], env: &Environment) -> Result<Value> {
     if config.get("kind_quota").is_none() {
         return Ok(result);
     }
+    validate_groups(config)?;
     let pool = &config["sandbox_pool"];
     let mut limits = BTreeMap::new();
     let mut groups = BTreeMap::new();
@@ -207,7 +310,7 @@ pub fn summary(rows: &[Value], env: &Environment) -> Result<Value> {
             .or_default()
             .insert("correspondence");
     }
-    let correspondence = linked(rows, env);
+    let correspondence = linked(rows, env)?;
     let mut active: BTreeMap<(Option<&str>, &str), i64> = BTreeMap::new();
     let mut queued = active.clone();
     for row in rows {
@@ -253,7 +356,13 @@ pub fn summary(rows: &[Value], env: &Environment) -> Result<Value> {
         let names = &lanes[&group];
         let capacity = match group {
             None => config["max_active"].as_i64().unwrap_or(0),
-            Some(g) => limits[g] * pool["agents_per_sandbox"].as_i64().unwrap_or(0),
+            Some(g) => limits[g]
+                .checked_mul(
+                    pool["agents_per_sandbox"]
+                        .as_i64()
+                        .ok_or_else(|| Error::new("Missing agents_per_sandbox integer"))?,
+                )
+                .ok_or_else(|| Error::new("Sandbox capacity overflow"))?,
         };
         for (index, name) in names.iter().enumerate() {
             let quota = capacity / names.len() as i64

@@ -12,6 +12,9 @@ impl CanonValue {
     pub fn parse(input: &str) -> Result<Self> {
         parse(input).map(Self)
     }
+    pub fn into_value(self) -> Value {
+        self.0
+    }
     pub fn value(&self) -> &Value {
         &self.0
     }

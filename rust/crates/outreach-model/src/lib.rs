@@ -65,6 +65,9 @@ impl TaskData {
     pub fn value(&self) -> &Value {
         self.0.value()
     }
+    pub fn into_value(self) -> Value {
+        self.0.into_value()
+    }
     pub fn canonical(&self) -> Result<String> {
         canonical(&self.0)
     }
@@ -173,11 +176,31 @@ pub struct Task {
     pub data: TaskData,
     pub updated: f64,
 }
+impl Task {
+    pub fn into_value(self) -> Result<Value> {
+        Ok(Value::Object(
+            [
+                ("id", Value::String(self.id.0)),
+                ("request", self.request.raw.into_value()),
+                ("request_hash", Value::String(self.request_hash)),
+                ("owner", Value::String(self.owner)),
+                ("kind", Value::String(self.kind.to_string())),
+                ("state", Value::String(self.state.to_string())),
+                ("revision", self.revision.into()),
+                ("data", self.data.into_value()),
+                ("updated", outreach_canon::float(self.updated)?),
+            ]
+            .into_iter()
+            .map(|(k, v)| (k.into(), v))
+            .collect(),
+        ))
+    }
+}
 #[derive(Clone, Debug)]
 pub struct TaskEvent {
     pub seq: i64,
     pub id: TaskId,
-    pub state: TaskState,
+    pub state: String,
     pub revision: i64,
     pub at: f64,
     pub data: TaskData,

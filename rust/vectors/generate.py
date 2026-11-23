@@ -475,6 +475,7 @@ def workflow_vectors():
 
 
 def generate():
+    from unicode_vectors import vectors as unicode_vectors
     envelopes, verification = envelope_vectors()
     rejected = ['NaN', 'Infinity', '-Infinity', '1e400', '-1e400', '"\\ud800"',
                 '"\\udfff"', '{"\\ud800":1}', '["\\ud800"]', '"\\ud800x"',
@@ -498,6 +499,7 @@ def generate():
                                   'python_digest': digest(json.loads('[' * 513 + '0' + ']' * 513))}]}
     result = {name + '.json': {'schema_version': 1, 'seed': SEED, 'vectors': vectors}
               for name, vectors in families.items()}
+    result['unicode.json'] = {'schema_version': 1, 'vectors': [unicode_vectors()]}
     result['workflows.json'] = {'schema_version': 1, **workflow_vectors()}
     return {name: (json.dumps(value, ensure_ascii=True, indent=2, allow_nan=False) + '\n').encode()
             for name, value in result.items()}
@@ -509,6 +511,12 @@ def main():
     parser.add_argument('--output', type=Path, default=Path(__file__).resolve().parent)
     args = parser.parse_args()
     generated = generate()
+    from unicode_vectors import sources
+    for name, source in sources(json.loads(generated['unicode.json'])['vectors'][0]).items():
+        path = Path(__file__).resolve().parents[1] / 'crates/outreach-core/src' / name
+        if args.check:
+            if path.read_text() != source: raise SystemExit('Unicode source stale: ' + name)
+        else: path.write_text(source)
     for name, raw in generated.items():
         path = args.output / name
         if args.check:

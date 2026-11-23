@@ -1,11 +1,29 @@
 use crate::*;
 use std::collections::BTreeSet;
 pub fn review_digest(work: &Value, env: &Environment) -> Result<Value> {
-    let persons = registry::people(&env.tables);
+    let persons = registry::digest_people(&env.tables)?;
     let mut items = Vec::new();
     let points = regex(r"(?:^|\s)(\d+)\.\s")?;
     let feedback_check = regex(r"^feedback \d+$")?;
+    if truth(&work["reviews"]) && !work["reviews"].is_array() {
+        return Err(Error::new("Reviews must be a list"));
+    }
     for item in array(&work["reviews"]) {
+        if !item.is_object() {
+            return Err(Error::new("Review entry must be an object"));
+        }
+        for value in [
+            &item["request"],
+            &item["result"],
+            &item["binding"],
+            &item["request"]["inputs"],
+        ] {
+            if truth(value) && !value.is_object() {
+                return Err(Error::new(
+                    "Review request/result/binding/inputs must be objects",
+                ));
+            }
+        }
         let request = &item["request"];
         let result = &item["result"];
         let inputs = &request["inputs"];
@@ -15,6 +33,9 @@ pub fn review_digest(work: &Value, env: &Environment) -> Result<Value> {
             .or_else(|| item.get("kind"))
             .cloned()
             .unwrap_or(string("unknown"));
+        if kind.is_array() || kind.is_object() {
+            return Err(Error::new("Review kind must be a scalar"));
+        }
         if kind == "submission"
             && result["outcome"] == "completed"
             && !truth(&item["submission_review_requested"])
@@ -28,17 +49,21 @@ pub fn review_digest(work: &Value, env: &Environment) -> Result<Value> {
             if !truth(value) {
                 continue;
             }
-            let person = persons.iter().find(|p| p["id"] == *value).or_else(|| {
-                if s(value).contains('@') {
-                    persons.iter().rev().find(|p| {
-                        array(&p["emails"])
-                            .iter()
-                            .any(|a| s(a) == casefold(s(value)))
-                    })
-                } else {
-                    None
-                }
-            });
+            let person = persons
+                .iter()
+                .rev()
+                .find(|p| p["id"] == *value)
+                .or_else(|| {
+                    if s(value).contains('@') {
+                        persons.iter().rev().find(|p| {
+                            array(&p["emails"])
+                                .iter()
+                                .any(|a| s(a) == casefold(s(value)))
+                        })
+                    } else {
+                        None
+                    }
+                });
             labels.push(
                 person
                     .map(|p| py_str(&p["name"]))
@@ -56,9 +81,21 @@ pub fn review_digest(work: &Value, env: &Environment) -> Result<Value> {
         }
         let mut seen = BTreeSet::new();
         labels.retain(|v| seen.insert(v.clone()));
+        let raw_report = result.get("report");
+        if !truth(&result["headline"])
+            && !truth(&result["owner_brief"]["summary_zh"])
+            && raw_report.is_some_and(|v| !v.is_string())
+        {
+            return Err(Error::new(
+                "Report must be a string when used as the headline",
+            ));
+        }
         let report = s(&result["report"]);
         let first = report.split_once(". ").map(|(a, _)| a).unwrap_or(report);
         let headline = fallback(&[&result["headline"], &result["owner_brief"]["summary_zh"]]);
+        if truth(headline) && !headline.is_string() {
+            return Err(Error::new("Headline must be a string"));
+        }
         let headline = text::compact(if truth(headline) { s(headline) } else { first }, 200);
         let mut flags = Vec::new();
         let mut feedback = "feedback —".to_owned();
@@ -79,18 +116,16 @@ pub fn review_digest(work: &Value, env: &Environment) -> Result<Value> {
                 flags.push(format!("feedback unresolved: {}/{total}", total - resolved));
             }
         }
+        let empty_report = string("");
         if result["outcome"] == "hold" || item["state"] == "held" {
-            let reason = fallback(&[&item["reason"], &result["report"]]);
+            let reason = if truth(&item["reason"]) {
+                &item["reason"]
+            } else {
+                result.get("report").unwrap_or(&empty_report)
+            };
             flags.push(format!(
                 "agent hold: {}",
-                text::compact(
-                    &if reason.is_null() {
-                        String::new()
-                    } else {
-                        py_str(reason)
-                    },
-                    80
-                )
+                text::compact(&py_str(reason), 80)
             ));
         }
         if array(&result["self_audit"])
@@ -114,8 +149,8 @@ pub fn review_digest(work: &Value, env: &Environment) -> Result<Value> {
         if result["routing"]["mail"] == "owner" {
             flags.push("routing owner".into());
         }
-        let current = &env.workflows[s(&kind)];
-        let changed = truth(current)
+        let current = (env.workflow)(s(&kind)).unwrap_or(Value::Null);
+        let changed = truth(&current)
             && truth(&request["workflow_hash"])
             && !reviews::matches_workflow(
                 &object([
@@ -125,7 +160,7 @@ pub fn review_digest(work: &Value, env: &Environment) -> Result<Value> {
                         object([("workflow_binding", item["workflow_binding"].clone())]),
                     ),
                 ]),
-                current,
+                &current,
             );
         if changed {
             flags.push("workflow changed: rebind or rerun".into());

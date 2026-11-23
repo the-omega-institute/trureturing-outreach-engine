@@ -1,0 +1,3285 @@
+{
+  "schema_version": 1,
+  "file_sets": {
+    "synthetic": {
+      "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}",
+      "runtime.py": "Synthetic runtime.py\r\n\u03a9 \ud83d\ude00\n",
+      "replies/voice.md": "Synthetic replies/voice.md\r\n\u03a9 \ud83d\ude00\n",
+      "firstcontact/workflow.json": "Synthetic firstcontact/workflow.json\r\n\u03a9 \ud83d\ude00\n",
+      "firstcontact/review.md": "Synthetic firstcontact/review.md\r\n\u03a9 \ud83d\ude00\n",
+      "replies/workflow.json": "Synthetic replies/workflow.json\r\n\u03a9 \ud83d\ude00\n",
+      "replies/review.md": "Synthetic replies/review.md\r\n\u03a9 \ud83d\ude00\n",
+      "daily/workflow.json": "Synthetic daily/workflow.json\r\n\u03a9 \ud83d\ude00\n",
+      "daily/DESIGN-notes.md": "Synthetic daily/DESIGN-notes.md\r\n\u03a9 \ud83d\ude00\n",
+      "research/workflow.json": "Synthetic research/workflow.json\r\n\u03a9 \ud83d\ude00\n",
+      "research/review.md": "Synthetic research/review.md\r\n\u03a9 \ud83d\ude00\n",
+      "submission/workflow.json": "Synthetic submission/workflow.json\r\n\u03a9 \ud83d\ude00\n",
+      "submission/review.md": "Synthetic submission/review.md\r\n\u03a9 \ud83d\ude00\n",
+      "submission/author-policy.json": "Synthetic submission/author-policy.json\r\n\u03a9 \ud83d\ude00\n"
+    }
+  },
+  "vectors": [
+    {
+      "profile": "synthetic",
+      "kind": "daily",
+      "overrides": {},
+      "missing": [],
+      "historical": false,
+      "digest": "57fe647352d61ddaea52b2c7b636d987792374ba1fada0505b2a9a08044d7482",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "daily",
+      "overrides": {},
+      "missing": [
+        "automation.json"
+      ],
+      "historical": false,
+      "digest": null,
+      "error": true
+    },
+    {
+      "profile": "synthetic",
+      "kind": "daily",
+      "overrides": {
+        "runtime.py": "Synthetic runtime.py\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "57fe647352d61ddaea52b2c7b636d987792374ba1fada0505b2a9a08044d7482",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "daily",
+      "overrides": {},
+      "missing": [
+        "runtime.py"
+      ],
+      "historical": false,
+      "digest": "57fe647352d61ddaea52b2c7b636d987792374ba1fada0505b2a9a08044d7482",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "daily",
+      "overrides": {
+        "replies/voice.md": "Synthetic replies/voice.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "57fe647352d61ddaea52b2c7b636d987792374ba1fada0505b2a9a08044d7482",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "daily",
+      "overrides": {},
+      "missing": [
+        "replies/voice.md"
+      ],
+      "historical": false,
+      "digest": "57fe647352d61ddaea52b2c7b636d987792374ba1fada0505b2a9a08044d7482",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "daily",
+      "overrides": {
+        "firstcontact/workflow.json": "Synthetic firstcontact/workflow.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "57fe647352d61ddaea52b2c7b636d987792374ba1fada0505b2a9a08044d7482",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "daily",
+      "overrides": {},
+      "missing": [
+        "firstcontact/workflow.json"
+      ],
+      "historical": false,
+      "digest": "57fe647352d61ddaea52b2c7b636d987792374ba1fada0505b2a9a08044d7482",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "daily",
+      "overrides": {
+        "firstcontact/review.md": "Synthetic firstcontact/review.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "c8cff537cf564e7859959f267eb8983c4748d8a8209989b6d48f511b0c3fa0ef",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "daily",
+      "overrides": {},
+      "missing": [
+        "firstcontact/review.md"
+      ],
+      "historical": false,
+      "digest": null,
+      "error": true
+    },
+    {
+      "profile": "synthetic",
+      "kind": "daily",
+      "overrides": {
+        "replies/workflow.json": "Synthetic replies/workflow.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "57fe647352d61ddaea52b2c7b636d987792374ba1fada0505b2a9a08044d7482",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "daily",
+      "overrides": {},
+      "missing": [
+        "replies/workflow.json"
+      ],
+      "historical": false,
+      "digest": "57fe647352d61ddaea52b2c7b636d987792374ba1fada0505b2a9a08044d7482",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "daily",
+      "overrides": {
+        "replies/review.md": "Synthetic replies/review.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "57fe647352d61ddaea52b2c7b636d987792374ba1fada0505b2a9a08044d7482",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "daily",
+      "overrides": {},
+      "missing": [
+        "replies/review.md"
+      ],
+      "historical": false,
+      "digest": "57fe647352d61ddaea52b2c7b636d987792374ba1fada0505b2a9a08044d7482",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "daily",
+      "overrides": {
+        "daily/workflow.json": "Synthetic daily/workflow.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "96436677adb93619a2e06c9e9639e79f34decd2628847bcacf740934b799df7f",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "daily",
+      "overrides": {},
+      "missing": [
+        "daily/workflow.json"
+      ],
+      "historical": false,
+      "digest": null,
+      "error": true
+    },
+    {
+      "profile": "synthetic",
+      "kind": "daily",
+      "overrides": {
+        "daily/DESIGN-notes.md": "Synthetic daily/DESIGN-notes.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "a5ca79ccdba454c82956768a46f739a4c49131327831cfa4746c642da470dd81",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "daily",
+      "overrides": {},
+      "missing": [
+        "daily/DESIGN-notes.md"
+      ],
+      "historical": false,
+      "digest": null,
+      "error": true
+    },
+    {
+      "profile": "synthetic",
+      "kind": "daily",
+      "overrides": {
+        "research/workflow.json": "Synthetic research/workflow.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "57fe647352d61ddaea52b2c7b636d987792374ba1fada0505b2a9a08044d7482",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "daily",
+      "overrides": {},
+      "missing": [
+        "research/workflow.json"
+      ],
+      "historical": false,
+      "digest": "57fe647352d61ddaea52b2c7b636d987792374ba1fada0505b2a9a08044d7482",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "daily",
+      "overrides": {
+        "research/review.md": "Synthetic research/review.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "57fe647352d61ddaea52b2c7b636d987792374ba1fada0505b2a9a08044d7482",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "daily",
+      "overrides": {},
+      "missing": [
+        "research/review.md"
+      ],
+      "historical": false,
+      "digest": "57fe647352d61ddaea52b2c7b636d987792374ba1fada0505b2a9a08044d7482",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "daily",
+      "overrides": {
+        "submission/workflow.json": "Synthetic submission/workflow.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "57fe647352d61ddaea52b2c7b636d987792374ba1fada0505b2a9a08044d7482",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "daily",
+      "overrides": {},
+      "missing": [
+        "submission/workflow.json"
+      ],
+      "historical": false,
+      "digest": "57fe647352d61ddaea52b2c7b636d987792374ba1fada0505b2a9a08044d7482",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "daily",
+      "overrides": {
+        "submission/review.md": "Synthetic submission/review.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "57fe647352d61ddaea52b2c7b636d987792374ba1fada0505b2a9a08044d7482",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "daily",
+      "overrides": {},
+      "missing": [
+        "submission/review.md"
+      ],
+      "historical": false,
+      "digest": "57fe647352d61ddaea52b2c7b636d987792374ba1fada0505b2a9a08044d7482",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "daily",
+      "overrides": {
+        "submission/author-policy.json": "Synthetic submission/author-policy.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "57fe647352d61ddaea52b2c7b636d987792374ba1fada0505b2a9a08044d7482",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "daily",
+      "overrides": {},
+      "missing": [
+        "submission/author-policy.json"
+      ],
+      "historical": false,
+      "digest": "57fe647352d61ddaea52b2c7b636d987792374ba1fada0505b2a9a08044d7482",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "daily",
+      "overrides": {
+        "automation.json": "{\"schema_version\":[\"changed\"],\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "aad492f794efeaba1518b68bda8d4b5272e3236af2df4c84ab0c1c47884c206d",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "daily",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":[\"changed\"],\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "26fe4bb315db001ad908725a13ee18d9f85c2980a767cabd4b708dd8eff01904",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "daily",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[\"changed\"],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6ed8ec3dfe3a784b33dd30879e39b943d3f4a9208db08fee8d58f65f5dec2fda",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "daily",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":[\"changed\"],\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "57fe647352d61ddaea52b2c7b636d987792374ba1fada0505b2a9a08044d7482",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "daily",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":[\"changed\"],\"coverage\":[true],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "5038254231144b7712b66fa2413629e9b3d3e1d084bfd89fe3821618447d007e",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "daily",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[\"changed\"],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "57fe647352d61ddaea52b2c7b636d987792374ba1fada0505b2a9a08044d7482",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "daily",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[\"changed\"]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "57fe647352d61ddaea52b2c7b636d987792374ba1fada0505b2a9a08044d7482",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "daily",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[false]},\"ignored\":[\"changed\"]}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "57fe647352d61ddaea52b2c7b636d987792374ba1fada0505b2a9a08044d7482",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "daily",
+      "overrides": {
+        "automation.json": "{\n  \"schema_version\": 1,\n  \"routing_contract\": {\n    \"route\": \"synthetic\"\n  },\n  \"continuation\": [\n    1e+16,\n    340282366920938463463374607431768211456\n  ],\n  \"mail\": {\n    \"mode\": \"synthetic\"\n  },\n  \"publication\": {\n    \"daily\": {\n      \"mode\": \"synthetic-daily\"\n    },\n    \"coverage\": [\n      true\n    ],\n    \"public_updates\": [\n      false\n    ]\n  },\n  \"ignored\": \"excluded from every hash\"\n}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "57fe647352d61ddaea52b2c7b636d987792374ba1fada0505b2a9a08044d7482",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "firstcontact",
+      "overrides": {},
+      "missing": [],
+      "historical": false,
+      "digest": "39775eef236bc0bb60d64fe35f1c1ee0d440c8c6c0e44126460b4b1c7115c21b",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "firstcontact",
+      "overrides": {},
+      "missing": [
+        "automation.json"
+      ],
+      "historical": false,
+      "digest": null,
+      "error": true
+    },
+    {
+      "profile": "synthetic",
+      "kind": "firstcontact",
+      "overrides": {
+        "runtime.py": "Synthetic runtime.py\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "485f802434a7e4f98e210c9f1ab222eee016a3d1fff0f256f5cdc80c75268cff",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "firstcontact",
+      "overrides": {},
+      "missing": [
+        "runtime.py"
+      ],
+      "historical": false,
+      "digest": null,
+      "error": true
+    },
+    {
+      "profile": "synthetic",
+      "kind": "firstcontact",
+      "overrides": {
+        "replies/voice.md": "Synthetic replies/voice.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "d1666c5c767c33904bc0aa2f11c2e7d0c739337f3f10e78832ec40d1bb990f01",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "firstcontact",
+      "overrides": {},
+      "missing": [
+        "replies/voice.md"
+      ],
+      "historical": false,
+      "digest": null,
+      "error": true
+    },
+    {
+      "profile": "synthetic",
+      "kind": "firstcontact",
+      "overrides": {
+        "firstcontact/workflow.json": "Synthetic firstcontact/workflow.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "7e79cbcc7b9a67a335b3b3e4e38bef4e4c8e7e0f342c4d20deb8471cf03b6bfb",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "firstcontact",
+      "overrides": {},
+      "missing": [
+        "firstcontact/workflow.json"
+      ],
+      "historical": false,
+      "digest": null,
+      "error": true
+    },
+    {
+      "profile": "synthetic",
+      "kind": "firstcontact",
+      "overrides": {
+        "firstcontact/review.md": "Synthetic firstcontact/review.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "5115d9155e0a04c78585f030b453cb98f84986e70234fe31b1dc48990229307e",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "firstcontact",
+      "overrides": {},
+      "missing": [
+        "firstcontact/review.md"
+      ],
+      "historical": false,
+      "digest": null,
+      "error": true
+    },
+    {
+      "profile": "synthetic",
+      "kind": "firstcontact",
+      "overrides": {
+        "replies/workflow.json": "Synthetic replies/workflow.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "39775eef236bc0bb60d64fe35f1c1ee0d440c8c6c0e44126460b4b1c7115c21b",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "firstcontact",
+      "overrides": {},
+      "missing": [
+        "replies/workflow.json"
+      ],
+      "historical": false,
+      "digest": "39775eef236bc0bb60d64fe35f1c1ee0d440c8c6c0e44126460b4b1c7115c21b",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "firstcontact",
+      "overrides": {
+        "replies/review.md": "Synthetic replies/review.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "39775eef236bc0bb60d64fe35f1c1ee0d440c8c6c0e44126460b4b1c7115c21b",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "firstcontact",
+      "overrides": {},
+      "missing": [
+        "replies/review.md"
+      ],
+      "historical": false,
+      "digest": "39775eef236bc0bb60d64fe35f1c1ee0d440c8c6c0e44126460b4b1c7115c21b",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "firstcontact",
+      "overrides": {
+        "daily/workflow.json": "Synthetic daily/workflow.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "39775eef236bc0bb60d64fe35f1c1ee0d440c8c6c0e44126460b4b1c7115c21b",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "firstcontact",
+      "overrides": {},
+      "missing": [
+        "daily/workflow.json"
+      ],
+      "historical": false,
+      "digest": "39775eef236bc0bb60d64fe35f1c1ee0d440c8c6c0e44126460b4b1c7115c21b",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "firstcontact",
+      "overrides": {
+        "daily/DESIGN-notes.md": "Synthetic daily/DESIGN-notes.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "39775eef236bc0bb60d64fe35f1c1ee0d440c8c6c0e44126460b4b1c7115c21b",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "firstcontact",
+      "overrides": {},
+      "missing": [
+        "daily/DESIGN-notes.md"
+      ],
+      "historical": false,
+      "digest": "39775eef236bc0bb60d64fe35f1c1ee0d440c8c6c0e44126460b4b1c7115c21b",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "firstcontact",
+      "overrides": {
+        "research/workflow.json": "Synthetic research/workflow.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "39775eef236bc0bb60d64fe35f1c1ee0d440c8c6c0e44126460b4b1c7115c21b",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "firstcontact",
+      "overrides": {},
+      "missing": [
+        "research/workflow.json"
+      ],
+      "historical": false,
+      "digest": "39775eef236bc0bb60d64fe35f1c1ee0d440c8c6c0e44126460b4b1c7115c21b",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "firstcontact",
+      "overrides": {
+        "research/review.md": "Synthetic research/review.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "39775eef236bc0bb60d64fe35f1c1ee0d440c8c6c0e44126460b4b1c7115c21b",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "firstcontact",
+      "overrides": {},
+      "missing": [
+        "research/review.md"
+      ],
+      "historical": false,
+      "digest": "39775eef236bc0bb60d64fe35f1c1ee0d440c8c6c0e44126460b4b1c7115c21b",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "firstcontact",
+      "overrides": {
+        "submission/workflow.json": "Synthetic submission/workflow.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "39775eef236bc0bb60d64fe35f1c1ee0d440c8c6c0e44126460b4b1c7115c21b",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "firstcontact",
+      "overrides": {},
+      "missing": [
+        "submission/workflow.json"
+      ],
+      "historical": false,
+      "digest": "39775eef236bc0bb60d64fe35f1c1ee0d440c8c6c0e44126460b4b1c7115c21b",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "firstcontact",
+      "overrides": {
+        "submission/review.md": "Synthetic submission/review.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "39775eef236bc0bb60d64fe35f1c1ee0d440c8c6c0e44126460b4b1c7115c21b",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "firstcontact",
+      "overrides": {},
+      "missing": [
+        "submission/review.md"
+      ],
+      "historical": false,
+      "digest": "39775eef236bc0bb60d64fe35f1c1ee0d440c8c6c0e44126460b4b1c7115c21b",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "firstcontact",
+      "overrides": {
+        "submission/author-policy.json": "Synthetic submission/author-policy.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "39775eef236bc0bb60d64fe35f1c1ee0d440c8c6c0e44126460b4b1c7115c21b",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "firstcontact",
+      "overrides": {},
+      "missing": [
+        "submission/author-policy.json"
+      ],
+      "historical": false,
+      "digest": "39775eef236bc0bb60d64fe35f1c1ee0d440c8c6c0e44126460b4b1c7115c21b",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "firstcontact",
+      "overrides": {
+        "automation.json": "{\"schema_version\":[\"changed\"],\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "73630cd23faad57ea24c8b117633ac243314b7fd426e327138bac1a55cb5641b",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "firstcontact",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":[\"changed\"],\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "ff3dee69dd91aa28b830d70e0ed2027e53a4114b935ea1c1faa7e5f8f5ed5798",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "firstcontact",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[\"changed\"],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "cc89f9bc5c9a1edd253060a32db6267e56f4ad6bed933914ced2f7d9f89d1468",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "firstcontact",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":[\"changed\"],\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "f24c87317499737042a71fd21e89b1b77497088258111709244eb22c852d73b9",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "firstcontact",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":[\"changed\"],\"coverage\":[true],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "39775eef236bc0bb60d64fe35f1c1ee0d440c8c6c0e44126460b4b1c7115c21b",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "firstcontact",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[\"changed\"],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "39775eef236bc0bb60d64fe35f1c1ee0d440c8c6c0e44126460b4b1c7115c21b",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "firstcontact",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[\"changed\"]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "39775eef236bc0bb60d64fe35f1c1ee0d440c8c6c0e44126460b4b1c7115c21b",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "firstcontact",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[false]},\"ignored\":[\"changed\"]}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "39775eef236bc0bb60d64fe35f1c1ee0d440c8c6c0e44126460b4b1c7115c21b",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "firstcontact",
+      "overrides": {
+        "automation.json": "{\n  \"schema_version\": 1,\n  \"routing_contract\": {\n    \"route\": \"synthetic\"\n  },\n  \"continuation\": [\n    1e+16,\n    340282366920938463463374607431768211456\n  ],\n  \"mail\": {\n    \"mode\": \"synthetic\"\n  },\n  \"publication\": {\n    \"daily\": {\n      \"mode\": \"synthetic-daily\"\n    },\n    \"coverage\": [\n      true\n    ],\n    \"public_updates\": [\n      false\n    ]\n  },\n  \"ignored\": \"excluded from every hash\"\n}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "39775eef236bc0bb60d64fe35f1c1ee0d440c8c6c0e44126460b4b1c7115c21b",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "mathesis",
+      "overrides": {},
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "mathesis",
+      "overrides": {},
+      "missing": [
+        "automation.json"
+      ],
+      "historical": false,
+      "digest": null,
+      "error": true
+    },
+    {
+      "profile": "synthetic",
+      "kind": "mathesis",
+      "overrides": {
+        "runtime.py": "Synthetic runtime.py\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "5b312d14ddad65ece5f67a7f4be9d0fb5529a08ded2d7037874acdcbf1448ce2",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "mathesis",
+      "overrides": {},
+      "missing": [
+        "runtime.py"
+      ],
+      "historical": false,
+      "digest": null,
+      "error": true
+    },
+    {
+      "profile": "synthetic",
+      "kind": "mathesis",
+      "overrides": {
+        "replies/voice.md": "Synthetic replies/voice.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "mathesis",
+      "overrides": {},
+      "missing": [
+        "replies/voice.md"
+      ],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "mathesis",
+      "overrides": {
+        "firstcontact/workflow.json": "Synthetic firstcontact/workflow.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "mathesis",
+      "overrides": {},
+      "missing": [
+        "firstcontact/workflow.json"
+      ],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "mathesis",
+      "overrides": {
+        "firstcontact/review.md": "Synthetic firstcontact/review.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "mathesis",
+      "overrides": {},
+      "missing": [
+        "firstcontact/review.md"
+      ],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "mathesis",
+      "overrides": {
+        "replies/workflow.json": "Synthetic replies/workflow.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "mathesis",
+      "overrides": {},
+      "missing": [
+        "replies/workflow.json"
+      ],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "mathesis",
+      "overrides": {
+        "replies/review.md": "Synthetic replies/review.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "mathesis",
+      "overrides": {},
+      "missing": [
+        "replies/review.md"
+      ],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "mathesis",
+      "overrides": {
+        "daily/workflow.json": "Synthetic daily/workflow.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "mathesis",
+      "overrides": {},
+      "missing": [
+        "daily/workflow.json"
+      ],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "mathesis",
+      "overrides": {
+        "daily/DESIGN-notes.md": "Synthetic daily/DESIGN-notes.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "mathesis",
+      "overrides": {},
+      "missing": [
+        "daily/DESIGN-notes.md"
+      ],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "mathesis",
+      "overrides": {
+        "research/workflow.json": "Synthetic research/workflow.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "481bd6b552f1c0856a28786497b2a90832ecabf449ddeca9b2cce1a4de2a36da",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "mathesis",
+      "overrides": {},
+      "missing": [
+        "research/workflow.json"
+      ],
+      "historical": false,
+      "digest": null,
+      "error": true
+    },
+    {
+      "profile": "synthetic",
+      "kind": "mathesis",
+      "overrides": {
+        "research/review.md": "Synthetic research/review.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "459d6f05d3f5841ce2501367d2fb4ede699bf23ff2c0f6c18337dd5eba1f722d",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "mathesis",
+      "overrides": {},
+      "missing": [
+        "research/review.md"
+      ],
+      "historical": false,
+      "digest": null,
+      "error": true
+    },
+    {
+      "profile": "synthetic",
+      "kind": "mathesis",
+      "overrides": {
+        "submission/workflow.json": "Synthetic submission/workflow.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "mathesis",
+      "overrides": {},
+      "missing": [
+        "submission/workflow.json"
+      ],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "mathesis",
+      "overrides": {
+        "submission/review.md": "Synthetic submission/review.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "mathesis",
+      "overrides": {},
+      "missing": [
+        "submission/review.md"
+      ],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "mathesis",
+      "overrides": {
+        "submission/author-policy.json": "Synthetic submission/author-policy.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "mathesis",
+      "overrides": {},
+      "missing": [
+        "submission/author-policy.json"
+      ],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "mathesis",
+      "overrides": {
+        "automation.json": "{\"schema_version\":[\"changed\"],\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "8ed442ff8002931c84391d1d72c0f726d55db5336fa390f79c3b054c9fee09d8",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "mathesis",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":[\"changed\"],\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "985f73c50fd63fc44072818260052660ad895335e8d0f0f4524fd316f234eb5c",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "mathesis",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[\"changed\"],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "5373e8c1d36131a05e81be1f57b3e6b830feddcdb112832cb02c834dbd168388",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "mathesis",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":[\"changed\"],\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "mathesis",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":[\"changed\"],\"coverage\":[true],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "mathesis",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[\"changed\"],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "72047bbfc31cec6cf9664a13be75bcce21c27945b4eaa2e0b2de72ca6c164775",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "mathesis",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[\"changed\"]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "592e736111246f1d50a6b6762f10059e30d82cbbe9578555d4076b28e2f7f082",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "mathesis",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[false]},\"ignored\":[\"changed\"]}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "mathesis",
+      "overrides": {
+        "automation.json": "{\n  \"schema_version\": 1,\n  \"routing_contract\": {\n    \"route\": \"synthetic\"\n  },\n  \"continuation\": [\n    1e+16,\n    340282366920938463463374607431768211456\n  ],\n  \"mail\": {\n    \"mode\": \"synthetic\"\n  },\n  \"publication\": {\n    \"daily\": {\n      \"mode\": \"synthetic-daily\"\n    },\n    \"coverage\": [\n      true\n    ],\n    \"public_updates\": [\n      false\n    ]\n  },\n  \"ignored\": \"excluded from every hash\"\n}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "reply",
+      "overrides": {},
+      "missing": [],
+      "historical": false,
+      "digest": "891912b06ee270afaea07067bb5b45497172a5ebce340ed0d4852b1e1ae92344",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "reply",
+      "overrides": {},
+      "missing": [
+        "automation.json"
+      ],
+      "historical": false,
+      "digest": null,
+      "error": true
+    },
+    {
+      "profile": "synthetic",
+      "kind": "reply",
+      "overrides": {
+        "runtime.py": "Synthetic runtime.py\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "dc2211a4a64aa83b0d5f9989ccd3ef8d77481dc150f83b51e81be50dc70256e7",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "reply",
+      "overrides": {},
+      "missing": [
+        "runtime.py"
+      ],
+      "historical": false,
+      "digest": null,
+      "error": true
+    },
+    {
+      "profile": "synthetic",
+      "kind": "reply",
+      "overrides": {
+        "replies/voice.md": "Synthetic replies/voice.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "b1942bc15d81ca8849671d8a9415a1d0483f5452b9b69d037361f65406b21972",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "reply",
+      "overrides": {},
+      "missing": [
+        "replies/voice.md"
+      ],
+      "historical": false,
+      "digest": null,
+      "error": true
+    },
+    {
+      "profile": "synthetic",
+      "kind": "reply",
+      "overrides": {
+        "firstcontact/workflow.json": "Synthetic firstcontact/workflow.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "891912b06ee270afaea07067bb5b45497172a5ebce340ed0d4852b1e1ae92344",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "reply",
+      "overrides": {},
+      "missing": [
+        "firstcontact/workflow.json"
+      ],
+      "historical": false,
+      "digest": "891912b06ee270afaea07067bb5b45497172a5ebce340ed0d4852b1e1ae92344",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "reply",
+      "overrides": {
+        "firstcontact/review.md": "Synthetic firstcontact/review.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "1bdf0ced85660a5edef890b2a28dc7d4db19388d0f63bffd91ae9fd3ded348b6",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "reply",
+      "overrides": {},
+      "missing": [
+        "firstcontact/review.md"
+      ],
+      "historical": false,
+      "digest": null,
+      "error": true
+    },
+    {
+      "profile": "synthetic",
+      "kind": "reply",
+      "overrides": {
+        "replies/workflow.json": "Synthetic replies/workflow.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "207395ae0a781245af6b60d094972f181e6c60a07b45fccb342eb40ab63a25e1",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "reply",
+      "overrides": {},
+      "missing": [
+        "replies/workflow.json"
+      ],
+      "historical": false,
+      "digest": null,
+      "error": true
+    },
+    {
+      "profile": "synthetic",
+      "kind": "reply",
+      "overrides": {
+        "replies/review.md": "Synthetic replies/review.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "ad5031edc1aa80debadfcaae9efa217a53519cfffe6bb039a60d0a84bd703e1a",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "reply",
+      "overrides": {},
+      "missing": [
+        "replies/review.md"
+      ],
+      "historical": false,
+      "digest": null,
+      "error": true
+    },
+    {
+      "profile": "synthetic",
+      "kind": "reply",
+      "overrides": {
+        "daily/workflow.json": "Synthetic daily/workflow.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "891912b06ee270afaea07067bb5b45497172a5ebce340ed0d4852b1e1ae92344",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "reply",
+      "overrides": {},
+      "missing": [
+        "daily/workflow.json"
+      ],
+      "historical": false,
+      "digest": "891912b06ee270afaea07067bb5b45497172a5ebce340ed0d4852b1e1ae92344",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "reply",
+      "overrides": {
+        "daily/DESIGN-notes.md": "Synthetic daily/DESIGN-notes.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "891912b06ee270afaea07067bb5b45497172a5ebce340ed0d4852b1e1ae92344",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "reply",
+      "overrides": {},
+      "missing": [
+        "daily/DESIGN-notes.md"
+      ],
+      "historical": false,
+      "digest": "891912b06ee270afaea07067bb5b45497172a5ebce340ed0d4852b1e1ae92344",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "reply",
+      "overrides": {
+        "research/workflow.json": "Synthetic research/workflow.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "891912b06ee270afaea07067bb5b45497172a5ebce340ed0d4852b1e1ae92344",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "reply",
+      "overrides": {},
+      "missing": [
+        "research/workflow.json"
+      ],
+      "historical": false,
+      "digest": "891912b06ee270afaea07067bb5b45497172a5ebce340ed0d4852b1e1ae92344",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "reply",
+      "overrides": {
+        "research/review.md": "Synthetic research/review.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "891912b06ee270afaea07067bb5b45497172a5ebce340ed0d4852b1e1ae92344",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "reply",
+      "overrides": {},
+      "missing": [
+        "research/review.md"
+      ],
+      "historical": false,
+      "digest": "891912b06ee270afaea07067bb5b45497172a5ebce340ed0d4852b1e1ae92344",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "reply",
+      "overrides": {
+        "submission/workflow.json": "Synthetic submission/workflow.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "891912b06ee270afaea07067bb5b45497172a5ebce340ed0d4852b1e1ae92344",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "reply",
+      "overrides": {},
+      "missing": [
+        "submission/workflow.json"
+      ],
+      "historical": false,
+      "digest": "891912b06ee270afaea07067bb5b45497172a5ebce340ed0d4852b1e1ae92344",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "reply",
+      "overrides": {
+        "submission/review.md": "Synthetic submission/review.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "891912b06ee270afaea07067bb5b45497172a5ebce340ed0d4852b1e1ae92344",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "reply",
+      "overrides": {},
+      "missing": [
+        "submission/review.md"
+      ],
+      "historical": false,
+      "digest": "891912b06ee270afaea07067bb5b45497172a5ebce340ed0d4852b1e1ae92344",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "reply",
+      "overrides": {
+        "submission/author-policy.json": "Synthetic submission/author-policy.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "891912b06ee270afaea07067bb5b45497172a5ebce340ed0d4852b1e1ae92344",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "reply",
+      "overrides": {},
+      "missing": [
+        "submission/author-policy.json"
+      ],
+      "historical": false,
+      "digest": "891912b06ee270afaea07067bb5b45497172a5ebce340ed0d4852b1e1ae92344",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "reply",
+      "overrides": {
+        "automation.json": "{\"schema_version\":[\"changed\"],\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "ceaa3402a7284d6eee821ad8a6f17716f36e1d5ba41051a7b857691cc45f4e11",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "reply",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":[\"changed\"],\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "f3090fca937e23e5782cbb53f158ea18eb62ae90467baca464dd6519ffc10b03",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "reply",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[\"changed\"],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "1c26ed840d4a608c80ff5590f0322ed663762e9bb78746b07faf91b75f229d33",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "reply",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":[\"changed\"],\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "9102edf9bbcf5d7e308f13c3738d2562fd97dbcc8f28124c600d9cee86affaaa",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "reply",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":[\"changed\"],\"coverage\":[true],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "891912b06ee270afaea07067bb5b45497172a5ebce340ed0d4852b1e1ae92344",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "reply",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[\"changed\"],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "891912b06ee270afaea07067bb5b45497172a5ebce340ed0d4852b1e1ae92344",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "reply",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[\"changed\"]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "891912b06ee270afaea07067bb5b45497172a5ebce340ed0d4852b1e1ae92344",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "reply",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[false]},\"ignored\":[\"changed\"]}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "891912b06ee270afaea07067bb5b45497172a5ebce340ed0d4852b1e1ae92344",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "reply",
+      "overrides": {
+        "automation.json": "{\n  \"schema_version\": 1,\n  \"routing_contract\": {\n    \"route\": \"synthetic\"\n  },\n  \"continuation\": [\n    1e+16,\n    340282366920938463463374607431768211456\n  ],\n  \"mail\": {\n    \"mode\": \"synthetic\"\n  },\n  \"publication\": {\n    \"daily\": {\n      \"mode\": \"synthetic-daily\"\n    },\n    \"coverage\": [\n      true\n    ],\n    \"public_updates\": [\n      false\n    ]\n  },\n  \"ignored\": \"excluded from every hash\"\n}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "891912b06ee270afaea07067bb5b45497172a5ebce340ed0d4852b1e1ae92344",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "research",
+      "overrides": {},
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "research",
+      "overrides": {},
+      "missing": [
+        "automation.json"
+      ],
+      "historical": false,
+      "digest": null,
+      "error": true
+    },
+    {
+      "profile": "synthetic",
+      "kind": "research",
+      "overrides": {
+        "runtime.py": "Synthetic runtime.py\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "5b312d14ddad65ece5f67a7f4be9d0fb5529a08ded2d7037874acdcbf1448ce2",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "research",
+      "overrides": {},
+      "missing": [
+        "runtime.py"
+      ],
+      "historical": false,
+      "digest": null,
+      "error": true
+    },
+    {
+      "profile": "synthetic",
+      "kind": "research",
+      "overrides": {
+        "replies/voice.md": "Synthetic replies/voice.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "research",
+      "overrides": {},
+      "missing": [
+        "replies/voice.md"
+      ],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "research",
+      "overrides": {
+        "firstcontact/workflow.json": "Synthetic firstcontact/workflow.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "research",
+      "overrides": {},
+      "missing": [
+        "firstcontact/workflow.json"
+      ],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "research",
+      "overrides": {
+        "firstcontact/review.md": "Synthetic firstcontact/review.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "research",
+      "overrides": {},
+      "missing": [
+        "firstcontact/review.md"
+      ],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "research",
+      "overrides": {
+        "replies/workflow.json": "Synthetic replies/workflow.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "research",
+      "overrides": {},
+      "missing": [
+        "replies/workflow.json"
+      ],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "research",
+      "overrides": {
+        "replies/review.md": "Synthetic replies/review.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "research",
+      "overrides": {},
+      "missing": [
+        "replies/review.md"
+      ],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "research",
+      "overrides": {
+        "daily/workflow.json": "Synthetic daily/workflow.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "research",
+      "overrides": {},
+      "missing": [
+        "daily/workflow.json"
+      ],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "research",
+      "overrides": {
+        "daily/DESIGN-notes.md": "Synthetic daily/DESIGN-notes.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "research",
+      "overrides": {},
+      "missing": [
+        "daily/DESIGN-notes.md"
+      ],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "research",
+      "overrides": {
+        "research/workflow.json": "Synthetic research/workflow.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "481bd6b552f1c0856a28786497b2a90832ecabf449ddeca9b2cce1a4de2a36da",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "research",
+      "overrides": {},
+      "missing": [
+        "research/workflow.json"
+      ],
+      "historical": false,
+      "digest": null,
+      "error": true
+    },
+    {
+      "profile": "synthetic",
+      "kind": "research",
+      "overrides": {
+        "research/review.md": "Synthetic research/review.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "459d6f05d3f5841ce2501367d2fb4ede699bf23ff2c0f6c18337dd5eba1f722d",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "research",
+      "overrides": {},
+      "missing": [
+        "research/review.md"
+      ],
+      "historical": false,
+      "digest": null,
+      "error": true
+    },
+    {
+      "profile": "synthetic",
+      "kind": "research",
+      "overrides": {
+        "submission/workflow.json": "Synthetic submission/workflow.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "research",
+      "overrides": {},
+      "missing": [
+        "submission/workflow.json"
+      ],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "research",
+      "overrides": {
+        "submission/review.md": "Synthetic submission/review.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "research",
+      "overrides": {},
+      "missing": [
+        "submission/review.md"
+      ],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "research",
+      "overrides": {
+        "submission/author-policy.json": "Synthetic submission/author-policy.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "research",
+      "overrides": {},
+      "missing": [
+        "submission/author-policy.json"
+      ],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "research",
+      "overrides": {
+        "automation.json": "{\"schema_version\":[\"changed\"],\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "8ed442ff8002931c84391d1d72c0f726d55db5336fa390f79c3b054c9fee09d8",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "research",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":[\"changed\"],\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "985f73c50fd63fc44072818260052660ad895335e8d0f0f4524fd316f234eb5c",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "research",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[\"changed\"],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "5373e8c1d36131a05e81be1f57b3e6b830feddcdb112832cb02c834dbd168388",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "research",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":[\"changed\"],\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "research",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":[\"changed\"],\"coverage\":[true],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "research",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[\"changed\"],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "72047bbfc31cec6cf9664a13be75bcce21c27945b4eaa2e0b2de72ca6c164775",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "research",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[\"changed\"]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "592e736111246f1d50a6b6762f10059e30d82cbbe9578555d4076b28e2f7f082",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "research",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[false]},\"ignored\":[\"changed\"]}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "research",
+      "overrides": {
+        "automation.json": "{\n  \"schema_version\": 1,\n  \"routing_contract\": {\n    \"route\": \"synthetic\"\n  },\n  \"continuation\": [\n    1e+16,\n    340282366920938463463374607431768211456\n  ],\n  \"mail\": {\n    \"mode\": \"synthetic\"\n  },\n  \"publication\": {\n    \"daily\": {\n      \"mode\": \"synthetic-daily\"\n    },\n    \"coverage\": [\n      true\n    ],\n    \"public_updates\": [\n      false\n    ]\n  },\n  \"ignored\": \"excluded from every hash\"\n}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "shortnote",
+      "overrides": {},
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "shortnote",
+      "overrides": {},
+      "missing": [
+        "automation.json"
+      ],
+      "historical": false,
+      "digest": null,
+      "error": true
+    },
+    {
+      "profile": "synthetic",
+      "kind": "shortnote",
+      "overrides": {
+        "runtime.py": "Synthetic runtime.py\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "5b312d14ddad65ece5f67a7f4be9d0fb5529a08ded2d7037874acdcbf1448ce2",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "shortnote",
+      "overrides": {},
+      "missing": [
+        "runtime.py"
+      ],
+      "historical": false,
+      "digest": null,
+      "error": true
+    },
+    {
+      "profile": "synthetic",
+      "kind": "shortnote",
+      "overrides": {
+        "replies/voice.md": "Synthetic replies/voice.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "shortnote",
+      "overrides": {},
+      "missing": [
+        "replies/voice.md"
+      ],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "shortnote",
+      "overrides": {
+        "firstcontact/workflow.json": "Synthetic firstcontact/workflow.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "shortnote",
+      "overrides": {},
+      "missing": [
+        "firstcontact/workflow.json"
+      ],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "shortnote",
+      "overrides": {
+        "firstcontact/review.md": "Synthetic firstcontact/review.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "shortnote",
+      "overrides": {},
+      "missing": [
+        "firstcontact/review.md"
+      ],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "shortnote",
+      "overrides": {
+        "replies/workflow.json": "Synthetic replies/workflow.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "shortnote",
+      "overrides": {},
+      "missing": [
+        "replies/workflow.json"
+      ],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "shortnote",
+      "overrides": {
+        "replies/review.md": "Synthetic replies/review.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "shortnote",
+      "overrides": {},
+      "missing": [
+        "replies/review.md"
+      ],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "shortnote",
+      "overrides": {
+        "daily/workflow.json": "Synthetic daily/workflow.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "shortnote",
+      "overrides": {},
+      "missing": [
+        "daily/workflow.json"
+      ],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "shortnote",
+      "overrides": {
+        "daily/DESIGN-notes.md": "Synthetic daily/DESIGN-notes.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "shortnote",
+      "overrides": {},
+      "missing": [
+        "daily/DESIGN-notes.md"
+      ],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "shortnote",
+      "overrides": {
+        "research/workflow.json": "Synthetic research/workflow.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "481bd6b552f1c0856a28786497b2a90832ecabf449ddeca9b2cce1a4de2a36da",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "shortnote",
+      "overrides": {},
+      "missing": [
+        "research/workflow.json"
+      ],
+      "historical": false,
+      "digest": null,
+      "error": true
+    },
+    {
+      "profile": "synthetic",
+      "kind": "shortnote",
+      "overrides": {
+        "research/review.md": "Synthetic research/review.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "459d6f05d3f5841ce2501367d2fb4ede699bf23ff2c0f6c18337dd5eba1f722d",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "shortnote",
+      "overrides": {},
+      "missing": [
+        "research/review.md"
+      ],
+      "historical": false,
+      "digest": null,
+      "error": true
+    },
+    {
+      "profile": "synthetic",
+      "kind": "shortnote",
+      "overrides": {
+        "submission/workflow.json": "Synthetic submission/workflow.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "shortnote",
+      "overrides": {},
+      "missing": [
+        "submission/workflow.json"
+      ],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "shortnote",
+      "overrides": {
+        "submission/review.md": "Synthetic submission/review.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "shortnote",
+      "overrides": {},
+      "missing": [
+        "submission/review.md"
+      ],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "shortnote",
+      "overrides": {
+        "submission/author-policy.json": "Synthetic submission/author-policy.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "shortnote",
+      "overrides": {},
+      "missing": [
+        "submission/author-policy.json"
+      ],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "shortnote",
+      "overrides": {
+        "automation.json": "{\"schema_version\":[\"changed\"],\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "8ed442ff8002931c84391d1d72c0f726d55db5336fa390f79c3b054c9fee09d8",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "shortnote",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":[\"changed\"],\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "985f73c50fd63fc44072818260052660ad895335e8d0f0f4524fd316f234eb5c",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "shortnote",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[\"changed\"],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "5373e8c1d36131a05e81be1f57b3e6b830feddcdb112832cb02c834dbd168388",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "shortnote",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":[\"changed\"],\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "shortnote",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":[\"changed\"],\"coverage\":[true],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "shortnote",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[\"changed\"],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "72047bbfc31cec6cf9664a13be75bcce21c27945b4eaa2e0b2de72ca6c164775",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "shortnote",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[\"changed\"]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "592e736111246f1d50a6b6762f10059e30d82cbbe9578555d4076b28e2f7f082",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "shortnote",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[false]},\"ignored\":[\"changed\"]}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "shortnote",
+      "overrides": {
+        "automation.json": "{\n  \"schema_version\": 1,\n  \"routing_contract\": {\n    \"route\": \"synthetic\"\n  },\n  \"continuation\": [\n    1e+16,\n    340282366920938463463374607431768211456\n  ],\n  \"mail\": {\n    \"mode\": \"synthetic\"\n  },\n  \"publication\": {\n    \"daily\": {\n      \"mode\": \"synthetic-daily\"\n    },\n    \"coverage\": [\n      true\n    ],\n    \"public_updates\": [\n      false\n    ]\n  },\n  \"ignored\": \"excluded from every hash\"\n}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d406c5a95c98740bcce47f027eec30b617c0b0ee236d3c31ebc7310b9bae578",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "submission",
+      "overrides": {},
+      "missing": [],
+      "historical": false,
+      "digest": "d18a3c24bc5d497a2f2142c47cce2d2a289ab3315fd11e380f9a1541eaf98e80",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "submission",
+      "overrides": {},
+      "missing": [
+        "automation.json"
+      ],
+      "historical": false,
+      "digest": null,
+      "error": true
+    },
+    {
+      "profile": "synthetic",
+      "kind": "submission",
+      "overrides": {
+        "runtime.py": "Synthetic runtime.py\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "d59325dade1586f1590c29918be1caedfcc724f5e554741848ce87fed570e802",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "submission",
+      "overrides": {},
+      "missing": [
+        "runtime.py"
+      ],
+      "historical": false,
+      "digest": null,
+      "error": true
+    },
+    {
+      "profile": "synthetic",
+      "kind": "submission",
+      "overrides": {
+        "replies/voice.md": "Synthetic replies/voice.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "d18a3c24bc5d497a2f2142c47cce2d2a289ab3315fd11e380f9a1541eaf98e80",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "submission",
+      "overrides": {},
+      "missing": [
+        "replies/voice.md"
+      ],
+      "historical": false,
+      "digest": "d18a3c24bc5d497a2f2142c47cce2d2a289ab3315fd11e380f9a1541eaf98e80",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "submission",
+      "overrides": {
+        "firstcontact/workflow.json": "Synthetic firstcontact/workflow.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "d18a3c24bc5d497a2f2142c47cce2d2a289ab3315fd11e380f9a1541eaf98e80",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "submission",
+      "overrides": {},
+      "missing": [
+        "firstcontact/workflow.json"
+      ],
+      "historical": false,
+      "digest": "d18a3c24bc5d497a2f2142c47cce2d2a289ab3315fd11e380f9a1541eaf98e80",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "submission",
+      "overrides": {
+        "firstcontact/review.md": "Synthetic firstcontact/review.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "d18a3c24bc5d497a2f2142c47cce2d2a289ab3315fd11e380f9a1541eaf98e80",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "submission",
+      "overrides": {},
+      "missing": [
+        "firstcontact/review.md"
+      ],
+      "historical": false,
+      "digest": "d18a3c24bc5d497a2f2142c47cce2d2a289ab3315fd11e380f9a1541eaf98e80",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "submission",
+      "overrides": {
+        "replies/workflow.json": "Synthetic replies/workflow.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "d18a3c24bc5d497a2f2142c47cce2d2a289ab3315fd11e380f9a1541eaf98e80",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "submission",
+      "overrides": {},
+      "missing": [
+        "replies/workflow.json"
+      ],
+      "historical": false,
+      "digest": "d18a3c24bc5d497a2f2142c47cce2d2a289ab3315fd11e380f9a1541eaf98e80",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "submission",
+      "overrides": {
+        "replies/review.md": "Synthetic replies/review.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "d18a3c24bc5d497a2f2142c47cce2d2a289ab3315fd11e380f9a1541eaf98e80",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "submission",
+      "overrides": {},
+      "missing": [
+        "replies/review.md"
+      ],
+      "historical": false,
+      "digest": "d18a3c24bc5d497a2f2142c47cce2d2a289ab3315fd11e380f9a1541eaf98e80",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "submission",
+      "overrides": {
+        "daily/workflow.json": "Synthetic daily/workflow.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "d18a3c24bc5d497a2f2142c47cce2d2a289ab3315fd11e380f9a1541eaf98e80",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "submission",
+      "overrides": {},
+      "missing": [
+        "daily/workflow.json"
+      ],
+      "historical": false,
+      "digest": "d18a3c24bc5d497a2f2142c47cce2d2a289ab3315fd11e380f9a1541eaf98e80",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "submission",
+      "overrides": {
+        "daily/DESIGN-notes.md": "Synthetic daily/DESIGN-notes.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "d18a3c24bc5d497a2f2142c47cce2d2a289ab3315fd11e380f9a1541eaf98e80",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "submission",
+      "overrides": {},
+      "missing": [
+        "daily/DESIGN-notes.md"
+      ],
+      "historical": false,
+      "digest": "d18a3c24bc5d497a2f2142c47cce2d2a289ab3315fd11e380f9a1541eaf98e80",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "submission",
+      "overrides": {
+        "research/workflow.json": "Synthetic research/workflow.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "d18a3c24bc5d497a2f2142c47cce2d2a289ab3315fd11e380f9a1541eaf98e80",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "submission",
+      "overrides": {},
+      "missing": [
+        "research/workflow.json"
+      ],
+      "historical": false,
+      "digest": "d18a3c24bc5d497a2f2142c47cce2d2a289ab3315fd11e380f9a1541eaf98e80",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "submission",
+      "overrides": {
+        "research/review.md": "Synthetic research/review.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "f1eab8ee59fc2394f55d5b3ed0e46e48820b93deb082a95ac4942529133a7b91",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "submission",
+      "overrides": {},
+      "missing": [
+        "research/review.md"
+      ],
+      "historical": false,
+      "digest": null,
+      "error": true
+    },
+    {
+      "profile": "synthetic",
+      "kind": "submission",
+      "overrides": {
+        "submission/workflow.json": "Synthetic submission/workflow.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "6d581760c6896d74c61def4b526592e74e809b2d8b610203b4d38696796d65f9",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "submission",
+      "overrides": {},
+      "missing": [
+        "submission/workflow.json"
+      ],
+      "historical": false,
+      "digest": null,
+      "error": true
+    },
+    {
+      "profile": "synthetic",
+      "kind": "submission",
+      "overrides": {
+        "submission/review.md": "Synthetic submission/review.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "7cd2d24303c23ffee7ed1ac22048fcb592e991408d5db3c91c2570fcb15e3c31",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "submission",
+      "overrides": {},
+      "missing": [
+        "submission/review.md"
+      ],
+      "historical": false,
+      "digest": null,
+      "error": true
+    },
+    {
+      "profile": "synthetic",
+      "kind": "submission",
+      "overrides": {
+        "submission/author-policy.json": "Synthetic submission/author-policy.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "c9c97bf8d7d459dbe2c42b73b6699c5425627cda918e7cb1268edc5ea095f989",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "submission",
+      "overrides": {},
+      "missing": [
+        "submission/author-policy.json"
+      ],
+      "historical": false,
+      "digest": null,
+      "error": true
+    },
+    {
+      "profile": "synthetic",
+      "kind": "submission",
+      "overrides": {
+        "automation.json": "{\"schema_version\":[\"changed\"],\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "41e533a2dacc7e084b4a19e9aa3c00637a30c99acb5ecac7d07ee9fdbfbfd6a9",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "submission",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":[\"changed\"],\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "e8c8bdd6ae9b346a288e4ad30f134e1c1618e330f22081b7e20b86c386dc8f91",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "submission",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[\"changed\"],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "27ad05929d98e5b6c708da445449e658b6896fe18305f2b8aea33e62d8628670",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "submission",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":[\"changed\"],\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "d18a3c24bc5d497a2f2142c47cce2d2a289ab3315fd11e380f9a1541eaf98e80",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "submission",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":[\"changed\"],\"coverage\":[true],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "d18a3c24bc5d497a2f2142c47cce2d2a289ab3315fd11e380f9a1541eaf98e80",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "submission",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[\"changed\"],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "d18a3c24bc5d497a2f2142c47cce2d2a289ab3315fd11e380f9a1541eaf98e80",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "submission",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[\"changed\"]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "d18a3c24bc5d497a2f2142c47cce2d2a289ab3315fd11e380f9a1541eaf98e80",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "submission",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[false]},\"ignored\":[\"changed\"]}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "d18a3c24bc5d497a2f2142c47cce2d2a289ab3315fd11e380f9a1541eaf98e80",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "submission",
+      "overrides": {
+        "automation.json": "{\n  \"schema_version\": 1,\n  \"routing_contract\": {\n    \"route\": \"synthetic\"\n  },\n  \"continuation\": [\n    1e+16,\n    340282366920938463463374607431768211456\n  ],\n  \"mail\": {\n    \"mode\": \"synthetic\"\n  },\n  \"publication\": {\n    \"daily\": {\n      \"mode\": \"synthetic-daily\"\n    },\n    \"coverage\": [\n      true\n    ],\n    \"public_updates\": [\n      false\n    ]\n  },\n  \"ignored\": \"excluded from every hash\"\n}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "d18a3c24bc5d497a2f2142c47cce2d2a289ab3315fd11e380f9a1541eaf98e80",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "unknown",
+      "overrides": {},
+      "missing": [],
+      "historical": false,
+      "digest": "b883a43652a2b868bc6dbc03a9614c187317f9c80f8f61e1e7c701b91d68183e",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "unknown",
+      "overrides": {},
+      "missing": [
+        "automation.json"
+      ],
+      "historical": false,
+      "digest": null,
+      "error": true
+    },
+    {
+      "profile": "synthetic",
+      "kind": "unknown",
+      "overrides": {
+        "runtime.py": "Synthetic runtime.py\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "2fc992b5c719bf35efe88b9492a39b105f88658e47adc6b0d8fbfd6b23e3a0f5",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "unknown",
+      "overrides": {},
+      "missing": [
+        "runtime.py"
+      ],
+      "historical": false,
+      "digest": null,
+      "error": true
+    },
+    {
+      "profile": "synthetic",
+      "kind": "unknown",
+      "overrides": {
+        "replies/voice.md": "Synthetic replies/voice.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "b883a43652a2b868bc6dbc03a9614c187317f9c80f8f61e1e7c701b91d68183e",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "unknown",
+      "overrides": {},
+      "missing": [
+        "replies/voice.md"
+      ],
+      "historical": false,
+      "digest": "b883a43652a2b868bc6dbc03a9614c187317f9c80f8f61e1e7c701b91d68183e",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "unknown",
+      "overrides": {
+        "firstcontact/workflow.json": "Synthetic firstcontact/workflow.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "b883a43652a2b868bc6dbc03a9614c187317f9c80f8f61e1e7c701b91d68183e",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "unknown",
+      "overrides": {},
+      "missing": [
+        "firstcontact/workflow.json"
+      ],
+      "historical": false,
+      "digest": "b883a43652a2b868bc6dbc03a9614c187317f9c80f8f61e1e7c701b91d68183e",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "unknown",
+      "overrides": {
+        "firstcontact/review.md": "Synthetic firstcontact/review.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "b883a43652a2b868bc6dbc03a9614c187317f9c80f8f61e1e7c701b91d68183e",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "unknown",
+      "overrides": {},
+      "missing": [
+        "firstcontact/review.md"
+      ],
+      "historical": false,
+      "digest": "b883a43652a2b868bc6dbc03a9614c187317f9c80f8f61e1e7c701b91d68183e",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "unknown",
+      "overrides": {
+        "replies/workflow.json": "Synthetic replies/workflow.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "b883a43652a2b868bc6dbc03a9614c187317f9c80f8f61e1e7c701b91d68183e",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "unknown",
+      "overrides": {},
+      "missing": [
+        "replies/workflow.json"
+      ],
+      "historical": false,
+      "digest": "b883a43652a2b868bc6dbc03a9614c187317f9c80f8f61e1e7c701b91d68183e",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "unknown",
+      "overrides": {
+        "replies/review.md": "Synthetic replies/review.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "b883a43652a2b868bc6dbc03a9614c187317f9c80f8f61e1e7c701b91d68183e",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "unknown",
+      "overrides": {},
+      "missing": [
+        "replies/review.md"
+      ],
+      "historical": false,
+      "digest": "b883a43652a2b868bc6dbc03a9614c187317f9c80f8f61e1e7c701b91d68183e",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "unknown",
+      "overrides": {
+        "daily/workflow.json": "Synthetic daily/workflow.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "b883a43652a2b868bc6dbc03a9614c187317f9c80f8f61e1e7c701b91d68183e",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "unknown",
+      "overrides": {},
+      "missing": [
+        "daily/workflow.json"
+      ],
+      "historical": false,
+      "digest": "b883a43652a2b868bc6dbc03a9614c187317f9c80f8f61e1e7c701b91d68183e",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "unknown",
+      "overrides": {
+        "daily/DESIGN-notes.md": "Synthetic daily/DESIGN-notes.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "b883a43652a2b868bc6dbc03a9614c187317f9c80f8f61e1e7c701b91d68183e",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "unknown",
+      "overrides": {},
+      "missing": [
+        "daily/DESIGN-notes.md"
+      ],
+      "historical": false,
+      "digest": "b883a43652a2b868bc6dbc03a9614c187317f9c80f8f61e1e7c701b91d68183e",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "unknown",
+      "overrides": {
+        "research/workflow.json": "Synthetic research/workflow.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "e34065316d99ec53ac7434bc5908cce5e692db104e0b0e29a6d8e5f09efec078",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "unknown",
+      "overrides": {},
+      "missing": [
+        "research/workflow.json"
+      ],
+      "historical": false,
+      "digest": null,
+      "error": true
+    },
+    {
+      "profile": "synthetic",
+      "kind": "unknown",
+      "overrides": {
+        "research/review.md": "Synthetic research/review.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "02bba245ee4df8644d31855ac49f1c894cb2a32df9acbc2544546f0f1e26b523",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "unknown",
+      "overrides": {},
+      "missing": [
+        "research/review.md"
+      ],
+      "historical": false,
+      "digest": null,
+      "error": true
+    },
+    {
+      "profile": "synthetic",
+      "kind": "unknown",
+      "overrides": {
+        "submission/workflow.json": "Synthetic submission/workflow.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "b883a43652a2b868bc6dbc03a9614c187317f9c80f8f61e1e7c701b91d68183e",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "unknown",
+      "overrides": {},
+      "missing": [
+        "submission/workflow.json"
+      ],
+      "historical": false,
+      "digest": "b883a43652a2b868bc6dbc03a9614c187317f9c80f8f61e1e7c701b91d68183e",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "unknown",
+      "overrides": {
+        "submission/review.md": "Synthetic submission/review.md\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "b883a43652a2b868bc6dbc03a9614c187317f9c80f8f61e1e7c701b91d68183e",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "unknown",
+      "overrides": {},
+      "missing": [
+        "submission/review.md"
+      ],
+      "historical": false,
+      "digest": "b883a43652a2b868bc6dbc03a9614c187317f9c80f8f61e1e7c701b91d68183e",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "unknown",
+      "overrides": {
+        "submission/author-policy.json": "Synthetic submission/author-policy.json\r\n\u03a9 \ud83d\ude00\n\nchanged synthetic input\n"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "b883a43652a2b868bc6dbc03a9614c187317f9c80f8f61e1e7c701b91d68183e",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "unknown",
+      "overrides": {},
+      "missing": [
+        "submission/author-policy.json"
+      ],
+      "historical": false,
+      "digest": "b883a43652a2b868bc6dbc03a9614c187317f9c80f8f61e1e7c701b91d68183e",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "unknown",
+      "overrides": {
+        "automation.json": "{\"schema_version\":[\"changed\"],\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "5d863c8c49929a4dab12498713ba414c05bd6823a81fbe27ccd8609bc958c667",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "unknown",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":[\"changed\"],\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "b854f1b0533e58d5f31f47573d93fac75caef3cdefd557593fa1715658fea7d8",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "unknown",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[\"changed\"],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "2132ff7721c39c60d62446a0df0846ce46944d036f45ea846ae9ed3954af6c62",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "unknown",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":[\"changed\"],\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "b883a43652a2b868bc6dbc03a9614c187317f9c80f8f61e1e7c701b91d68183e",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "unknown",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":[\"changed\"],\"coverage\":[true],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "b883a43652a2b868bc6dbc03a9614c187317f9c80f8f61e1e7c701b91d68183e",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "unknown",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[\"changed\"],\"public_updates\":[false]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "b883a43652a2b868bc6dbc03a9614c187317f9c80f8f61e1e7c701b91d68183e",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "unknown",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[\"changed\"]},\"ignored\":\"excluded from every hash\"}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "b883a43652a2b868bc6dbc03a9614c187317f9c80f8f61e1e7c701b91d68183e",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "unknown",
+      "overrides": {
+        "automation.json": "{\"schema_version\":1,\"routing_contract\":{\"route\":\"synthetic\"},\"continuation\":[1e+16,340282366920938463463374607431768211456],\"mail\":{\"mode\":\"synthetic\"},\"publication\":{\"daily\":{\"mode\":\"synthetic-daily\"},\"coverage\":[true],\"public_updates\":[false]},\"ignored\":[\"changed\"]}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "b883a43652a2b868bc6dbc03a9614c187317f9c80f8f61e1e7c701b91d68183e",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "unknown",
+      "overrides": {
+        "automation.json": "{\n  \"schema_version\": 1,\n  \"routing_contract\": {\n    \"route\": \"synthetic\"\n  },\n  \"continuation\": [\n    1e+16,\n    340282366920938463463374607431768211456\n  ],\n  \"mail\": {\n    \"mode\": \"synthetic\"\n  },\n  \"publication\": {\n    \"daily\": {\n      \"mode\": \"synthetic-daily\"\n    },\n    \"coverage\": [\n      true\n    ],\n    \"public_updates\": [\n      false\n    ]\n  },\n  \"ignored\": \"excluded from every hash\"\n}"
+      },
+      "missing": [],
+      "historical": false,
+      "digest": "b883a43652a2b868bc6dbc03a9614c187317f9c80f8f61e1e7c701b91d68183e",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "reply",
+      "overrides": {},
+      "missing": [
+        "replies/voice.md"
+      ],
+      "historical": true,
+      "digest": "5c05c31d94df3f85a5c08b10eae021eb455450c349c79f760a26c8e1e998697e",
+      "error": false
+    },
+    {
+      "profile": "synthetic",
+      "kind": "firstcontact",
+      "overrides": {},
+      "missing": [
+        "replies/voice.md"
+      ],
+      "historical": true,
+      "digest": "44e3790d16a0064edb9fe4a958065e4cf1a98660edca19fceb7197ac1f1d5018",
+      "error": false
+    }
+  ]
+}

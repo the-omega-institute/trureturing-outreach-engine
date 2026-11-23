@@ -1,0 +1,1734 @@
+{
+  "schema_version": 1,
+  "seed": 55345352842547491,
+  "vectors": [
+    {
+      "kind": null,
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"reviewer\":\"local-claude-loop\",\"signature\":\"3bee2261ad824d60283c65d31ff346ff2519f6b5dc64a737f2aacc334eee754c\",\"verdict\":\"PASS\"}",
+      "error": null
+    },
+    {
+      "kind": null,
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"Synthetic edited body \\u03a9\\n\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"edited_body\":\"Synthetic edited body \u03a9\\n\",\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"reviewer\":\"local-claude-loop\",\"signature\":\"c639e8780d9043b7ca2edf5a7dbe764d405e8540a190640716cc66924be4405c\",\"verdict\":\"PASS\"}",
+      "error": null
+    },
+    {
+      "kind": null,
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"\\u001c\\u001f\"}",
+      "signed": null,
+      "error": "edited_body must be a nonempty string"
+    },
+    {
+      "kind": null,
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"\"}",
+      "signed": null,
+      "error": "edited_body must be a nonempty string"
+    },
+    {
+      "kind": null,
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":1}",
+      "signed": null,
+      "error": "edited_body must be a nonempty string"
+    },
+    {
+      "kind": null,
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"signature\":\"already-signed\"}",
+      "signed": null,
+      "error": "Envelope is already signed"
+    },
+    {
+      "kind": null,
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"BOUNCE\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"reviewer\":\"local-claude-loop\",\"signature\":\"9fc3a8f8cde152d120c8a68d032d863289f9507e11625f925c27e46a53167bf7\",\"verdict\":\"BOUNCE\"}",
+      "error": null
+    },
+    {
+      "kind": null,
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"HOLD\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"body\"}",
+      "signed": null,
+      "error": "Only PASS may include edited_body"
+    },
+    {
+      "kind": null,
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}",
+      "signed": null,
+      "error": "Workflow rebind requires --kind from the bound task request"
+    },
+    {
+      "kind": null,
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"}",
+      "signed": null,
+      "error": "Workflow rebind requires --kind from the bound task request"
+    },
+    {
+      "kind": null,
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"invalid\"}",
+      "signed": null,
+      "error": "Invalid workflow rebind digest"
+    },
+    {
+      "kind": null,
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"HOLD\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}",
+      "signed": null,
+      "error": "Only PASS may rebind a workflow"
+    },
+    {
+      "kind": null,
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"reviewer\":\"local-claude-loop\",\"signature\":\"3bee2261ad824d60283c65d31ff346ff2519f6b5dc64a737f2aacc334eee754c\",\"verdict\":\"PASS\"}",
+      "error": null
+    },
+    {
+      "kind": null,
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"Synthetic edited body \\u03a9\\n\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"edited_body\":\"Synthetic edited body \u03a9\\n\",\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"reviewer\":\"local-claude-loop\",\"signature\":\"c639e8780d9043b7ca2edf5a7dbe764d405e8540a190640716cc66924be4405c\",\"verdict\":\"PASS\"}",
+      "error": null
+    },
+    {
+      "kind": null,
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"\\u001c\\u001f\"}",
+      "signed": null,
+      "error": "edited_body must be a nonempty string"
+    },
+    {
+      "kind": null,
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"\"}",
+      "signed": null,
+      "error": "edited_body must be a nonempty string"
+    },
+    {
+      "kind": null,
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":1}",
+      "signed": null,
+      "error": "edited_body must be a nonempty string"
+    },
+    {
+      "kind": null,
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"signature\":\"already-signed\"}",
+      "signed": null,
+      "error": "Envelope is already signed"
+    },
+    {
+      "kind": null,
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"BOUNCE\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"reviewer\":\"local-claude-loop\",\"signature\":\"9fc3a8f8cde152d120c8a68d032d863289f9507e11625f925c27e46a53167bf7\",\"verdict\":\"BOUNCE\"}",
+      "error": null
+    },
+    {
+      "kind": null,
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"HOLD\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"body\"}",
+      "signed": null,
+      "error": "Only PASS may include edited_body"
+    },
+    {
+      "kind": null,
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}",
+      "signed": null,
+      "error": "Workflow rebind requires --kind from the bound task request"
+    },
+    {
+      "kind": null,
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"}",
+      "signed": null,
+      "error": "Workflow rebind requires --kind from the bound task request"
+    },
+    {
+      "kind": null,
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"invalid\"}",
+      "signed": null,
+      "error": "Invalid workflow rebind digest"
+    },
+    {
+      "kind": null,
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"HOLD\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}",
+      "signed": null,
+      "error": "Only PASS may rebind a workflow"
+    },
+    {
+      "kind": "daily",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"reviewer\":\"local-claude-loop\",\"signature\":\"3bee2261ad824d60283c65d31ff346ff2519f6b5dc64a737f2aacc334eee754c\",\"verdict\":\"PASS\"}",
+      "error": null
+    },
+    {
+      "kind": "daily",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"Synthetic edited body \\u03a9\\n\"}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "daily",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"\\u001c\\u001f\"}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "daily",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"\"}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "daily",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":1}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "daily",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"signature\":\"already-signed\"}",
+      "signed": null,
+      "error": "Envelope is already signed"
+    },
+    {
+      "kind": "daily",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"BOUNCE\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"reviewer\":\"local-claude-loop\",\"signature\":\"9fc3a8f8cde152d120c8a68d032d863289f9507e11625f925c27e46a53167bf7\",\"verdict\":\"BOUNCE\"}",
+      "error": null
+    },
+    {
+      "kind": "daily",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"HOLD\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"body\"}",
+      "signed": null,
+      "error": "Only PASS may include edited_body"
+    },
+    {
+      "kind": "daily",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}",
+      "signed": null,
+      "error": "Workflow rebind must match the current workflow for the task kind"
+    },
+    {
+      "kind": "daily",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"}",
+      "signed": null,
+      "error": "Workflow rebind must match the current workflow for the task kind"
+    },
+    {
+      "kind": "daily",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"invalid\"}",
+      "signed": null,
+      "error": "Invalid workflow rebind digest"
+    },
+    {
+      "kind": "daily",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"HOLD\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}",
+      "signed": null,
+      "error": "Only PASS may rebind a workflow"
+    },
+    {
+      "kind": "daily",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"reviewer\":\"local-claude-loop\",\"signature\":\"2bfb8fe0004328750d46007f27e2c7ddeb59d338b247b2892dd1461e0e69c799\",\"verdict\":\"PASS\"}",
+      "error": null
+    },
+    {
+      "kind": "daily",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"Synthetic edited body \\u03a9\\n\"}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "daily",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"\\u001c\\u001f\"}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "daily",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"\"}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "daily",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":1}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "daily",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"signature\":\"already-signed\"}",
+      "signed": null,
+      "error": "Envelope is already signed"
+    },
+    {
+      "kind": "daily",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"BOUNCE\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"reviewer\":\"local-claude-loop\",\"signature\":\"9fc3a8f8cde152d120c8a68d032d863289f9507e11625f925c27e46a53167bf7\",\"verdict\":\"BOUNCE\"}",
+      "error": null
+    },
+    {
+      "kind": "daily",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"HOLD\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"body\"}",
+      "signed": null,
+      "error": "Only PASS may include edited_body"
+    },
+    {
+      "kind": "daily",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"reviewer\":\"local-claude-loop\",\"signature\":\"2bfb8fe0004328750d46007f27e2c7ddeb59d338b247b2892dd1461e0e69c799\",\"verdict\":\"PASS\"}",
+      "error": null
+    },
+    {
+      "kind": "daily",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"}",
+      "signed": null,
+      "error": "Workflow rebind must match the current workflow for the task kind"
+    },
+    {
+      "kind": "daily",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"invalid\"}",
+      "signed": null,
+      "error": "Invalid workflow rebind digest"
+    },
+    {
+      "kind": "daily",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"HOLD\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}",
+      "signed": null,
+      "error": "Only PASS may rebind a workflow"
+    },
+    {
+      "kind": "firstcontact",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"reviewer\":\"local-claude-loop\",\"signature\":\"3bee2261ad824d60283c65d31ff346ff2519f6b5dc64a737f2aacc334eee754c\",\"verdict\":\"PASS\"}",
+      "error": null
+    },
+    {
+      "kind": "firstcontact",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"Synthetic edited body \\u03a9\\n\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"edited_body\":\"Synthetic edited body \u03a9\\n\",\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"reviewer\":\"local-claude-loop\",\"signature\":\"c639e8780d9043b7ca2edf5a7dbe764d405e8540a190640716cc66924be4405c\",\"verdict\":\"PASS\"}",
+      "error": null
+    },
+    {
+      "kind": "firstcontact",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"\\u001c\\u001f\"}",
+      "signed": null,
+      "error": "edited_body must be a nonempty string"
+    },
+    {
+      "kind": "firstcontact",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"\"}",
+      "signed": null,
+      "error": "edited_body must be a nonempty string"
+    },
+    {
+      "kind": "firstcontact",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":1}",
+      "signed": null,
+      "error": "edited_body must be a nonempty string"
+    },
+    {
+      "kind": "firstcontact",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"signature\":\"already-signed\"}",
+      "signed": null,
+      "error": "Envelope is already signed"
+    },
+    {
+      "kind": "firstcontact",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"BOUNCE\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"reviewer\":\"local-claude-loop\",\"signature\":\"9fc3a8f8cde152d120c8a68d032d863289f9507e11625f925c27e46a53167bf7\",\"verdict\":\"BOUNCE\"}",
+      "error": null
+    },
+    {
+      "kind": "firstcontact",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"HOLD\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"body\"}",
+      "signed": null,
+      "error": "Only PASS may include edited_body"
+    },
+    {
+      "kind": "firstcontact",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}",
+      "signed": null,
+      "error": "Workflow rebind must match the current workflow for the task kind"
+    },
+    {
+      "kind": "firstcontact",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"}",
+      "signed": null,
+      "error": "Workflow rebind must match the current workflow for the task kind"
+    },
+    {
+      "kind": "firstcontact",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"invalid\"}",
+      "signed": null,
+      "error": "Invalid workflow rebind digest"
+    },
+    {
+      "kind": "firstcontact",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"HOLD\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}",
+      "signed": null,
+      "error": "Only PASS may rebind a workflow"
+    },
+    {
+      "kind": "firstcontact",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"reviewer\":\"local-claude-loop\",\"signature\":\"2bfb8fe0004328750d46007f27e2c7ddeb59d338b247b2892dd1461e0e69c799\",\"verdict\":\"PASS\"}",
+      "error": null
+    },
+    {
+      "kind": "firstcontact",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"Synthetic edited body \\u03a9\\n\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"edited_body\":\"Synthetic edited body \u03a9\\n\",\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"reviewer\":\"local-claude-loop\",\"signature\":\"540f5fc0a4efb0f7d12387ac11318bc85776f56026e919363713275aa59846c5\",\"verdict\":\"PASS\"}",
+      "error": null
+    },
+    {
+      "kind": "firstcontact",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"\\u001c\\u001f\"}",
+      "signed": null,
+      "error": "edited_body must be a nonempty string"
+    },
+    {
+      "kind": "firstcontact",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"\"}",
+      "signed": null,
+      "error": "edited_body must be a nonempty string"
+    },
+    {
+      "kind": "firstcontact",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":1}",
+      "signed": null,
+      "error": "edited_body must be a nonempty string"
+    },
+    {
+      "kind": "firstcontact",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"signature\":\"already-signed\"}",
+      "signed": null,
+      "error": "Envelope is already signed"
+    },
+    {
+      "kind": "firstcontact",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"BOUNCE\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"reviewer\":\"local-claude-loop\",\"signature\":\"9fc3a8f8cde152d120c8a68d032d863289f9507e11625f925c27e46a53167bf7\",\"verdict\":\"BOUNCE\"}",
+      "error": null
+    },
+    {
+      "kind": "firstcontact",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"HOLD\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"body\"}",
+      "signed": null,
+      "error": "Only PASS may include edited_body"
+    },
+    {
+      "kind": "firstcontact",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"reviewer\":\"local-claude-loop\",\"signature\":\"2bfb8fe0004328750d46007f27e2c7ddeb59d338b247b2892dd1461e0e69c799\",\"verdict\":\"PASS\"}",
+      "error": null
+    },
+    {
+      "kind": "firstcontact",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"}",
+      "signed": null,
+      "error": "Workflow rebind must match the current workflow for the task kind"
+    },
+    {
+      "kind": "firstcontact",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"invalid\"}",
+      "signed": null,
+      "error": "Invalid workflow rebind digest"
+    },
+    {
+      "kind": "firstcontact",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"HOLD\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}",
+      "signed": null,
+      "error": "Only PASS may rebind a workflow"
+    },
+    {
+      "kind": "mathesis",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"reviewer\":\"local-claude-loop\",\"signature\":\"3bee2261ad824d60283c65d31ff346ff2519f6b5dc64a737f2aacc334eee754c\",\"verdict\":\"PASS\"}",
+      "error": null
+    },
+    {
+      "kind": "mathesis",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"Synthetic edited body \\u03a9\\n\"}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "mathesis",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"\\u001c\\u001f\"}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "mathesis",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"\"}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "mathesis",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":1}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "mathesis",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"signature\":\"already-signed\"}",
+      "signed": null,
+      "error": "Envelope is already signed"
+    },
+    {
+      "kind": "mathesis",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"BOUNCE\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"reviewer\":\"local-claude-loop\",\"signature\":\"9fc3a8f8cde152d120c8a68d032d863289f9507e11625f925c27e46a53167bf7\",\"verdict\":\"BOUNCE\"}",
+      "error": null
+    },
+    {
+      "kind": "mathesis",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"HOLD\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"body\"}",
+      "signed": null,
+      "error": "Only PASS may include edited_body"
+    },
+    {
+      "kind": "mathesis",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}",
+      "signed": null,
+      "error": "Workflow rebind must match the current workflow for the task kind"
+    },
+    {
+      "kind": "mathesis",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"}",
+      "signed": null,
+      "error": "Workflow rebind must match the current workflow for the task kind"
+    },
+    {
+      "kind": "mathesis",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"invalid\"}",
+      "signed": null,
+      "error": "Invalid workflow rebind digest"
+    },
+    {
+      "kind": "mathesis",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"HOLD\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}",
+      "signed": null,
+      "error": "Only PASS may rebind a workflow"
+    },
+    {
+      "kind": "mathesis",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"reviewer\":\"local-claude-loop\",\"signature\":\"2bfb8fe0004328750d46007f27e2c7ddeb59d338b247b2892dd1461e0e69c799\",\"verdict\":\"PASS\"}",
+      "error": null
+    },
+    {
+      "kind": "mathesis",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"Synthetic edited body \\u03a9\\n\"}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "mathesis",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"\\u001c\\u001f\"}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "mathesis",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"\"}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "mathesis",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":1}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "mathesis",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"signature\":\"already-signed\"}",
+      "signed": null,
+      "error": "Envelope is already signed"
+    },
+    {
+      "kind": "mathesis",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"BOUNCE\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"reviewer\":\"local-claude-loop\",\"signature\":\"9fc3a8f8cde152d120c8a68d032d863289f9507e11625f925c27e46a53167bf7\",\"verdict\":\"BOUNCE\"}",
+      "error": null
+    },
+    {
+      "kind": "mathesis",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"HOLD\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"body\"}",
+      "signed": null,
+      "error": "Only PASS may include edited_body"
+    },
+    {
+      "kind": "mathesis",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"reviewer\":\"local-claude-loop\",\"signature\":\"2bfb8fe0004328750d46007f27e2c7ddeb59d338b247b2892dd1461e0e69c799\",\"verdict\":\"PASS\"}",
+      "error": null
+    },
+    {
+      "kind": "mathesis",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"}",
+      "signed": null,
+      "error": "Workflow rebind must match the current workflow for the task kind"
+    },
+    {
+      "kind": "mathesis",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"invalid\"}",
+      "signed": null,
+      "error": "Invalid workflow rebind digest"
+    },
+    {
+      "kind": "mathesis",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"HOLD\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}",
+      "signed": null,
+      "error": "Only PASS may rebind a workflow"
+    },
+    {
+      "kind": "reply",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"reviewer\":\"local-claude-loop\",\"signature\":\"3bee2261ad824d60283c65d31ff346ff2519f6b5dc64a737f2aacc334eee754c\",\"verdict\":\"PASS\"}",
+      "error": null
+    },
+    {
+      "kind": "reply",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"Synthetic edited body \\u03a9\\n\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"edited_body\":\"Synthetic edited body \u03a9\\n\",\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"reviewer\":\"local-claude-loop\",\"signature\":\"c639e8780d9043b7ca2edf5a7dbe764d405e8540a190640716cc66924be4405c\",\"verdict\":\"PASS\"}",
+      "error": null
+    },
+    {
+      "kind": "reply",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"\\u001c\\u001f\"}",
+      "signed": null,
+      "error": "edited_body must be a nonempty string"
+    },
+    {
+      "kind": "reply",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"\"}",
+      "signed": null,
+      "error": "edited_body must be a nonempty string"
+    },
+    {
+      "kind": "reply",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":1}",
+      "signed": null,
+      "error": "edited_body must be a nonempty string"
+    },
+    {
+      "kind": "reply",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"signature\":\"already-signed\"}",
+      "signed": null,
+      "error": "Envelope is already signed"
+    },
+    {
+      "kind": "reply",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"BOUNCE\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"reviewer\":\"local-claude-loop\",\"signature\":\"9fc3a8f8cde152d120c8a68d032d863289f9507e11625f925c27e46a53167bf7\",\"verdict\":\"BOUNCE\"}",
+      "error": null
+    },
+    {
+      "kind": "reply",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"HOLD\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"body\"}",
+      "signed": null,
+      "error": "Only PASS may include edited_body"
+    },
+    {
+      "kind": "reply",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}",
+      "signed": null,
+      "error": "Workflow rebind must match the current workflow for the task kind"
+    },
+    {
+      "kind": "reply",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"}",
+      "signed": null,
+      "error": "Workflow rebind must match the current workflow for the task kind"
+    },
+    {
+      "kind": "reply",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"invalid\"}",
+      "signed": null,
+      "error": "Invalid workflow rebind digest"
+    },
+    {
+      "kind": "reply",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"HOLD\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}",
+      "signed": null,
+      "error": "Only PASS may rebind a workflow"
+    },
+    {
+      "kind": "reply",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"reviewer\":\"local-claude-loop\",\"signature\":\"2bfb8fe0004328750d46007f27e2c7ddeb59d338b247b2892dd1461e0e69c799\",\"verdict\":\"PASS\"}",
+      "error": null
+    },
+    {
+      "kind": "reply",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"Synthetic edited body \\u03a9\\n\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"edited_body\":\"Synthetic edited body \u03a9\\n\",\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"reviewer\":\"local-claude-loop\",\"signature\":\"540f5fc0a4efb0f7d12387ac11318bc85776f56026e919363713275aa59846c5\",\"verdict\":\"PASS\"}",
+      "error": null
+    },
+    {
+      "kind": "reply",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"\\u001c\\u001f\"}",
+      "signed": null,
+      "error": "edited_body must be a nonempty string"
+    },
+    {
+      "kind": "reply",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"\"}",
+      "signed": null,
+      "error": "edited_body must be a nonempty string"
+    },
+    {
+      "kind": "reply",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":1}",
+      "signed": null,
+      "error": "edited_body must be a nonempty string"
+    },
+    {
+      "kind": "reply",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"signature\":\"already-signed\"}",
+      "signed": null,
+      "error": "Envelope is already signed"
+    },
+    {
+      "kind": "reply",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"BOUNCE\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"reviewer\":\"local-claude-loop\",\"signature\":\"9fc3a8f8cde152d120c8a68d032d863289f9507e11625f925c27e46a53167bf7\",\"verdict\":\"BOUNCE\"}",
+      "error": null
+    },
+    {
+      "kind": "reply",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"HOLD\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"body\"}",
+      "signed": null,
+      "error": "Only PASS may include edited_body"
+    },
+    {
+      "kind": "reply",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"reviewer\":\"local-claude-loop\",\"signature\":\"2bfb8fe0004328750d46007f27e2c7ddeb59d338b247b2892dd1461e0e69c799\",\"verdict\":\"PASS\"}",
+      "error": null
+    },
+    {
+      "kind": "reply",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"}",
+      "signed": null,
+      "error": "Workflow rebind must match the current workflow for the task kind"
+    },
+    {
+      "kind": "reply",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"invalid\"}",
+      "signed": null,
+      "error": "Invalid workflow rebind digest"
+    },
+    {
+      "kind": "reply",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"HOLD\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}",
+      "signed": null,
+      "error": "Only PASS may rebind a workflow"
+    },
+    {
+      "kind": "research",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"reviewer\":\"local-claude-loop\",\"signature\":\"3bee2261ad824d60283c65d31ff346ff2519f6b5dc64a737f2aacc334eee754c\",\"verdict\":\"PASS\"}",
+      "error": null
+    },
+    {
+      "kind": "research",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"Synthetic edited body \\u03a9\\n\"}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "research",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"\\u001c\\u001f\"}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "research",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"\"}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "research",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":1}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "research",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"signature\":\"already-signed\"}",
+      "signed": null,
+      "error": "Envelope is already signed"
+    },
+    {
+      "kind": "research",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"BOUNCE\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"reviewer\":\"local-claude-loop\",\"signature\":\"9fc3a8f8cde152d120c8a68d032d863289f9507e11625f925c27e46a53167bf7\",\"verdict\":\"BOUNCE\"}",
+      "error": null
+    },
+    {
+      "kind": "research",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"HOLD\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"body\"}",
+      "signed": null,
+      "error": "Only PASS may include edited_body"
+    },
+    {
+      "kind": "research",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}",
+      "signed": null,
+      "error": "Workflow rebind must match the current workflow for the task kind"
+    },
+    {
+      "kind": "research",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"}",
+      "signed": null,
+      "error": "Workflow rebind must match the current workflow for the task kind"
+    },
+    {
+      "kind": "research",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"invalid\"}",
+      "signed": null,
+      "error": "Invalid workflow rebind digest"
+    },
+    {
+      "kind": "research",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"HOLD\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}",
+      "signed": null,
+      "error": "Only PASS may rebind a workflow"
+    },
+    {
+      "kind": "research",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"reviewer\":\"local-claude-loop\",\"signature\":\"2bfb8fe0004328750d46007f27e2c7ddeb59d338b247b2892dd1461e0e69c799\",\"verdict\":\"PASS\"}",
+      "error": null
+    },
+    {
+      "kind": "research",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"Synthetic edited body \\u03a9\\n\"}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "research",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"\\u001c\\u001f\"}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "research",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"\"}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "research",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":1}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "research",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"signature\":\"already-signed\"}",
+      "signed": null,
+      "error": "Envelope is already signed"
+    },
+    {
+      "kind": "research",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"BOUNCE\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"reviewer\":\"local-claude-loop\",\"signature\":\"9fc3a8f8cde152d120c8a68d032d863289f9507e11625f925c27e46a53167bf7\",\"verdict\":\"BOUNCE\"}",
+      "error": null
+    },
+    {
+      "kind": "research",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"HOLD\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"body\"}",
+      "signed": null,
+      "error": "Only PASS may include edited_body"
+    },
+    {
+      "kind": "research",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"reviewer\":\"local-claude-loop\",\"signature\":\"2bfb8fe0004328750d46007f27e2c7ddeb59d338b247b2892dd1461e0e69c799\",\"verdict\":\"PASS\"}",
+      "error": null
+    },
+    {
+      "kind": "research",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"}",
+      "signed": null,
+      "error": "Workflow rebind must match the current workflow for the task kind"
+    },
+    {
+      "kind": "research",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"invalid\"}",
+      "signed": null,
+      "error": "Invalid workflow rebind digest"
+    },
+    {
+      "kind": "research",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"HOLD\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}",
+      "signed": null,
+      "error": "Only PASS may rebind a workflow"
+    },
+    {
+      "kind": "shortnote",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"reviewer\":\"local-claude-loop\",\"signature\":\"3bee2261ad824d60283c65d31ff346ff2519f6b5dc64a737f2aacc334eee754c\",\"verdict\":\"PASS\"}",
+      "error": null
+    },
+    {
+      "kind": "shortnote",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"Synthetic edited body \\u03a9\\n\"}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "shortnote",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"\\u001c\\u001f\"}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "shortnote",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"\"}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "shortnote",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":1}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "shortnote",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"signature\":\"already-signed\"}",
+      "signed": null,
+      "error": "Envelope is already signed"
+    },
+    {
+      "kind": "shortnote",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"BOUNCE\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"reviewer\":\"local-claude-loop\",\"signature\":\"9fc3a8f8cde152d120c8a68d032d863289f9507e11625f925c27e46a53167bf7\",\"verdict\":\"BOUNCE\"}",
+      "error": null
+    },
+    {
+      "kind": "shortnote",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"HOLD\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"body\"}",
+      "signed": null,
+      "error": "Only PASS may include edited_body"
+    },
+    {
+      "kind": "shortnote",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}",
+      "signed": null,
+      "error": "Workflow rebind must match the current workflow for the task kind"
+    },
+    {
+      "kind": "shortnote",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"}",
+      "signed": null,
+      "error": "Workflow rebind must match the current workflow for the task kind"
+    },
+    {
+      "kind": "shortnote",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"invalid\"}",
+      "signed": null,
+      "error": "Invalid workflow rebind digest"
+    },
+    {
+      "kind": "shortnote",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"HOLD\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}",
+      "signed": null,
+      "error": "Only PASS may rebind a workflow"
+    },
+    {
+      "kind": "shortnote",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"reviewer\":\"local-claude-loop\",\"signature\":\"2bfb8fe0004328750d46007f27e2c7ddeb59d338b247b2892dd1461e0e69c799\",\"verdict\":\"PASS\"}",
+      "error": null
+    },
+    {
+      "kind": "shortnote",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"Synthetic edited body \\u03a9\\n\"}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "shortnote",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"\\u001c\\u001f\"}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "shortnote",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"\"}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "shortnote",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":1}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "shortnote",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"signature\":\"already-signed\"}",
+      "signed": null,
+      "error": "Envelope is already signed"
+    },
+    {
+      "kind": "shortnote",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"BOUNCE\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"reviewer\":\"local-claude-loop\",\"signature\":\"9fc3a8f8cde152d120c8a68d032d863289f9507e11625f925c27e46a53167bf7\",\"verdict\":\"BOUNCE\"}",
+      "error": null
+    },
+    {
+      "kind": "shortnote",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"HOLD\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"body\"}",
+      "signed": null,
+      "error": "Only PASS may include edited_body"
+    },
+    {
+      "kind": "shortnote",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"reviewer\":\"local-claude-loop\",\"signature\":\"2bfb8fe0004328750d46007f27e2c7ddeb59d338b247b2892dd1461e0e69c799\",\"verdict\":\"PASS\"}",
+      "error": null
+    },
+    {
+      "kind": "shortnote",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"}",
+      "signed": null,
+      "error": "Workflow rebind must match the current workflow for the task kind"
+    },
+    {
+      "kind": "shortnote",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"invalid\"}",
+      "signed": null,
+      "error": "Invalid workflow rebind digest"
+    },
+    {
+      "kind": "shortnote",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"HOLD\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}",
+      "signed": null,
+      "error": "Only PASS may rebind a workflow"
+    },
+    {
+      "kind": "submission",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"reviewer\":\"local-claude-loop\",\"signature\":\"3bee2261ad824d60283c65d31ff346ff2519f6b5dc64a737f2aacc334eee754c\",\"verdict\":\"PASS\"}",
+      "error": null
+    },
+    {
+      "kind": "submission",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"Synthetic edited body \\u03a9\\n\"}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "submission",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"\\u001c\\u001f\"}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "submission",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"\"}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "submission",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":1}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "submission",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"signature\":\"already-signed\"}",
+      "signed": null,
+      "error": "Envelope is already signed"
+    },
+    {
+      "kind": "submission",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"BOUNCE\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"reviewer\":\"local-claude-loop\",\"signature\":\"9fc3a8f8cde152d120c8a68d032d863289f9507e11625f925c27e46a53167bf7\",\"verdict\":\"BOUNCE\"}",
+      "error": null
+    },
+    {
+      "kind": "submission",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"HOLD\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"body\"}",
+      "signed": null,
+      "error": "Only PASS may include edited_body"
+    },
+    {
+      "kind": "submission",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}",
+      "signed": null,
+      "error": "Workflow rebind must match the current workflow for the task kind"
+    },
+    {
+      "kind": "submission",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"}",
+      "signed": null,
+      "error": "Workflow rebind must match the current workflow for the task kind"
+    },
+    {
+      "kind": "submission",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"invalid\"}",
+      "signed": null,
+      "error": "Invalid workflow rebind digest"
+    },
+    {
+      "kind": "submission",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"HOLD\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}",
+      "signed": null,
+      "error": "Only PASS may rebind a workflow"
+    },
+    {
+      "kind": "submission",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"reviewer\":\"local-claude-loop\",\"signature\":\"2bfb8fe0004328750d46007f27e2c7ddeb59d338b247b2892dd1461e0e69c799\",\"verdict\":\"PASS\"}",
+      "error": null
+    },
+    {
+      "kind": "submission",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"Synthetic edited body \\u03a9\\n\"}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "submission",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"\\u001c\\u001f\"}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "submission",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"\"}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "submission",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":1}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "submission",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"signature\":\"already-signed\"}",
+      "signed": null,
+      "error": "Envelope is already signed"
+    },
+    {
+      "kind": "submission",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"BOUNCE\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"reviewer\":\"local-claude-loop\",\"signature\":\"9fc3a8f8cde152d120c8a68d032d863289f9507e11625f925c27e46a53167bf7\",\"verdict\":\"BOUNCE\"}",
+      "error": null
+    },
+    {
+      "kind": "submission",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"HOLD\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"body\"}",
+      "signed": null,
+      "error": "Only PASS may include edited_body"
+    },
+    {
+      "kind": "submission",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"reviewer\":\"local-claude-loop\",\"signature\":\"2bfb8fe0004328750d46007f27e2c7ddeb59d338b247b2892dd1461e0e69c799\",\"verdict\":\"PASS\"}",
+      "error": null
+    },
+    {
+      "kind": "submission",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"}",
+      "signed": null,
+      "error": "Workflow rebind must match the current workflow for the task kind"
+    },
+    {
+      "kind": "submission",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"invalid\"}",
+      "signed": null,
+      "error": "Invalid workflow rebind digest"
+    },
+    {
+      "kind": "submission",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"HOLD\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}",
+      "signed": null,
+      "error": "Only PASS may rebind a workflow"
+    },
+    {
+      "kind": "unknown",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"reviewer\":\"local-claude-loop\",\"signature\":\"3bee2261ad824d60283c65d31ff346ff2519f6b5dc64a737f2aacc334eee754c\",\"verdict\":\"PASS\"}",
+      "error": null
+    },
+    {
+      "kind": "unknown",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"Synthetic edited body \\u03a9\\n\"}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "unknown",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"\\u001c\\u001f\"}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "unknown",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"\"}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "unknown",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":1}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "unknown",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"signature\":\"already-signed\"}",
+      "signed": null,
+      "error": "Envelope is already signed"
+    },
+    {
+      "kind": "unknown",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"BOUNCE\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"reviewer\":\"local-claude-loop\",\"signature\":\"9fc3a8f8cde152d120c8a68d032d863289f9507e11625f925c27e46a53167bf7\",\"verdict\":\"BOUNCE\"}",
+      "error": null
+    },
+    {
+      "kind": "unknown",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"HOLD\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"body\"}",
+      "signed": null,
+      "error": "Only PASS may include edited_body"
+    },
+    {
+      "kind": "unknown",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}",
+      "signed": null,
+      "error": "Workflow rebind requires --kind from the bound task request"
+    },
+    {
+      "kind": "unknown",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"}",
+      "signed": null,
+      "error": "Workflow rebind requires --kind from the bound task request"
+    },
+    {
+      "kind": "unknown",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"invalid\"}",
+      "signed": null,
+      "error": "Invalid workflow rebind digest"
+    },
+    {
+      "kind": "unknown",
+      "current_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"HOLD\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}",
+      "signed": null,
+      "error": "Only PASS may rebind a workflow"
+    },
+    {
+      "kind": "unknown",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"reviewer\":\"local-claude-loop\",\"signature\":\"3bee2261ad824d60283c65d31ff346ff2519f6b5dc64a737f2aacc334eee754c\",\"verdict\":\"PASS\"}",
+      "error": null
+    },
+    {
+      "kind": "unknown",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"Synthetic edited body \\u03a9\\n\"}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "unknown",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"\\u001c\\u001f\"}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "unknown",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"\"}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "unknown",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":1}",
+      "signed": null,
+      "error": "edited_body is only allowed for reply and firstcontact"
+    },
+    {
+      "kind": "unknown",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"signature\":\"already-signed\"}",
+      "signed": null,
+      "error": "Envelope is already signed"
+    },
+    {
+      "kind": "unknown",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"BOUNCE\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\"}",
+      "signed": "{\"binding\":{\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"task_id\":\"synthetic-review\",\"task_revision\":1,\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"evidence_ref\":\"fixture:review\",\"reason\":\"Synthetic checked result\",\"reviewer\":\"local-claude-loop\",\"signature\":\"9fc3a8f8cde152d120c8a68d032d863289f9507e11625f925c27e46a53167bf7\",\"verdict\":\"BOUNCE\"}",
+      "error": null
+    },
+    {
+      "kind": "unknown",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"HOLD\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"edited_body\":\"body\"}",
+      "signed": null,
+      "error": "Only PASS may include edited_body"
+    },
+    {
+      "kind": "unknown",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}",
+      "signed": null,
+      "error": "Workflow rebind requires --kind from the bound task request"
+    },
+    {
+      "kind": "unknown",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"}",
+      "signed": null,
+      "error": "Workflow rebind requires --kind from the bound task request"
+    },
+    {
+      "kind": "unknown",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"PASS\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"invalid\"}",
+      "signed": null,
+      "error": "Invalid workflow rebind digest"
+    },
+    {
+      "kind": "unknown",
+      "current_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "key": "synthetic-test-key-only-\u03c0",
+      "unsigned": "{\"binding\":{\"task_id\":\"synthetic-review\",\"task_revision\":1,\"result_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow_hash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"reviewer\":\"local-claude-loop\",\"verdict\":\"HOLD\",\"reason\":\"Synthetic checked result\",\"evidence_ref\":\"fixture:review\",\"rebind_workflow_hash\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}",
+      "signed": null,
+      "error": "Only PASS may rebind a workflow"
+    }
+  ]
+}

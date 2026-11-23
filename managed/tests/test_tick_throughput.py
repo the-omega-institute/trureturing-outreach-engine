@@ -13,7 +13,7 @@ import zipfile
 
 from managed import automation, control, delivery, publication, recheck
 from managed.queue import canonical
-from managed.sandbox_pool import STALLED_SECONDS
+from managed.sandbox_pool import SandboxPool, STALLED_SECONDS
 from managed.tick import Tick
 import test_artifact_preservation as artifact_tests
 import test_automation as automation_tests
@@ -41,6 +41,42 @@ class ThroughputTests(unittest.TestCase):
         row = self.ledger.tasks.add(request(name, name))
         return self.ledger.tasks.update(name, row['revision'], 'running', {
             'agent_id': 'agt_' + name, 'response_id': 'resp_' + name})
+
+    def test_advance_reuses_rows_when_recovery_does_not_write(self):
+        self.ledger.tasks.add(request('idle'))
+        config = {**self.config, 'paused': True}
+        with patch.object(self.ledger.tasks, 'all', wraps=self.ledger.tasks.all) as loads:
+            control.advance(self.ledger, self.cma, config, self.folder)
+        self.assertEqual(loads.call_count, 1)
+
+    def test_advance_refreshes_snapshot_after_recovery_writes(self):
+        self.running('recovered')
+        def recover(ledger, *args, **kwargs):
+            row = ledger.tasks.get('recovered')
+            ledger.tasks.update(row['id'], row['revision'], 'held',
+                                {**row['data'], 'execution_history': [{'agent_id': 'agt_history'}]})
+        with patch.object(control, 'recover_execution_failures', side_effect=recover), \
+                patch.object(self.ledger.tasks, 'all', wraps=self.ledger.tasks.all) as loads:
+            control.advance(self.ledger, self.cma, self.config, self.folder)
+        self.assertIn('agt_history', self.cma.retired)
+        self.assertGreaterEqual(loads.call_count, 2)
+
+    def test_advance_drops_snapshot_across_savepoint_rollback_and_same_generation_write(self):
+        self.ledger.tasks.add(request('idle'))
+        def speculative(ledger, *args, **kwargs):
+            ledger.tasks.db.execute('SAVEPOINT speculative')
+            ledger.tasks.db.execute("UPDATE tasks SET state='held' WHERE id='idle'")
+        def recover(ledger, *args, **kwargs):
+            ledger.tasks.db.execute('ROLLBACK TO speculative')
+            ledger.tasks.db.execute("UPDATE tasks SET state='queued' WHERE id='idle'")
+            ledger.tasks.db.execute('RELEASE speculative')
+        def health(cma, *, rows):
+            self.assertEqual(rows, self.ledger.tasks.all())
+        with patch.object(control, 'recover_credit_failures', side_effect=speculative), \
+                patch.object(control, 'recover_execution_failures', side_effect=recover), \
+                patch.object(SandboxPool, 'health', side_effect=health) as check:
+            control.advance(self.ledger, self.cma, {**self.config, 'paused': True}, self.folder)
+        check.assert_called_once()
 
     def advance(self, seconds=600):
         tick = Tick(seconds, self.clock); tick.bind(self.ledger)

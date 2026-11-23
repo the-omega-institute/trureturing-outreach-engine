@@ -32,6 +32,7 @@ class ServiceTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
         self.gh, self.pages, self.zenodo = FakeGitHub(), FakeGitHub(), FakeZenodo()
+        self.enterContext(patch.object(s, 'urlopen', side_effect=OSError('offline test')))
 
     def package(self, note_id='alpha', revision=1):
         folder = self.root / (note_id + '-' + str(revision))
@@ -65,6 +66,267 @@ class ServiceTests(unittest.TestCase):
         s.record_mathesis(self.catalog, 'alpha', self.mathesis_receipt(), self.gh)
         s.synchronize(self.catalog, self.gh, self.pages)
         return self.state()
+
+    def cached_feed(self):
+        state = self.publish_paper()
+        # Real GitHub listings give immutable asset IDs/digests. Model those
+        # identities without changing the existing public Release format.
+        release = self.gh.release
+        def identified(tag):
+            value = release(tag)
+            if value:
+                for asset in value['assets']:
+                    asset['digest'] = 'sha256:' + hashlib.sha256(self.gh.releases[tag][asset['name']]).hexdigest()
+            return value
+        self.enterContext(patch.object(self.gh, 'release', side_effect=identified))
+        self.cache = s.FeedCache(self.root / 'private-cache.json')
+        index = self.public_index(state)
+        s.synchronize_if_changed(self.catalog, self.gh, self.pages, cache=self.cache, fetch=lambda: index)
+        return index
+
+    def test_unchanged_deployed_feed_reuses_cache_across_jobs_and_reads_live_site(self):
+        index = self.cached_feed()
+        restored = s.FeedCache(self.cache.path)
+        before = (list(self.pages.dispatches), list(self.pages.uploads), self.cache.path.read_bytes())
+        with patch.object(s, 'projection', side_effect=AssertionError('unchanged projection rebuilt')), \
+                patch.object(self.gh, 'download', side_effect=AssertionError('manifest redownloaded')), \
+                patch.object(self.gh, 'list_releases', wraps=self.gh.list_releases) as listings, \
+                patch.object(s, 'urlopen') as served:
+            served.return_value.__enter__.return_value.read.return_value = w.encode(index)
+            result = s.synchronize_if_changed(self.catalog, self.gh, self.pages, cache=restored)
+        self.assertEqual(result['status'], 'deployed')
+        self.assertEqual(listings.call_count, 1)
+        self.assertEqual(served.call_count, 1)
+        self.assertEqual(before, (self.pages.dispatches, self.pages.uploads, self.cache.path.read_bytes()))
+        value = w.read(self.cache.path)
+        self.assertEqual(value['feed_sha256'], s.feed_digest(value['feed']))
+        self.assertNotIn('deployed_sha256', value)
+
+    def test_idle_delivery_uses_one_listing_without_manifest_downloads_or_deploy(self):
+        index = self.cached_feed()
+        dispatches = len(self.pages.dispatches)
+        with patch.object(self.gh, 'list_releases', wraps=self.gh.list_releases) as listings, \
+                patch.object(self.gh, 'download', side_effect=AssertionError('idle download')):
+            result = s.drain(self.catalog, self.gh, None, self.pages,
+                             cache=s.FeedCache(self.cache.path), fetch=lambda: index)
+        self.assertEqual(result, {'processed': 0, 'remaining': 0, 'failed': [], 'status': 'idle'})
+        self.assertEqual(listings.call_count, 1)
+        self.assertEqual(len(self.pages.dispatches), dispatches)
+
+    def test_catalog_change_reprojects_from_cached_manifests_and_dispatches_once(self):
+        index = self.cached_feed()
+        self.catalog['publications'] = [{**self.state()['publication'], 'id': 'other',
+                                         'url': 'https://arxiv.org/abs/2611.10000'}]
+        dispatches = len(self.pages.dispatches)
+        with patch.object(self.gh, 'download', side_effect=AssertionError('unchanged manifest downloaded')):
+            result = s.synchronize_if_changed(self.catalog, self.gh, self.pages,
+                                              cache=s.FeedCache(self.cache.path), fetch=lambda: index)
+        self.assertEqual(result['status'], 'dispatch_accepted')
+        self.assertEqual(len(self.pages.dispatches), dispatches + 1)
+        served = json.loads(self.pages.releases['research-updates']['research-updates.v1.json'])
+        self.assertEqual(len(served['publications']), 2)
+        self.assertNotIn('deployed_sha256', w.read(self.cache.path))
+        index = {**served, 'schema_version': 'publication-index.v1'}
+        result = s.synchronize_if_changed(self.catalog, self.gh, self.pages,
+                                          cache=s.FeedCache(self.cache.path), fetch=lambda: index)
+        self.assertEqual(result['status'], 'deployed')
+        self.assertEqual(len(self.pages.dispatches), dispatches + 1)
+
+    def test_changed_note_receipt_uses_cached_manifest_and_invalidates_feed(self):
+        index = self.cached_feed()
+        state = self.state()
+        state['publication']['summary'] = 'The checked paper now states the boundary case explicitly.'
+        self.gh.save_state(w.tag_for('alpha'), state)
+        with patch.object(self.gh, 'download', side_effect=AssertionError('unchanged manifest downloaded')):
+            result = s.synchronize_if_changed(self.catalog, self.gh, self.pages,
+                                              cache=s.FeedCache(self.cache.path), fetch=lambda: index)
+        self.assertEqual(result['status'], 'dispatch_accepted')
+        served = json.loads(self.pages.releases['research-updates']['research-updates.v1.json'])
+        self.assertEqual(served['publications'][0]['summary'], state['publication']['summary'])
+
+    def test_new_note_downloads_only_its_own_manifest(self):
+        index = self.cached_feed()
+        self.package('beta')
+        self.catalog['notes'].append(catalog('beta')['notes'][0])
+        w.operate('publish', 'beta', 1, self.gh, self.zenodo)
+        beta = w.release_state(self.gh.release(w.tag_for('beta')), 'beta')
+        beta['publication'] = {**beta['publication'], 'url': 'https://arxiv.org/abs/2611.10001', 'venue': 'arXiv'}
+        self.gh.save_state(w.tag_for('beta'), beta)
+        with patch.object(self.gh, 'download', wraps=self.gh.download) as downloads:
+            result = s.synchronize_if_changed(self.catalog, self.gh, self.pages,
+                                              cache=s.FeedCache(self.cache.path), fetch=lambda: index)
+        self.assertEqual(result['status'], 'dispatch_accepted')
+        self.assertEqual(downloads.call_count, 1)
+        self.assertEqual(downloads.call_args.args[:2], ('short-note-beta', 'note-v1.json'))
+
+    def test_delivery_and_pages_receipts_do_not_invalidate_projection_inputs(self):
+        index = self.cached_feed()
+        state = self.state()
+        state['pages'].update(status='deployed', verified_at='2026-11-23T00:00:00Z')
+        state['deliveries']['request-synthetic.json'] = {'status': 'dispatched', 'action': 'promote'}
+        self.gh.save_state(w.tag_for('alpha'), state)
+        with patch.object(s, 'projection', side_effect=AssertionError('receipt-only cache miss')):
+            self.assertEqual(s.synchronize_if_changed(self.catalog, self.gh, self.pages,
+                             cache=s.FeedCache(self.cache.path), fetch=lambda: index)['status'], 'deployed')
+
+    def test_replaced_manifest_identity_forces_checked_download(self):
+        index = self.cached_feed()
+        tag = w.tag_for('alpha')
+        package = json.loads(self.gh.releases[tag]['note-v1.json'])
+        package['metadata']['title'] = 'A substituted unreviewed theorem'
+        self.gh.releases[tag]['note-v1.json'] = w.encode(package)
+        with patch.object(self.gh, 'download', wraps=self.gh.download) as downloads:
+            with self.assertRaisesRegex(ValueError, 'differs from the archived'):
+                s.synchronize_if_changed(self.catalog, self.gh, self.pages,
+                                          cache=s.FeedCache(self.cache.path), fetch=lambda: index)
+        self.assertEqual(downloads.call_count, 1)
+
+    def test_corrupt_cache_is_rebuilt_and_revalidated(self):
+        index = self.cached_feed()
+        for raw in (b'not json', b'[]', w.encode({'inputs_sha256': self.cache.value['inputs_sha256'],
+                                               'feed': [], 'manifests': 'corrupt'})):
+            with self.subTest(raw=raw):
+                self.cache.path.write_bytes(raw)
+                with patch.object(self.gh, 'download', wraps=self.gh.download) as downloads:
+                    result = s.synchronize_if_changed(self.catalog, self.gh, self.pages,
+                                                      cache=s.FeedCache(self.cache.path), fetch=lambda: index)
+                self.assertEqual(result['status'], 'deployed')
+                self.assertEqual(downloads.call_count, 1)
+
+    def test_missing_asset_identities_disable_cache_hits(self):
+        state = self.publish_paper()
+        index = self.public_index(state)
+        cache = s.FeedCache(self.root / 'private-cache.json')
+        for _ in range(2):
+            with patch.object(self.gh, 'download', wraps=self.gh.download) as downloads:
+                s.synchronize_if_changed(self.catalog, self.gh, self.pages, cache=cache, fetch=lambda: index)
+            self.assertEqual(downloads.call_count, 1)
+            self.assertIsNone(w.read(cache.path)['inputs_sha256'])
+
+    def test_cached_feed_does_not_hide_stale_site_or_dispatch_failure(self):
+        index = self.cached_feed()
+        self.pages.fail_dispatch = True
+        stale = {**index, 'notes': []}
+        with self.assertRaisesRegex(RuntimeError, 'Dispatch'):
+            s.synchronize_if_changed(self.catalog, self.gh, self.pages,
+                                      cache=s.FeedCache(self.cache.path), fetch=lambda: stale)
+        self.pages.fail_dispatch = False
+        result = s.synchronize_if_changed(self.catalog, self.gh, self.pages,
+                                          cache=s.FeedCache(self.cache.path), fetch=lambda: stale)
+        self.assertEqual(result['status'], 'dispatch_accepted')
+        def unavailable():
+            raise OSError('site unavailable')
+        result = s.synchronize_if_changed(self.catalog, self.gh, self.pages,
+                                          cache=s.FeedCache(self.cache.path), fetch=unavailable)
+        self.assertEqual(result['status'], 'dispatch_accepted')
+
+    def test_deployed_cache_still_recovers_a_pending_feed_swap(self):
+        index = self.cached_feed()
+        assets = self.pages.releases['research-updates']
+        assets['research-updates.pending.json'] = assets['research-updates.v1.json']
+        dispatches = len(self.pages.dispatches)
+        result = s.synchronize_if_changed(self.catalog, self.gh, self.pages,
+                                          cache=s.FeedCache(self.cache.path), fetch=lambda: index)
+        self.assertEqual(result['status'], 'dispatch_accepted')
+        self.assertEqual(len(self.pages.dispatches), dispatches + 1)
+        self.assertNotIn('research-updates.pending.json', assets)
+
+    def test_feed_cache_key_covers_submission_board_and_projection_code(self):
+        self.cached_feed()
+        releases = s.note_releases(self.catalog, self.gh)
+        first = self.cache.key(self.catalog, releases, {'papers': []})
+        self.assertNotEqual(first, self.cache.key(self.catalog, releases, {'papers': [{'id': 'new'}]}))
+        read_bytes = Path.read_bytes
+        def changed_code(path):
+            raw = read_bytes(path)
+            return raw + b'\n# changed projection' if path == Path(s.__file__) else raw
+        with patch.object(Path, 'read_bytes', changed_code):
+            self.assertNotEqual(first, self.cache.key(self.catalog, releases, {'papers': []}))
+
+    def test_publication_removal_requires_a_new_deploy(self):
+        index = self.cached_feed()
+        other = {**index['publications'][0], 'id': 'unrelated-paper',
+                 'url': 'https://arxiv.org/abs/2611.10009'}
+        self.pages.authored_publications = [copy.deepcopy(index['publications'][0]), other]
+        index['publications'].append(other)
+        state = self.state()
+        state['publication'] = state['versions']['1']['publication']
+        self.gh.save_state(w.tag_for('alpha'), state)
+        result = s.synchronize_if_changed(self.catalog, self.gh, self.pages,
+                                          cache=s.FeedCache(self.cache.path), fetch=lambda: index)
+        self.assertEqual(result['status'], 'dispatch_accepted')
+        served = json.loads(self.pages.releases['research-updates']['research-updates.v1.json'])
+        self.assertEqual(served['publications'], [])
+
+        # The dispatch was accepted and the Release changed, but the Pages
+        # build failed. Its served index still contains the withdrawn paper.
+        for cold in (False, True, False):
+            with self.subTest(cold=cold):
+                if cold:
+                    self.cache.path.unlink(missing_ok=True)
+                dispatches = len(self.pages.dispatches)
+                result = s.synchronize_if_changed(self.catalog, self.gh, self.pages,
+                        cache=s.FeedCache(self.cache.path), fetch=lambda: index)
+                self.assertEqual(result['status'], 'dispatch_accepted')
+                self.assertEqual(len(self.pages.dispatches), dispatches + 1)
+        deployed = {**served, 'schema_version': 'publication-index.v1', 'publications': [other]}
+        result = s.synchronize_if_changed(self.catalog, self.gh, self.pages,
+                cache=s.FeedCache(self.cache.path), fetch=lambda: deployed)
+        self.assertEqual(result['status'], 'deployed')
+        self.assertEqual(deployed['publications'], [other])
+
+    def test_authored_catalog_failure_keeps_verification_pending_and_dispatch_retrying(self):
+        index = self.cached_feed()
+        with patch.object(w, 'pages_authored_publications', side_effect=RuntimeError('catalog unavailable')):
+            self.assertEqual(s.verify_feed(self.catalog, self.gh, pages=self.pages,
+                    fetch=lambda: index)['status'], 'verification_pending')
+            result = s.synchronize_if_changed(self.catalog, self.gh, self.pages,
+                    cache=s.FeedCache(self.cache.path), fetch=lambda: index)
+        self.assertEqual(result['status'], 'dispatch_accepted')
+
+    def test_feed_cache_preserves_verification_of_sites_with_other_paper_sources(self):
+        index = self.cached_feed()
+        other = {**index['publications'][0], 'id': 'unrelated-paper',
+                 'url': 'https://arxiv.org/abs/2611.10009'}
+        self.pages.authored_publications = [other]
+        index['publications'].append(other)
+        dispatches = len(self.pages.dispatches)
+        result = s.synchronize_if_changed(self.catalog, self.gh, self.pages,
+                                          cache=s.FeedCache(self.cache.path), fetch=lambda: index)
+        self.assertEqual(result['status'], 'deployed')
+        self.assertEqual(len(self.pages.dispatches), dispatches)
+
+    def test_extra_source_papers_are_pending_without_any_cached_history(self):
+        index = self.cached_feed()
+        index['publications'].append({**index['publications'][0], 'id': 'removed-catalog-paper',
+                                      'url': 'https://arxiv.org/abs/2611.10008'})
+        self.cache.path.unlink()
+        self.assertEqual(s.verify_feed(self.catalog, self.gh, pages=self.pages, fetch=lambda: index)['status'], 'verification_pending')
+        result = s.synchronize_if_changed(self.catalog, self.gh, self.pages,
+                cache=s.FeedCache(self.cache.path), fetch=lambda: index)
+        self.assertEqual(result['status'], 'dispatch_accepted')
+
+    def test_prefixed_ids_still_match_and_duplicate_source_papers_are_pending(self):
+        index = self.cached_feed()
+        expected = copy.deepcopy(self.cache.value['feed'])
+        expected['publications'][0]['id'] = 'paper-alpha'
+        index['publications'][0]['id'] = 'paper-paper-alpha'
+        self.assertEqual(s.verify_feed(self.catalog, self.gh, pages=self.pages,
+                expected=expected, fetch=lambda: index)['status'], 'deployed')
+        index['publications'].append(copy.deepcopy(index['publications'][0]))
+        self.assertEqual(s.verify_feed(self.catalog, self.gh, pages=self.pages,
+                expected=expected, fetch=lambda: index)['status'], 'verification_pending')
+
+    def test_uncached_idle_worker_retries_a_failed_removal_deploy(self):
+        index = self.cached_feed()
+        state = self.state()
+        state['publication'] = state['versions']['1']['publication']
+        self.gh.save_state(w.tag_for('alpha'), state)
+        for _ in range(3):
+            dispatches = len(self.pages.dispatches)
+            result = s.drain(self.catalog, self.gh, None, self.pages, fetch=lambda: index)
+            self.assertEqual(result['status'], 'dispatch_accepted')
+            self.assertEqual(len(self.pages.dispatches), dispatches + 1)
 
     def test_intake_archives_only_selected_sources_and_is_reproducible(self):
         meta, prepared = self.package()
@@ -368,7 +630,7 @@ class ServiceTests(unittest.TestCase):
                          'https://mathesis.example.invalid/papers/alpha?version=1')
         self.assertNotIn('doi', feed['notes'][0])
         index = {**feed, 'schema_version': 'publication-index.v1'}
-        self.assertEqual(s.verify_feed(self.catalog, self.gh, fetch=lambda: index)['status'], 'deployed')
+        self.assertEqual(s.verify_feed(self.catalog, self.gh, pages=self.pages, fetch=lambda: index)['status'], 'deployed')
         self.assertEqual(self.state()['mathesis_publication']['pdf_sha256'], receipt['pdf_sha256'])
         self.assertEqual(self.zenodo.records, {})
 
@@ -429,9 +691,9 @@ class ServiceTests(unittest.TestCase):
                     'summary': 'Checking the equality case.', 'evidence_url': 'https://sample.example.invalid/science'}
         self.catalog['collaborations'] = [exchange]
         index = {**self.public_index(state), 'collaborations': [exchange]}
-        self.assertEqual(s.verify_feed(self.catalog, self.gh, fetch=lambda: index)['status'], 'deployed')
+        self.assertEqual(s.verify_feed(self.catalog, self.gh, pages=self.pages, fetch=lambda: index)['status'], 'deployed')
         stale = {**index, 'collaborations': []}
-        self.assertEqual(s.verify_feed(self.catalog, self.gh, fetch=lambda: stale)['status'], 'verification_pending')
+        self.assertEqual(s.verify_feed(self.catalog, self.gh, pages=self.pages, fetch=lambda: stale)['status'], 'verification_pending')
 
     def test_zenodo_archive_is_retained_for_mathesis_without_pages_display(self):
         state = self.publish()
@@ -445,9 +707,9 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual(served['publications'], [])
         self.assertEqual(served['notes'], [])
         index = {**served, 'schema_version': 'publication-index.v1'}
-        self.assertEqual(s.verify_feed(self.catalog, self.gh, fetch=lambda: index)['status'], 'deployed')
+        self.assertEqual(s.verify_feed(self.catalog, self.gh, pages=self.pages, fetch=lambda: index)['status'], 'deployed')
         index['publications'] = [state['publication']]
-        self.assertEqual(s.verify_feed(self.catalog, self.gh, fetch=lambda: index)['status'], 'verification_pending')
+        self.assertEqual(s.verify_feed(self.catalog, self.gh, pages=self.pages, fetch=lambda: index)['status'], 'verification_pending')
 
     def test_mathesis_only_mapping_is_verified_without_a_research_publication(self):
         self.publish()
@@ -461,7 +723,7 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual(s.verify_deployment(self.catalog, 'alpha', self.gh, fetch=lambda: index)['status'], 'deployed')
         self.assertEqual(s.coverage(self.catalog, self.gh)['notes'][0]['pages'], 'deployed')
         stale = {**index, 'notes': []}
-        self.assertEqual(s.verify_feed(self.catalog, self.gh, fetch=lambda: stale)['status'], 'verification_pending')
+        self.assertEqual(s.verify_feed(self.catalog, self.gh, pages=self.pages, fetch=lambda: stale)['status'], 'verification_pending')
 
     def test_full_result_catalog_can_be_projected_and_delivered(self):
         state = self.publish()
@@ -491,11 +753,11 @@ class ServiceTests(unittest.TestCase):
         self.assertGreater(len(raw), 2 * 1024 * 1024)
         with patch('service.urlopen', side_effect=lambda *a, **kw: io.BytesIO(raw)):
             self.assertEqual(s.verify_deployment(self.catalog, 'alpha', self.gh)['status'], 'deployed')
-            self.assertEqual(s.verify_feed(self.catalog, self.gh)['status'], 'deployed')
+            self.assertEqual(s.verify_feed(self.catalog, self.gh, pages=self.pages)['status'], 'deployed')
         oversized = w.encode({**index, 'results': ['x' * w.MAX_INDEX_BYTES]})
         with patch('service.urlopen', side_effect=lambda *a, **kw: io.BytesIO(oversized)):
             for verify in (lambda: s.verify_deployment(self.catalog, 'alpha', self.gh),
-                           lambda: s.verify_feed(self.catalog, self.gh)):
+                           lambda: s.verify_feed(self.catalog, self.gh, pages=self.pages)):
                 result = verify()
                 self.assertEqual(result['status'], 'verification_pending')
                 self.assertIn('budget', result['error'])
@@ -513,9 +775,10 @@ class ServiceTests(unittest.TestCase):
         actual = json.loads(self.pages.releases['research-updates']['research-updates.v1.json'])
         self.assertEqual(actual['collaborations'], self.catalog['collaborations'])
         self.assertEqual(actual['notes'], [])
-        dispatches = len(self.pages.calls)
-        self.assertEqual(s.drain(self.catalog, self.gh, None, self.pages)['status'], 'idle')
-        self.assertEqual(len(self.pages.calls), dispatches)
+        dispatches = len(self.pages.dispatches)
+        index = {**actual, 'schema_version': 'publication-index.v1'}
+        self.assertEqual(s.drain(self.catalog, self.gh, None, self.pages, fetch=lambda: index)['status'], 'idle')
+        self.assertEqual(len(self.pages.dispatches), dispatches)
         self.assertEqual(len(self.zenodo.calls), calls)
 
     def test_scientific_handoff_archive_excludes_surrounding_correspondence(self):

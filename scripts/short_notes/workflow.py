@@ -630,6 +630,15 @@ def pages_feed(gh, directory):
     return feed, release, names
 
 
+def pages_authored_publications(gh):
+    """Read the independent paper catalog that Pages merges with our feed."""
+    raw = gh.run('api', f'repos/{PAGES}/contents/site/assets/research-news.json?ref=dev')
+    catalog = json.loads(base64.b64decode(json.loads(raw)['content']))
+    if not isinstance(catalog, dict) or not isinstance(catalog.get('publications'), list):
+        raise ValueError('Unexpected Pages authored publication catalog')
+    return catalog['publications']
+
+
 def is_pages_publication(paper):
     """Research shows arXiv or formal acceptance/publication, never Zenodo."""
     parts = urlsplit(url(paper['url']))
@@ -692,6 +701,8 @@ def deliver_feed(replacement, gh):
         gh.upload('research-updates', pending_path)
         gh.upload('research-updates', path, replace=True)
         dispatch()
+        # This only acknowledges dispatch. A later build may fail; callers
+        # must read the served publication index before considering it done.
         gh.delete_asset('research-updates', pending)
         return {'status': 'dispatch_accepted', 'feed_updated_at': replacement['updated_at'],
                 'dispatch_accepted_at': now()}

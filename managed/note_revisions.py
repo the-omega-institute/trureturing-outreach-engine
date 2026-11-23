@@ -101,8 +101,7 @@ def parent_gate(request, tasks, reply):
 class Revisions:
     def __init__(self, tasks, rows=None):
         if rows is None:
-            rows = [tasks.get(task_id) for (task_id,) in tasks.db.execute(
-                "SELECT id FROM tasks WHERE kind IN ('reply', 'shortnote', 'mathesis') ORDER BY rowid")]
+            rows = tasks.of_kinds('reply', 'shortnote', 'mathesis')
         self.rows = {r['id']: r for r in rows}
         self.ids = {r['id']: problem_ids(r) for r in rows if r['kind'] != 'reply'}
         self.files = {}

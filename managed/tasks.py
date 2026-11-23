@@ -218,10 +218,70 @@ def newer_reply(new, old):
         return False
 
 
+class _TaskCursor(sqlite3.Cursor):
+    def _call(self, operation, sql, *args, **kwargs):
+        # TEMP trigger updates are transactional. A rollback can reuse an old
+        # generation after another write, so keep a separate Python epoch.
+        if re.match(r'^(?:\s|--[^\n]*(?:\n|$)|/\*.*?\*/)*ROLLBACK\b', sql, re.I | re.S):
+            self.connection.row_cache_epoch += 1
+        try:
+            return operation(sql, *args, **kwargs)
+        except sqlite3.Error:
+            self.connection.row_cache_epoch += 1
+            raise
+
+    def execute(self, sql, parameters=()):
+        return self._call(super().execute, sql, parameters)
+
+    def executemany(self, sql, parameters):
+        return self._call(super().executemany, sql, parameters)
+
+    def executescript(self, sql):
+        # Scripts can contain transaction control after their first statement.
+        self.connection.row_cache_epoch += 1
+        return self._call(super().executescript, sql)
+
+
+class _TaskConnection(sqlite3.Connection):
+    row_cache_epoch = 0
+
+    def cursor(self, factory=_TaskCursor):
+        return super().cursor(factory)
+
+    def execute(self, sql, parameters=()):
+        return self.cursor().execute(sql, parameters)
+
+    def executemany(self, sql, parameters):
+        return self.cursor().executemany(sql, parameters)
+
+    def executescript(self, sql):
+        return self.cursor().executescript(sql)
+
+    def rollback(self):
+        self.row_cache_epoch += 1
+        return super().rollback()
+
+    def commit(self):
+        try:
+            return super().commit()
+        except sqlite3.Error:
+            self.row_cache_epoch += 1
+            raise
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if exc_type is not None:
+            self.row_cache_epoch += 1
+        try:
+            return super().__exit__(exc_type, exc_value, traceback)
+        except sqlite3.Error:
+            self.row_cache_epoch += 1
+            raise
+
+
 class Tasks:
     def __init__(self,path,clock=time.time):
         self.path=str(path);self.clock=clock
-        self.db=sqlite3.connect(self.path,isolation_level=None,timeout=10)
+        self.db=sqlite3.connect(self.path,isolation_level=None,timeout=10,factory=_TaskConnection)
         self.db.row_factory=sqlite3.Row
         self.db.execute('PRAGMA synchronous=FULL')
         self.db.executescript('''
@@ -239,6 +299,20 @@ class Tasks:
           task_id TEXT);
         CREATE TABLE IF NOT EXISTS pipeline_state(key TEXT PRIMARY KEY, payload TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS task_migrations(name TEXT PRIMARY KEY, phase TEXT NOT NULL);
+        ''')
+        # TEMP triggers track task-table writes, including direct SQL. Their
+        # generation is transactional; the connection epoch invalidates on
+        # rollbacks/failed statements. Neither enters a Release snapshot.
+        # data_version below also notices writes through another connection.
+        self.db.executescript('''
+        CREATE TEMP TABLE task_rows_version(generation INTEGER NOT NULL);
+        INSERT INTO task_rows_version VALUES(0);
+        CREATE TEMP TRIGGER task_rows_insert AFTER INSERT ON main.tasks BEGIN
+          UPDATE task_rows_version SET generation=generation+1; END;
+        CREATE TEMP TRIGGER task_rows_update AFTER UPDATE ON main.tasks BEGIN
+          UPDATE task_rows_version SET generation=generation+1; END;
+        CREATE TEMP TRIGGER task_rows_delete AFTER DELETE ON main.tasks BEGIN
+          UPDATE task_rows_version SET generation=generation+1; END;
         ''')
         self.compact_events()
 
@@ -268,13 +342,26 @@ class Tasks:
         except BaseException:self.db.execute('ROLLBACK');raise
 
     def close(self):self.db.close()
+    def row_version(self):
+        return (self.db.row_cache_epoch,
+                self.db.execute('SELECT generation FROM temp.task_rows_version').fetchone()[0],
+                self.db.execute('PRAGMA data_version').fetchone()[0])
     def get(self,task_id):
         row=self.db.execute('SELECT * FROM tasks WHERE id=?',(task_id,)).fetchone()
         require(row is not None,'Unknown task')
+        return self._decode(row)
+    @staticmethod
+    def _decode(row):
         result=dict(row)
         for key in ['request','data']:result[key]=json.loads(result[key])
         return result
-    def all(self):return [self.get(r[0]) for r in self.db.execute('SELECT id FROM tasks ORDER BY rowid')]
+    def all(self):
+        return [self._decode(row) for row in self.db.execute('SELECT * FROM tasks ORDER BY rowid')]
+
+    def of_kinds(self,*kinds):
+        marks=','.join('?' for _ in kinds)
+        return [self._decode(row) for row in self.db.execute(
+            f'SELECT * FROM tasks WHERE kind IN ({marks}) ORDER BY rowid',kinds)]
 
     def counts(self,column='state'):
         require(column in {'state','kind'},'Unknown task count column')

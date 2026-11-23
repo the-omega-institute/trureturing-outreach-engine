@@ -192,6 +192,52 @@ class DeliveryTests(unittest.TestCase):
         self.folder = self.root / ('restored-' + str(len(list(self.root.iterdir())))); self.folder.mkdir()
         self.ledger = Ledger(self.remote, self.folder)
 
+    def test_empty_delivery_pass_does_not_load_the_full_ledger(self):
+        self.ledger.tasks.add(request('mail', kind='reply'))
+        with patch.object(self.ledger.tasks, 'all', side_effect=AssertionError('full ledger load')):
+            for again in (False, True):
+                m.advance(self.ledger, self.config, self.root, self.folder, self.client, 'secret',
+                          attempted=set(), again=again)
+        self.assertEqual(self.client.owner_checks, 0)
+
+    def test_second_pass_skips_attempted_rows_but_finds_new_publication(self):
+        self.ready()
+        attempted = set()
+        m.advance(self.ledger, self.config, self.root, self.folder, self.client, 'secret', attempted=attempted)
+        self.assertEqual(attempted, {'mathesis-1'})
+        # This synthetic fixture uses the manuscript channel. A completed legacy
+        # migration is already settled; unfinished migration must still run.
+        row = self.ledger.tasks.get('mathesis-1')
+        row['data']['mathesis_delivery']['legacy_migration'] = {'phase': 'skipped'}
+        self.ledger.tasks.update(row['id'], row['revision'], row['state'], row['data'])
+        with patch.object(self.ledger.tasks, 'all', side_effect=AssertionError('full ledger load')):
+            m.advance(self.ledger, self.config, self.root, self.folder, self.client, 'secret',
+                      attempted=attempted, again=True)
+        self.ready('mathesis-2', {**self.metadata, 'work_id': 'new-publication'})
+        m.advance(self.ledger, self.config, self.root, self.folder, self.client, 'secret',
+                  attempted=attempted, again=True)
+        self.assertEqual(self.client.posts, 2)
+        self.assertEqual(attempted, {'mathesis-1', 'mathesis-2'})
+
+    def test_exhausted_slots_skip_full_load_without_posting(self):
+        self.ready()
+        with patch.object(self.ledger.tasks, 'all', side_effect=AssertionError('full ledger load')):
+            m.advance(self.ledger, self.config, self.root, self.folder, self.client, 'secret',
+                      attempted={'a', 'b', 'c', 'd'}, again=True)
+        self.assertEqual(self.client.posts, 0)
+
+    def test_empty_pass_preserves_deferred_work_rules(self):
+        from managed.tick import Tick
+        tick = Tick(60)
+        tick.bind(self.ledger)
+        tick.pending['mathesis'] = ['stale']
+        m.advance(self.ledger, self.config, self.root, self.folder, self.client, 'secret', attempted=set())
+        self.assertEqual(tick.pending['mathesis'], [])
+        tick.pending['mathesis'] = ['deferred-in-first-pass']
+        m.advance(self.ledger, self.config, self.root, self.folder, self.client, 'secret',
+                  attempted=set(), again=True)
+        self.assertEqual(tick.pending['mathesis'], ['deferred-in-first-pass'])
+
     def test_pass_signed_selection_and_persisted_receipt_finish_without_platform_review(self):
         env = self.ready()
         def preserved():

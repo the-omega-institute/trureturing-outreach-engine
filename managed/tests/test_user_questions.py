@@ -11,7 +11,7 @@ from managed import automation, control, owner_todo, registry, sent_events
 from managed.mailbox import instant
 from managed.queue import canonical, digest
 from managed.tick import Tick
-from test_tasks import Releases, request, use_fixture_workflow_revisions
+from test_tasks import CMA, Releases, request, use_fixture_workflow_revisions
 
 
 ACCOUNT = 'owner@example.invalid'
@@ -149,20 +149,71 @@ class UserQuestionTests(unittest.TestCase):
                 self.tick()
                 self.assertEqual(self.ledger.tasks.get(row['id'])['state'], 'answered-by-mail')
 
-    def test_supersession_requires_newer_same_owner_conversation_and_mature_state(self):
+    def test_a_newer_task_cannot_implicitly_close_a_question(self):
         for index, state in enumerate(['queued', 'running', 'awaiting-user', 'awaiting-review', 'owner-draft', 'verified']):
             with self.subTest(state=state):
                 thread = 'thread-' + str(index)
                 old = self.question('old-' + str(index), thread=thread)
-                new = self.question('new-' + str(index), at=SENT, thread=thread, state=state)
-                # Inspect only closure here; unrelated delivery/continuation paths are irrelevant.
+                self.question('new-' + str(index), at=SENT, thread=thread, state=state)
                 automation.close_user_questions(self.ledger, self.config, self.root)
-                closed = self.ledger.tasks.get(old['id'])
-                self.assertEqual(closed['state'], 'awaiting-user' if state in {'queued', 'running'} else 'superseded')
-                if closed['state'] == 'superseded':
-                    self.assertEqual(closed['data']['superseded_by'], new['id'])
-                    work = automation.work(self.ledger.tasks, self.root)
-                    self.assertEqual([c['task_id'] for c in work['user_questions_closed']].count(old['id']), 1)
+                self.assertEqual(self.ledger.tasks.get(old['id'])['state'], 'awaiting-user')
+
+    def approved_no_reply(self, task_id, supersedes=None):
+        req = request(task_id, 'contact-a', 'reply')
+        req['inputs'] = {'thread_id': 'conversation', 'latest_inbound_message_id': '<more@example.invalid>',
+                         'mailbox_observation': {'message_id': '<more@example.invalid>', 'at': SENT}}
+        if supersedes:
+            req['inputs']['supersedes_owner_questions'] = supersedes
+        row = self.ledger.tasks.add(req)
+        result = {'outcome': 'no-reply', 'packet': None, 'routing': {'mail': 'none', 'questions': []}}
+        return self.ledger.tasks.update(task_id, row['revision'], 'approved', {'result': result})
+
+    def route(self):
+        config = {**self.config, 'kinds': {'reply': True}, 'max_active': 1, 'agent_template': {}}
+        with patch.object(control, 'ROOT', self.root):
+            control.advance(self.ledger, CMA(), config, self.root / 'ledger')
+
+    def test_later_no_reply_waits_for_signed_answer_then_resumes(self):
+        old = self.question(state='revising')
+        later = self.approved_no_reply('later')
+        self.route()
+        tasks = self.ledger.tasks
+        blocked = tasks.get(later['id'])
+        self.assertEqual(blocked['state'], 'held')
+        self.assertEqual(blocked['data']['owner_question_blockers'], [old['id']])
+        self.assertEqual(tasks.get(old['id'])['state'], 'revising')
+        answer = {'schema_version': 1, 'task_id': old['id'], 'result_hash': digest(old['data']['result']),
+                  'answers': {'meeting': 'Decline the meeting.'}, 'evidence_ref': 'fixture:decision',
+                  'reviewer': 'local-claude-loop'}
+        answer['signature'] = hmac.new(b'secret', canonical(answer).encode(), hashlib.sha256).hexdigest()
+        tasks.decision(answer, 'secret')
+        self.route()
+        self.assertEqual(tasks.get(later['id'])['state'], 'no-reply')
+
+    def test_explicit_supersession_records_operator_reason(self):
+        old = self.question()
+        later = self.approved_no_reply('explicit', {old['id']: 'The correspondent withdrew the request.'})
+        self.route()
+        self.assertEqual(self.ledger.tasks.get(later['id'])['state'], 'no-reply')
+        closed = self.ledger.tasks.get(old['id'])
+        self.assertEqual(closed['state'], 'superseded')
+        self.assertEqual(closed['data']['user_question_closed']['evidence'],
+                         {'superseded_by': later['id'], 'reason': 'The correspondent withdrew the request.'})
+        self.assertFalse(self.ledger.tasks.owner_questions())
+
+    def test_health_counts_questions_older_than_two_days_using_open_time(self):
+        tasks = self.ledger.tasks
+        tasks.clock = lambda: 1000
+        old = self.question()
+        updated = tasks.get(old['id'])
+        questions = updated['data']['result']['routing']['questions']
+        questions.append({'id': 'byline', 'question': 'Who should appear on the byline?'})
+        tasks.clock = lambda: 1000 + 2 * 86400
+        tasks.update(old['id'], old['revision'], 'awaiting-user', updated['data'])
+        self.assertEqual(control.owner_question_health(tasks)['open_owner_questions_over_2_days'], 0)
+        tasks.clock = lambda: 1001 + 2 * 86400
+        self.question('recent')
+        self.assertEqual(control.owner_question_health(tasks)['open_owner_questions_over_2_days'], 2)
 
     def test_other_owner_conversation_or_older_inbound_cannot_supersede(self):
         for index, values in enumerate([dict(owner='contact-b'), dict(thread='different'),

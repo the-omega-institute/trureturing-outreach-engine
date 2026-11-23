@@ -2380,6 +2380,46 @@ def queued_gates(row,tasks,revisions=None):
     thread_gate(row['request'],ROOT)
 
 
+def mailbox_retry_data(data, label, key, exc, now):
+    transient = (exc.code in TRANSIENT_HTTP or 500 <= exc.code < 600) if isinstance(exc, HTTPError) else (
+        isinstance(exc, (URLError, TimeoutError, ConnectionError)))
+    diagnostic = type(exc).__name__ + ': ' + str(exc)[:300]
+    if not transient:
+        mailbox_retry_succeeded(data, key)
+        return 'held', {**data, 'reason': label + ' failed: ' + diagnostic}
+    retries = data.get(key, 0)
+    if retries >= RESOLUTION_RETRIES:
+        return 'held', {**data, 'reason': label + ' retry budget exhausted: ' + diagnostic,
+                        'mailbox_retry': {'status': 'exhausted', 'phase': key, 'attempts': retries + 1,
+                                          'since': now}}
+    return 'queued', {**data, key: retries + 1, 'last_error': label + ' retry: ' + diagnostic,
+                      'mailbox_retry': {'status': 'scheduled', 'phase': key,
+                                        'next_at': now + min(1800, 60 * 2**retries)}}
+
+
+def legacy_mailbox_hold(row):
+    if row['state'] != 'held' or not unstarted(row) or row['data'].get('mailbox_retry'):
+        return None
+    reason = row['data'].get('reason', '')
+    match = re.match(r'^(Thread resolution|First-contact mailbox history|Reply mailbox history) failed: '
+                     r'(?:HTTPError: HTTP Error (\d{3})\b|(?:URLError|TimeoutError|Connection(?:Reset|Aborted|Refused)?Error):)',
+                     reason)
+    if match and (not match[2] or 500 <= int(match[2]) < 600 or int(match[2]) in TRANSIENT_HTTP):
+        return 'resolution_retries' if match[1] == 'Thread resolution' else 'mailbox_history_retries'
+    return None
+
+
+def mailbox_retry_waiting(row, now):
+    retry = row['data'].get('mailbox_retry') or {}
+    return retry.get('status') == 'scheduled' and now < retry['next_at']
+
+
+def mailbox_retry_succeeded(data, key):
+    data.pop(key, None)
+    if data.get('mailbox_retry', {}).get('phase') == key:
+        data.pop('mailbox_retry')
+
+
 def lane_demand(row,tasks,config,active,ignore,revisions=None):
     """Held, disabled, delayed or policy/owner-blocked work reserves no share.
 
@@ -2387,6 +2427,7 @@ def lane_demand(row,tasks,config,active,ignore,revisions=None):
     The caller scopes competing demand to lanes that share Sandbox slots.
     """
     if row['state']!='queued' or not config['kinds'].get(row['kind'],False):return False
+    if mailbox_retry_waiting(row,tasks.clock()):return False
     recovery=row['data'].get('recovery',{})
     if recovery.get('status')=='lookup-pending':return False
     if recovery.get('status')=='retry-scheduled' and tasks.clock()<recovery['next_at']:return False
@@ -2633,6 +2674,8 @@ def advance(ledger,cma,config,folder,revision=None,mailbox=None,oracle_capacity=
         # artifact collection or retirement, even if an earlier phase overran.
         with phase(ledger,'approved'):
             yield from [r for r in rows if r['state']=='approved']
+            yield from [{**r, 'retry_no_reply': True} for r in stage_rows
+                        if r['state']=='held' and r['data'].get('owner_question_blockers')]
         yield from units(ledger,'advance',advance_order(),timed=False,preserve_order=True)
     for original in advance_rows():
         if 'history_task' in original:
@@ -2678,8 +2721,13 @@ def advance(ledger,cma,config,folder,revision=None,mailbox=None,oracle_capacity=
         if (row['state']=='failed' and data.get('reason')=='Original CMA response ended failed'
                 and data.get('agent_id') and data.get('response_id') and not data.get('credit_checked')):
             continue  # A failed recovery read must not destroy a potentially reusable Agent.
-        if (row['state']=='held' and (data.get('reason')==LEGACY_RESOLUTION_REASON or
-                data.get('reason','').startswith('Thread resolution failed: HTTPError: HTTP Error 401'))
+        if (retry_key := legacy_mailbox_hold(row)) and not config['paused'] and config['kinds'].get(row['kind']):
+            # Legacy holds spent their budget without a persisted backoff window.
+            data.pop('reason')
+            data.pop(retry_key, None)
+            row=tasks.update(row['id'],row['revision'],'queued',data);ledger.save()
+        if mailbox_retry_waiting(row,tasks.clock()):continue
+        if (row['state']=='held' and (data.get('reason')==LEGACY_RESOLUTION_REASON)
                 and unstarted(row)
                 and row['kind'] in {'reply','research'} and row['request']['inputs'].get('thread_ref')
                 and not config['paused'] and config['kinds'].get(row['kind'],False)):
@@ -2797,24 +2845,14 @@ def advance(ledger,cma,config,folder,revision=None,mailbox=None,oracle_capacity=
                                 history_tick_started=True
                             with measure(ledger,'firstcontact-history'):
                                 firstcontact_history.resolve(row,mailbox,ledger,ROOT,data['mailbox_history'])
+                        mailbox_retry_succeeded(data, retries_key)
                         data.pop('last_error',None)
                         row=tasks.update(row['id'],row['revision'],'queued',data)
                         if resolve_thread:row=tasks.supersede_reply_drafts(row['id'])
                         ledger.save()
                     except Exception as exc:
-                        from urllib.error import HTTPError, URLError
-                        transient=(isinstance(exc,HTTPError) and exc.code in TRANSIENT_HTTP) or (
-                            isinstance(exc,(URLError,TimeoutError,ConnectionError)) and not isinstance(exc,HTTPError))
-                        retries=data.get(retries_key,0)
-                        if transient and retries<RESOLUTION_RETRIES:
-                            # A token rotation or Graph outage is not a thread defect;
-                            # stay queued and resolve again on a later tick.
-                            tasks.update(row['id'],row['revision'],'queued',{
-                                **data,retries_key:retries+1,
-                                'last_error':label+' retry: '+type(exc).__name__+': '+str(exc)[:300]})
-                        else:
-                            tasks.update(row['id'],row['revision'],'held',{
-                                **data,'reason':label+' failed: '+type(exc).__name__+': '+str(exc)[:300]})
+                        state, retry_data = mailbox_retry_data(data, label, retries_key, exc, tasks.clock())
+                        tasks.update(row['id'],row['revision'],state,retry_data)
                         ledger.save();continue
             # Replies need the same fresh, coordinator-owned mailbox evidence as
             # first contacts, but their counterpart addresses come from every
@@ -2834,21 +2872,13 @@ def advance(ledger,cma,config,folder,revision=None,mailbox=None,oracle_capacity=
                             history_tick_started=True
                         with measure(ledger,'reply-mailbox-history'):
                             firstcontact_history.resolve_reply(row,mailbox,ledger,ROOT,data['mailbox_history'])
+                        mailbox_retry_succeeded(data, 'mailbox_history_retries')
                         data.pop('last_error',None)
                         row=tasks.update(row['id'],row['revision'],'queued',data);ledger.save()
                     except Exception as exc:
-                        from urllib.error import HTTPError, URLError
-                        transient=(isinstance(exc,HTTPError) and exc.code in TRANSIENT_HTTP) or (
-                            isinstance(exc,(URLError,TimeoutError,ConnectionError)) and not isinstance(exc,HTTPError))
-                        retries=data.get('mailbox_history_retries',0)
-                        label='Reply mailbox history'
-                        if transient and retries<RESOLUTION_RETRIES:
-                            tasks.update(row['id'],row['revision'],'queued',{
-                                **data, 'mailbox_history_retries':retries+1,
-                                'last_error':label+' retry: '+type(exc).__name__+': '+str(exc)[:300]})
-                        else:
-                            tasks.update(row['id'],row['revision'],'held',{
-                                **data,'reason':label+' failed: '+type(exc).__name__+': '+str(exc)[:300]})
+                        state, retry_data = mailbox_retry_data(
+                            data, 'Reply mailbox history', 'mailbox_history_retries', exc, tasks.clock())
+                        tasks.update(row['id'],row['revision'],state,retry_data)
                         ledger.save();continue
             with unit(ledger,'advance',row['id'],'claim') as ready:
                 if not ready:continue
@@ -2890,7 +2920,7 @@ def advance(ledger,cma,config,folder,revision=None,mailbox=None,oracle_capacity=
                 if pool:pool.observe_live(current_rows())
                 ledger.save()
         try:
-            if row['state']=='approved':
+            if row['state']=='approved' or original.get('retry_no_reply'):
                 try:
                     if row['kind'] == 'mathesis':
                         note_revisions.gate(row, tasks)
@@ -2915,7 +2945,13 @@ def advance(ledger,cma,config,folder,revision=None,mailbox=None,oracle_capacity=
                 state=approved_route(row,override)
                 data.pop('routing_override',None)
                 if override is not None:data['routing_override']=override
-                tasks.update(row['id'],row['revision'],state,data);ledger.save()
+                if state=='no-reply':
+                    tasks.route_no_reply(row,data)
+                else:
+                    if state=='awaiting-user':
+                        data.setdefault('owner_question_opened_at',tasks.clock())
+                    tasks.update(row['id'],row['revision'],state,data)
+                ledger.save()
                 updates.append(row['id']);continue
             if not credit.block and not credit.stopped and malformed_result(row):
                 with unit(ledger,'advance',row['id'],'repair') as ready:
@@ -3461,12 +3497,19 @@ def status_summary(tasks,config,ingest_errors=None,connector_errors=None):
             'counts':counts,'counts_by_kind':tasks.counts('kind'),
             'lanes':lane_summary(rows,config,linked_contacts(rows,ROOT,config)),
             'pipeline':pipeline_status(tasks,ROOT,config,compact=True),
+            **owner_question_health(tasks),
             'errors':{'failed':counts.get('failed',0),'held':counts.get('held',0),
                       'ingest_rejected':len(given_up_digests(rejected))},
             'admission_errors':ingest_errors if ingest_errors is not None else [
                 {'digest':sha,**entry} for sha,entry in rejected.items()],
             'connector_errors':connector_errors if connector_errors is not None else
                 (json.loads(stored[0]) if stored else [])}
+
+
+def owner_question_health(tasks):
+    cutoff = tasks.clock() - 2 * 86400
+    return {'open_owner_questions_over_2_days': sum(count for _, opened, count in tasks.owner_questions()
+                                                   if opened < cutoff)}
 
 
 def _main(argv=None):
@@ -3692,6 +3735,7 @@ def _main(argv=None):
                             'admission_errors':ingest_errors,
                             'connector_errors':connector_errors,
                             **prior_work_view(ledger.tasks),
+                            **owner_question_health(ledger.tasks),
                             'counts':ledger.tasks.counts()}
                     from .pipeline import status as pipeline_status
                     result['pipeline']=pipeline_status(ledger.tasks,ROOT,config)

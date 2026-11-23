@@ -183,6 +183,70 @@ class TriageTests(unittest.TestCase):
                               [m['internetMessageId'] for m in messages])
         self.assertEqual(self.inventory()['duplicate_inbound_tasks'], [])
 
+    def test_legacy_cursor_replays_once_and_stages_newer_message_after_verified_reply(self):
+        self.record_sent_history(AUTHOR)
+        old = message('old', AUTHOR, 'A question')
+        new = {**message('new', AUTHOR, 'A follow-up', minute=1), 'conversationId': old['conversationId']}
+        prior = pipeline.request('reply', 'old', 'author', {
+            'thread_id': old['conversationId'], 'latest_inbound_message_id': old['internetMessageId']}, 'b' * 40)
+        row = self.ledger.tasks.add(prior)
+        self.ledger.tasks.update(row['id'], row['revision'], 'verified', {})
+        prior_cursor = '2026-11-18T09:30:00Z'
+        self.ledger.tasks.db.execute('INSERT INTO pipeline_state VALUES(?,?)',
+                                     ('mailbox', canonical({'through': prior_cursor})))
+        self.tick(old, new)
+        self.assertIn('receivedDateTime ge 2026-11-18T00:00:00Z', self.box.messages.call_args.args[1]['$filter'])
+        self.assertEqual([r['request']['inputs']['latest_inbound_message_id'] for r in self.reply_tasks()],
+                         [new['internetMessageId']])
+        self.tick()
+        self.assertIn('receivedDateTime ge 2026-11-18T10:00:00Z', self.box.messages.call_args.args[1]['$filter'])
+        self.assertEqual(len(self.reply_tasks()), 1)
+
+    def test_older_retained_message_cannot_hide_new_arrival_on_held_thread(self):
+        self.record_sent_history(AUTHOR)
+        old = message('unmapped', 'visitor@example.invalid', 'A question')
+        new = {**message('new', AUTHOR, 'A follow-up', minute=1), 'conversationId': old['conversationId']}
+        prior = pipeline.request('reply', 'held', 'author', {'thread_id': old['conversationId'],
+                                 'latest_inbound_message_id': '<prior@example.invalid>'}, 'b' * 40)
+        row = self.ledger.tasks.add(prior)
+        self.ledger.tasks.update(row['id'], row['revision'], 'held', {'reason': 'New incoming message needs a reply'})
+        self.retain({**old, 'intake_reason': mailbox.UNREGISTERED, 'checked_at': self.ledger.tasks.clock()})
+        self.threads[old['conversationId']] = [old, new]
+        self.box.messages.return_value = [new]
+        mailbox.intake(self.ledger, self.config, self.root, self.box, revision='b' * 40, now=NOW)
+        task, = self.reply_tasks()
+        self.assertEqual(task['request']['inputs']['latest_inbound_message_id'], new['internetMessageId'])
+
+    def test_known_new_thread_and_unknown_first_message_get_separate_dispositions(self):
+        self.record_sent_history(AUTHOR)
+        active = pipeline.request('reply', 'other case', 'author', {
+            'thread_id': 'another-thread', 'latest_inbound_message_id': '<other@example.invalid>'}, 'b' * 40)
+        row = self.ledger.tasks.add(active)
+        self.ledger.tasks.update(row['id'], row['revision'], 'running', {})
+        known = message('known', AUTHOR, 'A fresh topic')
+        unknown = message('first', 'visitor@example.invalid', 'A first question')
+        auto = message('automatic', AUTHOR, 'Away from office', headers=[('Auto-Submitted', 'auto-replied')])
+        self.tick(known, unknown, auto)
+        self.assertEqual([r['request']['inputs']['latest_inbound_message_id'] for r in self.reply_tasks()],
+                         [known['internetMessageId']])
+        reasons = {r['internetMessageId']:r['intake_reason']
+                   for r in self.inventory()['mailbox_needs_classification']}
+        self.assertEqual(reasons[unknown['internetMessageId']], mailbox.UNREGISTERED)
+        self.assertEqual(reasons[auto['internetMessageId']], 'automated or bulk mail')
+
+    def test_each_observed_message_gets_a_reason_when_latest_has_a_sent_answer(self):
+        self.record_sent_history(AUTHOR)
+        early = message('early', AUTHOR, 'A question')
+        latest = {**message('latest', AUTHOR, 'A follow-up', minute=1), 'conversationId': early['conversationId']}
+        sent = {**sent_message('sent', 'A reply', '2026-11-18T09:02:00Z'), 'conversationId': early['conversationId']}
+        self.threads[early['conversationId']] = [early, latest, sent]
+        self.box.messages.return_value = [early, latest]
+        mailbox.intake(self.ledger, self.config, self.root, self.box, revision='b' * 40, now=NOW)
+        reasons = {r['internetMessageId']:r for r in self.inventory()['mailbox_no_task']}
+        self.assertEqual(reasons[early['internetMessageId']]['selected'], latest['internetMessageId'])
+        self.assertEqual(reasons[latest['internetMessageId']]['sent'], sent['internetMessageId'])
+        self.assertFalse(self.reply_tasks())
+
     def test_work_reports_active_reply_duplicates_by_message_id(self):
         message_id = '<same@example.invalid>'
         first = self.ledger.tasks.add(pipeline.request('reply', 'first', 'author', {
@@ -254,7 +318,7 @@ class TriageTests(unittest.TestCase):
                                  {'bulk': len(bulk), 'service-notice': 1, 'person': 3})
                 self.assertEqual([row['subject'] for row in work['mailbox_attention']],
                                  ['Shared project update', 'Outside service', 'mail', 'email'])
-        self.assertEqual(self.box.research_thread.call_count, len(bulk) + 4)
+        self.assertEqual(self.box.research_thread.call_count, 3)
         self.assertEqual(self.reply_tasks(), [])
 
     def test_departmental_reply_to_group_uses_sent_task_owner(self):
@@ -569,7 +633,7 @@ class TriageTests(unittest.TestCase):
         self.assertEqual(work['mailbox_category_counts'],
                          {'bulk': 2, 'editorial-info': 1, 'editorial-action': 2, 'person': 1})
         self.assertEqual(self.reply_tasks(), [])
-        self.assertEqual(self.box.research_thread.call_count, 5)
+        self.assertEqual(self.box.research_thread.call_count, 1)
 
     def test_manuscript_id_from_submission_task(self):
         request = pipeline.request('submission', 'fixture', 'author', {'paper': {

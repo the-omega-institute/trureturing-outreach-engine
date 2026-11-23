@@ -886,6 +886,11 @@ class GraphMailbox:
             self._drafts_folder = self.graph.request('/me/mailFolders/drafts?$select=id')['id']
         return self._drafts_folder
 
+    def deleted_items_folder_id(self):
+        if getattr(self, '_deleted_items_folder', None) is None:
+            self._deleted_items_folder = self.graph.request('/me/mailFolders/deleteditems?$select=id')['id']
+        return self._deleted_items_folder
+
     def matches(self, message, packet, *, exact_large=False):
         if not (address(message.get('from',{}))==packet['sender']
                 and sorted(address(a) for a in message.get('toRecipients',[]))==sorted(packet['to'])
@@ -1343,7 +1348,7 @@ def intake(ledger, config, root, mailbox, revision=None, now=None):
     if mailbox is None or config['paused'] or not config['kinds'].get('reply'):return
     from pathlib import Path
     from .mailbox_triage import (ANNOTATION_FIELDS, EDITORIAL_CONFIRMATION, SENT_SUBJECT_WINDOW,
-                                 Triage, category, recipients, subject_requirement)
+                                 Triage, bulk_reason, category, recipients, subject_requirement)
     from .pipeline import request
     from .registry import people
     from .thread_staging import active_inbound_tasks, inbound_tasks, normalize_message_id
@@ -1352,7 +1357,9 @@ def intake(ledger, config, root, mailbox, revision=None, now=None):
     require(mailbox.settings.get('reconciled') is True, 'Mailbox boundary is not reconciled')
     previous=db.execute("SELECT payload FROM pipeline_state WHERE key='mailbox'").fetchone()
     previous=json.loads(previous[0]) if previous else {}
-    since=previous.get('through') or mailbox.settings.get('live_since')
+    live_since=mailbox.settings.get('live_since')
+    replay=bool(previous.get('through') and live_since and not previous.get('intake_audited'))
+    since=live_since if replay else previous.get('through') or live_since
     require(since, 'Set the verified live Inbox start after reconciling the historical boundary')
     now=now or datetime.now(timezone.utc)
     cutoff=now.isoformat().replace('+00:00','Z')
@@ -1368,7 +1375,9 @@ def intake(ledger, config, root, mailbox, revision=None, now=None):
     controlled=json.loads(decisions_path.read_text()).get('owner_controlled_threads',[]) if decisions_path.exists() else []
     controlled={name.casefold() for name in controlled}
     revision=revision or source_head()
-    pending={};bounces=[];bounce_keys=set();seen=set()
+    pending={};bounces=[];bounce_keys=set();seen={}
+    no_task=previous.get('no_task', {})
+    live_start=instant(live_since) if live_since else None
     attachment_holds={m['conversationId']:{'checked_at':m['checked_at'],
                                          'attachment_issues':m['attachment_issues']}
                       for m in previous.get('unmapped',[])
@@ -1377,9 +1386,29 @@ def intake(ledger, config, root, mailbox, revision=None, now=None):
     notices=[];notice_keys=set();notice_count=previous.get('machine_notice_count', 0)
     budget=config.get('automation',{}).get('max_new_tasks_per_tick',4)
     def message_key(message):
-        return message.get('internetMessageId') or (message.get('conversationId'),message.get('receivedDateTime'))
+        identity=message.get('internetMessageId')
+        return normalize_message_id(identity) or identity or message.get('id') or (
+            message.get('conversationId'),message.get('receivedDateTime'))
     covered={message_key(m):m for m in previous.get('covered',[])}
     coverage=None
+
+    retained_keys = {message_key(m) for m in previous.get('unmapped', [])}
+
+    def in_window(message):
+        received=message.get('receivedDateTime')
+        if not received:
+            return False
+        received_at=instant(received)
+        return received_at <= now and (live_start is None or live_start <= received_at
+                                       or message_key(message) in retained_keys)
+
+    def record_no_task(message, reason, **evidence):
+        key=message_key(message)
+        pending.pop(key,None)
+        no_task[digest(key)]={'reason':reason, 'receivedDateTime':message.get('receivedDateTime'),
+                             'internetMessageId':message.get('internetMessageId'),
+                             'remote_id':message.get('id'), **evidence}
+
     def remember(message,reason,*,details=None,handled=False,**extra):
         fields={'id','internetMessageId','conversationId','from','toRecipients','ccRecipients',
                 'subject','receivedDateTime','sentDateTime','internetMessageHeaders'}
@@ -1390,6 +1419,7 @@ def intake(ledger, config, root, mailbox, revision=None, now=None):
             annotation['category_reason']='Unsupported thread attachments need operator selection'
         row={**{k:v for k,v in message.items() if k in fields},
              'intake_reason':reason,**annotation,**(details or {}),**extra}
+        no_task.pop(digest(key),None)
         if handled:
             pending.pop(key,None)
             covered[key]=row
@@ -1399,7 +1429,7 @@ def intake(ledger, config, root, mailbox, revision=None, now=None):
         nonlocal coverage
         identity=normalize_message_id(message.get('internetMessageId'))
         if not identity:return False
-        if coverage is None:coverage=active_inbound_tasks(tasks)
+        if coverage is None:coverage=active_inbound_tasks(tasks, include_finished=True)
         group=coverage.get(identity)
         if not group:return False
         task_id=group[0]['task_id']
@@ -1465,6 +1495,16 @@ def intake(ledger, config, root, mailbox, revision=None, now=None):
         if _delivery_failure(item):
             remember_bounce(item if item.get('original_recipient') or item.get('recipient') else enrich_bounce(item))
         else:remember_notice(item)
+
+    def excluded(message):
+        details = triage.classify(message)
+        if details['category'] in {'editorial-info', 'editorial-action', 'service-notice'}:
+            return details
+        headers = _message_headers(message)
+        if details['category'] == 'bulk' and bulk_reason(address(message.get('from',{})), headers):
+            return details
+        if headers.get('auto-submitted', 'no').split(';',1)[0].strip().casefold() != 'no':
+            return category('bulk', 'Auto-Submitted header')
     from .tick import unit
     tick=getattr(ledger,'tick',None)
     deferred=tick.previous.get('mailbox-intake',[]) if tick else []
@@ -1474,6 +1514,8 @@ def intake(ledger, config, root, mailbox, revision=None, now=None):
     registered_addresses={email for person in persons for email in person['emails']}
     registered, unregistered = [], []
     for message in incoming:
+        if not in_window(message):
+            continue
         group = registered if address(message.get('from')) in registered_addresses else unregistered
         group.append(message)
 
@@ -1544,11 +1586,13 @@ def intake(ledger, config, root, mailbox, revision=None, now=None):
         if index == len(registered):
             # Finish registered replies with attachments before unregistered threads.
             stage_uploads()
-        with unit(ledger,'mailbox-intake',digest(message_key(message)),'mailbox-intake') as ready:
+        key=message_key(message)
+        identity=digest(key)
+        if identity in no_task or message.get('isDraft'):continue
+        with unit(ledger,'mailbox-intake',identity,'mailbox-intake') as ready:
             if not ready:
                 defer(message,'tick budget; retained',details={'category_reason':'Tick time budget exhausted'})
                 continue
-            if message.get('isDraft'):continue
             if _delivery_failure(message):
                 remember_bounce(enrich_bounce(message));continue
             if EDITORIAL_CONFIRMATION.search(message.get('subject') or ''):
@@ -1563,12 +1607,26 @@ def intake(ledger, config, root, mailbox, revision=None, now=None):
                 counted=(previous.get('through') and not message.get('intake_reason') and
                          instant(message['receivedDateTime'])<=instant(previous['through']))
                 remember_notice(message, count=not counted);continue
-            conversation=message['conversationId']
+            if details := excluded(message):
+                reason = message.get('intake_reason') or 'automated or bulk mail'
+                remember(message,reason,details=details)
+                continue
+            if address(message.get('from',{})) == account:
+                record_no_task(message,'mailbox owner is the sender')
+                continue
+            conversation=message.get('conversationId')
+            if not conversation:
+                remember(message,'missing conversation identity')
+                continue
             hold=attachment_holds.get(conversation)
             if hold is not None and tasks.clock()-hold['checked_at']<UNMAPPED_RECHECK_SECONDS:
                 remember(message,UNSUPPORTED_ATTACHMENTS,**hold)
                 continue
-            if message.get('conversationId') in seen:continue
+            if conversation in seen:
+                if key not in pending and key != seen[conversation] and not remember_covered(message):
+                    record_no_task(message,'another incoming message selected for this conversation',
+                                   selected=seen[conversation])
+                continue
             if budget<=0:
                 defer(message,'bounded; retained',details={'category_reason':'New reply task limit reached for this tick'})
                 continue
@@ -1588,9 +1646,7 @@ def intake(ledger, config, root, mailbox, revision=None, now=None):
                         continue
                     remember(message,reason,checked_at=checked_at,
                              details={k:message[k] for k in ANNOTATION_FIELDS if k in message})
-                    seen.add(message.get('conversationId'))
                     continue
-            conversation=message['conversationId'];seen.add(conversation)
             try:
                 thread=mailbox.research_thread(conversation)
             except UnsupportedThreadAttachments as exc:
@@ -1599,14 +1655,22 @@ def intake(ledger, config, root, mailbox, revision=None, now=None):
                 remember(message,UNSUPPORTED_ATTACHMENTS,**hold)
                 continue
             attachment_holds.pop(conversation,None)
-            actual=[m for m in thread if not m.get('isDraft') and address(m.get('from',{})) != account]
-            if not actual:continue
+            actual=[m for m in thread if not m.get('isDraft') and in_window(m) and
+                    address(m.get('from',{})) != account and not _delivery_failure(m)
+                    and not _machine_sender(address(m.get('from',{}))) and not excluded(m)]
+            if not any(message_key(m)==key for m in actual):
+                remember(message,'Inbox message missing from conversation readback; retained')
+                continue
             latest=max(actual,key=lambda m:instant(m['receivedDateTime']))
+            latest_key=message_key(latest)
+            seen[conversation]=latest_key
+            if key != latest_key and not remember_covered(message):
+                record_no_task(message,'newer incoming message selected for this conversation',selected=latest_key)
             sender=address(latest.get('from',{}))
-            if _delivery_failure(latest):
-                remember_bounce(latest);continue
-            if _machine_sender(sender):
-                remember_notice(latest);continue
+            if not latest.get('internetMessageId'):
+                remember(latest,'missing Internet Message-ID')
+                continue
+            if remember_covered(latest):continue
             person=next((p for p in persons if sender in p['emails']),None)
             sent=[m for m in thread if not m.get('isDraft') and address(m.get('from',{}))==account]
             linked=None
@@ -1632,7 +1696,10 @@ def intake(ledger, config, root, mailbox, revision=None, now=None):
                 remember(latest,UNREGISTERED,checked_at=tasks.clock(),details=details)
                 continue
             latest_sent=max(sent,key=lambda m:instant(m['sentDateTime'])) if sent else None
-            if latest_sent is not None and instant(latest_sent['sentDateTime']) > instant(latest['receivedDateTime']):continue
+            if latest_sent is not None and instant(latest_sent['sentDateTime']) > instant(latest['receivedDateTime']):
+                record_no_task(latest,'answered by a later Sent Items message in this conversation',
+                               sent=latest_sent.get('internetMessageId'))
+                continue
             contacts={address(value) for m in thread for value in
                       [m.get('from',{}),*m.get('toRecipients',[]),*m.get('ccRecipients',[])]}
             subject_link=linked is not None and linked.get('match')=='subject-within-90-days'
@@ -1700,13 +1767,17 @@ def intake(ledger, config, root, mailbox, revision=None, now=None):
                                             'uniquely matched to a recipient. Preserve the reply task for the registered '
                                             'owner; do not infer an alias from the task owner. ' + inputs['instructions'])
             value=request('reply',link,person['id'],inputs,revision)
-            if not db.execute('SELECT 1 FROM tasks WHERE id=?',(value['id'],)).fetchone():
-                stage(message,latest,value,upload=False)
+            if db.execute('SELECT 1 FROM tasks WHERE id=?',(value['id'],)).fetchone():
+                remember(latest,'covered',handled=True,
+                         details=category('covered','Inbound message already has an intake task',task_id=value['id']))
+            else:
+                stage(latest,latest,value,upload=False)
     stage_uploads()
     # Advance only after the entire paginated window was read and all observed
     # work was persisted. Unknown/owner-controlled mail remains in the inventory.
     db.execute('INSERT OR REPLACE INTO pipeline_state VALUES(?,?)',
                ('mailbox',canonical({'through':cutoff,'account':account,'unmapped':list(pending.values()),'bounces':bounces,
+                                     'intake_audited':True,'no_task':no_task,
                                      'covered':list(covered.values())[-20:],
                                      'bounce_count':len(bounces),
                                      'machine_notice_count':notice_count,

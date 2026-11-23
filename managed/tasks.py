@@ -15,7 +15,7 @@ KINDS={'firstcontact','reply','research','shortnote','daily','mathesis','submiss
 NOTE_KINDS={'shortnote','mathesis'}
 ACTIVE={'provisioning','admitting','running','admission-unknown','provision-unknown','credit-wait'}
 STATES=ACTIVE|{'queued','awaiting-review','approved','bounced','held','failed',
-              'awaiting-mailbox','owner-draft','handoff-ready','verified',
+              'awaiting-mailbox','owner-draft','owner-discarded','handoff-ready','verified',
               'awaiting-user','answered-by-mail','decision-recorded','revising','no-reply','round-complete','submission-ready','superseded'}
 WORKFLOW_CHANGED='Workflow changed; stage a new request revision'
 WORKFLOW_PIN_MISMATCH='Workflow hash does not match the pinned source revision'
@@ -94,9 +94,11 @@ def owner_draft_rebindable(row, current_hash):
 
 def unstarted(row):
     # Even an uncertain creation/admission intent must retain its original keys.
-    return not ({'agent_id','operation_id','response_id','create_body','create_key',
-                 'command_key','prompt','owned_sandbox_id','response_text','result','review'}
-                & row['data'].keys())
+    data = row['data']
+    handles = {'agent_id','operation_id','response_id','create_body','create_key',
+               'command_key','owned_sandbox_id','response_text','result','review'}
+    # A restart caches the previous prompt before creating its next Agent.
+    return not (handles & data.keys() or ('prompt' in data and not data.get('execution_restart')))
 
 
 def policy_mismatch_hold(row):
@@ -163,6 +165,12 @@ def validate_request(request):
         require(isinstance(request[key],str) and bool(request[key].strip()),'Missing '+key)
     require(len(request['id'])<=120 and all(c.isalnum() or c in '-_.' for c in request['id']),'Unsafe task ID')
     require(isinstance(request['inputs'],dict),'Task inputs must be an object')
+    if 'supersedes_owner_questions' in request['inputs']:
+        supersedes = request['inputs']['supersedes_owner_questions']
+        require(request['kind'] == 'reply' and isinstance(supersedes, dict) and supersedes
+                and all(isinstance(key, str) and key.strip() and isinstance(reason, str) and reason.strip()
+                        for key, reason in supersedes.items()),
+                'Question supersession requires reply task IDs and operator reasons')
     if 'reply_origin_task_id' in request['inputs']:
         origin = request['inputs']['reply_origin_task_id']
         require(request['kind'] in NOTE_KINDS and isinstance(origin, str) and origin.strip(),
@@ -216,6 +224,17 @@ def newer_reply(new, old):
         return at is not None and before is not None and at > before
     except (KeyError, TypeError, ValueError, AttributeError):
         return False
+
+
+def question_thread(row):
+    from .thread_staging import effective_inputs
+    inputs = effective_inputs(row)
+    data = row['data']
+    packet = data.get('packet_override') or (data.get('result') or {}).get('packet') or {}
+    if conversation := inputs.get('thread_id') or packet.get('thread_id'):
+        return ('graph', conversation)
+    if record := (inputs.get('thread_ref') or {}).get('thread_id'):
+        return ('registry', record)
 
 
 def _starts_with_rollback(sql):
@@ -389,6 +408,52 @@ class Tasks:
         require(column in {'state','kind'},'Unknown task count column')
         return dict(self.db.execute(f'SELECT {column},COUNT(*) FROM tasks GROUP BY {column} ORDER BY {column}'))
 
+    def owner_questions(self):
+        """Open questions and their original wait times, including legacy closures."""
+        return self.db.execute("""
+            SELECT id, COALESCE(json_extract(data,'$.owner_question_opened_at'),
+                (SELECT MIN(e.at) FROM task_events e WHERE e.id=tasks.id AND e.state='awaiting-user'),
+                updated) AS opened_at, json_array_length(data,'$.result.routing.questions') AS question_count
+            FROM tasks
+            WHERE state IN ('awaiting-user','approved','revising','superseded')
+              AND json_array_length(data,'$.result.routing.questions') > 0
+              AND json_extract(data,'$.user_decision') IS NULL
+              AND (state='awaiting-user' OR json_extract(data,'$.result.outcome')='needs-decision')
+              AND (state!='superseded' OR
+                   (json_extract(data,'$.superseded_by') IS NOT NULL AND
+                    json_extract(data,'$.user_question_closed.evidence.reason') IS NULL))
+            ORDER BY opened_at,id
+        """).fetchall()
+
+    def route_no_reply(self, row, data):
+        """Apply a reviewed close and any explicit supersessions atomically."""
+        thread = question_thread(row)
+        supersedes = row['request']['inputs'].get('supersedes_owner_questions', {})
+        with self.tx():
+            blockers, replacements = [], []
+            if row['kind'] == 'reply' and thread is not None:
+                for task_id, _, _ in self.owner_questions():
+                    old = self.get(task_id)
+                    if question_thread(old) != thread or newer_reply(old, row):
+                        continue
+                    if task_id in supersedes:
+                        replacements.append(old)
+                    else:
+                        blockers.append(task_id)
+            if blockers:
+                data['owner_question_blockers'] = blockers
+                if row['state'] != 'held' or row['data'] != data:
+                    self._update(row['id'], row['revision'], 'held', data)
+                return False
+            for old in replacements:
+                evidence = {'superseded_by': row['id'], 'reason': supersedes[old['id']].strip()}
+                self._update(old['id'], old['revision'], 'superseded',
+                             {**old['data'], 'superseded_by': row['id'],
+                              'user_question_closed': {'reason': 'superseded', 'evidence': evidence}})
+            data.pop('owner_question_blockers', None)
+            self._update(row['id'], row['revision'], 'no-reply', data)
+        return True
+
     def lane_rows(self):
         """Project only lane/lineage fields in SQLite, excluding bulky payloads.
 
@@ -488,6 +553,9 @@ class Tasks:
         if row['kind'] != 'reply':return row
         inherited = []
         for old in self.all():
+            if (old['state'] == 'revising' and old['data'].get('result', {}).get('outcome') == 'needs-decision'
+                    and not old['data'].get('user_decision')):
+                continue
             old_inputs = old['request'].get('inputs', {})
             answers = old_inputs.get('user_answers') or []
             decision_continuation = bool(answers) or (
@@ -558,7 +626,7 @@ class Tasks:
                 queued = self.get(successor['id'])
                 self._update(queued['id'], queued['revision'], 'held', {**old['data'], **queued['data']})
             self._update(task_id,expected,'superseded',
-                         {**(old['data'] if identity_hold else {}),
+                         {**(old['data'] if identity_hold or old['data'].get('execution_history') else {}),
                           'reason':reason,'successor':successor['id']})
             self.db.execute('UPDATE pipeline_sources SET task_id=? WHERE task_id=?',
                             (successor['id'],task_id))
@@ -772,7 +840,10 @@ class Tasks:
             if self.db.execute('SELECT 1 FROM control_events WHERE id=?',(event_id,)).fetchone():
                 return self.get(envelope['task_id'])
             row=self.get(envelope['task_id'])
-            require(row['state']=='awaiting-user','Task is not awaiting a user decision')
+            require(row['state']=='awaiting-user' or
+                    (row['state'] in {'revising','superseded'} and
+                     any(task_id == row['id'] for task_id, _, _ in self.owner_questions())),
+                    'Task is not awaiting a user decision')
             require(digest(row['data']['result'])==envelope['result_hash'],'Decision targets an obsolete result')
             questions=row['data']['result'].get('routing',{}).get('questions',[])
             answers=envelope['answers']
@@ -780,6 +851,9 @@ class Tasks:
                     and answers and all(isinstance(v,str) and v.strip() for v in answers.values()),
                     'Answer every current question with the actual user response')
             data={**row['data'],'user_decision':envelope}
+            if row['state'] in {'revising','superseded'} and data.get('continuation_id'):
+                data['previous_continuation_id'] = data.pop('continuation_id')
+            data.pop('user_question_closed', None)
             self.db.execute("UPDATE tasks SET state='decision-recorded',revision=revision+1,data=?,updated=? WHERE id=?",
                             (canonical(data),self.clock(),row['id']))
             self.db.execute('INSERT INTO control_events VALUES(?,?)',(event_id,canonical(envelope)))

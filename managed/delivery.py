@@ -281,9 +281,26 @@ def _reconcile_owner_sent(ledger, config, mailbox, row):
     since = _owner_draft_since(row)
     if since is None:
         return False
-    draft = _read_live_draft(mailbox, receipt['remote_id'], after_delete=True)
-    if draft is not None and draft.get('isDraft') is not False:
-        return False
+    absence = None
+    try:
+        draft = _read_remote_draft(mailbox, receipt['remote_id'])
+    except HTTPError as exc:
+        if exc.code != 403:
+            raise
+        draft = None  # A forbidden read alone cannot establish discard.
+    else:
+        if draft is None:
+            absence = {'folder': 'missing', 'http_status': 404, 'lastModifiedDateTime': None}
+    if draft is not None:
+        parent = draft.get('parentFolderId')
+        drafts_folder = getattr(mailbox, 'drafts_folder_id', None)
+        if (draft.get('isDraft') is not False and
+                (not parent or not callable(drafts_folder) or parent == drafts_folder())):
+            return False
+        deleted_folder = getattr(mailbox, 'deleted_items_folder_id', None)
+        if parent and callable(deleted_folder) and parent == deleted_folder():
+            absence = {'folder': 'deleteditems', 'parentFolderId': parent,
+                       'lastModifiedDateTime': draft.get('lastModifiedDateTime')}
     data = dict(row['data'])
     packet = data.get('packet_override') or data.get('result', {}).get('packet')
     if not isinstance(packet, dict):
@@ -354,6 +371,16 @@ def _reconcile_owner_sent(ledger, config, mailbox, row):
         data.pop('owner_draft_status', None)
         data.pop('last_error', None)
         state = 'verified'
+    elif not matches and absence is not None:
+        intent = data.get('draft_revision_intent') or {}
+        if (intent.get('phase') == 'delete-intent' and intent.get('new_remote_id')
+                and intent.get('old_remote_id') == receipt['remote_id']):
+            return False  # Resume the coordinator's own checkpointed draft replacement.
+        data['owner_draft_status'] = 'discarded'
+        data['owner_draft_discard'] = {'remote_id': receipt['remote_id'],
+                                       'observed_at': ledger.tasks.clock(), **absence}
+        data.pop('last_error', None)
+        state = 'owner-discarded'
     else:
         state = row['state']
         data['owner_draft_status'] = 'sent-ambiguous' if matches else 'draft-missing-not-sent'

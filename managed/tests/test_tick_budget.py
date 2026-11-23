@@ -365,7 +365,8 @@ class TickBudgetTests(unittest.TestCase):
                 mailbox=json.loads(ledger.tasks.db.execute(
                     "SELECT payload FROM pipeline_state WHERE key='mailbox'").fetchone()[0])
                 self.assertEqual([(m['id'],m['intake_reason']) for m in mailbox['unmapped']],
-                                 [('second','tick budget; retained')])
+                                 [('first','Inbox message missing from conversation readback; retained'),
+                                  ('second','tick budget; retained')])
             finally:ledger.tasks.close()
 
     def test_empty_inbox_releases_intake_reserve_before_advance(self):

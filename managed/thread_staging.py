@@ -19,7 +19,8 @@ MAX_MESSAGES = 100
 LEGACY_RESOLUTION_REASON = 'Thread resolution failed: GateError: Known messages do not identify one conversation'
 # A revising parent has handed off to its continuation, which carries the target.
 INBOUND_STATES = STATES - {'verified', 'failed', 'no-reply', 'superseded', 'answered-by-mail',
-                           'handoff-ready', 'round-complete', 'submission-ready', 'revising'}
+                           'handoff-ready', 'round-complete', 'submission-ready', 'revising', 'owner-discarded'}
+FINISHED_INBOUND_STATES = {'verified', 'no-reply', 'answered-by-mail', 'owner-discarded'}
 # The operator may deliberately restage a message whose task is parked, saved as
 # an owner draft or waiting for a user answer; only work still in flight blocks it.
 IN_FLIGHT_STATES = ACTIVE | {'queued', 'awaiting-review', 'bounced', 'approved', 'awaiting-mailbox'}
@@ -92,7 +93,7 @@ def message_ids(event):
             if (identity := normalize_message_id((event or {}).get(key)))]
 
 
-def inbound_tasks(rows):
+def inbound_tasks(rows, *, include_finished=False):
     """Index active reply tasks by every covered Internet Message-ID.
 
     Research tasks are left out: one staged on a thread must not suppress the
@@ -100,14 +101,19 @@ def inbound_tasks(rows):
     """
     groups = {}
     for row in rows:
-        if row['kind'] != 'reply' or row['state'] not in INBOUND_STATES:
+        finished = include_finished and row['state'] in FINISHED_INBOUND_STATES
+        if row['kind'] != 'reply' or not (row['state'] in INBOUND_STATES or finished):
             continue
         inputs = row['request']['inputs']
         resolved = row['data'].get('thread_inputs') or {}
         ref = inputs.get('thread_ref')
         ids = ref.get('internetMessageIds') if isinstance(ref, dict) else None
         values = [inputs.get('latest_inbound_message_id'), resolved.get('latest_inbound_message_id')]
-        if isinstance(ids, list):
+        if finished:
+            data = row['data']
+            packet = data.get('packet_override') or (data.get('result') or {}).get('packet') or {}
+            values.append(packet.get('latest_inbound_message_id'))
+        if isinstance(ids, list) and not finished:
             values.extend(ids)
         for identity in dict.fromkeys(map(normalize_message_id, values)):
             if identity:
@@ -115,11 +121,12 @@ def inbound_tasks(rows):
     return groups
 
 
-def active_inbound_tasks(tasks):
-    marks = ','.join('?' for _ in INBOUND_STATES)
+def active_inbound_tasks(tasks, *, include_finished=False):
+    states = INBOUND_STATES | (FINISHED_INBOUND_STATES if include_finished else set())
+    marks = ','.join('?' for _ in states)
     rows = tasks.db.execute("SELECT id FROM tasks WHERE kind='reply' "
-                            f"AND state IN ({marks}) ORDER BY rowid", tuple(INBOUND_STATES))
-    return inbound_tasks(tasks.get(row[0]) for row in rows)
+                            f"AND state IN ({marks}) ORDER BY rowid", tuple(states))
+    return inbound_tasks((tasks.get(row[0]) for row in rows), include_finished=include_finished)
 
 
 def require_uncovered_inbound(value, tasks):

@@ -1,0 +1,18 @@
+[advisories]
+yanked = "deny"
+
+[licenses]
+allow = ["MIT", "Apache-2.0", "BSD-3-Clause"]
+
+# The existing repository has no license declaration. Do not invent a license
+# for the four unpublished engine packages; audit every third-party dependency.
+[licenses.private]
+ignore = true
+
+[bans]
+multiple-versions = "deny"
+wildcards = "deny"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"

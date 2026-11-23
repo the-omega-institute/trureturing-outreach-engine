@@ -1,0 +1,4998 @@
+{
+  "schema_version": 1,
+  "seed": 55345352842547491,
+  "vectors": [
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": null,
+        "separators": null
+      },
+      "expected": "{\"a\": \"\u03a9\\u0000\u007f\\n\", \"\ud83d\ude00\": [1e+16, -0.0, null, true, {}, []]}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": null,
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\"a\":\"\u03a9\\u0000\u007f\\n\",\"\ud83d\ude00\":[1e+16,-0.0,null,true,{},[]]}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": null,
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\"a\": \"\u03a9\\u0000\u007f\\n\", \"\ud83d\ude00\": [1e+16, -0.0, null, true, {}, []]}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "",
+        "separators": null
+      },
+      "expected": "{\n\"a\": \"\u03a9\\u0000\u007f\\n\",\n\"\ud83d\ude00\": [\n1e+16,\n-0.0,\nnull,\ntrue,\n{},\n[]\n]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\n\"a\":\"\u03a9\\u0000\u007f\\n\",\n\"\ud83d\ude00\":[\n1e+16,\n-0.0,\nnull,\ntrue,\n{},\n[]\n]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\n\"a\": \"\u03a9\\u0000\u007f\\n\", \n\"\ud83d\ude00\": [\n1e+16, \n-0.0, \nnull, \ntrue, \n{}, \n[]\n]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": null
+      },
+      "expected": "{\n  \"a\": \"\u03a9\\u0000\u007f\\n\",\n  \"\ud83d\ude00\": [\n    1e+16,\n    -0.0,\n    null,\n    true,\n    {},\n    []\n  ]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\n  \"a\":\"\u03a9\\u0000\u007f\\n\",\n  \"\ud83d\ude00\":[\n    1e+16,\n    -0.0,\n    null,\n    true,\n    {},\n    []\n  ]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\n  \"a\": \"\u03a9\\u0000\u007f\\n\", \n  \"\ud83d\ude00\": [\n    1e+16, \n    -0.0, \n    null, \n    true, \n    {}, \n    []\n  ]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": null
+      },
+      "expected": "{\n\t\"a\": \"\u03a9\\u0000\u007f\\n\",\n\t\"\ud83d\ude00\": [\n\t\t1e+16,\n\t\t-0.0,\n\t\tnull,\n\t\ttrue,\n\t\t{},\n\t\t[]\n\t]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\n\t\"a\":\"\u03a9\\u0000\u007f\\n\",\n\t\"\ud83d\ude00\":[\n\t\t1e+16,\n\t\t-0.0,\n\t\tnull,\n\t\ttrue,\n\t\t{},\n\t\t[]\n\t]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\n\t\"a\": \"\u03a9\\u0000\u007f\\n\", \n\t\"\ud83d\ude00\": [\n\t\t1e+16, \n\t\t-0.0, \n\t\tnull, \n\t\ttrue, \n\t\t{}, \n\t\t[]\n\t]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": null,
+        "separators": null
+      },
+      "expected": "{\"a\": \"\u03a9\\u0000\u007f\\n\", \"\ud83d\ude00\": [1e+16, -0.0, null, true, {}, []]}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": null,
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\"a\":\"\u03a9\\u0000\u007f\\n\",\"\ud83d\ude00\":[1e+16,-0.0,null,true,{},[]]}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": null,
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\"a\": \"\u03a9\\u0000\u007f\\n\", \"\ud83d\ude00\": [1e+16, -0.0, null, true, {}, []]}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "",
+        "separators": null
+      },
+      "expected": "{\n\"a\": \"\u03a9\\u0000\u007f\\n\",\n\"\ud83d\ude00\": [\n1e+16,\n-0.0,\nnull,\ntrue,\n{},\n[]\n]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\n\"a\":\"\u03a9\\u0000\u007f\\n\",\n\"\ud83d\ude00\":[\n1e+16,\n-0.0,\nnull,\ntrue,\n{},\n[]\n]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\n\"a\": \"\u03a9\\u0000\u007f\\n\", \n\"\ud83d\ude00\": [\n1e+16, \n-0.0, \nnull, \ntrue, \n{}, \n[]\n]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": null
+      },
+      "expected": "{\n  \"a\": \"\u03a9\\u0000\u007f\\n\",\n  \"\ud83d\ude00\": [\n    1e+16,\n    -0.0,\n    null,\n    true,\n    {},\n    []\n  ]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\n  \"a\":\"\u03a9\\u0000\u007f\\n\",\n  \"\ud83d\ude00\":[\n    1e+16,\n    -0.0,\n    null,\n    true,\n    {},\n    []\n  ]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\n  \"a\": \"\u03a9\\u0000\u007f\\n\", \n  \"\ud83d\ude00\": [\n    1e+16, \n    -0.0, \n    null, \n    true, \n    {}, \n    []\n  ]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": null
+      },
+      "expected": "{\n\t\"a\": \"\u03a9\\u0000\u007f\\n\",\n\t\"\ud83d\ude00\": [\n\t\t1e+16,\n\t\t-0.0,\n\t\tnull,\n\t\ttrue,\n\t\t{},\n\t\t[]\n\t]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\n\t\"a\":\"\u03a9\\u0000\u007f\\n\",\n\t\"\ud83d\ude00\":[\n\t\t1e+16,\n\t\t-0.0,\n\t\tnull,\n\t\ttrue,\n\t\t{},\n\t\t[]\n\t]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\n\t\"a\": \"\u03a9\\u0000\u007f\\n\", \n\t\"\ud83d\ude00\": [\n\t\t1e+16, \n\t\t-0.0, \n\t\tnull, \n\t\ttrue, \n\t\t{}, \n\t\t[]\n\t]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": null,
+        "separators": null
+      },
+      "expected": "{\"a\": \"\u03a9\\u0000\u007f\\n\", \"\ud83d\ude00\": [1e+16, -0.0, null, true, {}, []]}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": null,
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\"a\":\"\u03a9\\u0000\u007f\\n\",\"\ud83d\ude00\":[1e+16,-0.0,null,true,{},[]]}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": null,
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\"a\": \"\u03a9\\u0000\u007f\\n\", \"\ud83d\ude00\": [1e+16, -0.0, null, true, {}, []]}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "",
+        "separators": null
+      },
+      "expected": "{\n\"a\": \"\u03a9\\u0000\u007f\\n\",\n\"\ud83d\ude00\": [\n1e+16,\n-0.0,\nnull,\ntrue,\n{},\n[]\n]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\n\"a\":\"\u03a9\\u0000\u007f\\n\",\n\"\ud83d\ude00\":[\n1e+16,\n-0.0,\nnull,\ntrue,\n{},\n[]\n]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\n\"a\": \"\u03a9\\u0000\u007f\\n\", \n\"\ud83d\ude00\": [\n1e+16, \n-0.0, \nnull, \ntrue, \n{}, \n[]\n]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": null
+      },
+      "expected": "{\n  \"a\": \"\u03a9\\u0000\u007f\\n\",\n  \"\ud83d\ude00\": [\n    1e+16,\n    -0.0,\n    null,\n    true,\n    {},\n    []\n  ]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\n  \"a\":\"\u03a9\\u0000\u007f\\n\",\n  \"\ud83d\ude00\":[\n    1e+16,\n    -0.0,\n    null,\n    true,\n    {},\n    []\n  ]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\n  \"a\": \"\u03a9\\u0000\u007f\\n\", \n  \"\ud83d\ude00\": [\n    1e+16, \n    -0.0, \n    null, \n    true, \n    {}, \n    []\n  ]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": null
+      },
+      "expected": "{\n\t\"a\": \"\u03a9\\u0000\u007f\\n\",\n\t\"\ud83d\ude00\": [\n\t\t1e+16,\n\t\t-0.0,\n\t\tnull,\n\t\ttrue,\n\t\t{},\n\t\t[]\n\t]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\n\t\"a\":\"\u03a9\\u0000\u007f\\n\",\n\t\"\ud83d\ude00\":[\n\t\t1e+16,\n\t\t-0.0,\n\t\tnull,\n\t\ttrue,\n\t\t{},\n\t\t[]\n\t]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\n\t\"a\": \"\u03a9\\u0000\u007f\\n\", \n\t\"\ud83d\ude00\": [\n\t\t1e+16, \n\t\t-0.0, \n\t\tnull, \n\t\ttrue, \n\t\t{}, \n\t\t[]\n\t]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": null,
+        "separators": null
+      },
+      "expected": "{\"a\": \"\u03a9\\u0000\u007f\\n\", \"\ud83d\ude00\": [1e+16, -0.0, null, true, {}, []]}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": null,
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\"a\":\"\u03a9\\u0000\u007f\\n\",\"\ud83d\ude00\":[1e+16,-0.0,null,true,{},[]]}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": null,
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\"a\": \"\u03a9\\u0000\u007f\\n\", \"\ud83d\ude00\": [1e+16, -0.0, null, true, {}, []]}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "",
+        "separators": null
+      },
+      "expected": "{\n\"a\": \"\u03a9\\u0000\u007f\\n\",\n\"\ud83d\ude00\": [\n1e+16,\n-0.0,\nnull,\ntrue,\n{},\n[]\n]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\n\"a\":\"\u03a9\\u0000\u007f\\n\",\n\"\ud83d\ude00\":[\n1e+16,\n-0.0,\nnull,\ntrue,\n{},\n[]\n]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\n\"a\": \"\u03a9\\u0000\u007f\\n\", \n\"\ud83d\ude00\": [\n1e+16, \n-0.0, \nnull, \ntrue, \n{}, \n[]\n]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": null
+      },
+      "expected": "{\n  \"a\": \"\u03a9\\u0000\u007f\\n\",\n  \"\ud83d\ude00\": [\n    1e+16,\n    -0.0,\n    null,\n    true,\n    {},\n    []\n  ]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\n  \"a\":\"\u03a9\\u0000\u007f\\n\",\n  \"\ud83d\ude00\":[\n    1e+16,\n    -0.0,\n    null,\n    true,\n    {},\n    []\n  ]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\n  \"a\": \"\u03a9\\u0000\u007f\\n\", \n  \"\ud83d\ude00\": [\n    1e+16, \n    -0.0, \n    null, \n    true, \n    {}, \n    []\n  ]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": null
+      },
+      "expected": "{\n\t\"a\": \"\u03a9\\u0000\u007f\\n\",\n\t\"\ud83d\ude00\": [\n\t\t1e+16,\n\t\t-0.0,\n\t\tnull,\n\t\ttrue,\n\t\t{},\n\t\t[]\n\t]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\n\t\"a\":\"\u03a9\\u0000\u007f\\n\",\n\t\"\ud83d\ude00\":[\n\t\t1e+16,\n\t\t-0.0,\n\t\tnull,\n\t\ttrue,\n\t\t{},\n\t\t[]\n\t]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\n\t\"a\": \"\u03a9\\u0000\u007f\\n\", \n\t\"\ud83d\ude00\": [\n\t\t1e+16, \n\t\t-0.0, \n\t\tnull, \n\t\ttrue, \n\t\t{}, \n\t\t[]\n\t]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": null,
+        "separators": null
+      },
+      "expected": "{\"a\": \"\\u03a9\\u0000\\u007f\\n\", \"\\ud83d\\ude00\": [1e+16, -0.0, null, true, {}, []]}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": null,
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": null,
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\"a\": \"\\u03a9\\u0000\\u007f\\n\", \"\\ud83d\\ude00\": [1e+16, -0.0, null, true, {}, []]}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "",
+        "separators": null
+      },
+      "expected": "{\n\"a\": \"\\u03a9\\u0000\\u007f\\n\",\n\"\\ud83d\\ude00\": [\n1e+16,\n-0.0,\nnull,\ntrue,\n{},\n[]\n]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\n\"a\":\"\\u03a9\\u0000\\u007f\\n\",\n\"\\ud83d\\ude00\":[\n1e+16,\n-0.0,\nnull,\ntrue,\n{},\n[]\n]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\n\"a\": \"\\u03a9\\u0000\\u007f\\n\", \n\"\\ud83d\\ude00\": [\n1e+16, \n-0.0, \nnull, \ntrue, \n{}, \n[]\n]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": null
+      },
+      "expected": "{\n  \"a\": \"\\u03a9\\u0000\\u007f\\n\",\n  \"\\ud83d\\ude00\": [\n    1e+16,\n    -0.0,\n    null,\n    true,\n    {},\n    []\n  ]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\n  \"a\":\"\\u03a9\\u0000\\u007f\\n\",\n  \"\\ud83d\\ude00\":[\n    1e+16,\n    -0.0,\n    null,\n    true,\n    {},\n    []\n  ]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\n  \"a\": \"\\u03a9\\u0000\\u007f\\n\", \n  \"\\ud83d\\ude00\": [\n    1e+16, \n    -0.0, \n    null, \n    true, \n    {}, \n    []\n  ]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": null
+      },
+      "expected": "{\n\t\"a\": \"\\u03a9\\u0000\\u007f\\n\",\n\t\"\\ud83d\\ude00\": [\n\t\t1e+16,\n\t\t-0.0,\n\t\tnull,\n\t\ttrue,\n\t\t{},\n\t\t[]\n\t]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\n\t\"a\":\"\\u03a9\\u0000\\u007f\\n\",\n\t\"\\ud83d\\ude00\":[\n\t\t1e+16,\n\t\t-0.0,\n\t\tnull,\n\t\ttrue,\n\t\t{},\n\t\t[]\n\t]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\n\t\"a\": \"\\u03a9\\u0000\\u007f\\n\", \n\t\"\\ud83d\\ude00\": [\n\t\t1e+16, \n\t\t-0.0, \n\t\tnull, \n\t\ttrue, \n\t\t{}, \n\t\t[]\n\t]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": null,
+        "separators": null
+      },
+      "expected": "{\"a\": \"\\u03a9\\u0000\\u007f\\n\", \"\\ud83d\\ude00\": [1e+16, -0.0, null, true, {}, []]}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": null,
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": null,
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\"a\": \"\\u03a9\\u0000\\u007f\\n\", \"\\ud83d\\ude00\": [1e+16, -0.0, null, true, {}, []]}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "",
+        "separators": null
+      },
+      "expected": "{\n\"a\": \"\\u03a9\\u0000\\u007f\\n\",\n\"\\ud83d\\ude00\": [\n1e+16,\n-0.0,\nnull,\ntrue,\n{},\n[]\n]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\n\"a\":\"\\u03a9\\u0000\\u007f\\n\",\n\"\\ud83d\\ude00\":[\n1e+16,\n-0.0,\nnull,\ntrue,\n{},\n[]\n]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\n\"a\": \"\\u03a9\\u0000\\u007f\\n\", \n\"\\ud83d\\ude00\": [\n1e+16, \n-0.0, \nnull, \ntrue, \n{}, \n[]\n]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": null
+      },
+      "expected": "{\n  \"a\": \"\\u03a9\\u0000\\u007f\\n\",\n  \"\\ud83d\\ude00\": [\n    1e+16,\n    -0.0,\n    null,\n    true,\n    {},\n    []\n  ]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\n  \"a\":\"\\u03a9\\u0000\\u007f\\n\",\n  \"\\ud83d\\ude00\":[\n    1e+16,\n    -0.0,\n    null,\n    true,\n    {},\n    []\n  ]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\n  \"a\": \"\\u03a9\\u0000\\u007f\\n\", \n  \"\\ud83d\\ude00\": [\n    1e+16, \n    -0.0, \n    null, \n    true, \n    {}, \n    []\n  ]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": null
+      },
+      "expected": "{\n\t\"a\": \"\\u03a9\\u0000\\u007f\\n\",\n\t\"\\ud83d\\ude00\": [\n\t\t1e+16,\n\t\t-0.0,\n\t\tnull,\n\t\ttrue,\n\t\t{},\n\t\t[]\n\t]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\n\t\"a\":\"\\u03a9\\u0000\\u007f\\n\",\n\t\"\\ud83d\\ude00\":[\n\t\t1e+16,\n\t\t-0.0,\n\t\tnull,\n\t\ttrue,\n\t\t{},\n\t\t[]\n\t]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\n\t\"a\": \"\\u03a9\\u0000\\u007f\\n\", \n\t\"\\ud83d\\ude00\": [\n\t\t1e+16, \n\t\t-0.0, \n\t\tnull, \n\t\ttrue, \n\t\t{}, \n\t\t[]\n\t]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": null,
+        "separators": null
+      },
+      "expected": "{\"a\": \"\\u03a9\\u0000\\u007f\\n\", \"\\ud83d\\ude00\": [1e+16, -0.0, null, true, {}, []]}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": null,
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": null,
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\"a\": \"\\u03a9\\u0000\\u007f\\n\", \"\\ud83d\\ude00\": [1e+16, -0.0, null, true, {}, []]}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "",
+        "separators": null
+      },
+      "expected": "{\n\"a\": \"\\u03a9\\u0000\\u007f\\n\",\n\"\\ud83d\\ude00\": [\n1e+16,\n-0.0,\nnull,\ntrue,\n{},\n[]\n]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\n\"a\":\"\\u03a9\\u0000\\u007f\\n\",\n\"\\ud83d\\ude00\":[\n1e+16,\n-0.0,\nnull,\ntrue,\n{},\n[]\n]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\n\"a\": \"\\u03a9\\u0000\\u007f\\n\", \n\"\\ud83d\\ude00\": [\n1e+16, \n-0.0, \nnull, \ntrue, \n{}, \n[]\n]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": null
+      },
+      "expected": "{\n  \"a\": \"\\u03a9\\u0000\\u007f\\n\",\n  \"\\ud83d\\ude00\": [\n    1e+16,\n    -0.0,\n    null,\n    true,\n    {},\n    []\n  ]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\n  \"a\":\"\\u03a9\\u0000\\u007f\\n\",\n  \"\\ud83d\\ude00\":[\n    1e+16,\n    -0.0,\n    null,\n    true,\n    {},\n    []\n  ]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\n  \"a\": \"\\u03a9\\u0000\\u007f\\n\", \n  \"\\ud83d\\ude00\": [\n    1e+16, \n    -0.0, \n    null, \n    true, \n    {}, \n    []\n  ]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": null
+      },
+      "expected": "{\n\t\"a\": \"\\u03a9\\u0000\\u007f\\n\",\n\t\"\\ud83d\\ude00\": [\n\t\t1e+16,\n\t\t-0.0,\n\t\tnull,\n\t\ttrue,\n\t\t{},\n\t\t[]\n\t]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\n\t\"a\":\"\\u03a9\\u0000\\u007f\\n\",\n\t\"\\ud83d\\ude00\":[\n\t\t1e+16,\n\t\t-0.0,\n\t\tnull,\n\t\ttrue,\n\t\t{},\n\t\t[]\n\t]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\n\t\"a\": \"\\u03a9\\u0000\\u007f\\n\", \n\t\"\\ud83d\\ude00\": [\n\t\t1e+16, \n\t\t-0.0, \n\t\tnull, \n\t\ttrue, \n\t\t{}, \n\t\t[]\n\t]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": null,
+        "separators": null
+      },
+      "expected": "{\"a\": \"\\u03a9\\u0000\\u007f\\n\", \"\\ud83d\\ude00\": [1e+16, -0.0, null, true, {}, []]}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": null,
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": null,
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\"a\": \"\\u03a9\\u0000\\u007f\\n\", \"\\ud83d\\ude00\": [1e+16, -0.0, null, true, {}, []]}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "",
+        "separators": null
+      },
+      "expected": "{\n\"a\": \"\\u03a9\\u0000\\u007f\\n\",\n\"\\ud83d\\ude00\": [\n1e+16,\n-0.0,\nnull,\ntrue,\n{},\n[]\n]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\n\"a\":\"\\u03a9\\u0000\\u007f\\n\",\n\"\\ud83d\\ude00\":[\n1e+16,\n-0.0,\nnull,\ntrue,\n{},\n[]\n]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\n\"a\": \"\\u03a9\\u0000\\u007f\\n\", \n\"\\ud83d\\ude00\": [\n1e+16, \n-0.0, \nnull, \ntrue, \n{}, \n[]\n]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": null
+      },
+      "expected": "{\n  \"a\": \"\\u03a9\\u0000\\u007f\\n\",\n  \"\\ud83d\\ude00\": [\n    1e+16,\n    -0.0,\n    null,\n    true,\n    {},\n    []\n  ]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\n  \"a\":\"\\u03a9\\u0000\\u007f\\n\",\n  \"\\ud83d\\ude00\":[\n    1e+16,\n    -0.0,\n    null,\n    true,\n    {},\n    []\n  ]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\n  \"a\": \"\\u03a9\\u0000\\u007f\\n\", \n  \"\\ud83d\\ude00\": [\n    1e+16, \n    -0.0, \n    null, \n    true, \n    {}, \n    []\n  ]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": null
+      },
+      "expected": "{\n\t\"a\": \"\\u03a9\\u0000\\u007f\\n\",\n\t\"\\ud83d\\ude00\": [\n\t\t1e+16,\n\t\t-0.0,\n\t\tnull,\n\t\ttrue,\n\t\t{},\n\t\t[]\n\t]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\n\t\"a\":\"\\u03a9\\u0000\\u007f\\n\",\n\t\"\\ud83d\\ude00\":[\n\t\t1e+16,\n\t\t-0.0,\n\t\tnull,\n\t\ttrue,\n\t\t{},\n\t\t[]\n\t]\n}"
+    },
+    {
+      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\n\t\"a\": \"\\u03a9\\u0000\\u007f\\n\", \n\t\"\\ud83d\\ude00\": [\n\t\t1e+16, \n\t\t-0.0, \n\t\tnull, \n\t\ttrue, \n\t\t{}, \n\t\t[]\n\t]\n}"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": null,
+        "separators": null
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": null,
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": null,
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "",
+        "separators": null
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": null
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": null
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": null,
+        "separators": null
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": null,
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": null,
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "",
+        "separators": null
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": null
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": null
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": null,
+        "separators": null
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": null,
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": null,
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "",
+        "separators": null
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": null
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": null
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": null,
+        "separators": null
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": null,
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": null,
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "",
+        "separators": null
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": null
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": null
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": null,
+        "separators": null
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": null,
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": null,
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "",
+        "separators": null
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": null
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": null
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": null,
+        "separators": null
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": null,
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": null,
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "",
+        "separators": null
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": null
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": null
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": null,
+        "separators": null
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": null,
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": null,
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "",
+        "separators": null
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": null
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": null
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": null,
+        "separators": null
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": null,
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": null,
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "",
+        "separators": null
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": null
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": null
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "[]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[]"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": null,
+        "separators": null
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": null,
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": null,
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "",
+        "separators": null
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": null
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": null
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": null,
+        "separators": null
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": null,
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": null,
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "",
+        "separators": null
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": null
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": null
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": null,
+        "separators": null
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": null,
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": null,
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "",
+        "separators": null
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": null
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": null
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": null,
+        "separators": null
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": null,
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": null,
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "",
+        "separators": null
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": null
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": null
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": null,
+        "separators": null
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": null,
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": null,
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "",
+        "separators": null
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": null
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": null
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": null,
+        "separators": null
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": null,
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": null,
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "",
+        "separators": null
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": null
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": null
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": null,
+        "separators": null
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": null,
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": null,
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "",
+        "separators": null
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": null
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": null
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": null,
+        "separators": null
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": null,
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": null,
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "",
+        "separators": null
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": null
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": null
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "{}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{}"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": null,
+        "separators": null
+      },
+      "expected": "[\"\u4e2d\", {\"x\": [1, 2]}]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": null,
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[\"\u4e2d\",{\"x\":[1,2]}]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": null,
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[\"\u4e2d\", {\"x\": [1, 2]}]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "",
+        "separators": null
+      },
+      "expected": "[\n\"\u4e2d\",\n{\n\"x\": [\n1,\n2\n]\n}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[\n\"\u4e2d\",\n{\n\"x\":[\n1,\n2\n]\n}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[\n\"\u4e2d\", \n{\n\"x\": [\n1, \n2\n]\n}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": null
+      },
+      "expected": "[\n  \"\u4e2d\",\n  {\n    \"x\": [\n      1,\n      2\n    ]\n  }\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[\n  \"\u4e2d\",\n  {\n    \"x\":[\n      1,\n      2\n    ]\n  }\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[\n  \"\u4e2d\", \n  {\n    \"x\": [\n      1, \n      2\n    ]\n  }\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": null
+      },
+      "expected": "[\n\t\"\u4e2d\",\n\t{\n\t\t\"x\": [\n\t\t\t1,\n\t\t\t2\n\t\t]\n\t}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[\n\t\"\u4e2d\",\n\t{\n\t\t\"x\":[\n\t\t\t1,\n\t\t\t2\n\t\t]\n\t}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[\n\t\"\u4e2d\", \n\t{\n\t\t\"x\": [\n\t\t\t1, \n\t\t\t2\n\t\t]\n\t}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": null,
+        "separators": null
+      },
+      "expected": "[\"\u4e2d\", {\"x\": [1, 2]}]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": null,
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[\"\u4e2d\",{\"x\":[1,2]}]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": null,
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[\"\u4e2d\", {\"x\": [1, 2]}]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "",
+        "separators": null
+      },
+      "expected": "[\n\"\u4e2d\",\n{\n\"x\": [\n1,\n2\n]\n}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[\n\"\u4e2d\",\n{\n\"x\":[\n1,\n2\n]\n}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[\n\"\u4e2d\", \n{\n\"x\": [\n1, \n2\n]\n}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": null
+      },
+      "expected": "[\n  \"\u4e2d\",\n  {\n    \"x\": [\n      1,\n      2\n    ]\n  }\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[\n  \"\u4e2d\",\n  {\n    \"x\":[\n      1,\n      2\n    ]\n  }\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[\n  \"\u4e2d\", \n  {\n    \"x\": [\n      1, \n      2\n    ]\n  }\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": null
+      },
+      "expected": "[\n\t\"\u4e2d\",\n\t{\n\t\t\"x\": [\n\t\t\t1,\n\t\t\t2\n\t\t]\n\t}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[\n\t\"\u4e2d\",\n\t{\n\t\t\"x\":[\n\t\t\t1,\n\t\t\t2\n\t\t]\n\t}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[\n\t\"\u4e2d\", \n\t{\n\t\t\"x\": [\n\t\t\t1, \n\t\t\t2\n\t\t]\n\t}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": null,
+        "separators": null
+      },
+      "expected": "[\"\u4e2d\", {\"x\": [1, 2]}]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": null,
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[\"\u4e2d\",{\"x\":[1,2]}]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": null,
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[\"\u4e2d\", {\"x\": [1, 2]}]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "",
+        "separators": null
+      },
+      "expected": "[\n\"\u4e2d\",\n{\n\"x\": [\n1,\n2\n]\n}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[\n\"\u4e2d\",\n{\n\"x\":[\n1,\n2\n]\n}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[\n\"\u4e2d\", \n{\n\"x\": [\n1, \n2\n]\n}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": null
+      },
+      "expected": "[\n  \"\u4e2d\",\n  {\n    \"x\": [\n      1,\n      2\n    ]\n  }\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[\n  \"\u4e2d\",\n  {\n    \"x\":[\n      1,\n      2\n    ]\n  }\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[\n  \"\u4e2d\", \n  {\n    \"x\": [\n      1, \n      2\n    ]\n  }\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": null
+      },
+      "expected": "[\n\t\"\u4e2d\",\n\t{\n\t\t\"x\": [\n\t\t\t1,\n\t\t\t2\n\t\t]\n\t}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[\n\t\"\u4e2d\",\n\t{\n\t\t\"x\":[\n\t\t\t1,\n\t\t\t2\n\t\t]\n\t}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[\n\t\"\u4e2d\", \n\t{\n\t\t\"x\": [\n\t\t\t1, \n\t\t\t2\n\t\t]\n\t}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": null,
+        "separators": null
+      },
+      "expected": "[\"\u4e2d\", {\"x\": [1, 2]}]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": null,
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[\"\u4e2d\",{\"x\":[1,2]}]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": null,
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[\"\u4e2d\", {\"x\": [1, 2]}]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "",
+        "separators": null
+      },
+      "expected": "[\n\"\u4e2d\",\n{\n\"x\": [\n1,\n2\n]\n}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[\n\"\u4e2d\",\n{\n\"x\":[\n1,\n2\n]\n}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[\n\"\u4e2d\", \n{\n\"x\": [\n1, \n2\n]\n}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": null
+      },
+      "expected": "[\n  \"\u4e2d\",\n  {\n    \"x\": [\n      1,\n      2\n    ]\n  }\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[\n  \"\u4e2d\",\n  {\n    \"x\":[\n      1,\n      2\n    ]\n  }\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[\n  \"\u4e2d\", \n  {\n    \"x\": [\n      1, \n      2\n    ]\n  }\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": null
+      },
+      "expected": "[\n\t\"\u4e2d\",\n\t{\n\t\t\"x\": [\n\t\t\t1,\n\t\t\t2\n\t\t]\n\t}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[\n\t\"\u4e2d\",\n\t{\n\t\t\"x\":[\n\t\t\t1,\n\t\t\t2\n\t\t]\n\t}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[\n\t\"\u4e2d\", \n\t{\n\t\t\"x\": [\n\t\t\t1, \n\t\t\t2\n\t\t]\n\t}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": null,
+        "separators": null
+      },
+      "expected": "[\"\\u4e2d\", {\"x\": [1, 2]}]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": null,
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[\"\\u4e2d\",{\"x\":[1,2]}]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": null,
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[\"\\u4e2d\", {\"x\": [1, 2]}]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "",
+        "separators": null
+      },
+      "expected": "[\n\"\\u4e2d\",\n{\n\"x\": [\n1,\n2\n]\n}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[\n\"\\u4e2d\",\n{\n\"x\":[\n1,\n2\n]\n}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[\n\"\\u4e2d\", \n{\n\"x\": [\n1, \n2\n]\n}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": null
+      },
+      "expected": "[\n  \"\\u4e2d\",\n  {\n    \"x\": [\n      1,\n      2\n    ]\n  }\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[\n  \"\\u4e2d\",\n  {\n    \"x\":[\n      1,\n      2\n    ]\n  }\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[\n  \"\\u4e2d\", \n  {\n    \"x\": [\n      1, \n      2\n    ]\n  }\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": null
+      },
+      "expected": "[\n\t\"\\u4e2d\",\n\t{\n\t\t\"x\": [\n\t\t\t1,\n\t\t\t2\n\t\t]\n\t}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[\n\t\"\\u4e2d\",\n\t{\n\t\t\"x\":[\n\t\t\t1,\n\t\t\t2\n\t\t]\n\t}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[\n\t\"\\u4e2d\", \n\t{\n\t\t\"x\": [\n\t\t\t1, \n\t\t\t2\n\t\t]\n\t}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": null,
+        "separators": null
+      },
+      "expected": "[\"\\u4e2d\", {\"x\": [1, 2]}]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": null,
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[\"\\u4e2d\",{\"x\":[1,2]}]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": null,
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[\"\\u4e2d\", {\"x\": [1, 2]}]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "",
+        "separators": null
+      },
+      "expected": "[\n\"\\u4e2d\",\n{\n\"x\": [\n1,\n2\n]\n}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[\n\"\\u4e2d\",\n{\n\"x\":[\n1,\n2\n]\n}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[\n\"\\u4e2d\", \n{\n\"x\": [\n1, \n2\n]\n}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": null
+      },
+      "expected": "[\n  \"\\u4e2d\",\n  {\n    \"x\": [\n      1,\n      2\n    ]\n  }\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[\n  \"\\u4e2d\",\n  {\n    \"x\":[\n      1,\n      2\n    ]\n  }\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[\n  \"\\u4e2d\", \n  {\n    \"x\": [\n      1, \n      2\n    ]\n  }\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": null
+      },
+      "expected": "[\n\t\"\\u4e2d\",\n\t{\n\t\t\"x\": [\n\t\t\t1,\n\t\t\t2\n\t\t]\n\t}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[\n\t\"\\u4e2d\",\n\t{\n\t\t\"x\":[\n\t\t\t1,\n\t\t\t2\n\t\t]\n\t}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[\n\t\"\\u4e2d\", \n\t{\n\t\t\"x\": [\n\t\t\t1, \n\t\t\t2\n\t\t]\n\t}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": null,
+        "separators": null
+      },
+      "expected": "[\"\\u4e2d\", {\"x\": [1, 2]}]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": null,
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[\"\\u4e2d\",{\"x\":[1,2]}]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": null,
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[\"\\u4e2d\", {\"x\": [1, 2]}]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "",
+        "separators": null
+      },
+      "expected": "[\n\"\\u4e2d\",\n{\n\"x\": [\n1,\n2\n]\n}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[\n\"\\u4e2d\",\n{\n\"x\":[\n1,\n2\n]\n}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[\n\"\\u4e2d\", \n{\n\"x\": [\n1, \n2\n]\n}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": null
+      },
+      "expected": "[\n  \"\\u4e2d\",\n  {\n    \"x\": [\n      1,\n      2\n    ]\n  }\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[\n  \"\\u4e2d\",\n  {\n    \"x\":[\n      1,\n      2\n    ]\n  }\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[\n  \"\\u4e2d\", \n  {\n    \"x\": [\n      1, \n      2\n    ]\n  }\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": null
+      },
+      "expected": "[\n\t\"\\u4e2d\",\n\t{\n\t\t\"x\": [\n\t\t\t1,\n\t\t\t2\n\t\t]\n\t}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[\n\t\"\\u4e2d\",\n\t{\n\t\t\"x\":[\n\t\t\t1,\n\t\t\t2\n\t\t]\n\t}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[\n\t\"\\u4e2d\", \n\t{\n\t\t\"x\": [\n\t\t\t1, \n\t\t\t2\n\t\t]\n\t}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": null,
+        "separators": null
+      },
+      "expected": "[\"\\u4e2d\", {\"x\": [1, 2]}]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": null,
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[\"\\u4e2d\",{\"x\":[1,2]}]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": null,
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[\"\\u4e2d\", {\"x\": [1, 2]}]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "",
+        "separators": null
+      },
+      "expected": "[\n\"\\u4e2d\",\n{\n\"x\": [\n1,\n2\n]\n}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[\n\"\\u4e2d\",\n{\n\"x\":[\n1,\n2\n]\n}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[\n\"\\u4e2d\", \n{\n\"x\": [\n1, \n2\n]\n}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": null
+      },
+      "expected": "[\n  \"\\u4e2d\",\n  {\n    \"x\": [\n      1,\n      2\n    ]\n  }\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[\n  \"\\u4e2d\",\n  {\n    \"x\":[\n      1,\n      2\n    ]\n  }\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[\n  \"\\u4e2d\", \n  {\n    \"x\": [\n      1, \n      2\n    ]\n  }\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": null
+      },
+      "expected": "[\n\t\"\\u4e2d\",\n\t{\n\t\t\"x\": [\n\t\t\t1,\n\t\t\t2\n\t\t]\n\t}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "[\n\t\"\\u4e2d\",\n\t{\n\t\t\"x\":[\n\t\t\t1,\n\t\t\t2\n\t\t]\n\t}\n]"
+    },
+    {
+      "input": "[\"\\u4e2d\",{\"x\":[1,2]}]",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "[\n\t\"\\u4e2d\", \n\t{\n\t\t\"x\": [\n\t\t\t1, \n\t\t\t2\n\t\t]\n\t}\n]"
+    }
+  ]
+}

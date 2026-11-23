@@ -1,0 +1,9 @@
+# Pure engine logic receives time and randomness through explicit inputs/ports.
+disallowed-methods = [
+    { path = "std::time::SystemTime::now", reason = "Receive wall-clock time through a port." },
+    { path = "std::time::Instant::now", reason = "Receive monotonic time through a port." },
+]
+disallowed-types = [
+    { path = "std::collections::HashMap", reason = "Use BTreeMap or IndexMap for deterministic iteration." },
+    { path = "std::collections::HashSet", reason = "Use BTreeSet or IndexSet for deterministic iteration." },
+]

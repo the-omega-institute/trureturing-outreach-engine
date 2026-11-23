@@ -1,0 +1,294 @@
+{
+  "schema_version": 1,
+  "seed": 55345352842547491,
+  "vectors": [
+    {
+      "family": "registry",
+      "input": "{\"kind\":\"status\",\"at\":\"2026-01-01T12:00:00Z\",\"summary\":\"Synthetic result 0: \\u03a9 \\u4e2d \\ud83d\\ude00\\n\\\"checked\\\"\",\"evidence\":\"fixture:synthetic\"}",
+      "id": "event-655a500757646081",
+      "serialized": "{\"at\": \"2026-01-01T12:00:00Z\", \"evidence\": \"fixture:synthetic\", \"kind\": \"status\", \"summary\": \"Synthetic result 0: \u03a9 \u4e2d \ud83d\ude00\\n\\\"checked\\\"\"}"
+    },
+    {
+      "family": "sent-events",
+      "input": "{\"kind\":\"sent\",\"at\":\"2026-01-01T12:00:00Z\",\"summary\":\"Synthetic result 0: \\u03a9 \\u4e2d \\ud83d\\ude00 \\\"checked\\\"\",\"evidence\":\"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-0\\\", \\\"internetMessageId\\\": \\\"<synthetic-0@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\"}",
+      "id": "event-6b49e583099a1336",
+      "serialized": "{\"at\": \"2026-01-01T12:00:00Z\", \"evidence\": \"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-0\\\", \\\"internetMessageId\\\": \\\"<synthetic-0@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\", \"kind\": \"sent\", \"summary\": \"Synthetic result 0: \u03a9 \u4e2d \ud83d\ude00 \\\"checked\\\"\"}"
+    },
+    {
+      "family": "registry",
+      "input": "{\"kind\":\"status\",\"at\":\"2026-01-02T12:00:00Z\",\"summary\":\"Synthetic result 1: \\u03a9 \\u4e2d \\ud83d\\ude00\\n\\\"checked\\\"\",\"evidence\":\"fixture:synthetic\"}",
+      "id": "event-66123e019ef41dd8",
+      "serialized": "{\"at\": \"2026-01-02T12:00:00Z\", \"evidence\": \"fixture:synthetic\", \"kind\": \"status\", \"summary\": \"Synthetic result 1: \u03a9 \u4e2d \ud83d\ude00\\n\\\"checked\\\"\"}"
+    },
+    {
+      "family": "sent-events",
+      "input": "{\"kind\":\"sent\",\"at\":\"2026-01-02T12:00:00Z\",\"summary\":\"Synthetic result 1: \\u03a9 \\u4e2d \\ud83d\\ude00 \\\"checked\\\"\",\"evidence\":\"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-1\\\", \\\"internetMessageId\\\": \\\"<synthetic-1@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\"}",
+      "id": "event-fcd7fd23717eeaf1",
+      "serialized": "{\"at\": \"2026-01-02T12:00:00Z\", \"evidence\": \"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-1\\\", \\\"internetMessageId\\\": \\\"<synthetic-1@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\", \"kind\": \"sent\", \"summary\": \"Synthetic result 1: \u03a9 \u4e2d \ud83d\ude00 \\\"checked\\\"\"}"
+    },
+    {
+      "family": "registry",
+      "input": "{\"kind\":\"status\",\"at\":\"2026-01-03T12:00:00Z\",\"summary\":\"Synthetic result 2: \\u03a9 \\u4e2d \\ud83d\\ude00\\n\\\"checked\\\"\",\"evidence\":\"fixture:synthetic\"}",
+      "id": "event-c3db19c65393f3c6",
+      "serialized": "{\"at\": \"2026-01-03T12:00:00Z\", \"evidence\": \"fixture:synthetic\", \"kind\": \"status\", \"summary\": \"Synthetic result 2: \u03a9 \u4e2d \ud83d\ude00\\n\\\"checked\\\"\"}"
+    },
+    {
+      "family": "sent-events",
+      "input": "{\"kind\":\"sent\",\"at\":\"2026-01-03T12:00:00Z\",\"summary\":\"Synthetic result 2: \\u03a9 \\u4e2d \\ud83d\\ude00 \\\"checked\\\"\",\"evidence\":\"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-2\\\", \\\"internetMessageId\\\": \\\"<synthetic-2@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\"}",
+      "id": "event-f2a78996691b3123",
+      "serialized": "{\"at\": \"2026-01-03T12:00:00Z\", \"evidence\": \"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-2\\\", \\\"internetMessageId\\\": \\\"<synthetic-2@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\", \"kind\": \"sent\", \"summary\": \"Synthetic result 2: \u03a9 \u4e2d \ud83d\ude00 \\\"checked\\\"\"}"
+    },
+    {
+      "family": "registry",
+      "input": "{\"kind\":\"status\",\"at\":\"2026-01-04T12:00:00Z\",\"summary\":\"Synthetic result 3: \\u03a9 \\u4e2d \\ud83d\\ude00\\n\\\"checked\\\"\",\"evidence\":\"fixture:synthetic\"}",
+      "id": "event-7a446320c8bc9917",
+      "serialized": "{\"at\": \"2026-01-04T12:00:00Z\", \"evidence\": \"fixture:synthetic\", \"kind\": \"status\", \"summary\": \"Synthetic result 3: \u03a9 \u4e2d \ud83d\ude00\\n\\\"checked\\\"\"}"
+    },
+    {
+      "family": "sent-events",
+      "input": "{\"kind\":\"sent\",\"at\":\"2026-01-04T12:00:00Z\",\"summary\":\"Synthetic result 3: \\u03a9 \\u4e2d \\ud83d\\ude00 \\\"checked\\\"\",\"evidence\":\"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-3\\\", \\\"internetMessageId\\\": \\\"<synthetic-3@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\"}",
+      "id": "event-11909b313845c53c",
+      "serialized": "{\"at\": \"2026-01-04T12:00:00Z\", \"evidence\": \"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-3\\\", \\\"internetMessageId\\\": \\\"<synthetic-3@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\", \"kind\": \"sent\", \"summary\": \"Synthetic result 3: \u03a9 \u4e2d \ud83d\ude00 \\\"checked\\\"\"}"
+    },
+    {
+      "family": "registry",
+      "input": "{\"kind\":\"status\",\"at\":\"2026-01-05T12:00:00Z\",\"summary\":\"Synthetic result 4: \\u03a9 \\u4e2d \\ud83d\\ude00\\n\\\"checked\\\"\",\"evidence\":\"fixture:synthetic\"}",
+      "id": "event-d52adbf1c7622b61",
+      "serialized": "{\"at\": \"2026-01-05T12:00:00Z\", \"evidence\": \"fixture:synthetic\", \"kind\": \"status\", \"summary\": \"Synthetic result 4: \u03a9 \u4e2d \ud83d\ude00\\n\\\"checked\\\"\"}"
+    },
+    {
+      "family": "sent-events",
+      "input": "{\"kind\":\"sent\",\"at\":\"2026-01-05T12:00:00Z\",\"summary\":\"Synthetic result 4: \\u03a9 \\u4e2d \\ud83d\\ude00 \\\"checked\\\"\",\"evidence\":\"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-4\\\", \\\"internetMessageId\\\": \\\"<synthetic-4@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\"}",
+      "id": "event-49eefed126c10229",
+      "serialized": "{\"at\": \"2026-01-05T12:00:00Z\", \"evidence\": \"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-4\\\", \\\"internetMessageId\\\": \\\"<synthetic-4@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\", \"kind\": \"sent\", \"summary\": \"Synthetic result 4: \u03a9 \u4e2d \ud83d\ude00 \\\"checked\\\"\"}"
+    },
+    {
+      "family": "registry",
+      "input": "{\"kind\":\"status\",\"at\":\"2026-01-06T12:00:00Z\",\"summary\":\"Synthetic result 5: \\u03a9 \\u4e2d \\ud83d\\ude00\\n\\\"checked\\\"\",\"evidence\":\"fixture:synthetic\"}",
+      "id": "event-254af915cbee6894",
+      "serialized": "{\"at\": \"2026-01-06T12:00:00Z\", \"evidence\": \"fixture:synthetic\", \"kind\": \"status\", \"summary\": \"Synthetic result 5: \u03a9 \u4e2d \ud83d\ude00\\n\\\"checked\\\"\"}"
+    },
+    {
+      "family": "sent-events",
+      "input": "{\"kind\":\"sent\",\"at\":\"2026-01-06T12:00:00Z\",\"summary\":\"Synthetic result 5: \\u03a9 \\u4e2d \\ud83d\\ude00 \\\"checked\\\"\",\"evidence\":\"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-5\\\", \\\"internetMessageId\\\": \\\"<synthetic-5@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\"}",
+      "id": "event-8fa8d53f6810f50c",
+      "serialized": "{\"at\": \"2026-01-06T12:00:00Z\", \"evidence\": \"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-5\\\", \\\"internetMessageId\\\": \\\"<synthetic-5@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\", \"kind\": \"sent\", \"summary\": \"Synthetic result 5: \u03a9 \u4e2d \ud83d\ude00 \\\"checked\\\"\"}"
+    },
+    {
+      "family": "registry",
+      "input": "{\"kind\":\"status\",\"at\":\"2026-01-07T12:00:00Z\",\"summary\":\"Synthetic result 6: \\u03a9 \\u4e2d \\ud83d\\ude00\\n\\\"checked\\\"\",\"evidence\":\"fixture:synthetic\"}",
+      "id": "event-5f7dbb27f46a878d",
+      "serialized": "{\"at\": \"2026-01-07T12:00:00Z\", \"evidence\": \"fixture:synthetic\", \"kind\": \"status\", \"summary\": \"Synthetic result 6: \u03a9 \u4e2d \ud83d\ude00\\n\\\"checked\\\"\"}"
+    },
+    {
+      "family": "sent-events",
+      "input": "{\"kind\":\"sent\",\"at\":\"2026-01-07T12:00:00Z\",\"summary\":\"Synthetic result 6: \\u03a9 \\u4e2d \\ud83d\\ude00 \\\"checked\\\"\",\"evidence\":\"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-6\\\", \\\"internetMessageId\\\": \\\"<synthetic-6@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\"}",
+      "id": "event-0bf157c66bc7d9c1",
+      "serialized": "{\"at\": \"2026-01-07T12:00:00Z\", \"evidence\": \"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-6\\\", \\\"internetMessageId\\\": \\\"<synthetic-6@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\", \"kind\": \"sent\", \"summary\": \"Synthetic result 6: \u03a9 \u4e2d \ud83d\ude00 \\\"checked\\\"\"}"
+    },
+    {
+      "family": "registry",
+      "input": "{\"kind\":\"status\",\"at\":\"2026-01-08T12:00:00Z\",\"summary\":\"Synthetic result 7: \\u03a9 \\u4e2d \\ud83d\\ude00\\n\\\"checked\\\"\",\"evidence\":\"fixture:synthetic\"}",
+      "id": "event-bf9b144019f492f7",
+      "serialized": "{\"at\": \"2026-01-08T12:00:00Z\", \"evidence\": \"fixture:synthetic\", \"kind\": \"status\", \"summary\": \"Synthetic result 7: \u03a9 \u4e2d \ud83d\ude00\\n\\\"checked\\\"\"}"
+    },
+    {
+      "family": "sent-events",
+      "input": "{\"kind\":\"sent\",\"at\":\"2026-01-08T12:00:00Z\",\"summary\":\"Synthetic result 7: \\u03a9 \\u4e2d \\ud83d\\ude00 \\\"checked\\\"\",\"evidence\":\"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-7\\\", \\\"internetMessageId\\\": \\\"<synthetic-7@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\"}",
+      "id": "event-a351c036c883c5df",
+      "serialized": "{\"at\": \"2026-01-08T12:00:00Z\", \"evidence\": \"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-7\\\", \\\"internetMessageId\\\": \\\"<synthetic-7@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\", \"kind\": \"sent\", \"summary\": \"Synthetic result 7: \u03a9 \u4e2d \ud83d\ude00 \\\"checked\\\"\"}"
+    },
+    {
+      "family": "registry",
+      "input": "{\"kind\":\"status\",\"at\":\"2026-01-09T12:00:00Z\",\"summary\":\"Synthetic result 8: \\u03a9 \\u4e2d \\ud83d\\ude00\\n\\\"checked\\\"\",\"evidence\":\"fixture:synthetic\"}",
+      "id": "event-ec400199c3785f46",
+      "serialized": "{\"at\": \"2026-01-09T12:00:00Z\", \"evidence\": \"fixture:synthetic\", \"kind\": \"status\", \"summary\": \"Synthetic result 8: \u03a9 \u4e2d \ud83d\ude00\\n\\\"checked\\\"\"}"
+    },
+    {
+      "family": "sent-events",
+      "input": "{\"kind\":\"sent\",\"at\":\"2026-01-09T12:00:00Z\",\"summary\":\"Synthetic result 8: \\u03a9 \\u4e2d \\ud83d\\ude00 \\\"checked\\\"\",\"evidence\":\"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-8\\\", \\\"internetMessageId\\\": \\\"<synthetic-8@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\"}",
+      "id": "event-dea926f3af39c81f",
+      "serialized": "{\"at\": \"2026-01-09T12:00:00Z\", \"evidence\": \"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-8\\\", \\\"internetMessageId\\\": \\\"<synthetic-8@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\", \"kind\": \"sent\", \"summary\": \"Synthetic result 8: \u03a9 \u4e2d \ud83d\ude00 \\\"checked\\\"\"}"
+    },
+    {
+      "family": "registry",
+      "input": "{\"kind\":\"status\",\"at\":\"2026-01-10T12:00:00Z\",\"summary\":\"Synthetic result 9: \\u03a9 \\u4e2d \\ud83d\\ude00\\n\\\"checked\\\"\",\"evidence\":\"fixture:synthetic\"}",
+      "id": "event-86dce5d245e6ca08",
+      "serialized": "{\"at\": \"2026-01-10T12:00:00Z\", \"evidence\": \"fixture:synthetic\", \"kind\": \"status\", \"summary\": \"Synthetic result 9: \u03a9 \u4e2d \ud83d\ude00\\n\\\"checked\\\"\"}"
+    },
+    {
+      "family": "sent-events",
+      "input": "{\"kind\":\"sent\",\"at\":\"2026-01-10T12:00:00Z\",\"summary\":\"Synthetic result 9: \\u03a9 \\u4e2d \\ud83d\\ude00 \\\"checked\\\"\",\"evidence\":\"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-9\\\", \\\"internetMessageId\\\": \\\"<synthetic-9@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\"}",
+      "id": "event-45a4cc1ccb79b3ab",
+      "serialized": "{\"at\": \"2026-01-10T12:00:00Z\", \"evidence\": \"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-9\\\", \\\"internetMessageId\\\": \\\"<synthetic-9@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\", \"kind\": \"sent\", \"summary\": \"Synthetic result 9: \u03a9 \u4e2d \ud83d\ude00 \\\"checked\\\"\"}"
+    },
+    {
+      "family": "registry",
+      "input": "{\"kind\":\"status\",\"at\":\"2026-01-11T12:00:00Z\",\"summary\":\"Synthetic result 10: \\u03a9 \\u4e2d \\ud83d\\ude00\\n\\\"checked\\\"\",\"evidence\":\"fixture:synthetic\"}",
+      "id": "event-5be5c2b9604e0366",
+      "serialized": "{\"at\": \"2026-01-11T12:00:00Z\", \"evidence\": \"fixture:synthetic\", \"kind\": \"status\", \"summary\": \"Synthetic result 10: \u03a9 \u4e2d \ud83d\ude00\\n\\\"checked\\\"\"}"
+    },
+    {
+      "family": "sent-events",
+      "input": "{\"kind\":\"sent\",\"at\":\"2026-01-11T12:00:00Z\",\"summary\":\"Synthetic result 10: \\u03a9 \\u4e2d \\ud83d\\ude00 \\\"checked\\\"\",\"evidence\":\"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-10\\\", \\\"internetMessageId\\\": \\\"<synthetic-10@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\"}",
+      "id": "event-e9a741aa17f73ae7",
+      "serialized": "{\"at\": \"2026-01-11T12:00:00Z\", \"evidence\": \"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-10\\\", \\\"internetMessageId\\\": \\\"<synthetic-10@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\", \"kind\": \"sent\", \"summary\": \"Synthetic result 10: \u03a9 \u4e2d \ud83d\ude00 \\\"checked\\\"\"}"
+    },
+    {
+      "family": "registry",
+      "input": "{\"kind\":\"status\",\"at\":\"2026-01-12T12:00:00Z\",\"summary\":\"Synthetic result 11: \\u03a9 \\u4e2d \\ud83d\\ude00\\n\\\"checked\\\"\",\"evidence\":\"fixture:synthetic\"}",
+      "id": "event-8d287e068a708e7e",
+      "serialized": "{\"at\": \"2026-01-12T12:00:00Z\", \"evidence\": \"fixture:synthetic\", \"kind\": \"status\", \"summary\": \"Synthetic result 11: \u03a9 \u4e2d \ud83d\ude00\\n\\\"checked\\\"\"}"
+    },
+    {
+      "family": "sent-events",
+      "input": "{\"kind\":\"sent\",\"at\":\"2026-01-12T12:00:00Z\",\"summary\":\"Synthetic result 11: \\u03a9 \\u4e2d \\ud83d\\ude00 \\\"checked\\\"\",\"evidence\":\"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-11\\\", \\\"internetMessageId\\\": \\\"<synthetic-11@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\"}",
+      "id": "event-77ca4faca7d05c4f",
+      "serialized": "{\"at\": \"2026-01-12T12:00:00Z\", \"evidence\": \"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-11\\\", \\\"internetMessageId\\\": \\\"<synthetic-11@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\", \"kind\": \"sent\", \"summary\": \"Synthetic result 11: \u03a9 \u4e2d \ud83d\ude00 \\\"checked\\\"\"}"
+    },
+    {
+      "family": "registry",
+      "input": "{\"kind\":\"status\",\"at\":\"2026-01-13T12:00:00Z\",\"summary\":\"Synthetic result 12: \\u03a9 \\u4e2d \\ud83d\\ude00\\n\\\"checked\\\"\",\"evidence\":\"fixture:synthetic\"}",
+      "id": "event-f5f036f02587b9e1",
+      "serialized": "{\"at\": \"2026-01-13T12:00:00Z\", \"evidence\": \"fixture:synthetic\", \"kind\": \"status\", \"summary\": \"Synthetic result 12: \u03a9 \u4e2d \ud83d\ude00\\n\\\"checked\\\"\"}"
+    },
+    {
+      "family": "sent-events",
+      "input": "{\"kind\":\"sent\",\"at\":\"2026-01-13T12:00:00Z\",\"summary\":\"Synthetic result 12: \\u03a9 \\u4e2d \\ud83d\\ude00 \\\"checked\\\"\",\"evidence\":\"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-12\\\", \\\"internetMessageId\\\": \\\"<synthetic-12@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\"}",
+      "id": "event-427088e16e83fe3a",
+      "serialized": "{\"at\": \"2026-01-13T12:00:00Z\", \"evidence\": \"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-12\\\", \\\"internetMessageId\\\": \\\"<synthetic-12@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\", \"kind\": \"sent\", \"summary\": \"Synthetic result 12: \u03a9 \u4e2d \ud83d\ude00 \\\"checked\\\"\"}"
+    },
+    {
+      "family": "registry",
+      "input": "{\"kind\":\"status\",\"at\":\"2026-01-14T12:00:00Z\",\"summary\":\"Synthetic result 13: \\u03a9 \\u4e2d \\ud83d\\ude00\\n\\\"checked\\\"\",\"evidence\":\"fixture:synthetic\"}",
+      "id": "event-0c5a24c1fe0cdd99",
+      "serialized": "{\"at\": \"2026-01-14T12:00:00Z\", \"evidence\": \"fixture:synthetic\", \"kind\": \"status\", \"summary\": \"Synthetic result 13: \u03a9 \u4e2d \ud83d\ude00\\n\\\"checked\\\"\"}"
+    },
+    {
+      "family": "sent-events",
+      "input": "{\"kind\":\"sent\",\"at\":\"2026-01-14T12:00:00Z\",\"summary\":\"Synthetic result 13: \\u03a9 \\u4e2d \\ud83d\\ude00 \\\"checked\\\"\",\"evidence\":\"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-13\\\", \\\"internetMessageId\\\": \\\"<synthetic-13@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\"}",
+      "id": "event-94f57a4bbd0d2f4f",
+      "serialized": "{\"at\": \"2026-01-14T12:00:00Z\", \"evidence\": \"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-13\\\", \\\"internetMessageId\\\": \\\"<synthetic-13@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\", \"kind\": \"sent\", \"summary\": \"Synthetic result 13: \u03a9 \u4e2d \ud83d\ude00 \\\"checked\\\"\"}"
+    },
+    {
+      "family": "registry",
+      "input": "{\"kind\":\"status\",\"at\":\"2026-01-15T12:00:00Z\",\"summary\":\"Synthetic result 14: \\u03a9 \\u4e2d \\ud83d\\ude00\\n\\\"checked\\\"\",\"evidence\":\"fixture:synthetic\"}",
+      "id": "event-fc1d7e4fdf53434e",
+      "serialized": "{\"at\": \"2026-01-15T12:00:00Z\", \"evidence\": \"fixture:synthetic\", \"kind\": \"status\", \"summary\": \"Synthetic result 14: \u03a9 \u4e2d \ud83d\ude00\\n\\\"checked\\\"\"}"
+    },
+    {
+      "family": "sent-events",
+      "input": "{\"kind\":\"sent\",\"at\":\"2026-01-15T12:00:00Z\",\"summary\":\"Synthetic result 14: \\u03a9 \\u4e2d \\ud83d\\ude00 \\\"checked\\\"\",\"evidence\":\"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-14\\\", \\\"internetMessageId\\\": \\\"<synthetic-14@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\"}",
+      "id": "event-0618d48d076f5621",
+      "serialized": "{\"at\": \"2026-01-15T12:00:00Z\", \"evidence\": \"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-14\\\", \\\"internetMessageId\\\": \\\"<synthetic-14@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\", \"kind\": \"sent\", \"summary\": \"Synthetic result 14: \u03a9 \u4e2d \ud83d\ude00 \\\"checked\\\"\"}"
+    },
+    {
+      "family": "registry",
+      "input": "{\"kind\":\"status\",\"at\":\"2026-01-16T12:00:00Z\",\"summary\":\"Synthetic result 15: \\u03a9 \\u4e2d \\ud83d\\ude00\\n\\\"checked\\\"\",\"evidence\":\"fixture:synthetic\"}",
+      "id": "event-6c7a7c0a5e1bc72f",
+      "serialized": "{\"at\": \"2026-01-16T12:00:00Z\", \"evidence\": \"fixture:synthetic\", \"kind\": \"status\", \"summary\": \"Synthetic result 15: \u03a9 \u4e2d \ud83d\ude00\\n\\\"checked\\\"\"}"
+    },
+    {
+      "family": "sent-events",
+      "input": "{\"kind\":\"sent\",\"at\":\"2026-01-16T12:00:00Z\",\"summary\":\"Synthetic result 15: \\u03a9 \\u4e2d \\ud83d\\ude00 \\\"checked\\\"\",\"evidence\":\"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-15\\\", \\\"internetMessageId\\\": \\\"<synthetic-15@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\"}",
+      "id": "event-632b18773cdb8298",
+      "serialized": "{\"at\": \"2026-01-16T12:00:00Z\", \"evidence\": \"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-15\\\", \\\"internetMessageId\\\": \\\"<synthetic-15@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\", \"kind\": \"sent\", \"summary\": \"Synthetic result 15: \u03a9 \u4e2d \ud83d\ude00 \\\"checked\\\"\"}"
+    },
+    {
+      "family": "registry",
+      "input": "{\"kind\":\"status\",\"at\":\"2026-01-17T12:00:00Z\",\"summary\":\"Synthetic result 16: \\u03a9 \\u4e2d \\ud83d\\ude00\\n\\\"checked\\\"\",\"evidence\":\"fixture:synthetic\"}",
+      "id": "event-c873ea7d86df5e02",
+      "serialized": "{\"at\": \"2026-01-17T12:00:00Z\", \"evidence\": \"fixture:synthetic\", \"kind\": \"status\", \"summary\": \"Synthetic result 16: \u03a9 \u4e2d \ud83d\ude00\\n\\\"checked\\\"\"}"
+    },
+    {
+      "family": "sent-events",
+      "input": "{\"kind\":\"sent\",\"at\":\"2026-01-17T12:00:00Z\",\"summary\":\"Synthetic result 16: \\u03a9 \\u4e2d \\ud83d\\ude00 \\\"checked\\\"\",\"evidence\":\"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-16\\\", \\\"internetMessageId\\\": \\\"<synthetic-16@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\"}",
+      "id": "event-6e0c54120e5e6c9f",
+      "serialized": "{\"at\": \"2026-01-17T12:00:00Z\", \"evidence\": \"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-16\\\", \\\"internetMessageId\\\": \\\"<synthetic-16@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\", \"kind\": \"sent\", \"summary\": \"Synthetic result 16: \u03a9 \u4e2d \ud83d\ude00 \\\"checked\\\"\"}"
+    },
+    {
+      "family": "registry",
+      "input": "{\"kind\":\"status\",\"at\":\"2026-01-18T12:00:00Z\",\"summary\":\"Synthetic result 17: \\u03a9 \\u4e2d \\ud83d\\ude00\\n\\\"checked\\\"\",\"evidence\":\"fixture:synthetic\"}",
+      "id": "event-1073eafa64076329",
+      "serialized": "{\"at\": \"2026-01-18T12:00:00Z\", \"evidence\": \"fixture:synthetic\", \"kind\": \"status\", \"summary\": \"Synthetic result 17: \u03a9 \u4e2d \ud83d\ude00\\n\\\"checked\\\"\"}"
+    },
+    {
+      "family": "sent-events",
+      "input": "{\"kind\":\"sent\",\"at\":\"2026-01-18T12:00:00Z\",\"summary\":\"Synthetic result 17: \\u03a9 \\u4e2d \\ud83d\\ude00 \\\"checked\\\"\",\"evidence\":\"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-17\\\", \\\"internetMessageId\\\": \\\"<synthetic-17@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\"}",
+      "id": "event-1d40d7f8e0ef8eb4",
+      "serialized": "{\"at\": \"2026-01-18T12:00:00Z\", \"evidence\": \"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-17\\\", \\\"internetMessageId\\\": \\\"<synthetic-17@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\", \"kind\": \"sent\", \"summary\": \"Synthetic result 17: \u03a9 \u4e2d \ud83d\ude00 \\\"checked\\\"\"}"
+    },
+    {
+      "family": "registry",
+      "input": "{\"kind\":\"status\",\"at\":\"2026-01-19T12:00:00Z\",\"summary\":\"Synthetic result 18: \\u03a9 \\u4e2d \\ud83d\\ude00\\n\\\"checked\\\"\",\"evidence\":\"fixture:synthetic\"}",
+      "id": "event-98eb1c3c0e7bf5d3",
+      "serialized": "{\"at\": \"2026-01-19T12:00:00Z\", \"evidence\": \"fixture:synthetic\", \"kind\": \"status\", \"summary\": \"Synthetic result 18: \u03a9 \u4e2d \ud83d\ude00\\n\\\"checked\\\"\"}"
+    },
+    {
+      "family": "sent-events",
+      "input": "{\"kind\":\"sent\",\"at\":\"2026-01-19T12:00:00Z\",\"summary\":\"Synthetic result 18: \\u03a9 \\u4e2d \\ud83d\\ude00 \\\"checked\\\"\",\"evidence\":\"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-18\\\", \\\"internetMessageId\\\": \\\"<synthetic-18@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\"}",
+      "id": "event-d7510e387e44d76d",
+      "serialized": "{\"at\": \"2026-01-19T12:00:00Z\", \"evidence\": \"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-18\\\", \\\"internetMessageId\\\": \\\"<synthetic-18@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\", \"kind\": \"sent\", \"summary\": \"Synthetic result 18: \u03a9 \u4e2d \ud83d\ude00 \\\"checked\\\"\"}"
+    },
+    {
+      "family": "registry",
+      "input": "{\"kind\":\"status\",\"at\":\"2026-01-20T12:00:00Z\",\"summary\":\"Synthetic result 19: \\u03a9 \\u4e2d \\ud83d\\ude00\\n\\\"checked\\\"\",\"evidence\":\"fixture:synthetic\"}",
+      "id": "event-9550d89b04f46c5a",
+      "serialized": "{\"at\": \"2026-01-20T12:00:00Z\", \"evidence\": \"fixture:synthetic\", \"kind\": \"status\", \"summary\": \"Synthetic result 19: \u03a9 \u4e2d \ud83d\ude00\\n\\\"checked\\\"\"}"
+    },
+    {
+      "family": "sent-events",
+      "input": "{\"kind\":\"sent\",\"at\":\"2026-01-20T12:00:00Z\",\"summary\":\"Synthetic result 19: \\u03a9 \\u4e2d \\ud83d\\ude00 \\\"checked\\\"\",\"evidence\":\"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-19\\\", \\\"internetMessageId\\\": \\\"<synthetic-19@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\"}",
+      "id": "event-fe82db4e5d4b1063",
+      "serialized": "{\"at\": \"2026-01-20T12:00:00Z\", \"evidence\": \"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-19\\\", \\\"internetMessageId\\\": \\\"<synthetic-19@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\", \"kind\": \"sent\", \"summary\": \"Synthetic result 19: \u03a9 \u4e2d \ud83d\ude00 \\\"checked\\\"\"}"
+    },
+    {
+      "family": "registry",
+      "input": "{\"kind\":\"status\",\"at\":\"2026-01-21T12:00:00Z\",\"summary\":\"Synthetic result 20: \\u03a9 \\u4e2d \\ud83d\\ude00\\n\\\"checked\\\"\",\"evidence\":\"fixture:synthetic\"}",
+      "id": "event-3e78eb731aaf73a3",
+      "serialized": "{\"at\": \"2026-01-21T12:00:00Z\", \"evidence\": \"fixture:synthetic\", \"kind\": \"status\", \"summary\": \"Synthetic result 20: \u03a9 \u4e2d \ud83d\ude00\\n\\\"checked\\\"\"}"
+    },
+    {
+      "family": "sent-events",
+      "input": "{\"kind\":\"sent\",\"at\":\"2026-01-21T12:00:00Z\",\"summary\":\"Synthetic result 20: \\u03a9 \\u4e2d \\ud83d\\ude00 \\\"checked\\\"\",\"evidence\":\"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-20\\\", \\\"internetMessageId\\\": \\\"<synthetic-20@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\"}",
+      "id": "event-7d419838c4d2b93e",
+      "serialized": "{\"at\": \"2026-01-21T12:00:00Z\", \"evidence\": \"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-20\\\", \\\"internetMessageId\\\": \\\"<synthetic-20@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\", \"kind\": \"sent\", \"summary\": \"Synthetic result 20: \u03a9 \u4e2d \ud83d\ude00 \\\"checked\\\"\"}"
+    },
+    {
+      "family": "registry",
+      "input": "{\"kind\":\"status\",\"at\":\"2026-01-22T12:00:00Z\",\"summary\":\"Synthetic result 21: \\u03a9 \\u4e2d \\ud83d\\ude00\\n\\\"checked\\\"\",\"evidence\":\"fixture:synthetic\"}",
+      "id": "event-eba9e566f425784d",
+      "serialized": "{\"at\": \"2026-01-22T12:00:00Z\", \"evidence\": \"fixture:synthetic\", \"kind\": \"status\", \"summary\": \"Synthetic result 21: \u03a9 \u4e2d \ud83d\ude00\\n\\\"checked\\\"\"}"
+    },
+    {
+      "family": "sent-events",
+      "input": "{\"kind\":\"sent\",\"at\":\"2026-01-22T12:00:00Z\",\"summary\":\"Synthetic result 21: \\u03a9 \\u4e2d \\ud83d\\ude00 \\\"checked\\\"\",\"evidence\":\"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-21\\\", \\\"internetMessageId\\\": \\\"<synthetic-21@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\"}",
+      "id": "event-cc2f7381e61dc279",
+      "serialized": "{\"at\": \"2026-01-22T12:00:00Z\", \"evidence\": \"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-21\\\", \\\"internetMessageId\\\": \\\"<synthetic-21@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\", \"kind\": \"sent\", \"summary\": \"Synthetic result 21: \u03a9 \u4e2d \ud83d\ude00 \\\"checked\\\"\"}"
+    },
+    {
+      "family": "registry",
+      "input": "{\"kind\":\"status\",\"at\":\"2026-01-23T12:00:00Z\",\"summary\":\"Synthetic result 22: \\u03a9 \\u4e2d \\ud83d\\ude00\\n\\\"checked\\\"\",\"evidence\":\"fixture:synthetic\"}",
+      "id": "event-35f8b07b7bce19fa",
+      "serialized": "{\"at\": \"2026-01-23T12:00:00Z\", \"evidence\": \"fixture:synthetic\", \"kind\": \"status\", \"summary\": \"Synthetic result 22: \u03a9 \u4e2d \ud83d\ude00\\n\\\"checked\\\"\"}"
+    },
+    {
+      "family": "sent-events",
+      "input": "{\"kind\":\"sent\",\"at\":\"2026-01-23T12:00:00Z\",\"summary\":\"Synthetic result 22: \\u03a9 \\u4e2d \\ud83d\\ude00 \\\"checked\\\"\",\"evidence\":\"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-22\\\", \\\"internetMessageId\\\": \\\"<synthetic-22@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\"}",
+      "id": "event-3eda7a6e9e3257f1",
+      "serialized": "{\"at\": \"2026-01-23T12:00:00Z\", \"evidence\": \"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-22\\\", \\\"internetMessageId\\\": \\\"<synthetic-22@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\", \"kind\": \"sent\", \"summary\": \"Synthetic result 22: \u03a9 \u4e2d \ud83d\ude00 \\\"checked\\\"\"}"
+    },
+    {
+      "family": "registry",
+      "input": "{\"kind\":\"status\",\"at\":\"2026-01-24T12:00:00Z\",\"summary\":\"Synthetic result 23: \\u03a9 \\u4e2d \\ud83d\\ude00\\n\\\"checked\\\"\",\"evidence\":\"fixture:synthetic\"}",
+      "id": "event-d6250122238a14e7",
+      "serialized": "{\"at\": \"2026-01-24T12:00:00Z\", \"evidence\": \"fixture:synthetic\", \"kind\": \"status\", \"summary\": \"Synthetic result 23: \u03a9 \u4e2d \ud83d\ude00\\n\\\"checked\\\"\"}"
+    },
+    {
+      "family": "sent-events",
+      "input": "{\"kind\":\"sent\",\"at\":\"2026-01-24T12:00:00Z\",\"summary\":\"Synthetic result 23: \\u03a9 \\u4e2d \\ud83d\\ude00 \\\"checked\\\"\",\"evidence\":\"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-23\\\", \\\"internetMessageId\\\": \\\"<synthetic-23@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\"}",
+      "id": "event-5f720f5d5126f3fe",
+      "serialized": "{\"at\": \"2026-01-24T12:00:00Z\", \"evidence\": \"{\\\"conversationId\\\": \\\"synthetic-conversation\\\", \\\"id\\\": \\\"synthetic-23\\\", \\\"internetMessageId\\\": \\\"<synthetic-23@example.invalid>\\\", \\\"recipient\\\": \\\"synthetic@example.invalid\\\", \\\"source\\\": \\\"sent-events\\\"}\", \"kind\": \"sent\", \"summary\": \"Synthetic result 23: \u03a9 \u4e2d \ud83d\ude00 \\\"checked\\\"\"}"
+    }
+  ]
+}

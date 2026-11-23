@@ -218,11 +218,33 @@ def newer_reply(new, old):
         return False
 
 
+def _starts_with_rollback(sql):
+    """True when the first statement keyword, after whitespace and comments, is ROLLBACK.
+
+    A linear scan: a regular expression with nested repetition can backtrack
+    exponentially on crafted comment sequences.
+    """
+    i, n = 0, len(sql)
+    while i < n:
+        if sql[i].isspace():
+            i += 1
+        elif sql.startswith('--', i):
+            j = sql.find('\n', i)
+            i = n if j < 0 else j + 1
+        elif sql.startswith('/*', i):
+            j = sql.find('*/', i + 2)
+            i = n if j < 0 else j + 2
+        else:
+            break
+    word = sql[i:i + 9]
+    return word[:8].upper() == 'ROLLBACK' and not (len(word) > 8 and (word[8].isalnum() or word[8] == '_'))
+
+
 class _TaskCursor(sqlite3.Cursor):
     def _call(self, operation, sql, *args, **kwargs):
         # TEMP trigger updates are transactional. A rollback can reuse an old
         # generation after another write, so keep a separate Python epoch.
-        if re.match(r'^(?:\s|--[^\n]*(?:\n|$)|/\*.*?\*/)*ROLLBACK\b', sql, re.I | re.S):
+        if _starts_with_rollback(sql):
             self.connection.row_cache_epoch += 1
         try:
             return operation(sql, *args, **kwargs)

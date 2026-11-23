@@ -4,6 +4,7 @@ Classification is a proposal until Claude reviews the exact result. Questions
 and independent-paper work stay separate from the permission to send mail.
 """
 import copy
+from datetime import datetime, timezone
 import json
 from pathlib import Path
 import re
@@ -21,6 +22,7 @@ from . import note_closure, note_revisions
 
 MAIL = {'firstcontact', 'reply'}
 HOME_RECIPIENT_MIGRATION_LIMIT = 32
+MAILBOX_NO_TASK_LIMIT = 100
 REVIEWED = {'approved', 'awaiting-mailbox', 'owner-draft', 'handoff-ready',
             'verified', 'no-reply', 'round-complete', 'submission-ready'}
 def submission_rounds():
@@ -743,6 +745,7 @@ def work(tasks, root, config=None):
                           given_up_digests, ingest_rejections)
     from .correspondence import linked_contacts
     from .lanes import lane, summary as lane_summary
+    from .mailbox import recent_no_task
     from .mailbox_triage import inventory as mailbox_inventory
     from .draft_status import inventory as draft_inventory, recent_owner_edits
     from .registry import reply_mail_thread_contacts, bounce_updates
@@ -920,6 +923,9 @@ def work(tasks, root, config=None):
     active_papers = {r['request']['inputs'].get('paper', {}).get('id') for r in rows if r['kind'] == 'submission'}
     mailbox=tasks.db.execute("SELECT payload FROM pipeline_state WHERE key='mailbox'").fetchone()
     mailbox=json.loads(mailbox[0]) if mailbox else {}
+    no_task = mailbox.get('no_task', {})
+    if no_task:
+        no_task = recent_no_task(no_task, datetime.fromtimestamp(tasks.clock(), timezone.utc))
     errors=tasks.db.execute("SELECT payload FROM pipeline_state WHERE key='connector_errors'").fetchone()
     oracle_capacity=tasks.db.execute("SELECT payload FROM pipeline_state WHERE key='oracle_capacity'").fetchone()
     oracle_capacity=json.loads(oracle_capacity[0]) if oracle_capacity else None
@@ -997,7 +1003,7 @@ def work(tasks, root, config=None):
                  'reason': r['data'].get('reason'), **r['data']['mailbox_retry']}
                 for r in rows if r['state'] == 'held'
                 and r['data'].get('mailbox_retry', {}).get('status') == 'exhausted'],
-            'mailbox_no_task':list(mailbox.get('no_task', {}).values()),
+            'mailbox_no_task':list(no_task.values())[:MAILBOX_NO_TASK_LIMIT],
             'user_questions_closed':[{'task_id':r['id'], 'owner':r['owner'], **r['data']['user_question_closed']}
                                      for r in all_rows if r['id'] not in open_questions and r['data'].get('user_question_closed')],
             'reviews':reviews,

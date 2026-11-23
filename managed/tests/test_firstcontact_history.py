@@ -337,7 +337,7 @@ class FirstcontactHistoryTests(unittest.TestCase):
         self.assertFalse(self.cma.creates)
         self.graph.scan_error = None
         self.graph.rows['inbox'] = [self.message()]
-        self.retry_when_due()
+        self.tick()
         for task_id in (self.req['id'], second_id):
             row = self.ledger.tasks.get(task_id)
             self.assertEqual(row['state'], 'running')
@@ -420,7 +420,8 @@ class FirstcontactHistoryTests(unittest.TestCase):
         self.assertEqual(len(self.graph.paths), 1)  # search failure does not trigger a full scan
         self.assertIn('$search', parse_qs(urlsplit(self.graph.paths[0]).query))
         self.graph.error = None
-        row = self.retry_when_due()
+        self.assertNotIn('mailbox_retry', row['data'])
+        row = self.tick()
         self.assertEqual(row['state'], 'running'); self.assertEqual(len(self.cma.creates), 1)
         self.assertTrue(row['data']['mailbox_history']['complete'])
 
@@ -458,13 +459,11 @@ class FirstcontactHistoryTests(unittest.TestCase):
                 row = self.tick(add=True)
                 for _ in range(control.RESOLUTION_RETRIES):
                     if row['state'] == 'queued':
-                        row = self.retry_when_due()
+                        row = self.tick()
                 self.assertEqual(row['state'], 'held'); self.assertFalse(self.cma.creates)
                 self.assertIn('HTTPError:', row['data']['reason'])
-                if code == 429:
-                    self.assertEqual(row['data']['mailbox_retry']['status'], 'exhausted')
-                else:
-                    self.assertNotIn('mailbox_retry', row['data'])
+                self.assertNotIn('mailbox_retry', row['data'])
+                self.assertEqual(self.tick(), row)
                 self.assertFalse(row['data']['mailbox_history']['complete'])
 
     def test_configured_adapter_failure_records_incomplete_snapshot(self):
@@ -486,7 +485,7 @@ class FirstcontactHistoryTests(unittest.TestCase):
         with patch.object(control, 'ROOT', self.root), self.assertRaisesRegex(GateError, 'incomplete'):
             control.validate_result(self.result(), row)
         # A retry replaces partial material with a fresh complete scan.
-        row = self.retry_when_due()
+        row = self.tick()
         self.assertEqual(row['state'], 'running')
         self.assertTrue(row['data']['mailbox_history']['complete'])
         self.assertEqual(row['data']['mailbox_history']['messages'], [])

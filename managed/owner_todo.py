@@ -13,7 +13,6 @@ from .registry import activity, people
 SECTIONS = (
     ('confirmations', '只有你能操作的确认'),
     ('questions', '需要你决定的问题'),
-    ('mailbox_holds', '需要处理的邮件重试'),
     ('drafts', '草稿箱待你发送'),
     ('owner_controlled', '你自己掌握的来信'),
     ('old_drafts', '很久未回（低优先级）'),
@@ -187,7 +186,7 @@ def owner_todo(work, root, now=None) -> dict:
         return f'已等待 {days} 天 {hours} 小时'
 
     items = sorted(work.get('user_questions', []),
-                   key=lambda item: timestamp(item.get('opened_at')) or EARLIEST)
+                   key=lambda item: timestamp(item.get('opened_at')) or datetime.max.replace(tzinfo=timezone.utc))
     for item in items:
         task = {**tasks.get(item['task_id'], {}), **item}
         result = task.get('result') or {}
@@ -208,8 +207,9 @@ def owner_todo(work, root, now=None) -> dict:
         task = {**tasks.get(item['task_id'], {}), **item}
         row, _, _ = row_for(task, decision=True)
         age = waiting(item, 'since')
-        view['mailbox_holds'].append({**row, 'age_seconds': age, 'attempts': item['attempts'],
-                                      'content': item['reason'], 'notes': age_note(age)})
+        view['operator_check']['rows'].append({
+            **row, 'age_seconds': age, 'attempts': item['attempts'],
+            'content': item['reason'], 'notes': age_note(age)})
 
     drafts, old_drafts = [], []
     for task in draft_tasks.values():

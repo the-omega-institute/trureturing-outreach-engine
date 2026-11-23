@@ -29,10 +29,10 @@ from .correspondence import enabled as correspondence_priority, linked_contacts
 from .github_diagnostics import stderr_failure as github_failure
 from .queue import canonical, digest, require
 from .mail_domains import home_domains
-from .tasks import (ACTIVE, KINDS, Tasks, POLICY_IDENTITY_MISMATCH, WORKFLOW_CHANGED, WORKFLOW_PIN_MISMATCH, matches_workflow,
+from .tasks import (ACTIVE, CORRESPONDENCE_KINDS, KINDS, Tasks, POLICY_IDENTITY_MISMATCH, WORKFLOW_CHANGED, WORKFLOW_PIN_MISMATCH, matches_workflow,
                     owners, policy_mismatch_hold, unstarted, validate_request, validate_review_edit, validate_review_rebind)
 from .registry import email, firstcontact_gate
-from .thread_staging import effective_inputs, LEGACY_RESOLUTION_REASON
+from .thread_staging import answer_continuation, effective_inputs, later_inbound_task, LEGACY_RESOLUTION_REASON
 from .tick import Tick, artifact_io_budget, artifact_io_timeout, measure, phase, unit, units
 from .lanes import at_share, interleave, lane as lane_of, summary as lane_summary, validate as validate_lanes
 from . import note_closure, note_revisions, recheck
@@ -2398,10 +2398,11 @@ def mailbox_retry_data(data, label, key, exc, now):
 
 
 def legacy_mailbox_hold(row):
-    if row['state'] != 'held' or not unstarted(row) or row['data'].get('mailbox_retry'):
+    if (row['kind'] not in CORRESPONDENCE_KINDS or row['state'] != 'held'
+            or not unstarted(row) or row['data'].get('mailbox_retry')):
         return None
     reason = row['data'].get('reason', '')
-    match = re.match(r'^(Thread resolution|First-contact mailbox history|Reply mailbox history) failed: '
+    match = re.match(r'^(Thread resolution|Reply mailbox history) failed: '
                      r'(?:HTTPError: HTTP Error (\d{3})\b|(?:URLError|TimeoutError|Connection(?:Reset|Aborted|Refused)?Error):)',
                      reason)
     if match and (not match[2] or 500 <= int(match[2]) < 600 or int(match[2]) in TRANSIENT_HTTP):
@@ -2411,7 +2412,7 @@ def legacy_mailbox_hold(row):
 
 def mailbox_retry_waiting(row, now):
     retry = row['data'].get('mailbox_retry') or {}
-    return retry.get('status') == 'scheduled' and now < retry['next_at']
+    return row['kind'] in CORRESPONDENCE_KINDS and retry.get('status') == 'scheduled' and now < retry['next_at']
 
 
 def mailbox_retry_succeeded(data, key):
@@ -2674,9 +2675,23 @@ def advance(ledger,cma,config,folder,revision=None,mailbox=None,oracle_capacity=
         # artifact collection or retirement, even if an earlier phase overran.
         with phase(ledger,'approved'):
             yield from [r for r in rows if r['state']=='approved']
-            yield from [{**r, 'retry_no_reply': True} for r in stage_rows
-                        if r['state']=='held' and r['data'].get('owner_question_blockers')]
+            blocked = [r for r in stage_rows if r['kind']=='reply' and r['state']=='held'
+                       and r['data'].get('owner_question_blockers')]
+            if blocked:
+                open_ids = {task_id for task_id, _, _ in tasks.owner_questions()}
+                yield from ({**r, 'retry_no_reply': True} for r in blocked
+                            if open_ids.isdisjoint(r['data']['owner_question_blockers']))
         yield from units(ledger,'advance',advance_order(),timed=False,preserve_order=True)
+    def supersede_if_covered(row, *, answers_only=False):
+        successor = later_inbound_task(row, current_rows(), answers_only=answers_only)
+        if not successor:
+            return False
+        tasks.update(row['id'], row['revision'], 'superseded', {
+            **row['data'], 'superseded_by': successor, 'reason': 'A later task covers the same incoming message'})
+        ledger.save()
+        updates.append(row['id'])
+        return True
+
     for original in advance_rows():
         if 'history_task' in original:
             if history_retired>=RETIRE_HISTORY_PER_TICK:
@@ -2721,18 +2736,22 @@ def advance(ledger,cma,config,folder,revision=None,mailbox=None,oracle_capacity=
         if (row['state']=='failed' and data.get('reason')=='Original CMA response ended failed'
                 and data.get('agent_id') and data.get('response_id') and not data.get('credit_checked')):
             continue  # A failed recovery read must not destroy a potentially reusable Agent.
-        if (retry_key := legacy_mailbox_hold(row)) and not config['paused'] and config['kinds'].get(row['kind']):
-            # Legacy holds spent their budget without a persisted backoff window.
-            data.pop('reason')
-            data.pop(retry_key, None)
-            row=tasks.update(row['id'],row['revision'],'queued',data);ledger.save()
+        if row['state']=='held' and row['kind'] in CORRESPONDENCE_KINDS:
+            retry_key = legacy_mailbox_hold(row)
+            legacy_thread = (data.get('reason') == LEGACY_RESOLUTION_REASON and unstarted(row)
+                             and row['request']['inputs'].get('thread_ref'))
+            if (retry_key or legacy_thread) and not config['paused'] and config['kinds'].get(row['kind']):
+                if supersede_if_covered(row):continue
+                # Legacy holds spent their budget without a persisted backoff window.
+                data.pop('reason')
+                if retry_key:
+                    data.pop(retry_key, None)
+                row=tasks.update(row['id'],row['revision'],'queued',data);ledger.save()
         if mailbox_retry_waiting(row,tasks.clock()):continue
-        if (row['state']=='held' and (data.get('reason')==LEGACY_RESOLUTION_REASON)
-                and unstarted(row)
-                and row['kind'] in {'reply','research'} and row['request']['inputs'].get('thread_ref')
-                and not config['paused'] and config['kinds'].get(row['kind'],False)):
-            data.pop('reason')
-            row=tasks.update(row['id'],row['revision'],'queued',data);ledger.save()
+        if (row['state']=='queued' and row['kind'] in CORRESPONDENCE_KINDS
+                and answer_continuation(row) and not config['paused'] and config['kinds'].get(row['kind'])
+                and unstarted(row) and supersede_if_covered(row, answers_only=True)):
+            continue
         if (group not in capacity_limited and row['state']=='failed' and data.get('reason')=='CMA provisioning failed; retained original operation'
                 and data.get('operation_id') and not data.get('agent_id') and (not data.get('capacity_checked') or
                     (not data.get('runtime_checked') and data.get('runtime_retries',0)<RUNTIME_RETRIES))
@@ -2758,7 +2777,8 @@ def advance(ledger,cma,config,folder,revision=None,mailbox=None,oracle_capacity=
         if waiting or identity_hold or row['state'] == 'queued':
             if config['paused'] or not config['kinds'].get(row['kind'],False):continue
             mismatch = pinned_workflow_mismatch(row, read_pinned_workflow) if waiting or identity_hold else False
-            stale_hold = waiting and row['state'] == 'held' and data.get('reason') == WORKFLOW_CHANGED
+            stale_hold = (waiting and row['kind'] in CORRESPONDENCE_KINDS and row['state'] == 'held'
+                          and data.get('reason') == WORKFLOW_CHANGED)
             stale_queue = row['state'] == 'queued' and not matches_workflow(row, workflow(row['kind']))
             if mismatch or stale_hold or stale_queue:
                 if mismatch and repins >= WORKFLOW_REPIN_LIMIT:
@@ -2767,6 +2787,8 @@ def advance(ledger,cma,config,folder,revision=None,mailbox=None,oracle_capacity=
                     revision = revision or source_head(ENGINE_ROOT)
                     current_hash = request_binding(row['kind'], revision, current_policy)['workflow_hash']
                     if mismatch or stale_hold or not matches_workflow(row, current_hash):
+                        if (row['state']=='held' and row['kind'] in CORRESPONDENCE_KINDS
+                                and supersede_if_covered(row)):continue
                         reason = WORKFLOW_PIN_MISMATCH if mismatch else WORKFLOW_CHANGED
                         tasks.repin(row['id'], row['revision'], current_hash, revision, reason=reason,
                                     policy_revision=current_policy)
@@ -2845,13 +2867,24 @@ def advance(ledger,cma,config,folder,revision=None,mailbox=None,oracle_capacity=
                                 history_tick_started=True
                             with measure(ledger,'firstcontact-history'):
                                 firstcontact_history.resolve(row,mailbox,ledger,ROOT,data['mailbox_history'])
-                        mailbox_retry_succeeded(data, retries_key)
+                        if resolve_thread:mailbox_retry_succeeded(data, retries_key)
                         data.pop('last_error',None)
                         row=tasks.update(row['id'],row['revision'],'queued',data)
                         if resolve_thread:row=tasks.supersede_reply_drafts(row['id'])
                         ledger.save()
                     except Exception as exc:
-                        state, retry_data = mailbox_retry_data(data, label, retries_key, exc, tasks.clock())
+                        if resolve_thread:
+                            state, retry_data = mailbox_retry_data(data, label, retries_key, exc, tasks.clock())
+                        else:
+                            transient = (exc.code in TRANSIENT_HTTP if isinstance(exc, HTTPError) else
+                                         isinstance(exc, (URLError, TimeoutError, ConnectionError)))
+                            retries = data.get(retries_key, 0)
+                            diagnostic = type(exc).__name__+': '+str(exc)[:300]
+                            if transient and retries < RESOLUTION_RETRIES:
+                                state, retry_data = 'queued', {
+                                    **data, retries_key: retries+1, 'last_error': label+' retry: '+diagnostic}
+                            else:
+                                state, retry_data = 'held', {**data, 'reason': label+' failed: '+diagnostic}
                         tasks.update(row['id'],row['revision'],state,retry_data)
                         ledger.save();continue
             # Replies need the same fresh, coordinator-owned mailbox evidence as
@@ -2921,6 +2954,8 @@ def advance(ledger,cma,config,folder,revision=None,mailbox=None,oracle_capacity=
                 ledger.save()
         try:
             if row['state']=='approved' or original.get('retry_no_reply'):
+                if original.get('retry_no_reply') and supersede_if_covered(row):continue
+                data.pop('owner_question_blockers', None)
                 try:
                     if row['kind'] == 'mathesis':
                         note_revisions.gate(row, tasks)
@@ -2948,7 +2983,7 @@ def advance(ledger,cma,config,folder,revision=None,mailbox=None,oracle_capacity=
                 if state=='no-reply':
                     tasks.route_no_reply(row,data)
                 else:
-                    if state=='awaiting-user':
+                    if state=='awaiting-user' and row['kind'] in CORRESPONDENCE_KINDS:
                         data.setdefault('owner_question_opened_at',tasks.clock())
                     tasks.update(row['id'],row['revision'],state,data)
                 ledger.save()
@@ -3509,7 +3544,7 @@ def status_summary(tasks,config,ingest_errors=None,connector_errors=None):
 def owner_question_health(tasks):
     cutoff = tasks.clock() - 2 * 86400
     return {'open_owner_questions_over_2_days': sum(count for _, opened, count in tasks.owner_questions()
-                                                   if opened < cutoff)}
+                                                   if opened is not None and opened < cutoff)}
 
 
 def _main(argv=None):

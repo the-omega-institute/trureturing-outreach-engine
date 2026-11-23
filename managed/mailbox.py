@@ -1335,6 +1335,22 @@ REFUSAL_BLOCKED='active refusal; retained'
 AGED='older than 14 days'
 UNMAPPED_RECHECK_SECONDS=6*3600
 MAX_INBOUND_AGE=timedelta(days=14)
+UNRESOLVABLE_INBOUND = {'missing conversation identity', 'missing Internet Message-ID',
+                        'Inbox message missing from conversation readback; retained'}
+
+
+def recent_no_task(no_task, now):
+    cutoff = now - MAX_INBOUND_AGE
+    recent = []
+    for key, record in no_task.items():
+        try:
+            received = instant(record['receivedDateTime'])
+        except (KeyError, TypeError, ValueError, AttributeError):
+            continue
+        if cutoff <= received <= now:
+            recent.append((received, key, record))
+    recent.sort(reverse=True)
+    return {key: record for _, key, record in recent}
 
 
 def _has_registry_history(person):
@@ -1376,7 +1392,7 @@ def intake(ledger, config, root, mailbox, revision=None, now=None):
     controlled={name.casefold() for name in controlled}
     revision=revision or source_head()
     pending={};bounces=[];bounce_keys=set();seen={}
-    no_task=previous.get('no_task', {})
+    no_task=recent_no_task(previous.get('no_task', {}), now)
     live_start=instant(live_since) if live_since else None
     attachment_holds={m['conversationId']:{'checked_at':m['checked_at'],
                                          'attachment_issues':m['attachment_issues']}
@@ -1399,21 +1415,31 @@ def intake(ledger, config, root, mailbox, revision=None, now=None):
         if not received:
             return False
         received_at=instant(received)
+        if message.get('intake_reason') in UNRESOLVABLE_INBOUND:
+            expires_at = message.get('expires_at', (received_at + MAX_INBOUND_AGE).timestamp())
+            if expires_at < now.timestamp():
+                return False
         return received_at <= now and (live_start is None or live_start <= received_at
                                        or message_key(message) in retained_keys)
 
     def record_no_task(message, reason, **evidence):
         key=message_key(message)
         pending.pop(key,None)
-        no_task[digest(key)]={'reason':reason, 'receivedDateTime':message.get('receivedDateTime'),
-                             'internetMessageId':message.get('internetMessageId'),
-                             'remote_id':message.get('id'), **evidence}
+        if instant(message['receivedDateTime']) >= now - MAX_INBOUND_AGE:
+            no_task[digest(key)]={'reason':reason, 'receivedDateTime':message['receivedDateTime'],
+                                 'internetMessageId':message.get('internetMessageId'),
+                                 'remote_id':message.get('id'), **evidence}
 
     def remember(message,reason,*,details=None,handled=False,**extra):
         fields={'id','internetMessageId','conversationId','from','toRecipients','ccRecipients',
                 'subject','receivedDateTime','sentDateTime','internetMessageHeaders'}
         key=message_key(message)
         if key in pending and not handled:return
+        if reason in UNRESOLVABLE_INBOUND:
+            expires_at = (instant(message['receivedDateTime']) + MAX_INBOUND_AGE).timestamp()
+            if expires_at < now.timestamp():
+                return
+            extra = {'checked_at': tasks.clock(), **extra, 'expires_at': expires_at}
         annotation={} if details and 'category' in details else triage.classify(message,intake_reason=reason)
         if reason==UNSUPPORTED_ATTACHMENTS:
             annotation['category_reason']='Unsupported thread attachments need operator selection'
@@ -1497,12 +1523,12 @@ def intake(ledger, config, root, mailbox, revision=None, now=None):
         else:remember_notice(item)
 
     def excluded(message):
-        details = triage.classify(message)
-        if details['category'] in {'editorial-info', 'editorial-action', 'service-notice'}:
-            return details
         headers = _message_headers(message)
-        if details['category'] == 'bulk' and bulk_reason(address(message.get('from',{})), headers):
-            return details
+        reason = bulk_reason(address(message.get('from',{})), headers)
+        if reason:
+            details = triage.classify(message)
+            if details['category'] in {'bulk', 'editorial-info', 'editorial-action', 'service-notice'}:
+                return details
         if headers.get('auto-submitted', 'no').split(';',1)[0].strip().casefold() != 'no':
             return category('bulk', 'Auto-Submitted header')
     from .tick import unit
@@ -1614,6 +1640,13 @@ def intake(ledger, config, root, mailbox, revision=None, now=None):
             if address(message.get('from',{})) == account:
                 record_no_task(message,'mailbox owner is the sender')
                 continue
+            reason=message.get('intake_reason')
+            checked_at=message.get('checked_at')
+            if (reason in UNRESOLVABLE_INBOUND and checked_at is not None
+                    and tasks.clock()-checked_at<UNMAPPED_RECHECK_SECONDS):
+                remember(message,reason,checked_at=checked_at,
+                         details={k:message[k] for k in ANNOTATION_FIELDS if k in message})
+                continue
             conversation=message.get('conversationId')
             if not conversation:
                 remember(message,'missing conversation identity')
@@ -1634,8 +1667,6 @@ def intake(ledger, config, root, mailbox, revision=None, now=None):
             # their threads every tick cost ~200 s for 98 messages on
             # 2026-11-08; recheck them only after a pause, or at once when
             # the sender has since been registered.
-            reason=message.get('intake_reason')
-            checked_at=message.get('checked_at')
             if reason in {UNREGISTERED,REFUSAL_BLOCKED,AGED} and checked_at is not None:
                 sender0=address(message.get('from',{}))
                 if (tasks.clock()-checked_at<UNMAPPED_RECHECK_SECONDS and

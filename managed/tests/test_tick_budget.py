@@ -1,5 +1,6 @@
 """Offline fake-clock ticks, including restoration of deferred work."""
 from contextlib import ExitStack, redirect_stderr
+from datetime import datetime, timedelta, timezone
 import hashlib
 import hmac
 import io
@@ -345,8 +346,9 @@ class TickBudgetTests(unittest.TestCase):
         self.remote.download=slow_download
         box=Mock(settings={'reconciled':True,'live_since':'2020-01-01T00:00:00Z'})
         box.verify_owner.return_value='owner@example.invalid'
+        received = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
         box.messages.return_value=[{'id':name,'conversationId':name,'internetMessageId':f'<{name}@example.invalid>',
-                                    'receivedDateTime':'2020-01-02T00:00:00Z'} for name in ('first','second')]
+                                    'receivedDateTime':received} for name in ('first','second')]
         def slow_thread(conversation):
             self.clock.advance(60)
             return []

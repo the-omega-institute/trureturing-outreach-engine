@@ -216,7 +216,7 @@ class OwnerSentTests(unittest.TestCase):
         self.assertIsNone(row['data']['sent_receipt'])
         self.assertEqual(row['data']['owner_draft_status'], 'draft-missing-not-sent')
 
-    def assert_discarded(self, folder='missing'):
+    def assert_discarded(self, folder):
         row = self.row()
         self.assertEqual(row['state'], 'owner-discarded')
         self.assertIsNone(row['data']['sent_receipt'])
@@ -334,7 +334,7 @@ class OwnerSentTests(unittest.TestCase):
         self.assert_sent(message)
         self.packet['thread_id'] = 'thread-1'
         self.task_id = 'owner-reply'
-        self.assert_discarded()
+        self.assert_missing()
 
     def test_a_sent_message_is_never_claimed_twice(self):
         message = self.outlook_send()
@@ -343,12 +343,12 @@ class OwnerSentTests(unittest.TestCase):
         self.task_id = self.add_task('second-reply', 'draft-2')
         self.graph.drafts.pop('draft-2')
         self.tick()
-        self.assert_discarded()
+        self.assert_missing()
 
-    def test_no_match_marks_missing_draft_discarded_without_deleting(self):
+    def test_no_match_keeps_404_draft_missing_without_deleting(self):
         self.outlook_send(conversationId='other-thread', subject='Unrelated subject')
         self.tick()
-        self.assert_discarded()
+        self.assert_missing()
         before = self.row()
         self.tick()
         self.assertEqual(self.row(), before)
@@ -399,6 +399,26 @@ class OwnerSentTests(unittest.TestCase):
         calls = list(self.graph.calls)
         self.tick()
         self.assertEqual(self.graph.calls, calls)
+
+    def test_sent_copy_in_deleted_items_is_missing_without_sent_items_evidence(self):
+        message = self.outlook_send(sent_id='draft-1', parentFolderId='deleted-folder')
+        self.graph.drafts['draft-1'] = self.graph.sent.pop(message['id'])
+        self.tick()
+        self.assert_missing()
+        self.assertNotIn('owner_draft_discard', self.row()['data'])
+
+    def test_coordinator_stale_draft_move_stays_available_for_successor_reconciliation(self):
+        successor = self.ledger.tasks.add(request('replacement', 'contact-a', 'reply'))
+        self.graph.drafts['draft-1']['parentFolderId'] = 'deleted-folder'
+        before = self.row()
+        for phase in ('move-intent', 'moved'):
+            with self.subTest(phase=phase):
+                successor = self.ledger.tasks.update(successor['id'], successor['revision'], 'held', {
+                    'stale_draft_replacement': {'remote_id': 'draft-1', 'phase': phase}})
+                with patch.object(self.ledger.tasks, 'clock', return_value=
+                                  self.ledger.tasks.clock() + delivery.OWNER_SENT_RECHECK_SECONDS):
+                    self.tick()
+                self.assertEqual(self.row(), before)
 
     def test_sent_copy_wins_over_a_readable_deleted_draft(self):
         original = self.graph.drafts['draft-1'].copy()
@@ -453,7 +473,7 @@ class OwnerSentTests(unittest.TestCase):
                 self.graph.sent['sent-1'] = {**message, 'toRecipients': recipients}
                 self.box.sent = None
                 self.tick()
-                self.assert_discarded()
+                self.assert_missing()
 
     def test_team_cc_may_be_omitted_only_when_it_was_in_the_packet(self):
         packet = {**self.packet, 'cc': [*self.packet['cc'], 'TEAM@example.invalid']}
@@ -466,21 +486,21 @@ class OwnerSentTests(unittest.TestCase):
         message = self.outlook_send(ccRecipients=[participant(a) for a in
                                    [*self.packet['cc'], 'team@example.invalid']])
         self.tick()
-        self.assert_discarded()
+        self.assert_missing()
         self.assertIn('sent-1', self.graph.sent)
 
     def test_only_messages_strictly_after_receipt_time_can_match(self):
         self.update(draft_receipt={**self.row()['data']['draft_receipt'], 'at': SENT})
         self.outlook_send()
         self.tick()
-        self.assert_discarded()
+        self.assert_missing()
 
     def test_numeric_draft_intent_time_precedes_mailbox_observation_fallback(self):
         self.update(draft_intent={'key': 'attempt-owner-reply',
                                   'at': mailbox.instant(SENT).timestamp()})
         self.outlook_send()
         self.tick()
-        self.assert_discarded()
+        self.assert_missing()
 
     def test_revised_draft_uses_its_own_time_instead_of_original_intent(self):
         receipt = self.row()['data']['draft_receipt']
@@ -489,7 +509,7 @@ class OwnerSentTests(unittest.TestCase):
                                       'old_draft_deleted': {'at': mailbox.instant(SENT).timestamp()}}])
         self.outlook_send()
         self.tick()
-        self.assert_discarded()
+        self.assert_missing()
 
     def test_missing_timestamp_or_sent_identity_is_not_evidence(self):
         message = self.outlook_send()
@@ -499,7 +519,7 @@ class OwnerSentTests(unittest.TestCase):
                 self.graph.sent['sent-1'] = {**message, **changes}
                 self.box.sent = None
                 self.tick()
-                self.assert_discarded()
+                self.assert_missing()
 
     def test_pause_and_disabled_kind_defer_observation(self):
         self.outlook_send()
@@ -523,9 +543,9 @@ class OwnerSentTests(unittest.TestCase):
         self.graph.drafts.clear()
         self.tick()
         self.assertEqual(sum('/sentitems/' in path for path, _, _ in self.graph.calls), 1)
-        self.assert_discarded()
+        self.assert_missing()
         self.assertEqual(self.ledger.tasks.get('owner-reply-2')['data']['owner_draft_status'],
-                         'discarded')
+                         'draft-missing-not-sent')
 
     def test_sent_receipt_wins_over_a_pending_draft_revision(self):
         message = self.outlook_send()
@@ -537,7 +557,7 @@ class OwnerSentTests(unittest.TestCase):
         self.graph.drafts.clear()
         self.update(draft_revision_requests=[{'reason': 'A synthetic pending revision'}])
         self.tick()
-        self.assert_discarded()
+        self.assert_missing()
         self.assertNotIn('draft_revision_intent', self.row()['data'])
 
     def test_receipt_reaches_registry_pending_outgoing_including_packet_override(self):

@@ -13,10 +13,11 @@ from . import note_closure
 
 KINDS={'firstcontact','reply','research','shortnote','daily','mathesis','submission'}
 NOTE_KINDS={'shortnote','mathesis'}
+CORRESPONDENCE_KINDS={'reply','research'}
 ACTIVE={'provisioning','admitting','running','admission-unknown','provision-unknown','credit-wait'}
 STATES=ACTIVE|{'queued','awaiting-review','approved','bounced','held','failed',
               'awaiting-mailbox','owner-draft','owner-discarded','handoff-ready','verified',
-              'awaiting-user','answered-by-mail','decision-recorded','revising','no-reply','round-complete','submission-ready','superseded'}
+              'awaiting-user','answered-by-mail','question-closed','decision-recorded','revising','no-reply','round-complete','submission-ready','superseded'}
 WORKFLOW_CHANGED='Workflow changed; stage a new request revision'
 WORKFLOW_PIN_MISMATCH='Workflow hash does not match the pinned source revision'
 POLICY_IDENTITY_MISMATCH='Policy identity mismatch'
@@ -98,7 +99,9 @@ def unstarted(row):
     handles = {'agent_id','operation_id','response_id','create_body','create_key',
                'command_key','owned_sandbox_id','response_text','result','review'}
     # A restart caches the previous prompt before creating its next Agent.
-    return not (handles & data.keys() or ('prompt' in data and not data.get('execution_restart')))
+    if row['kind'] not in CORRESPONDENCE_KINDS or not data.get('execution_restart'):
+        handles.add('prompt')
+    return not handles & data.keys()
 
 
 def policy_mismatch_hold(row):
@@ -409,20 +412,16 @@ class Tasks:
         return dict(self.db.execute(f'SELECT {column},COUNT(*) FROM tasks GROUP BY {column} ORDER BY {column}'))
 
     def owner_questions(self):
-        """Open questions and their original wait times, including legacy closures."""
+        """Reviewed questions awaiting a user decision and their original wait times."""
         return self.db.execute("""
             SELECT id, COALESCE(json_extract(data,'$.owner_question_opened_at'),
                 (SELECT MIN(e.at) FROM task_events e WHERE e.id=tasks.id AND e.state='awaiting-user'),
-                updated) AS opened_at, json_array_length(data,'$.result.routing.questions') AS question_count
+                (SELECT MIN(e.at) FROM task_events e WHERE e.id=tasks.id))
+                AS opened_at, json_array_length(data,'$.result.routing.questions') AS question_count
             FROM tasks
-            WHERE state IN ('awaiting-user','approved','revising','superseded')
+            WHERE kind IN ('reply','research') AND state='awaiting-user'
               AND json_array_length(data,'$.result.routing.questions') > 0
-              AND json_extract(data,'$.user_decision') IS NULL
-              AND (state='awaiting-user' OR json_extract(data,'$.result.outcome')='needs-decision')
-              AND (state!='superseded' OR
-                   (json_extract(data,'$.superseded_by') IS NOT NULL AND
-                    json_extract(data,'$.user_question_closed.evidence.reason') IS NULL))
-            ORDER BY opened_at,id
+            ORDER BY opened_at NULLS LAST,id
         """).fetchall()
 
     def route_no_reply(self, row, data):
@@ -553,9 +552,6 @@ class Tasks:
         if row['kind'] != 'reply':return row
         inherited = []
         for old in self.all():
-            if (old['state'] == 'revising' and old['data'].get('result', {}).get('outcome') == 'needs-decision'
-                    and not old['data'].get('user_decision')):
-                continue
             old_inputs = old['request'].get('inputs', {})
             answers = old_inputs.get('user_answers') or []
             decision_continuation = bool(answers) or (
@@ -609,7 +605,8 @@ class Tasks:
                           != (source_revision, policy_revision, workflow_hash))
             stale = (reason == WORKFLOW_CHANGED and unstarted(old)
                      and ((old['state'] == 'queued' and request['workflow_hash'] != workflow_hash)
-                          or (old['state'] == 'held' and old['data'].get('reason') == WORKFLOW_CHANGED)))
+                          or (old['kind'] in CORRESPONDENCE_KINDS and old['state'] == 'held'
+                              and old['data'].get('reason') == WORKFLOW_CHANGED)))
             require(mismatched or stale, 'Only workflow-stale or pin-mismatched work can be re-pinned')
             successor = {**request, **pin, 'id': old['kind']+'-'+digest({'supersedes': task_id, **pin})[:32]}
             if policy_revision is None:
@@ -626,7 +623,8 @@ class Tasks:
                 queued = self.get(successor['id'])
                 self._update(queued['id'], queued['revision'], 'held', {**old['data'], **queued['data']})
             self._update(task_id,expected,'superseded',
-                         {**(old['data'] if identity_hold or old['data'].get('execution_history') else {}),
+                         {**(old['data'] if identity_hold or (old['kind'] in CORRESPONDENCE_KINDS
+                                                           and old['data'].get('execution_history')) else {}),
                           'reason':reason,'successor':successor['id']})
             self.db.execute('UPDATE pipeline_sources SET task_id=? WHERE task_id=?',
                             (successor['id'],task_id))
@@ -824,41 +822,50 @@ class Tasks:
         return self.get(row['id'])
 
     def decision(self,envelope,secret):
-        """Record an actual user answer; the reviewer key never authorizes sending."""
+        """Record actual user answers or close the reviewed questions."""
         require(bool(secret),'Reviewer verification key is not configured')
-        require(set(envelope)=={'schema_version','task_id','result_hash','answers',
-                               'evidence_ref','reviewer','signature'},'Invalid user decision envelope')
+        fields = {'schema_version','task_id','result_hash','evidence_ref','reviewer','signature'}
+        require(isinstance(envelope, dict) and set(envelope) in
+                (fields | {'answers'}, fields | {'action', 'reason'}), 'Invalid user decision envelope')
+        closing = 'action' in envelope
+        if closing:
+            require(envelope['action'] == 'close' and isinstance(envelope['reason'], str)
+                    and envelope['reason'].strip(), 'Question closure needs a reason')
         signed={k:v for k,v in envelope.items() if k!='signature'}
         expected=hmac.new(secret.encode(),canonical(signed).encode(),hashlib.sha256).hexdigest()
         require(hmac.compare_digest(expected,envelope['signature']),'Decision signature failed')
         require(envelope['schema_version']==1 and envelope['reviewer']=='local-claude-loop',
-                'Only the local operator records user answers')
+                'Only the local operator records user decisions')
         require(isinstance(envelope['evidence_ref'],str) and envelope['evidence_ref'].strip(),
-                'Preserve the actual user-answer source')
+                'Preserve the evidence source for the decision')
         event_id=digest(envelope)
         with self.tx():
             if self.db.execute('SELECT 1 FROM control_events WHERE id=?',(event_id,)).fetchone():
                 return self.get(envelope['task_id'])
             row=self.get(envelope['task_id'])
-            require(row['state']=='awaiting-user' or
-                    (row['state'] in {'revising','superseded'} and
-                     any(task_id == row['id'] for task_id, _, _ in self.owner_questions())),
-                    'Task is not awaiting a user decision')
-            require(digest(row['data']['result'])==envelope['result_hash'],'Decision targets an obsolete result')
-            questions=row['data']['result'].get('routing',{}).get('questions',[])
-            answers=envelope['answers']
-            require(isinstance(answers,dict) and set(answers)=={q['id'] for q in questions}
-                    and answers and all(isinstance(v,str) and v.strip() for v in answers.values()),
-                    'Answer every current question with the actual user response')
-            data={**row['data'],'user_decision':envelope}
-            if row['state'] in {'revising','superseded'} and data.get('continuation_id'):
-                data['previous_continuation_id'] = data.pop('continuation_id')
-            data.pop('user_question_closed', None)
-            self.db.execute("UPDATE tasks SET state='decision-recorded',revision=revision+1,data=?,updated=? WHERE id=?",
-                            (canonical(data),self.clock(),row['id']))
+            require(row['state']=='awaiting-user', 'Task is not awaiting a user decision')
+            result = row['data']['result']
+            require(digest(result)==envelope['result_hash'],'Decision targets an obsolete result')
+            questions = result.get('routing', {}).get('questions', [])
+            data = dict(row['data'])
+            if closing:
+                require(row['kind'] in CORRESPONDENCE_KINDS and questions,
+                        'Question closure requires open reply or research questions')
+                data['user_question_closed'] = {'reason': 'question closed', 'evidence': {
+                    'reason': envelope['reason'].strip(), 'evidence_ref': envelope['evidence_ref']}}
+                state = 'question-closed'
+            else:
+                answers = envelope['answers']
+                require(isinstance(answers,dict) and set(answers)=={q['id'] for q in questions}
+                        and answers and all(isinstance(v,str) and v.strip() for v in answers.values()),
+                        'Answer every current question with the actual user response')
+                data['user_decision'] = envelope
+                state = 'decision-recorded'
+            self.db.execute('UPDATE tasks SET state=?,revision=revision+1,data=?,updated=? WHERE id=?',
+                            (state,canonical(data),self.clock(),row['id']))
             self.db.execute('INSERT INTO control_events VALUES(?,?)',(event_id,canonical(envelope)))
             self.db.execute('INSERT INTO task_events(id,state,revision,at,data) VALUES(?,?,?,?,?)',
-                            (row['id'],'decision-recorded',row['revision']+1,self.clock(),canonical({'decision':event_id})))
+                            (row['id'],state,row['revision']+1,self.clock(),canonical({'decision':event_id})))
         return self.get(row['id'])
 
     def draft_revision(self, envelope, secret):

@@ -102,6 +102,15 @@ class OwnerTodoTests(unittest.TestCase):
         self.assertEqual(rows[0]['person'], '甲教授')
         self.assertEqual(rows[0]['email'], 'ALIAS@example.invalid')
 
+    def test_exhausted_mailbox_retries_are_visible_only_to_the_operator(self):
+        item = {'task_id': 'reply-retry', 'owner': 'contact-a', 'attempts': 9,
+                'since': '2026-11-03T00:00:00Z', 'reason': 'Synthetic mailbox retry budget exhausted'}
+        view = self.view({'mailbox_retry_exhausted': [item]})
+        row, = view['operator_check']['rows']
+        self.assertEqual((row['task_id'], row['attempts'], row['content']),
+                         (item['task_id'], item['attempts'], item['reason']))
+        self.assertNotIn(item['reason'], render_markdown(view))
+
     def test_drafts_sorted_by_save_date_and_brief_notes(self):
         first = draft('first', '2026-10-30T12:00:00Z')
         newest = draft('newest', '2026-11-03T10:00:00Z')

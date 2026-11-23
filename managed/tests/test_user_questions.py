@@ -7,9 +7,10 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from managed import automation, control, owner_todo, registry, sent_events
+from managed import automation, control, owner_todo, pipeline, registry, sent_events
 from managed.mailbox import instant
 from managed.queue import canonical, digest
+from managed.tasks import WORKFLOW_CHANGED
 from managed.tick import Tick
 from test_tasks import CMA, Releases, request, use_fixture_workflow_revisions
 
@@ -30,6 +31,7 @@ class UserQuestionTests(unittest.TestCase):
         folder = self.root / 'ledger'
         folder.mkdir()
         self.ledger = control.Ledger(Releases(), folder)
+        self.enterContext(patch.object(self.ledger.releases, 'ensure', create=True))
         self.addCleanup(self.ledger.tasks.close)
         registry.write(self.root, 'contacts', {'contacts': [
             {'id': 'contact-a', 'name': 'Professor Scholar', 'email': CONTACT, 'problem_ids': []},
@@ -39,8 +41,8 @@ class UserQuestionTests(unittest.TestCase):
         self.config = {'paused': False, 'mailbox': {'account': ACCOUNT},
                        'automation': {'enabled': True, 'max_new_tasks_per_tick': 4}}
 
-    def question(self, name='reply-old', at=INBOUND, thread='conversation', state='awaiting-user', owner='contact-a'):
-        req = request(name, owner, 'reply')
+    def question(self, name='reply-old', at=INBOUND, thread='conversation', state='awaiting-user', owner='contact-a', kind='reply'):
+        req = request(name, owner, kind)
         req['inputs'] = {'latest_inbound_message_id': '<' + name + '>',
                          'mailbox_observation': {'message_id': '<' + name + '>', 'at': at, 'email': CONTACT}}
         message = {'internetMessageId': '<' + name + '>', 'subject': 'Topic', 'receivedDateTime': at}
@@ -169,25 +171,120 @@ class UserQuestionTests(unittest.TestCase):
         return self.ledger.tasks.update(task_id, row['revision'], 'approved', {'result': result})
 
     def route(self):
-        config = {**self.config, 'kinds': {'reply': True}, 'max_active': 1, 'agent_template': {}}
+        config = {**self.config, 'kinds': {'reply': True}, 'max_active': 2, 'agent_template': {}}
+        cma = CMA()
         with patch.object(control, 'ROOT', self.root):
-            control.advance(self.ledger, CMA(), config, self.root / 'ledger')
+            control.advance(self.ledger, cma, config, self.root / 'ledger', revision='b' * 40)
+        return cma
 
     def test_later_no_reply_waits_for_signed_answer_then_resumes(self):
-        old = self.question(state='revising')
+        old = self.question()
         later = self.approved_no_reply('later')
         self.route()
         tasks = self.ledger.tasks
         blocked = tasks.get(later['id'])
         self.assertEqual(blocked['state'], 'held')
         self.assertEqual(blocked['data']['owner_question_blockers'], [old['id']])
-        self.assertEqual(tasks.get(old['id'])['state'], 'revising')
+        self.assertEqual(tasks.get(old['id'])['state'], 'awaiting-user')
+        with patch.object(pipeline, 'source_gate', wraps=pipeline.source_gate) as gate:
+            self.route()
+            gate.assert_not_called()
+        self.assertEqual(tasks.get(later['id']), blocked)
         answer = {'schema_version': 1, 'task_id': old['id'], 'result_hash': digest(old['data']['result']),
                   'answers': {'meeting': 'Decline the meeting.'}, 'evidence_ref': 'fixture:decision',
                   'reviewer': 'local-claude-loop'}
         answer['signature'] = hmac.new(b'secret', canonical(answer).encode(), hashlib.sha256).hexdigest()
         tasks.decision(answer, 'secret')
         self.route()
+        self.assertEqual(tasks.get(later['id'])['state'], 'no-reply')
+
+    def test_resumed_hold_yields_to_later_manually_staged_inbound(self):
+        tasks = self.ledger.tasks
+        inputs = {'thread_id': 'conversation', 'latest_inbound_message_id': '<shared@example.invalid>'}
+        old = tasks.add({**request('reply-held', 'contact-a', 'reply'), 'inputs': inputs})
+        tasks.update(old['id'], old['revision'], 'held', {'reason': WORKFLOW_CHANGED})
+        later = {**request('reply-manual', 'contact-a', 'reply'), 'inputs': inputs}
+        control.stage(later, 'request', self.ledger.releases, self.root / 'ledger')
+        with patch.object(control, 'ROOT', self.root):
+            self.ledger.ingest()
+        cma = self.route()
+        self.assertEqual(len(cma.creates), 1)
+        self.assertEqual(tasks.get(later['id'])['state'], 'running')
+        suppressed = tasks.get(old['id'])
+        self.assertEqual(suppressed['state'], 'superseded')
+        self.assertEqual(suppressed['data']['superseded_by'], later['id'])
+        self.assertIn('same incoming message', suppressed['data']['reason'])
+        self.assertEqual(len(tasks.all()), 2)
+
+    def test_only_later_answer_continuation_starts_for_same_inbound(self):
+        tasks = self.ledger.tasks
+        children = []
+        for index, answer in enumerate(('Accept.', 'Decline.')):
+            req = request('answer-parent-' + str(index), 'contact-a', 'reply')
+            req['inputs'] = {'thread_id': 'conversation', 'latest_inbound_message_id': '<shared@example.invalid>'}
+            parent = tasks.add(req)
+            result = {'outcome': 'needs-decision', 'packet': None,
+                      'routing': {'mail': 'owner', 'questions': [{'id': 'meeting', 'question': 'Meet?'}]}}
+            tasks.update(parent['id'], parent['revision'], 'awaiting-user', {'result': result})
+            envelope = {'schema_version': 1, 'task_id': parent['id'], 'result_hash': digest(result),
+                        'answers': {'meeting': answer}, 'evidence_ref': 'fixture:answer-' + str(index),
+                        'reviewer': 'local-claude-loop'}
+            envelope['signature'] = hmac.new(b'secret', canonical(envelope).encode(), hashlib.sha256).hexdigest()
+            tasks.decision(envelope, 'secret')
+            self.tick()
+            children.append(tasks.get(parent['id'])['data']['continuation_id'])
+        cma = self.route()
+        self.assertEqual(len(cma.creates), 1)
+        older, later = [tasks.get(child) for child in children]
+        self.assertEqual(older['state'], 'superseded')
+        self.assertEqual(older['data']['superseded_by'], later['id'])
+        self.assertEqual(later['state'], 'running')
+        self.assertEqual([env['answers'] for env in later['request']['inputs']['user_answers']],
+                         [{'meeting': 'Decline.'}])
+
+    def test_signed_close_releases_no_reply_without_staging_a_continuation(self):
+        old = self.question(kind='research')
+        later = self.approved_no_reply('later')
+        self.route()
+        tasks = self.ledger.tasks
+        self.assertEqual(tasks.get(later['id'])['data']['owner_question_blockers'], [old['id']])
+        envelope = {'schema_version': 1, 'task_id': old['id'], 'result_hash': digest(old['data']['result']),
+                    'action': 'close', 'reason': 'Invitation withdrawn.', 'evidence_ref': 'fixture:withdrawal',
+                    'reviewer': 'local-claude-loop'}
+        envelope['signature'] = hmac.new(b'secret', canonical(envelope).encode(), hashlib.sha256).hexdigest()
+        with self.assertRaisesRegex(ValueError, 'Decision signature failed'):
+            tasks.decision({**envelope, 'reason': 'Edited after signing.'}, 'secret')
+        control.stage(envelope, 'decision', self.ledger.releases, self.root / 'ledger')
+        self.ledger.ingest('secret')
+        closed = tasks.get(old['id'])
+        self.assertEqual(closed['state'], 'question-closed')
+        self.assertEqual(closed['data']['user_question_closed'], {'reason': 'question closed', 'evidence': {
+            'reason': envelope['reason'], 'evidence_ref': envelope['evidence_ref']}})
+        self.assertEqual(tasks.decision(envelope, 'secret'), closed)
+        self.tick()
+        self.route()
+        self.assertEqual(tasks.get(later['id'])['state'], 'no-reply')
+        self.assertEqual(len(tasks.all()), 2)
+
+    def test_non_open_questions_neither_block_routing_nor_accept_signed_closure(self):
+        fixtures = [('reply', 'approved'), ('reply', 'revising'), ('reply', 'superseded'),
+                    ('submission', 'revising'), ('submission', 'superseded'), ('shortnote', 'awaiting-user')]
+        tasks = self.ledger.tasks
+        for index, (kind, state) in enumerate(fixtures):
+            row = self.question('excluded-' + str(index), state=state, kind=kind)
+            fields = {'schema_version': 1, 'task_id': row['id'], 'result_hash': digest(row['data']['result']),
+                      'evidence_ref': 'fixture:evidence', 'reviewer': 'local-claude-loop'}
+            variants = [{'action': 'close', 'reason': 'Withdrawn.'}]
+            if state in {'revising', 'superseded'}:
+                variants.append({'answers': {'meeting': 'Decline.'}})
+            for variant in variants:
+                envelope = {**fields, **variant}
+                envelope['signature'] = hmac.new(b'secret', canonical(envelope).encode(), hashlib.sha256).hexdigest()
+                with self.assertRaises(ValueError):
+                    tasks.decision(envelope, 'secret')
+        self.assertFalse(tasks.owner_questions())
+        later = self.approved_no_reply('unblocked')
+        self.assertTrue(tasks.route_no_reply(later, later['data']))
         self.assertEqual(tasks.get(later['id'])['state'], 'no-reply')
 
     def test_explicit_supersession_records_operator_reason(self):
@@ -210,6 +307,7 @@ class UserQuestionTests(unittest.TestCase):
         questions.append({'id': 'byline', 'question': 'Who should appear on the byline?'})
         tasks.clock = lambda: 1000 + 2 * 86400
         tasks.update(old['id'], old['revision'], 'awaiting-user', updated['data'])
+        self.assertEqual(automation.work(tasks, self.root)['user_questions'][0]['opened_at'], 1000)
         self.assertEqual(control.owner_question_health(tasks)['open_owner_questions_over_2_days'], 0)
         tasks.clock = lambda: 1001 + 2 * 86400
         self.question('recent')

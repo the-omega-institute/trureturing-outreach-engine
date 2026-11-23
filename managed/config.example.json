@@ -1,5 +1,7 @@
 {
-  "repositories": {"data": "example/outreach"},
+  "repositories": {
+    "data": "example/outreach"
+  },
   "schema_version": 1,
   "paused": true,
   "max_active": 24,
@@ -38,7 +40,10 @@
     "enabled": false,
     "max_new_tasks_per_tick": 4,
     "backfill_result_ids": [],
-    "daily": false
+    "daily": false,
+    "auto_backfill": false,
+    "backfill_per_tick": 1,
+    "backfill_pending_limit": 16
   },
   "kinds": {
     "firstcontact": false,
@@ -198,5 +203,15 @@
   "cma": {
     "token_base_url": "https://worker.example.invalid",
     "proxy_base_url": "https://auth.example.invalid/api/v1/proxy/s/cma"
+  },
+  "independent_review": {
+    "enabled": false,
+    "max_active": 2,
+    "profile": {
+      "model": "gpt-6.2-sol",
+      "reasoning_effort": "high"
+    },
+    "register_author_contacts": true,
+    "max_active_per_group": 1
   }
 }

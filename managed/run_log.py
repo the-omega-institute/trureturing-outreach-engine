@@ -75,7 +75,7 @@ def phase_timing(name, seconds, count):
         'credit-recovery', 'execution-recovery', 'pool-health', 'pool-idle',
         'approved', 'advance', 'firstcontact-history', 'automation', 'delivery',
         'sent-events', 'mathesis', 'mathesis-delivery', 'formalization-requests', 'prior-work-issues',
-        'maintenance', 'owner-drafts', 'final-save',
+        'maintenance', 'owner-drafts', 'final-save', 'independent-review',
     }:
         emit(f'tick-phase {name} {seconds:.3f}s units={count:d}')
 

@@ -5,6 +5,7 @@ import re
 import shlex
 
 from .queue import canonical, digest, require
+from .tasks import INDEPENDENT_REVIEWERS
 
 INSTRUCTIONS = (
     'Return author_contacts in the final result: one proposal for every author of the '
@@ -101,7 +102,7 @@ def reviewed(value, secret=None):
     validate_result(result, {'id':request['id'], 'kind':'shortnote', 'request':request})
     binding = review.get('binding', {})
     require(result['outcome'] == 'completed' and review.get('verdict') == 'PASS'
-            and review.get('reviewer') == 'local-claude-loop'
+            and review.get('reviewer') in INDEPENDENT_REVIEWERS
             and binding.get('task_id') == request['id']
             and binding.get('result_hash') == digest(result)
             and binding.get('workflow_hash') == request['workflow_hash'],
@@ -243,3 +244,41 @@ def apply(value, root, secret, render_views=True):
             'unreachable':[a for a in authors if not a['emails']],
             'author_contacts_reason':value['result'].get('author_contacts_reason'),
             'enqueued':False, 'sent':False}
+
+
+def advance(ledger, config, root, secret):
+    """Reconcile exact reviewed author proposals in the sole production writer."""
+    from . import data_writes
+    from .tick import units
+    if (config['paused'] or not config.get('independent_review', {}).get('enabled')
+            or not config['independent_review'].get('register_author_contacts', False)):
+        return
+    candidates = [r for r in ledger.tasks.all() if r['kind'] == 'shortnote'
+                  and r['data'].get('result', {}).get('outcome') == 'completed'
+                  and 'author_contacts' in r['data']['result']
+                  and r['data'].get('review', {}).get('verdict') == 'PASS'
+                  and r['state'] not in {'superseded', 'held'}
+                  and r['data'].get('author_contacts_reconciled', {}).get('result_hash')
+                      != digest(r['data']['result'])
+                  and r['data'].get('author_contacts_reconciled', {}).get('next_retry_at', 0)
+                      <= ledger.tasks.clock()]
+    paths = ['tables/contacts.json', 'README.md', 'tables/CONTACTS.md', 'tables/POSITIVE.md',
+             'tables/REFUSALS.md', 'tables/ACTIONS.md', 'tables/SUBMISSIONS.md']
+    for original in units(ledger, 'independent-review', candidates[:2], key=lambda r:r['id']):
+        row = ledger.tasks.get(original['id'])
+        try:
+            value = {'request':row['request'], 'result':row['data']['result'], 'review':row['data']['review']}
+            # The existing adapter verifies the signature and current refusals,
+            # aliases and contact history before registering any address.
+            result = apply(value, root, secret)
+            data_writes.commit_paths(paths, 'Reconcile independently reviewed source authors', root)
+            data_writes.push(root)
+            receipt = {'result_hash':digest(value['result']), 'phase':'reconciled', **result}
+        except Exception as error:
+            attempts = row['data'].get('author_contacts_reconciled', {}).get('attempts', 0) + 1
+            receipt = {'phase':'pending', 'error':type(error).__name__, 'attempts':attempts,
+                       'next_retry_at':ledger.tasks.clock() + min(3600, 60 * 2 ** min(attempts, 6))}
+        current = ledger.tasks.get(row['id'])
+        ledger.tasks.update(row['id'], current['revision'], current['state'],
+                            {**current['data'], 'author_contacts_reconciled':receipt})
+        ledger.save(force=True)

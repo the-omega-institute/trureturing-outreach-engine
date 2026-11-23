@@ -19,6 +19,7 @@ from .correspondence import linked_contacts
 from .github_diagnostics import failure as github_failure
 from .tick import units
 from . import recheck
+from .tasks import INDEPENDENT_REVIEWERS
 
 # Reuse the existing delivery service, including its validators and file contract.
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts/short_notes'))
@@ -214,7 +215,7 @@ def reviewed(row):
     binding = review.get('binding', {})
     return (row['state'] in REVIEWED and (row['kind'] == 'mathesis' or reviewed_shortnote(row))
             and result.get('outcome') == 'completed' and review.get('verdict') == 'PASS'
-            and review.get('reviewer') == 'local-claude-loop'
+            and review.get('reviewer') in INDEPENDENT_REVIEWERS
             and binding.get('result_hash') == digest(result)
             and binding.get('workflow_hash') == row['request']['workflow_hash'])
 

@@ -2510,11 +2510,13 @@ def advance(ledger,cma,config,folder,revision=None,mailbox=None,oracle_capacity=
         if snapshot['version']!=version:
             snapshot.update(version=version,rows=tasks.all())
         return snapshot['rows']
+    from .independent_review import enabled as hosted_review_enabled
     initial_rows = current_rows()
     correspondence = linked_contacts(initial_rows, ROOT, config)
     revisions = note_revisions.Revisions(tasks, initial_rows) if config['kinds'].get('mathesis') else None
     pool=SandboxPool(ledger,config['sandbox_pool'],config['kinds'],paused=config['paused'],
-                     correspondence=correspondence,rows=initial_rows) if config.get('sandbox_pool') else None
+                     correspondence=correspondence,rows=initial_rows,
+                     reserve_review_slots=int(bool(hosted_review_enabled(config)))) if config.get('sandbox_pool') else None
     grouped=bool(pool and config['sandbox_pool'].get('groups'))
     failure_pool=pool or SandboxPool(ledger,{'max_sandboxes':1,'agents_per_sandbox':1},rows=initial_rows)
     credit=CreditGate(ledger,config)
@@ -3408,6 +3410,7 @@ def finished(tick,name):
 
 
 def run_tick(ledger,config,folder,tick,oracle_fetcher=None):
+    from .independent_review import advance as review_independently, enabled as hosted_review_enabled
     from .draft_status import refresh as refresh_draft_status
     from .mailbox import configured, intake
     from .pipeline import reconcile
@@ -3427,7 +3430,10 @@ def run_tick(ledger,config,folder,tick,oracle_fetcher=None):
     # Ingest remains first so fresh reviews/decisions precede every dependent
     # effect. Rotate the remaining passes, without changing their own gates.
     stages=tick.order(['advance','automation','delivery','sent-events','mathesis',
-                       'formalization-requests','prior-work-issues','maintenance'])
+                       'formalization-requests','prior-work-issues','maintenance']
+                      + (['independent-review'] if hosted_review_enabled(config) else []))
+    if hosted_review_enabled(config):
+        tick.reserve('independent-review', 30, dedicated=True)
     # Pool health, result collection, repair turns and admissions live in
     # advance. Mailbox intake alone took ~300 s on 2026-11-08 and advance then
     # never reached repairs or queued work, so its slice is reserved on every
@@ -3489,6 +3495,10 @@ def run_tick(ledger,config,folder,tick,oracle_fetcher=None):
                 try:advance(ledger,cma,config,folder,revision=revision,mailbox=mailbox,
                             oracle_capacity=oracle_capacity)
                 finally:tick.report('firstcontact-history')
+            elif name=='independent-review':
+                review_independently(ledger,cma,config,folder)
+                from .author_contacts import advance as register_reviewed_authors
+                register_reviewed_authors(ledger,config,ROOT,os.environ.get('OUTREACH_REVIEW_KEY'))
             elif name=='automation':continue_work(ledger,config,ROOT,revision=revision)
             elif name=='delivery':
                 deliver(ledger,config,ROOT,mailbox)

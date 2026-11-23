@@ -89,6 +89,9 @@ def references(data, entry):
 
 def live_reference(row, entry):
     data=row['data']
+    from .independent_review import runs, live
+    if any(live(run) and references(run, entry) for run in runs(row)):
+        return True
     # Reserve slots while lifecycle creation is still asynchronous. Held results
     # and failed tasks also occupy a slot until their Agent's stop is accepted
     # (stopping or later); it runs nothing more, and cleanup confirms deletion.
@@ -106,7 +109,8 @@ def placements(rows, entry):
     """Backfill legacy usage, counting repeated execution snapshots only once."""
     count=0
     for row in rows:
-        groups=[];matched=False;pending=[row['data']]
+        from .independent_review import runs
+        groups=[];matched=False;pending=[row['data'], *runs(row)]
         while pending:
             data=pending.pop()
             if not isinstance(data,dict):continue
@@ -135,7 +139,8 @@ def ledger_agents(rows):
     found=set()
     for row in rows:
         data=row['data']
-        for item in [data,*data.get('execution_history',[]),*data.get('sandbox_failure_history',[])]:
+        from .independent_review import runs
+        for item in [data,*data.get('execution_history',[]),*data.get('sandbox_failure_history',[]),*runs(row)]:
             if isinstance(item,dict):
                 found.update(a for a in (item.get('agent_id'),(item.get('cleanup') or {}).get('agent_id')) if a)
     return frozenset(found)
@@ -172,13 +177,14 @@ def summary(tasks, rows=None):
 
 
 class SandboxPool:
-    def __init__(self, ledger, config, kinds=None, *, paused=False, correspondence=(), rows=None):
+    def __init__(self, ledger, config, kinds=None, *, paused=False, correspondence=(), rows=None, reserve_review_slots=0):
         self.ledger=ledger
         self.kinds = kinds or {}
         self.paused = paused
         self.correspondence = correspondence
         self.max_sandboxes=config['max_sandboxes']
         self.agents_per_sandbox=config['agents_per_sandbox']
+        self.reserve_review_slots=min(reserve_review_slots, max(0, self.agents_per_sandbox-1))
         self.rotate_after_agents=config.get('rotate_after_agents',24)
         self.quota_blocked_max_agents_placed=config.get('quota_blocked_max_agents_placed',96)
         require(type(self.max_sandboxes) is int and self.max_sandboxes>0,
@@ -497,6 +503,12 @@ class SandboxPool:
         self.write('sandbox_pool_cleanup',self.failed)
         self.ledger.save()
 
+    def admission_limit(self, entry, rows):
+        from .independent_review import runs, live
+        occupied=sum(any(live(run) and references(run,entry) for run in runs(row)) for row in rows)
+        return min(self.agents_per_sandbox,
+                   self.agents_per_sandbox-self.reserve_review_slots+occupied)
+
     def slot(self, row=None, *, cma=None, rows=None):
         rows=self.ledger.tasks.all() if rows is None else rows
         group = self.group(row)
@@ -507,7 +519,7 @@ class SandboxPool:
         candidates=[(sum(live_reference(r,entry) for r in rows),index,entry)
                     for index,entry in enumerate(non_draining)
                     if entry['sandbox_id'] in self.available]
-        candidates=[candidate for candidate in candidates if candidate[0]<self.agents_per_sandbox]
+        candidates=[candidate for candidate in candidates if candidate[0]<self.admission_limit(candidate[2],rows)]
         if candidates:
             return True,min(candidates,key=lambda candidate:candidate[:2])[2]
         # Only a pending first Workspace in this group serializes its creation.
@@ -529,12 +541,12 @@ class SandboxPool:
                       and entry['agents_placed']<self.quota_blocked_max_agents_placed
                       and (self.observed.get(entry['sandbox_id']) or {}).get('status')=='active'
                       and not entry.get('intent')]
-            fallback=[candidate for candidate in fallback if candidate[0]<self.agents_per_sandbox]
+            fallback=[candidate for candidate in fallback if candidate[0]<self.admission_limit(candidate[2],rows)]
             if fallback:
                 return True,min(fallback,key=lambda candidate:candidate[:2])[2]
         for entry in non_draining:
             if (entry['sandbox_id'] in self.observed and
-                    sum(live_reference(r,entry) for r in rows)<self.agents_per_sandbox and
+                    sum(live_reference(r,entry) for r in rows)<self.admission_limit(entry,rows) and
                     entry.get('state') in {'paused','pausing','reviving'}):
                 if cma is not None and self.observed[entry['sandbox_id']].get('status')=='paused':
                     self.transition(cma,entry,'revive')

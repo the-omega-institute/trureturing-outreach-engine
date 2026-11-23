@@ -12,6 +12,7 @@ from .queue import canonical, digest, require, validate_packet
 from . import note_closure
 
 KINDS={'firstcontact','reply','research','shortnote','daily','mathesis','submission'}
+INDEPENDENT_REVIEWERS=frozenset({'local-claude-loop','hosted-cma-review'})
 NOTE_KINDS={'shortnote','mathesis'}
 CORRESPONDENCE_KINDS={'reply','research'}
 ACTIVE={'provisioning','admitting','running','admission-unknown','provision-unknown','credit-wait'}
@@ -755,7 +756,7 @@ class Tasks:
         signature=hmac.new(secret.encode(),canonical(signed).encode(),hashlib.sha256).hexdigest()
         require(isinstance(envelope['signature'],str) and re.fullmatch(r'[0-9a-f]{64}',envelope['signature'])
                 and hmac.compare_digest(signature,envelope['signature']),'Invalid signed review: review signature failed')
-        require(envelope['reviewer']=='local-claude-loop' and envelope['verdict'] in {'PASS','BOUNCE','HOLD'},'Invalid reviewer/verdict')
+        require(envelope['reviewer'] in INDEPENDENT_REVIEWERS and envelope['verdict'] in {'PASS','BOUNCE','HOLD'},'Invalid reviewer/verdict')
         require(all(isinstance(envelope[k],str) and envelope[k].strip() for k in ['reason','evidence_ref']),'Review needs reasoning and evidence')
         event_id=digest(envelope)
         with self.tx():

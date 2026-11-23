@@ -392,14 +392,33 @@ def serialization_vectors():
                 for allow_nan in [False, True]:
                     for indent in [None, '', '  ', '\t']:
                         for separators in [None, (',', ':'), (', ', ': ')]:
-                            # Until phase 2 retains input order, unsorted parity
-                            # is limited to dictionaries already in stored order.
-                            ordered = json.loads(canonical(value))
+                            ordered = value
                             options = dict(ensure_ascii=ensure_ascii, sort_keys=sort_keys,
                                            allow_nan=allow_nan, indent=indent, separators=separators)
                             vectors.append({'input': input_json(ordered), 'options': options,
                                             'expected': json.dumps(ordered, **options)})
     return vectors
+
+
+def ordered_vectors():
+    inputs = [' {"z":1,"a":2,"z":3,"middle":{"b":0,"a":1,"b":2}} ',
+              '{"😀":1,"a":[],"😀":{"z":1,"a":2}}',
+              '{"$serde_json::private::Number":"123","z":1,"$serde_json::private::Number":"last"}']
+    return [{'input': raw, 'expected': json.dumps(json.loads(raw), ensure_ascii=False, indent=2)}
+            for raw in inputs]
+
+
+def equality_vectors():
+    rng = random.Random(SEED + 19)
+    pairs = [(1, 1.0), (True, 1), (False, -0.0), (False, 0), (True, 1.1),
+             (2**53+1, float(2**53+1)), (2**53, float(2**53)),
+             (10**23, 1e23), (int(1e23), 1e23), (10**400, 1e308),
+             ([1, {'z': True, 'a': False}], [1.0, {'a': 0, 'z': 1}]),
+             ({'z': 1, 'a': 2}, {'a': 2.0, 'z': True}), ('1', 1), (None, False)]
+    for _ in range(512):
+        f = random_float(rng)
+        pairs.extend([(int(f), f), (int(f) + 1, f), (f, f)])
+    return [{'left': input_json(a), 'right': input_json(b), 'equal': a == b} for a, b in pairs]
 
 
 def workflow_vectors():
@@ -472,6 +491,7 @@ def generate():
                 'envelopes': envelopes, 'verification': verification, 'reviews': review_vectors(),
                 'identities': identity_vectors(), 'rejections': [{'input': raw} for raw in rejected],
                 'events': event_vectors(), 'serialization': serialization_vectors(),
+                'ordered': ordered_vectors(), 'equality': equality_vectors(),
                 # Python accepts this input; the explicit Rust resource bound
                 # is a deliberate divergence, not a Python rejection oracle.
                 'depth_limits': [{'input': '[' * 513 + '0' + ']' * 513,

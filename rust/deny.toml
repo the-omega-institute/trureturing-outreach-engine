@@ -2,10 +2,10 @@
 yanked = "deny"
 
 [licenses]
-allow = ["MIT", "Apache-2.0", "BSD-3-Clause"]
+allow = ["MIT", "Apache-2.0", "BSD-3-Clause", "Zlib"]
 
 # The existing repository has no license declaration. Do not invent a license
-# for the four unpublished engine packages; audit every third-party dependency.
+# for the unpublished engine packages; audit every third-party dependency.
 [licenses.private]
 ignore = true
 

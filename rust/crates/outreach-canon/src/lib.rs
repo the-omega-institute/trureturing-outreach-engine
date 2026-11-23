@@ -8,6 +8,7 @@ mod identity;
 mod parser;
 mod serializer;
 mod signing;
+mod value;
 mod workflow;
 
 pub use identity::*;
@@ -15,6 +16,7 @@ pub use parser::parse;
 pub use serde_json::Value;
 pub use serializer::{SerializeOptions, canonical, dumps};
 pub use signing::*;
+pub use value::{CanonValue, python_eq};
 pub use workflow::*;
 
 use serde_json::Map;

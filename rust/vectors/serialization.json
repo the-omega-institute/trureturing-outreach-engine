@@ -3,7 +3,7 @@
   "seed": 55345352842547491,
   "vectors": [
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": false,
         "sort_keys": false,
@@ -11,13 +11,325 @@
         "indent": null,
         "separators": null
       },
-      "expected": "{\"a\": \"\u03a9\\u0000\u007f\\n\", \"\ud83d\ude00\": [1e+16, -0.0, null, true, {}, []]}"
+      "expected": "{\"\ud83d\ude00\": [1e+16, -0.0, null, true, {}, []], \"a\": \"\u03a9\\u0000\u007f\\n\"}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": false,
         "sort_keys": false,
+        "allow_nan": false,
+        "indent": null,
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\"\ud83d\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\u03a9\\u0000\u007f\\n\"}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": null,
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\"\ud83d\ude00\": [1e+16, -0.0, null, true, {}, []], \"a\": \"\u03a9\\u0000\u007f\\n\"}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "",
+        "separators": null
+      },
+      "expected": "{\n\"\ud83d\ude00\": [\n1e+16,\n-0.0,\nnull,\ntrue,\n{},\n[]\n],\n\"a\": \"\u03a9\\u0000\u007f\\n\"\n}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\n\"\ud83d\ude00\":[\n1e+16,\n-0.0,\nnull,\ntrue,\n{},\n[]\n],\n\"a\":\"\u03a9\\u0000\u007f\\n\"\n}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\n\"\ud83d\ude00\": [\n1e+16, \n-0.0, \nnull, \ntrue, \n{}, \n[]\n], \n\"a\": \"\u03a9\\u0000\u007f\\n\"\n}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": null
+      },
+      "expected": "{\n  \"\ud83d\ude00\": [\n    1e+16,\n    -0.0,\n    null,\n    true,\n    {},\n    []\n  ],\n  \"a\": \"\u03a9\\u0000\u007f\\n\"\n}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\n  \"\ud83d\ude00\":[\n    1e+16,\n    -0.0,\n    null,\n    true,\n    {},\n    []\n  ],\n  \"a\":\"\u03a9\\u0000\u007f\\n\"\n}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\n  \"\ud83d\ude00\": [\n    1e+16, \n    -0.0, \n    null, \n    true, \n    {}, \n    []\n  ], \n  \"a\": \"\u03a9\\u0000\u007f\\n\"\n}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": null
+      },
+      "expected": "{\n\t\"\ud83d\ude00\": [\n\t\t1e+16,\n\t\t-0.0,\n\t\tnull,\n\t\ttrue,\n\t\t{},\n\t\t[]\n\t],\n\t\"a\": \"\u03a9\\u0000\u007f\\n\"\n}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\n\t\"\ud83d\ude00\":[\n\t\t1e+16,\n\t\t-0.0,\n\t\tnull,\n\t\ttrue,\n\t\t{},\n\t\t[]\n\t],\n\t\"a\":\"\u03a9\\u0000\u007f\\n\"\n}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\n\t\"\ud83d\ude00\": [\n\t\t1e+16, \n\t\t-0.0, \n\t\tnull, \n\t\ttrue, \n\t\t{}, \n\t\t[]\n\t], \n\t\"a\": \"\u03a9\\u0000\u007f\\n\"\n}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": null,
+        "separators": null
+      },
+      "expected": "{\"\ud83d\ude00\": [1e+16, -0.0, null, true, {}, []], \"a\": \"\u03a9\\u0000\u007f\\n\"}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": null,
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\"\ud83d\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\u03a9\\u0000\u007f\\n\"}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": null,
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\"\ud83d\ude00\": [1e+16, -0.0, null, true, {}, []], \"a\": \"\u03a9\\u0000\u007f\\n\"}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "",
+        "separators": null
+      },
+      "expected": "{\n\"\ud83d\ude00\": [\n1e+16,\n-0.0,\nnull,\ntrue,\n{},\n[]\n],\n\"a\": \"\u03a9\\u0000\u007f\\n\"\n}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\n\"\ud83d\ude00\":[\n1e+16,\n-0.0,\nnull,\ntrue,\n{},\n[]\n],\n\"a\":\"\u03a9\\u0000\u007f\\n\"\n}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\n\"\ud83d\ude00\": [\n1e+16, \n-0.0, \nnull, \ntrue, \n{}, \n[]\n], \n\"a\": \"\u03a9\\u0000\u007f\\n\"\n}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": null
+      },
+      "expected": "{\n  \"\ud83d\ude00\": [\n    1e+16,\n    -0.0,\n    null,\n    true,\n    {},\n    []\n  ],\n  \"a\": \"\u03a9\\u0000\u007f\\n\"\n}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\n  \"\ud83d\ude00\":[\n    1e+16,\n    -0.0,\n    null,\n    true,\n    {},\n    []\n  ],\n  \"a\":\"\u03a9\\u0000\u007f\\n\"\n}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\n  \"\ud83d\ude00\": [\n    1e+16, \n    -0.0, \n    null, \n    true, \n    {}, \n    []\n  ], \n  \"a\": \"\u03a9\\u0000\u007f\\n\"\n}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": null
+      },
+      "expected": "{\n\t\"\ud83d\ude00\": [\n\t\t1e+16,\n\t\t-0.0,\n\t\tnull,\n\t\ttrue,\n\t\t{},\n\t\t[]\n\t],\n\t\"a\": \"\u03a9\\u0000\u007f\\n\"\n}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\n\t\"\ud83d\ude00\":[\n\t\t1e+16,\n\t\t-0.0,\n\t\tnull,\n\t\ttrue,\n\t\t{},\n\t\t[]\n\t],\n\t\"a\":\"\u03a9\\u0000\u007f\\n\"\n}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\n\t\"\ud83d\ude00\": [\n\t\t1e+16, \n\t\t-0.0, \n\t\tnull, \n\t\ttrue, \n\t\t{}, \n\t\t[]\n\t], \n\t\"a\": \"\u03a9\\u0000\u007f\\n\"\n}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
+        "allow_nan": false,
+        "indent": null,
+        "separators": null
+      },
+      "expected": "{\"a\": \"\u03a9\\u0000\u007f\\n\", \"\ud83d\ude00\": [1e+16, -0.0, null, true, {}, []]}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": false,
+        "sort_keys": true,
         "allow_nan": false,
         "indent": null,
         "separators": [
@@ -28,319 +340,7 @@
       "expected": "{\"a\":\"\u03a9\\u0000\u007f\\n\",\"\ud83d\ude00\":[1e+16,-0.0,null,true,{},[]]}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": false,
-        "sort_keys": false,
-        "allow_nan": false,
-        "indent": null,
-        "separators": [
-          ", ",
-          ": "
-        ]
-      },
-      "expected": "{\"a\": \"\u03a9\\u0000\u007f\\n\", \"\ud83d\ude00\": [1e+16, -0.0, null, true, {}, []]}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": false,
-        "sort_keys": false,
-        "allow_nan": false,
-        "indent": "",
-        "separators": null
-      },
-      "expected": "{\n\"a\": \"\u03a9\\u0000\u007f\\n\",\n\"\ud83d\ude00\": [\n1e+16,\n-0.0,\nnull,\ntrue,\n{},\n[]\n]\n}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": false,
-        "sort_keys": false,
-        "allow_nan": false,
-        "indent": "",
-        "separators": [
-          ",",
-          ":"
-        ]
-      },
-      "expected": "{\n\"a\":\"\u03a9\\u0000\u007f\\n\",\n\"\ud83d\ude00\":[\n1e+16,\n-0.0,\nnull,\ntrue,\n{},\n[]\n]\n}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": false,
-        "sort_keys": false,
-        "allow_nan": false,
-        "indent": "",
-        "separators": [
-          ", ",
-          ": "
-        ]
-      },
-      "expected": "{\n\"a\": \"\u03a9\\u0000\u007f\\n\", \n\"\ud83d\ude00\": [\n1e+16, \n-0.0, \nnull, \ntrue, \n{}, \n[]\n]\n}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": false,
-        "sort_keys": false,
-        "allow_nan": false,
-        "indent": "  ",
-        "separators": null
-      },
-      "expected": "{\n  \"a\": \"\u03a9\\u0000\u007f\\n\",\n  \"\ud83d\ude00\": [\n    1e+16,\n    -0.0,\n    null,\n    true,\n    {},\n    []\n  ]\n}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": false,
-        "sort_keys": false,
-        "allow_nan": false,
-        "indent": "  ",
-        "separators": [
-          ",",
-          ":"
-        ]
-      },
-      "expected": "{\n  \"a\":\"\u03a9\\u0000\u007f\\n\",\n  \"\ud83d\ude00\":[\n    1e+16,\n    -0.0,\n    null,\n    true,\n    {},\n    []\n  ]\n}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": false,
-        "sort_keys": false,
-        "allow_nan": false,
-        "indent": "  ",
-        "separators": [
-          ", ",
-          ": "
-        ]
-      },
-      "expected": "{\n  \"a\": \"\u03a9\\u0000\u007f\\n\", \n  \"\ud83d\ude00\": [\n    1e+16, \n    -0.0, \n    null, \n    true, \n    {}, \n    []\n  ]\n}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": false,
-        "sort_keys": false,
-        "allow_nan": false,
-        "indent": "\t",
-        "separators": null
-      },
-      "expected": "{\n\t\"a\": \"\u03a9\\u0000\u007f\\n\",\n\t\"\ud83d\ude00\": [\n\t\t1e+16,\n\t\t-0.0,\n\t\tnull,\n\t\ttrue,\n\t\t{},\n\t\t[]\n\t]\n}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": false,
-        "sort_keys": false,
-        "allow_nan": false,
-        "indent": "\t",
-        "separators": [
-          ",",
-          ":"
-        ]
-      },
-      "expected": "{\n\t\"a\":\"\u03a9\\u0000\u007f\\n\",\n\t\"\ud83d\ude00\":[\n\t\t1e+16,\n\t\t-0.0,\n\t\tnull,\n\t\ttrue,\n\t\t{},\n\t\t[]\n\t]\n}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": false,
-        "sort_keys": false,
-        "allow_nan": false,
-        "indent": "\t",
-        "separators": [
-          ", ",
-          ": "
-        ]
-      },
-      "expected": "{\n\t\"a\": \"\u03a9\\u0000\u007f\\n\", \n\t\"\ud83d\ude00\": [\n\t\t1e+16, \n\t\t-0.0, \n\t\tnull, \n\t\ttrue, \n\t\t{}, \n\t\t[]\n\t]\n}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": false,
-        "sort_keys": false,
-        "allow_nan": true,
-        "indent": null,
-        "separators": null
-      },
-      "expected": "{\"a\": \"\u03a9\\u0000\u007f\\n\", \"\ud83d\ude00\": [1e+16, -0.0, null, true, {}, []]}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": false,
-        "sort_keys": false,
-        "allow_nan": true,
-        "indent": null,
-        "separators": [
-          ",",
-          ":"
-        ]
-      },
-      "expected": "{\"a\":\"\u03a9\\u0000\u007f\\n\",\"\ud83d\ude00\":[1e+16,-0.0,null,true,{},[]]}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": false,
-        "sort_keys": false,
-        "allow_nan": true,
-        "indent": null,
-        "separators": [
-          ", ",
-          ": "
-        ]
-      },
-      "expected": "{\"a\": \"\u03a9\\u0000\u007f\\n\", \"\ud83d\ude00\": [1e+16, -0.0, null, true, {}, []]}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": false,
-        "sort_keys": false,
-        "allow_nan": true,
-        "indent": "",
-        "separators": null
-      },
-      "expected": "{\n\"a\": \"\u03a9\\u0000\u007f\\n\",\n\"\ud83d\ude00\": [\n1e+16,\n-0.0,\nnull,\ntrue,\n{},\n[]\n]\n}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": false,
-        "sort_keys": false,
-        "allow_nan": true,
-        "indent": "",
-        "separators": [
-          ",",
-          ":"
-        ]
-      },
-      "expected": "{\n\"a\":\"\u03a9\\u0000\u007f\\n\",\n\"\ud83d\ude00\":[\n1e+16,\n-0.0,\nnull,\ntrue,\n{},\n[]\n]\n}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": false,
-        "sort_keys": false,
-        "allow_nan": true,
-        "indent": "",
-        "separators": [
-          ", ",
-          ": "
-        ]
-      },
-      "expected": "{\n\"a\": \"\u03a9\\u0000\u007f\\n\", \n\"\ud83d\ude00\": [\n1e+16, \n-0.0, \nnull, \ntrue, \n{}, \n[]\n]\n}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": false,
-        "sort_keys": false,
-        "allow_nan": true,
-        "indent": "  ",
-        "separators": null
-      },
-      "expected": "{\n  \"a\": \"\u03a9\\u0000\u007f\\n\",\n  \"\ud83d\ude00\": [\n    1e+16,\n    -0.0,\n    null,\n    true,\n    {},\n    []\n  ]\n}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": false,
-        "sort_keys": false,
-        "allow_nan": true,
-        "indent": "  ",
-        "separators": [
-          ",",
-          ":"
-        ]
-      },
-      "expected": "{\n  \"a\":\"\u03a9\\u0000\u007f\\n\",\n  \"\ud83d\ude00\":[\n    1e+16,\n    -0.0,\n    null,\n    true,\n    {},\n    []\n  ]\n}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": false,
-        "sort_keys": false,
-        "allow_nan": true,
-        "indent": "  ",
-        "separators": [
-          ", ",
-          ": "
-        ]
-      },
-      "expected": "{\n  \"a\": \"\u03a9\\u0000\u007f\\n\", \n  \"\ud83d\ude00\": [\n    1e+16, \n    -0.0, \n    null, \n    true, \n    {}, \n    []\n  ]\n}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": false,
-        "sort_keys": false,
-        "allow_nan": true,
-        "indent": "\t",
-        "separators": null
-      },
-      "expected": "{\n\t\"a\": \"\u03a9\\u0000\u007f\\n\",\n\t\"\ud83d\ude00\": [\n\t\t1e+16,\n\t\t-0.0,\n\t\tnull,\n\t\ttrue,\n\t\t{},\n\t\t[]\n\t]\n}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": false,
-        "sort_keys": false,
-        "allow_nan": true,
-        "indent": "\t",
-        "separators": [
-          ",",
-          ":"
-        ]
-      },
-      "expected": "{\n\t\"a\":\"\u03a9\\u0000\u007f\\n\",\n\t\"\ud83d\ude00\":[\n\t\t1e+16,\n\t\t-0.0,\n\t\tnull,\n\t\ttrue,\n\t\t{},\n\t\t[]\n\t]\n}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": false,
-        "sort_keys": false,
-        "allow_nan": true,
-        "indent": "\t",
-        "separators": [
-          ", ",
-          ": "
-        ]
-      },
-      "expected": "{\n\t\"a\": \"\u03a9\\u0000\u007f\\n\", \n\t\"\ud83d\ude00\": [\n\t\t1e+16, \n\t\t-0.0, \n\t\tnull, \n\t\ttrue, \n\t\t{}, \n\t\t[]\n\t]\n}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": false,
-        "sort_keys": true,
-        "allow_nan": false,
-        "indent": null,
-        "separators": null
-      },
-      "expected": "{\"a\": \"\u03a9\\u0000\u007f\\n\", \"\ud83d\ude00\": [1e+16, -0.0, null, true, {}, []]}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": false,
-        "sort_keys": true,
-        "allow_nan": false,
-        "indent": null,
-        "separators": [
-          ",",
-          ":"
-        ]
-      },
-      "expected": "{\"a\":\"\u03a9\\u0000\u007f\\n\",\"\ud83d\ude00\":[1e+16,-0.0,null,true,{},[]]}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": false,
         "sort_keys": true,
@@ -354,7 +354,7 @@
       "expected": "{\"a\": \"\u03a9\\u0000\u007f\\n\", \"\ud83d\ude00\": [1e+16, -0.0, null, true, {}, []]}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": false,
         "sort_keys": true,
@@ -365,7 +365,7 @@
       "expected": "{\n\"a\": \"\u03a9\\u0000\u007f\\n\",\n\"\ud83d\ude00\": [\n1e+16,\n-0.0,\nnull,\ntrue,\n{},\n[]\n]\n}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": false,
         "sort_keys": true,
@@ -379,7 +379,7 @@
       "expected": "{\n\"a\":\"\u03a9\\u0000\u007f\\n\",\n\"\ud83d\ude00\":[\n1e+16,\n-0.0,\nnull,\ntrue,\n{},\n[]\n]\n}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": false,
         "sort_keys": true,
@@ -393,7 +393,7 @@
       "expected": "{\n\"a\": \"\u03a9\\u0000\u007f\\n\", \n\"\ud83d\ude00\": [\n1e+16, \n-0.0, \nnull, \ntrue, \n{}, \n[]\n]\n}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": false,
         "sort_keys": true,
@@ -404,7 +404,7 @@
       "expected": "{\n  \"a\": \"\u03a9\\u0000\u007f\\n\",\n  \"\ud83d\ude00\": [\n    1e+16,\n    -0.0,\n    null,\n    true,\n    {},\n    []\n  ]\n}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": false,
         "sort_keys": true,
@@ -418,7 +418,7 @@
       "expected": "{\n  \"a\":\"\u03a9\\u0000\u007f\\n\",\n  \"\ud83d\ude00\":[\n    1e+16,\n    -0.0,\n    null,\n    true,\n    {},\n    []\n  ]\n}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": false,
         "sort_keys": true,
@@ -432,7 +432,7 @@
       "expected": "{\n  \"a\": \"\u03a9\\u0000\u007f\\n\", \n  \"\ud83d\ude00\": [\n    1e+16, \n    -0.0, \n    null, \n    true, \n    {}, \n    []\n  ]\n}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": false,
         "sort_keys": true,
@@ -443,7 +443,7 @@
       "expected": "{\n\t\"a\": \"\u03a9\\u0000\u007f\\n\",\n\t\"\ud83d\ude00\": [\n\t\t1e+16,\n\t\t-0.0,\n\t\tnull,\n\t\ttrue,\n\t\t{},\n\t\t[]\n\t]\n}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": false,
         "sort_keys": true,
@@ -457,7 +457,7 @@
       "expected": "{\n\t\"a\":\"\u03a9\\u0000\u007f\\n\",\n\t\"\ud83d\ude00\":[\n\t\t1e+16,\n\t\t-0.0,\n\t\tnull,\n\t\ttrue,\n\t\t{},\n\t\t[]\n\t]\n}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": false,
         "sort_keys": true,
@@ -471,7 +471,7 @@
       "expected": "{\n\t\"a\": \"\u03a9\\u0000\u007f\\n\", \n\t\"\ud83d\ude00\": [\n\t\t1e+16, \n\t\t-0.0, \n\t\tnull, \n\t\ttrue, \n\t\t{}, \n\t\t[]\n\t]\n}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": false,
         "sort_keys": true,
@@ -482,7 +482,7 @@
       "expected": "{\"a\": \"\u03a9\\u0000\u007f\\n\", \"\ud83d\ude00\": [1e+16, -0.0, null, true, {}, []]}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": false,
         "sort_keys": true,
@@ -496,7 +496,7 @@
       "expected": "{\"a\":\"\u03a9\\u0000\u007f\\n\",\"\ud83d\ude00\":[1e+16,-0.0,null,true,{},[]]}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": false,
         "sort_keys": true,
@@ -510,7 +510,7 @@
       "expected": "{\"a\": \"\u03a9\\u0000\u007f\\n\", \"\ud83d\ude00\": [1e+16, -0.0, null, true, {}, []]}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": false,
         "sort_keys": true,
@@ -521,7 +521,7 @@
       "expected": "{\n\"a\": \"\u03a9\\u0000\u007f\\n\",\n\"\ud83d\ude00\": [\n1e+16,\n-0.0,\nnull,\ntrue,\n{},\n[]\n]\n}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": false,
         "sort_keys": true,
@@ -535,7 +535,7 @@
       "expected": "{\n\"a\":\"\u03a9\\u0000\u007f\\n\",\n\"\ud83d\ude00\":[\n1e+16,\n-0.0,\nnull,\ntrue,\n{},\n[]\n]\n}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": false,
         "sort_keys": true,
@@ -549,7 +549,7 @@
       "expected": "{\n\"a\": \"\u03a9\\u0000\u007f\\n\", \n\"\ud83d\ude00\": [\n1e+16, \n-0.0, \nnull, \ntrue, \n{}, \n[]\n]\n}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": false,
         "sort_keys": true,
@@ -560,7 +560,7 @@
       "expected": "{\n  \"a\": \"\u03a9\\u0000\u007f\\n\",\n  \"\ud83d\ude00\": [\n    1e+16,\n    -0.0,\n    null,\n    true,\n    {},\n    []\n  ]\n}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": false,
         "sort_keys": true,
@@ -574,7 +574,7 @@
       "expected": "{\n  \"a\":\"\u03a9\\u0000\u007f\\n\",\n  \"\ud83d\ude00\":[\n    1e+16,\n    -0.0,\n    null,\n    true,\n    {},\n    []\n  ]\n}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": false,
         "sort_keys": true,
@@ -588,7 +588,7 @@
       "expected": "{\n  \"a\": \"\u03a9\\u0000\u007f\\n\", \n  \"\ud83d\ude00\": [\n    1e+16, \n    -0.0, \n    null, \n    true, \n    {}, \n    []\n  ]\n}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": false,
         "sort_keys": true,
@@ -599,7 +599,7 @@
       "expected": "{\n\t\"a\": \"\u03a9\\u0000\u007f\\n\",\n\t\"\ud83d\ude00\": [\n\t\t1e+16,\n\t\t-0.0,\n\t\tnull,\n\t\ttrue,\n\t\t{},\n\t\t[]\n\t]\n}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": false,
         "sort_keys": true,
@@ -613,7 +613,7 @@
       "expected": "{\n\t\"a\":\"\u03a9\\u0000\u007f\\n\",\n\t\"\ud83d\ude00\":[\n\t\t1e+16,\n\t\t-0.0,\n\t\tnull,\n\t\ttrue,\n\t\t{},\n\t\t[]\n\t]\n}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": false,
         "sort_keys": true,
@@ -627,10 +627,322 @@
       "expected": "{\n\t\"a\": \"\u03a9\\u0000\u007f\\n\", \n\t\"\ud83d\ude00\": [\n\t\t1e+16, \n\t\t-0.0, \n\t\tnull, \n\t\ttrue, \n\t\t{}, \n\t\t[]\n\t]\n}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": true,
         "sort_keys": false,
+        "allow_nan": false,
+        "indent": null,
+        "separators": null
+      },
+      "expected": "{\"\\ud83d\\ude00\": [1e+16, -0.0, null, true, {}, []], \"a\": \"\\u03a9\\u0000\\u007f\\n\"}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": null,
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": null,
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\"\\ud83d\\ude00\": [1e+16, -0.0, null, true, {}, []], \"a\": \"\\u03a9\\u0000\\u007f\\n\"}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "",
+        "separators": null
+      },
+      "expected": "{\n\"\\ud83d\\ude00\": [\n1e+16,\n-0.0,\nnull,\ntrue,\n{},\n[]\n],\n\"a\": \"\\u03a9\\u0000\\u007f\\n\"\n}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\n\"\\ud83d\\ude00\":[\n1e+16,\n-0.0,\nnull,\ntrue,\n{},\n[]\n],\n\"a\":\"\\u03a9\\u0000\\u007f\\n\"\n}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\n\"\\ud83d\\ude00\": [\n1e+16, \n-0.0, \nnull, \ntrue, \n{}, \n[]\n], \n\"a\": \"\\u03a9\\u0000\\u007f\\n\"\n}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": null
+      },
+      "expected": "{\n  \"\\ud83d\\ude00\": [\n    1e+16,\n    -0.0,\n    null,\n    true,\n    {},\n    []\n  ],\n  \"a\": \"\\u03a9\\u0000\\u007f\\n\"\n}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\n  \"\\ud83d\\ude00\":[\n    1e+16,\n    -0.0,\n    null,\n    true,\n    {},\n    []\n  ],\n  \"a\":\"\\u03a9\\u0000\\u007f\\n\"\n}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "  ",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\n  \"\\ud83d\\ude00\": [\n    1e+16, \n    -0.0, \n    null, \n    true, \n    {}, \n    []\n  ], \n  \"a\": \"\\u03a9\\u0000\\u007f\\n\"\n}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": null
+      },
+      "expected": "{\n\t\"\\ud83d\\ude00\": [\n\t\t1e+16,\n\t\t-0.0,\n\t\tnull,\n\t\ttrue,\n\t\t{},\n\t\t[]\n\t],\n\t\"a\": \"\\u03a9\\u0000\\u007f\\n\"\n}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\n\t\"\\ud83d\\ude00\":[\n\t\t1e+16,\n\t\t-0.0,\n\t\tnull,\n\t\ttrue,\n\t\t{},\n\t\t[]\n\t],\n\t\"a\":\"\\u03a9\\u0000\\u007f\\n\"\n}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": false,
+        "indent": "\t",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\n\t\"\\ud83d\\ude00\": [\n\t\t1e+16, \n\t\t-0.0, \n\t\tnull, \n\t\ttrue, \n\t\t{}, \n\t\t[]\n\t], \n\t\"a\": \"\\u03a9\\u0000\\u007f\\n\"\n}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": null,
+        "separators": null
+      },
+      "expected": "{\"\\ud83d\\ude00\": [1e+16, -0.0, null, true, {}, []], \"a\": \"\\u03a9\\u0000\\u007f\\n\"}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": null,
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": null,
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\"\\ud83d\\ude00\": [1e+16, -0.0, null, true, {}, []], \"a\": \"\\u03a9\\u0000\\u007f\\n\"}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "",
+        "separators": null
+      },
+      "expected": "{\n\"\\ud83d\\ude00\": [\n1e+16,\n-0.0,\nnull,\ntrue,\n{},\n[]\n],\n\"a\": \"\\u03a9\\u0000\\u007f\\n\"\n}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\n\"\\ud83d\\ude00\":[\n1e+16,\n-0.0,\nnull,\ntrue,\n{},\n[]\n],\n\"a\":\"\\u03a9\\u0000\\u007f\\n\"\n}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\n\"\\ud83d\\ude00\": [\n1e+16, \n-0.0, \nnull, \ntrue, \n{}, \n[]\n], \n\"a\": \"\\u03a9\\u0000\\u007f\\n\"\n}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": null
+      },
+      "expected": "{\n  \"\\ud83d\\ude00\": [\n    1e+16,\n    -0.0,\n    null,\n    true,\n    {},\n    []\n  ],\n  \"a\": \"\\u03a9\\u0000\\u007f\\n\"\n}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\n  \"\\ud83d\\ude00\":[\n    1e+16,\n    -0.0,\n    null,\n    true,\n    {},\n    []\n  ],\n  \"a\":\"\\u03a9\\u0000\\u007f\\n\"\n}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "  ",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\n  \"\\ud83d\\ude00\": [\n    1e+16, \n    -0.0, \n    null, \n    true, \n    {}, \n    []\n  ], \n  \"a\": \"\\u03a9\\u0000\\u007f\\n\"\n}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": null
+      },
+      "expected": "{\n\t\"\\ud83d\\ude00\": [\n\t\t1e+16,\n\t\t-0.0,\n\t\tnull,\n\t\ttrue,\n\t\t{},\n\t\t[]\n\t],\n\t\"a\": \"\\u03a9\\u0000\\u007f\\n\"\n}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": [
+          ",",
+          ":"
+        ]
+      },
+      "expected": "{\n\t\"\\ud83d\\ude00\":[\n\t\t1e+16,\n\t\t-0.0,\n\t\tnull,\n\t\ttrue,\n\t\t{},\n\t\t[]\n\t],\n\t\"a\":\"\\u03a9\\u0000\\u007f\\n\"\n}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": false,
+        "allow_nan": true,
+        "indent": "\t",
+        "separators": [
+          ", ",
+          ": "
+        ]
+      },
+      "expected": "{\n\t\"\\ud83d\\ude00\": [\n\t\t1e+16, \n\t\t-0.0, \n\t\tnull, \n\t\ttrue, \n\t\t{}, \n\t\t[]\n\t], \n\t\"a\": \"\\u03a9\\u0000\\u007f\\n\"\n}"
+    },
+    {
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
+      "options": {
+        "ensure_ascii": true,
+        "sort_keys": true,
         "allow_nan": false,
         "indent": null,
         "separators": null
@@ -638,10 +950,10 @@
       "expected": "{\"a\": \"\\u03a9\\u0000\\u007f\\n\", \"\\ud83d\\ude00\": [1e+16, -0.0, null, true, {}, []]}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": true,
-        "sort_keys": false,
+        "sort_keys": true,
         "allow_nan": false,
         "indent": null,
         "separators": [
@@ -652,10 +964,10 @@
       "expected": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": true,
-        "sort_keys": false,
+        "sort_keys": true,
         "allow_nan": false,
         "indent": null,
         "separators": [
@@ -666,10 +978,10 @@
       "expected": "{\"a\": \"\\u03a9\\u0000\\u007f\\n\", \"\\ud83d\\ude00\": [1e+16, -0.0, null, true, {}, []]}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": true,
-        "sort_keys": false,
+        "sort_keys": true,
         "allow_nan": false,
         "indent": "",
         "separators": null
@@ -677,10 +989,10 @@
       "expected": "{\n\"a\": \"\\u03a9\\u0000\\u007f\\n\",\n\"\\ud83d\\ude00\": [\n1e+16,\n-0.0,\nnull,\ntrue,\n{},\n[]\n]\n}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": true,
-        "sort_keys": false,
+        "sort_keys": true,
         "allow_nan": false,
         "indent": "",
         "separators": [
@@ -691,10 +1003,10 @@
       "expected": "{\n\"a\":\"\\u03a9\\u0000\\u007f\\n\",\n\"\\ud83d\\ude00\":[\n1e+16,\n-0.0,\nnull,\ntrue,\n{},\n[]\n]\n}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": true,
-        "sort_keys": false,
+        "sort_keys": true,
         "allow_nan": false,
         "indent": "",
         "separators": [
@@ -705,10 +1017,10 @@
       "expected": "{\n\"a\": \"\\u03a9\\u0000\\u007f\\n\", \n\"\\ud83d\\ude00\": [\n1e+16, \n-0.0, \nnull, \ntrue, \n{}, \n[]\n]\n}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": true,
-        "sort_keys": false,
+        "sort_keys": true,
         "allow_nan": false,
         "indent": "  ",
         "separators": null
@@ -716,10 +1028,10 @@
       "expected": "{\n  \"a\": \"\\u03a9\\u0000\\u007f\\n\",\n  \"\\ud83d\\ude00\": [\n    1e+16,\n    -0.0,\n    null,\n    true,\n    {},\n    []\n  ]\n}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": true,
-        "sort_keys": false,
+        "sort_keys": true,
         "allow_nan": false,
         "indent": "  ",
         "separators": [
@@ -730,10 +1042,10 @@
       "expected": "{\n  \"a\":\"\\u03a9\\u0000\\u007f\\n\",\n  \"\\ud83d\\ude00\":[\n    1e+16,\n    -0.0,\n    null,\n    true,\n    {},\n    []\n  ]\n}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": true,
-        "sort_keys": false,
+        "sort_keys": true,
         "allow_nan": false,
         "indent": "  ",
         "separators": [
@@ -744,10 +1056,10 @@
       "expected": "{\n  \"a\": \"\\u03a9\\u0000\\u007f\\n\", \n  \"\\ud83d\\ude00\": [\n    1e+16, \n    -0.0, \n    null, \n    true, \n    {}, \n    []\n  ]\n}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": true,
-        "sort_keys": false,
+        "sort_keys": true,
         "allow_nan": false,
         "indent": "\t",
         "separators": null
@@ -755,10 +1067,10 @@
       "expected": "{\n\t\"a\": \"\\u03a9\\u0000\\u007f\\n\",\n\t\"\\ud83d\\ude00\": [\n\t\t1e+16,\n\t\t-0.0,\n\t\tnull,\n\t\ttrue,\n\t\t{},\n\t\t[]\n\t]\n}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": true,
-        "sort_keys": false,
+        "sort_keys": true,
         "allow_nan": false,
         "indent": "\t",
         "separators": [
@@ -769,10 +1081,10 @@
       "expected": "{\n\t\"a\":\"\\u03a9\\u0000\\u007f\\n\",\n\t\"\\ud83d\\ude00\":[\n\t\t1e+16,\n\t\t-0.0,\n\t\tnull,\n\t\ttrue,\n\t\t{},\n\t\t[]\n\t]\n}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": true,
-        "sort_keys": false,
+        "sort_keys": true,
         "allow_nan": false,
         "indent": "\t",
         "separators": [
@@ -783,319 +1095,7 @@
       "expected": "{\n\t\"a\": \"\\u03a9\\u0000\\u007f\\n\", \n\t\"\\ud83d\\ude00\": [\n\t\t1e+16, \n\t\t-0.0, \n\t\tnull, \n\t\ttrue, \n\t\t{}, \n\t\t[]\n\t]\n}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": true,
-        "sort_keys": false,
-        "allow_nan": true,
-        "indent": null,
-        "separators": null
-      },
-      "expected": "{\"a\": \"\\u03a9\\u0000\\u007f\\n\", \"\\ud83d\\ude00\": [1e+16, -0.0, null, true, {}, []]}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": true,
-        "sort_keys": false,
-        "allow_nan": true,
-        "indent": null,
-        "separators": [
-          ",",
-          ":"
-        ]
-      },
-      "expected": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": true,
-        "sort_keys": false,
-        "allow_nan": true,
-        "indent": null,
-        "separators": [
-          ", ",
-          ": "
-        ]
-      },
-      "expected": "{\"a\": \"\\u03a9\\u0000\\u007f\\n\", \"\\ud83d\\ude00\": [1e+16, -0.0, null, true, {}, []]}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": true,
-        "sort_keys": false,
-        "allow_nan": true,
-        "indent": "",
-        "separators": null
-      },
-      "expected": "{\n\"a\": \"\\u03a9\\u0000\\u007f\\n\",\n\"\\ud83d\\ude00\": [\n1e+16,\n-0.0,\nnull,\ntrue,\n{},\n[]\n]\n}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": true,
-        "sort_keys": false,
-        "allow_nan": true,
-        "indent": "",
-        "separators": [
-          ",",
-          ":"
-        ]
-      },
-      "expected": "{\n\"a\":\"\\u03a9\\u0000\\u007f\\n\",\n\"\\ud83d\\ude00\":[\n1e+16,\n-0.0,\nnull,\ntrue,\n{},\n[]\n]\n}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": true,
-        "sort_keys": false,
-        "allow_nan": true,
-        "indent": "",
-        "separators": [
-          ", ",
-          ": "
-        ]
-      },
-      "expected": "{\n\"a\": \"\\u03a9\\u0000\\u007f\\n\", \n\"\\ud83d\\ude00\": [\n1e+16, \n-0.0, \nnull, \ntrue, \n{}, \n[]\n]\n}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": true,
-        "sort_keys": false,
-        "allow_nan": true,
-        "indent": "  ",
-        "separators": null
-      },
-      "expected": "{\n  \"a\": \"\\u03a9\\u0000\\u007f\\n\",\n  \"\\ud83d\\ude00\": [\n    1e+16,\n    -0.0,\n    null,\n    true,\n    {},\n    []\n  ]\n}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": true,
-        "sort_keys": false,
-        "allow_nan": true,
-        "indent": "  ",
-        "separators": [
-          ",",
-          ":"
-        ]
-      },
-      "expected": "{\n  \"a\":\"\\u03a9\\u0000\\u007f\\n\",\n  \"\\ud83d\\ude00\":[\n    1e+16,\n    -0.0,\n    null,\n    true,\n    {},\n    []\n  ]\n}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": true,
-        "sort_keys": false,
-        "allow_nan": true,
-        "indent": "  ",
-        "separators": [
-          ", ",
-          ": "
-        ]
-      },
-      "expected": "{\n  \"a\": \"\\u03a9\\u0000\\u007f\\n\", \n  \"\\ud83d\\ude00\": [\n    1e+16, \n    -0.0, \n    null, \n    true, \n    {}, \n    []\n  ]\n}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": true,
-        "sort_keys": false,
-        "allow_nan": true,
-        "indent": "\t",
-        "separators": null
-      },
-      "expected": "{\n\t\"a\": \"\\u03a9\\u0000\\u007f\\n\",\n\t\"\\ud83d\\ude00\": [\n\t\t1e+16,\n\t\t-0.0,\n\t\tnull,\n\t\ttrue,\n\t\t{},\n\t\t[]\n\t]\n}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": true,
-        "sort_keys": false,
-        "allow_nan": true,
-        "indent": "\t",
-        "separators": [
-          ",",
-          ":"
-        ]
-      },
-      "expected": "{\n\t\"a\":\"\\u03a9\\u0000\\u007f\\n\",\n\t\"\\ud83d\\ude00\":[\n\t\t1e+16,\n\t\t-0.0,\n\t\tnull,\n\t\ttrue,\n\t\t{},\n\t\t[]\n\t]\n}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": true,
-        "sort_keys": false,
-        "allow_nan": true,
-        "indent": "\t",
-        "separators": [
-          ", ",
-          ": "
-        ]
-      },
-      "expected": "{\n\t\"a\": \"\\u03a9\\u0000\\u007f\\n\", \n\t\"\\ud83d\\ude00\": [\n\t\t1e+16, \n\t\t-0.0, \n\t\tnull, \n\t\ttrue, \n\t\t{}, \n\t\t[]\n\t]\n}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": true,
-        "sort_keys": true,
-        "allow_nan": false,
-        "indent": null,
-        "separators": null
-      },
-      "expected": "{\"a\": \"\\u03a9\\u0000\\u007f\\n\", \"\\ud83d\\ude00\": [1e+16, -0.0, null, true, {}, []]}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": true,
-        "sort_keys": true,
-        "allow_nan": false,
-        "indent": null,
-        "separators": [
-          ",",
-          ":"
-        ]
-      },
-      "expected": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": true,
-        "sort_keys": true,
-        "allow_nan": false,
-        "indent": null,
-        "separators": [
-          ", ",
-          ": "
-        ]
-      },
-      "expected": "{\"a\": \"\\u03a9\\u0000\\u007f\\n\", \"\\ud83d\\ude00\": [1e+16, -0.0, null, true, {}, []]}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": true,
-        "sort_keys": true,
-        "allow_nan": false,
-        "indent": "",
-        "separators": null
-      },
-      "expected": "{\n\"a\": \"\\u03a9\\u0000\\u007f\\n\",\n\"\\ud83d\\ude00\": [\n1e+16,\n-0.0,\nnull,\ntrue,\n{},\n[]\n]\n}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": true,
-        "sort_keys": true,
-        "allow_nan": false,
-        "indent": "",
-        "separators": [
-          ",",
-          ":"
-        ]
-      },
-      "expected": "{\n\"a\":\"\\u03a9\\u0000\\u007f\\n\",\n\"\\ud83d\\ude00\":[\n1e+16,\n-0.0,\nnull,\ntrue,\n{},\n[]\n]\n}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": true,
-        "sort_keys": true,
-        "allow_nan": false,
-        "indent": "",
-        "separators": [
-          ", ",
-          ": "
-        ]
-      },
-      "expected": "{\n\"a\": \"\\u03a9\\u0000\\u007f\\n\", \n\"\\ud83d\\ude00\": [\n1e+16, \n-0.0, \nnull, \ntrue, \n{}, \n[]\n]\n}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": true,
-        "sort_keys": true,
-        "allow_nan": false,
-        "indent": "  ",
-        "separators": null
-      },
-      "expected": "{\n  \"a\": \"\\u03a9\\u0000\\u007f\\n\",\n  \"\\ud83d\\ude00\": [\n    1e+16,\n    -0.0,\n    null,\n    true,\n    {},\n    []\n  ]\n}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": true,
-        "sort_keys": true,
-        "allow_nan": false,
-        "indent": "  ",
-        "separators": [
-          ",",
-          ":"
-        ]
-      },
-      "expected": "{\n  \"a\":\"\\u03a9\\u0000\\u007f\\n\",\n  \"\\ud83d\\ude00\":[\n    1e+16,\n    -0.0,\n    null,\n    true,\n    {},\n    []\n  ]\n}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": true,
-        "sort_keys": true,
-        "allow_nan": false,
-        "indent": "  ",
-        "separators": [
-          ", ",
-          ": "
-        ]
-      },
-      "expected": "{\n  \"a\": \"\\u03a9\\u0000\\u007f\\n\", \n  \"\\ud83d\\ude00\": [\n    1e+16, \n    -0.0, \n    null, \n    true, \n    {}, \n    []\n  ]\n}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": true,
-        "sort_keys": true,
-        "allow_nan": false,
-        "indent": "\t",
-        "separators": null
-      },
-      "expected": "{\n\t\"a\": \"\\u03a9\\u0000\\u007f\\n\",\n\t\"\\ud83d\\ude00\": [\n\t\t1e+16,\n\t\t-0.0,\n\t\tnull,\n\t\ttrue,\n\t\t{},\n\t\t[]\n\t]\n}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": true,
-        "sort_keys": true,
-        "allow_nan": false,
-        "indent": "\t",
-        "separators": [
-          ",",
-          ":"
-        ]
-      },
-      "expected": "{\n\t\"a\":\"\\u03a9\\u0000\\u007f\\n\",\n\t\"\\ud83d\\ude00\":[\n\t\t1e+16,\n\t\t-0.0,\n\t\tnull,\n\t\ttrue,\n\t\t{},\n\t\t[]\n\t]\n}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
-      "options": {
-        "ensure_ascii": true,
-        "sort_keys": true,
-        "allow_nan": false,
-        "indent": "\t",
-        "separators": [
-          ", ",
-          ": "
-        ]
-      },
-      "expected": "{\n\t\"a\": \"\\u03a9\\u0000\\u007f\\n\", \n\t\"\\ud83d\\ude00\": [\n\t\t1e+16, \n\t\t-0.0, \n\t\tnull, \n\t\ttrue, \n\t\t{}, \n\t\t[]\n\t]\n}"
-    },
-    {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": true,
         "sort_keys": true,
@@ -1106,7 +1106,7 @@
       "expected": "{\"a\": \"\\u03a9\\u0000\\u007f\\n\", \"\\ud83d\\ude00\": [1e+16, -0.0, null, true, {}, []]}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": true,
         "sort_keys": true,
@@ -1120,7 +1120,7 @@
       "expected": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": true,
         "sort_keys": true,
@@ -1134,7 +1134,7 @@
       "expected": "{\"a\": \"\\u03a9\\u0000\\u007f\\n\", \"\\ud83d\\ude00\": [1e+16, -0.0, null, true, {}, []]}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": true,
         "sort_keys": true,
@@ -1145,7 +1145,7 @@
       "expected": "{\n\"a\": \"\\u03a9\\u0000\\u007f\\n\",\n\"\\ud83d\\ude00\": [\n1e+16,\n-0.0,\nnull,\ntrue,\n{},\n[]\n]\n}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": true,
         "sort_keys": true,
@@ -1159,7 +1159,7 @@
       "expected": "{\n\"a\":\"\\u03a9\\u0000\\u007f\\n\",\n\"\\ud83d\\ude00\":[\n1e+16,\n-0.0,\nnull,\ntrue,\n{},\n[]\n]\n}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": true,
         "sort_keys": true,
@@ -1173,7 +1173,7 @@
       "expected": "{\n\"a\": \"\\u03a9\\u0000\\u007f\\n\", \n\"\\ud83d\\ude00\": [\n1e+16, \n-0.0, \nnull, \ntrue, \n{}, \n[]\n]\n}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": true,
         "sort_keys": true,
@@ -1184,7 +1184,7 @@
       "expected": "{\n  \"a\": \"\\u03a9\\u0000\\u007f\\n\",\n  \"\\ud83d\\ude00\": [\n    1e+16,\n    -0.0,\n    null,\n    true,\n    {},\n    []\n  ]\n}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": true,
         "sort_keys": true,
@@ -1198,7 +1198,7 @@
       "expected": "{\n  \"a\":\"\\u03a9\\u0000\\u007f\\n\",\n  \"\\ud83d\\ude00\":[\n    1e+16,\n    -0.0,\n    null,\n    true,\n    {},\n    []\n  ]\n}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": true,
         "sort_keys": true,
@@ -1212,7 +1212,7 @@
       "expected": "{\n  \"a\": \"\\u03a9\\u0000\\u007f\\n\", \n  \"\\ud83d\\ude00\": [\n    1e+16, \n    -0.0, \n    null, \n    true, \n    {}, \n    []\n  ]\n}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": true,
         "sort_keys": true,
@@ -1223,7 +1223,7 @@
       "expected": "{\n\t\"a\": \"\\u03a9\\u0000\\u007f\\n\",\n\t\"\\ud83d\\ude00\": [\n\t\t1e+16,\n\t\t-0.0,\n\t\tnull,\n\t\ttrue,\n\t\t{},\n\t\t[]\n\t]\n}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": true,
         "sort_keys": true,
@@ -1237,7 +1237,7 @@
       "expected": "{\n\t\"a\":\"\\u03a9\\u0000\\u007f\\n\",\n\t\"\\ud83d\\ude00\":[\n\t\t1e+16,\n\t\t-0.0,\n\t\tnull,\n\t\ttrue,\n\t\t{},\n\t\t[]\n\t]\n}"
     },
     {
-      "input": "{\"a\":\"\\u03a9\\u0000\\u007f\\n\",\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]]}",
+      "input": "{\"\\ud83d\\ude00\":[1e+16,-0.0,null,true,{},[]],\"a\":\"\\u03a9\\u0000\\u007f\\n\"}",
       "options": {
         "ensure_ascii": true,
         "sort_keys": true,

@@ -392,3 +392,64 @@ fn nonfinite_floats_and_unencodable_surrogates_produce_no_bytes() {
         assert!(float(value).is_err());
     }
 }
+
+#[test]
+fn ordered_parse_and_python_equality_match_live_vectors() {
+    for v in vectors("ordered")["vectors"].as_array().unwrap() {
+        let input = CanonValue::parse(text(v, "input")).unwrap();
+        assert_eq!(
+            dumps(
+                &input,
+                SerializeOptions {
+                    indent: Some("  "),
+                    ensure_ascii: false,
+                    ..Default::default()
+                }
+            )
+            .unwrap(),
+            text(v, "expected")
+        );
+    }
+    for (i, v) in vectors("equality")["vectors"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .enumerate()
+    {
+        assert_eq!(
+            python_eq(
+                &parse(text(v, "left")).unwrap(),
+                &parse(text(v, "right")).unwrap()
+            ),
+            v["equal"].as_bool().unwrap(),
+            "equality vector {i}"
+        );
+    }
+}
+
+#[test]
+fn canon_value_deserialization_cannot_bypass_the_parser() {
+    for raw in [
+        r#"{"z":1,"a":2,"z":3}"#,
+        "10000000000000000000000000000000000000000000000000001",
+        "1e-9999",
+        r#"{"$serde_json::private::Number":"still data"}"#,
+    ] {
+        let decoded: CanonValue = serde_json::from_str(raw).unwrap();
+        assert_eq!(
+            canonical(&decoded).unwrap(),
+            canonical(&parse(raw).unwrap()).unwrap()
+        );
+        assert_eq!(
+            dumps(&decoded, Default::default()).unwrap(),
+            dumps(&parse(raw).unwrap(), Default::default()).unwrap()
+        );
+    }
+    for raw in [
+        "1e9999".into(),
+        "9".repeat(4301),
+        format!("{}0{}", "[".repeat(513), "]".repeat(513)),
+    ] {
+        assert!(serde_json::from_str::<CanonValue>(&raw).is_err());
+    }
+}

@@ -93,6 +93,28 @@ class UserQuestionTests(unittest.TestCase):
             {'task_id': row['id'], 'owner': row['owner'], 'reason': 'answered-by-mail', 'evidence': evidence}])
         self.assertEqual(owner_todo.owner_todo(work, self.root)['questions'], [])
 
+    def test_work_and_owner_todo_include_questions_from_every_kind_in_open_order(self):
+        tasks = self.ledger.tasks
+        kinds = ['reply', 'research', 'shortnote', 'submission', 'firstcontact', 'mathesis', 'daily']
+        for offset, kind in enumerate(kinds):
+            opened_at = 1000 - offset
+            tasks.clock = lambda: opened_at
+            row = self.question(kind, kind=kind)
+            result = row['data']['result']
+            result['routing']['questions'][0]['source_quote'] = 'Could we discuss this on Friday?'
+            tasks.update(row['id'], row['revision'], 'awaiting-user', {'result': result})
+        tasks.clock = lambda: 1001 + 2 * 86400
+        work = automation.work(tasks, self.root)
+        self.assertEqual([q['task_id'] for q in work['user_questions']], kinds[::-1])
+        submission = next(q for q in work['user_questions'] if q['task_id'] == 'submission')
+        self.assertEqual(submission['opened_at'], 997)
+        self.assertEqual(submission['result_hash'], digest(tasks.get('submission')['data']['result']))
+        todo = owner_todo.owner_todo(work, self.root)['questions']
+        self.assertEqual([q['task_id'] for q in todo], kinds[::-1])
+        submission = next(q for q in todo if q['task_id'] == 'submission')
+        self.assertEqual(submission['content'], '是否会面？\n“Could we discuss this on Friday?”')
+        self.assertEqual(control.owner_question_health(tasks)['open_owner_questions_over_2_days'], 2)
+
     def test_prior_same_time_different_conversation_sender_or_recipient_stay_open(self):
         cases = [dict(at='2026-11-12T18:30:00Z'), dict(at=INBOUND),
                  dict(conversation='different'), dict(recipient='other@example.invalid'),
@@ -170,8 +192,9 @@ class UserQuestionTests(unittest.TestCase):
         result = {'outcome': 'no-reply', 'packet': None, 'routing': {'mail': 'none', 'questions': []}}
         return self.ledger.tasks.update(task_id, row['revision'], 'approved', {'result': result})
 
-    def route(self):
-        config = {**self.config, 'kinds': {'reply': True}, 'max_active': 2, 'agent_template': {}}
+    def route(self, *kinds):
+        config = {**self.config, 'kinds': dict.fromkeys(kinds or ('reply',), True),
+                  'max_active': 2, 'agent_template': {}}
         cma = CMA()
         with patch.object(control, 'ROOT', self.root):
             control.advance(self.ledger, cma, config, self.root / 'ledger', revision='b' * 40)
@@ -215,6 +238,89 @@ class UserQuestionTests(unittest.TestCase):
         self.assertEqual(suppressed['data']['superseded_by'], later['id'])
         self.assertIn('same incoming message', suppressed['data']['reason'])
         self.assertEqual(len(tasks.all()), 2)
+
+    def inbound(self, task_id, message_id, at, thread='conversation', kind='reply', **extra):
+        return self.ledger.tasks.add({**request(task_id, 'contact-a', kind), 'inputs': {
+            'thread_id': thread, 'latest_inbound_message_id': message_id,
+            'mailbox_observation': {'message_id': message_id, 'at': at}, **extra}})
+
+    def test_workflow_hold_yields_to_completed_work_for_newer_inbound(self):
+        tasks = self.ledger.tasks
+        for state, kind in [('verified', 'reply'), ('no-reply', 'reply'), ('handoff-ready', 'research')]:
+            with self.subTest(state=state):
+                # The successor can have been staged earlier when recovering older mail.
+                later = self.inbound('later-' + state, '<new@example.invalid>', SENT, thread=state, kind=kind)
+                if state == 'no-reply':
+                    result = {'outcome': 'no-reply', 'packet': None, 'routing': {'mail': 'none', 'questions': []}}
+                    later = tasks.update(later['id'], later['revision'], 'awaiting-review', {'result': result})
+                    review = {'binding': tasks.review_binding(later), 'verdict': 'PASS',
+                              'reviewer': 'local-claude-loop', 'reason': 'The question was withdrawn.',
+                              'evidence_ref': 'fixture:withdrawal'}
+                    review['signature'] = hmac.new(b'secret', canonical(review).encode(), hashlib.sha256).hexdigest()
+                    tasks.verdict(review, 'secret')
+                else:
+                    tasks.update(later['id'], later['revision'], state, {})
+                old = self.inbound('held-' + state, '<old@example.invalid>', INBOUND, thread=state, kind=kind)
+                tasks.update(old['id'], old['revision'], 'held', {'reason': WORKFLOW_CHANGED})
+                cma = self.route(kind)
+                self.assertFalse(cma.creates)
+                self.assertEqual(tasks.get(later['id'])['state'], state)
+                suppressed = tasks.get(old['id'])
+                self.assertEqual(suppressed['state'], 'superseded')
+                self.assertEqual(suppressed['data']['superseded_by'], later['id'])
+                self.assertIn('newer incoming message', suppressed['data']['reason'])
+
+    def test_workflow_hold_resumes_with_only_failed_or_unrelated_newer_tasks(self):
+        tasks = self.ledger.tasks
+        old = self.inbound('held', '<old@example.invalid>', INBOUND)
+        tasks.update(old['id'], old['revision'], 'held', {'reason': WORKFLOW_CHANGED})
+        for state, thread in [('failed', 'conversation'), ('verified', 'other'), ('held', 'conversation')]:
+            later = self.inbound('later-' + state, '<new@example.invalid>', SENT, thread=thread)
+            tasks.update(later['id'], later['revision'], state, {})
+        self.assertFalse(self.route().creates)
+        repinned = tasks.get(old['id'])['data']['successor']
+        self.assertEqual(tasks.get(repinned)['state'], 'queued')
+        self.assertEqual(len(self.route().creates), 1)
+        self.assertEqual(tasks.get(repinned)['state'], 'running')
+
+    def test_held_continuations_carry_answers_before_successor_admission(self):
+        tasks = self.ledger.tasks
+        cases = [('workflow', WORKFLOW_CHANGED), ('mailbox', 'Reply mailbox history failed: TimeoutError: offline')]
+        for case, reason in cases:
+            with self.subTest(case=case):
+                answer = {'answers': {'meeting': 'Decline.'}, 'evidence_ref': 'fixture:' + case}
+                old = self.inbound('held-' + case, '<same@example.invalid>', INBOUND,
+                                   thread=case, user_answers=[answer])
+                tasks.update(old['id'], old['revision'], 'held', {'reason': reason})
+                later = self.inbound('successor-' + case, '<same@example.invalid>', INBOUND, thread=case)
+                cma = self.route()
+                self.assertEqual(len(cma.creates), 1)
+                successor = tasks.get(later['id'])
+                self.assertEqual(successor['state'], 'running')
+                self.assertEqual(successor['request']['inputs']['user_answers'], [answer])
+                self.assertTrue(successor['request']['inputs']['user_decision_ever'])
+                self.assertIn(answer['evidence_ref'], next(iter(cma.commands.values()))['prompt'])
+                inventory = automation.work(tasks, self.root)['superseded_answer_continuations']
+                item = next(i for i in inventory if i['task_id'] == old['id'])
+                self.assertEqual(item['superseded_by'], later['id'])
+                self.assertEqual(item['answers'], [answer])
+                tasks.update(successor['id'], successor['revision'], 'verified', {})
+
+    def test_started_successor_records_carried_answer_with_original_binding(self):
+        tasks = self.ledger.tasks
+        answer = {'answers': {'meeting': 'Decline.'}, 'evidence_ref': 'fixture:meeting'}
+        later = self.inbound('finished', '<new@example.invalid>', SENT)
+        later = tasks.update(later['id'], later['revision'], 'verified', {'sent_receipt': {'verified': True}})
+        old = self.inbound('held-answer', '<old@example.invalid>', INBOUND, user_answers=[answer])
+        tasks.update(old['id'], old['revision'], 'held', {'reason': WORKFLOW_CHANGED})
+        self.assertFalse(self.route().creates)
+        successor = tasks.get(later['id'])
+        self.assertEqual(successor['state'], 'verified')
+        self.assertEqual(successor['request_hash'], later['request_hash'])
+        self.assertEqual(successor['request'], later['request'])
+        self.assertEqual(successor['data'], {**later['data'], 'carried_user_answers': [answer]})
+        self.route()
+        self.assertEqual(tasks.get(later['id']), successor)
 
     def test_only_later_answer_continuation_starts_for_same_inbound(self):
         tasks = self.ledger.tasks
@@ -268,7 +374,8 @@ class UserQuestionTests(unittest.TestCase):
 
     def test_non_open_questions_neither_block_routing_nor_accept_signed_closure(self):
         fixtures = [('reply', 'approved'), ('reply', 'revising'), ('reply', 'superseded'),
-                    ('submission', 'revising'), ('submission', 'superseded'), ('shortnote', 'awaiting-user')]
+                    ('submission', 'revising'), ('submission', 'superseded'),
+                    ('submission', 'awaiting-user'), ('shortnote', 'awaiting-user')]
         tasks = self.ledger.tasks
         for index, (kind, state) in enumerate(fixtures):
             row = self.question('excluded-' + str(index), state=state, kind=kind)

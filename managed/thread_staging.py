@@ -11,7 +11,7 @@ from tempfile import TemporaryDirectory
 from .location import owner_labels, source_head
 from .queue import digest, require
 from .registry import email, people, preflight
-from .tasks import ACTIVE, STATES
+from .tasks import ACTIVE, STATES, newer_reply
 
 
 MAX_CONVERSATIONS = 3
@@ -142,6 +142,13 @@ def later_inbound_task(row, rows, *, answers_only=False):
     groups = inbound_tasks(later, include_finished=True, kind=kind)
     candidates = {task['task_id'] for identity in identities for task in groups.get(identity, ())}
     return next((other['id'] for other in later if other['id'] in candidates), None)
+
+
+def newer_conversation_task(row, rows):
+    """Find work on a later inbound in the same conversation and task kind."""
+    states = (INBOUND_STATES - {'held'}) | FINISHED_INBOUND_STATES | {'handoff-ready'}
+    return next((other['id'] for other in reversed(rows)
+                 if other['state'] in states and newer_reply(other, row)), None)
 
 
 def active_inbound_tasks(tasks, *, include_finished=False):

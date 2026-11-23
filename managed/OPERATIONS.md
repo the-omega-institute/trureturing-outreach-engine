@@ -69,4 +69,5 @@ Add the hex digest as `signature` and stage the signed file with
 `python3 -m managed.control decision /path/to/decision.json`. The coordinator
 checks the signature and result hash and accepts closure while the task is
 `awaiting-user`. It records `question-closed` with the reason and evidence
-reference. The closure appears in `work.user_questions_closed`.
+reference and discards any unsent letter in that result. The closure appears
+in `work.user_questions_closed`.

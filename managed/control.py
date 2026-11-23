@@ -32,7 +32,8 @@ from .mail_domains import home_domains
 from .tasks import (ACTIVE, CORRESPONDENCE_KINDS, KINDS, Tasks, POLICY_IDENTITY_MISMATCH, WORKFLOW_CHANGED, WORKFLOW_PIN_MISMATCH, matches_workflow,
                     owners, policy_mismatch_hold, unstarted, validate_request, validate_review_edit, validate_review_rebind)
 from .registry import email, firstcontact_gate
-from .thread_staging import answer_continuation, effective_inputs, later_inbound_task, LEGACY_RESOLUTION_REASON
+from .thread_staging import (answer_continuation, effective_inputs, later_inbound_task,
+                             newer_conversation_task, LEGACY_RESOLUTION_REASON)
 from .tick import Tick, artifact_io_budget, artifact_io_timeout, measure, phase, unit, units
 from .lanes import at_share, interleave, lane as lane_of, summary as lane_summary, validate as validate_lanes
 from . import note_closure, note_revisions, recheck
@@ -2410,6 +2411,11 @@ def legacy_mailbox_hold(row):
     return None
 
 
+def legacy_thread_hold(row):
+    return (row['data'].get('reason') == LEGACY_RESOLUTION_REASON and unstarted(row)
+            and bool(row['request']['inputs'].get('thread_ref')))
+
+
 def mailbox_retry_waiting(row, now):
     retry = row['data'].get('mailbox_retry') or {}
     return row['kind'] in CORRESPONDENCE_KINDS and retry.get('status') == 'scheduled' and now < retry['next_at']
@@ -2681,13 +2687,29 @@ def advance(ledger,cma,config,folder,revision=None,mailbox=None,oracle_capacity=
                 open_ids = {task_id for task_id, _, _ in tasks.owner_questions()}
                 yield from ({**r, 'retry_no_reply': True} for r in blocked
                             if open_ids.isdisjoint(r['data']['owner_question_blockers']))
+        # Carry answers from resumable holds before the queued successor can be admitted.
+        if not config['paused']:
+            for original in stage_rows:
+                kind = original['kind']
+                if (original['state'] != 'held' or kind not in CORRESPONDENCE_KINDS
+                        or not config['kinds'].get(kind) or not answer_continuation(original)):
+                    continue
+                row = tasks.get(original['id'])
+                if row['state'] == 'held' and (legacy_mailbox_hold(row) or legacy_thread_hold(row)
+                        or (unstarted(row) and row['data'].get('reason') == WORKFLOW_CHANGED
+                            and not mailbox_retry_waiting(row, tasks.clock()))):
+                    supersede_if_covered(row)
         yield from units(ledger,'advance',advance_order(),timed=False,preserve_order=True)
     def supersede_if_covered(row, *, answers_only=False):
-        successor = later_inbound_task(row, current_rows(), answers_only=answers_only)
+        candidates = current_rows()
+        successor = later_inbound_task(row, candidates, answers_only=answers_only)
+        reason = 'A later task covers the same incoming message'
+        if not successor and row['state'] == 'held':
+            successor = newer_conversation_task(row, candidates)
+            reason = 'Another task covers a newer incoming message in the same conversation'
         if not successor:
             return False
-        tasks.update(row['id'], row['revision'], 'superseded', {
-            **row['data'], 'superseded_by': successor, 'reason': 'A later task covers the same incoming message'})
+        tasks.supersede_inbound(row, successor, reason)
         ledger.save()
         updates.append(row['id'])
         return True
@@ -2738,9 +2760,7 @@ def advance(ledger,cma,config,folder,revision=None,mailbox=None,oracle_capacity=
             continue  # A failed recovery read must not destroy a potentially reusable Agent.
         if row['state']=='held' and row['kind'] in CORRESPONDENCE_KINDS:
             retry_key = legacy_mailbox_hold(row)
-            legacy_thread = (data.get('reason') == LEGACY_RESOLUTION_REASON and unstarted(row)
-                             and row['request']['inputs'].get('thread_ref'))
-            if (retry_key or legacy_thread) and not config['paused'] and config['kinds'].get(row['kind']):
+            if (retry_key or legacy_thread_hold(row)) and not config['paused'] and config['kinds'].get(row['kind']):
                 if supersede_if_covered(row):continue
                 # Legacy holds spent their budget without a persisted backoff window.
                 data.pop('reason')

@@ -17,7 +17,7 @@ from .queue import digest, require
 from .mail_domains import home_domains, home_recipient_override
 from .tasks import (ACTIVE, matches_workflow, owner_draft_rebindable, parked,
                     review_current, submission_ready_unreviewed, validate_request)
-from .thread_staging import effective_inputs, inbound_tasks
+from .thread_staging import answer_continuation, effective_inputs, inbound_tasks
 from . import note_closure, note_revisions
 
 MAIL = {'firstcontact', 'reply'}
@@ -897,7 +897,7 @@ def work(tasks, root, config=None):
                              'stale_draft_conflict':data.get('stale_draft_conflict'),
                              'last_error':data.get('last_error')})
     questions = []
-    open_questions = {task_id: opened for task_id, opened, _ in tasks.owner_questions()}
+    open_questions = {task_id: opened for task_id, opened, _ in tasks.owner_questions(correspondence_only=False)}
     for task_id, opened_at in open_questions.items():
         row = tasks.get(task_id)
         result = row['data']['result']
@@ -905,7 +905,7 @@ def work(tasks, root, config=None):
         questions.append({'task_id': task_id, 'owner': row['owner'], 'opened_at': opened_at,
                           'result_hash': digest(result), 'request': {**row['request'], 'inputs': inputs},
                           'result': result, 'mailbox_observation': inputs.get('mailbox_observation'),
-                          'questions': result['routing']['questions']})
+                          'questions': (result.get('routing') or {}).get('questions', [])})
     follow = [{'id':r['id'], 'kind':r['kind'], 'state':r['state'],
                'reason':r['data'].get('last_error') or r['data'].get('reason') or
                         r['data'].get('review', {}).get('reason') or r['data'].get('result',{}).get('report',''),
@@ -1006,6 +1006,13 @@ def work(tasks, root, config=None):
             'mailbox_no_task':list(no_task.values())[:MAILBOX_NO_TASK_LIMIT],
             'user_questions_closed':[{'task_id':r['id'], 'owner':r['owner'], **r['data']['user_question_closed']}
                                      for r in all_rows if r['id'] not in open_questions and r['data'].get('user_question_closed')],
+            'superseded_answer_continuations':[
+                {'task_id': r['id'], 'owner': r['owner'], 'kind': r['kind'],
+                 'superseded_by': r['data']['superseded_by'], 'reason': r['data'].get('reason'),
+                 'answers': [*(r['request']['inputs'].get('user_answers') or []),
+                             *r['data'].get('carried_user_answers', [])]}
+                for r in all_rows if r['state'] == 'superseded' and r['data'].get('superseded_by')
+                and (answer_continuation(r) or r['data'].get('carried_user_answers'))],
             'reviews':reviews,
             'artifact_collections_in_progress':artifact_collections,
             'guard_continuations_without_checkpoint':guard_without_checkpoint,

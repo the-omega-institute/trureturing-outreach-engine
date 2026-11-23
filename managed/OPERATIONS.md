@@ -12,6 +12,35 @@ branch. Place the operational `config.json` and operative `policy/` in that chec
 output contains timings and statuses. Detailed logs are retained in the private
 control Release. Pull request checks use fixtures and the example configuration.
 
+Hosted feed synchronization and delivery share the disposable
+`pages-feed-cache.json` asset in the private `outreach-control` Release. Each
+job downloads it to a temporary directory outside the private data checkout
+and replaces only that asset when its bytes change. Its input digest
+covers the catalog, submission board, note receipts, manifest asset identities,
+projection code and Mathesis configuration. Cached manifests are reused by
+immutable asset identity, so changing one note downloads only that note's
+manifest. Receipt bookkeeping and timestamps do not create content changes.
+Every synchronization still verifies the projected content against the live
+Pages index and checks for a pending feed swap before skipping deployment.
+Verification requires the exact publication set after excluding independent
+papers from Pages' authored catalog; extra feed papers, including removals
+left by a failed build, keep dispatch retrying on later jobs. Release asset
+contents and prior cache hits never establish deployment. A missing/corrupt
+cache or missing asset identity falls back to checked downloads; a stale or
+unavailable site follows the recoverable feed delivery and dispatch path. The
+cache can be deleted without losing delivery state. Missing/failed cache
+downloads take the cold path; failed cache uploads leave delivery results
+intact. Cache files are never written or committed to the private data branch.
+
+The coordinator keeps its 540-second tick budget and 15-minute schedule.
+Advance-stage readers reuse a snapshot until a task-table write or a write
+through another SQLite connection invalidates it. Process-local SQLite TEMP
+triggers track direct task writes; a Python connection epoch invalidates
+snapshots on rollbacks and failed statements, including savepoint reuse,
+without changing the persisted ledger format. Empty Mathesis passes inspect
+delivery fields before loading the full ledger; unfinished legacy migration and uncertain delivery handles
+still follow their original recovery paths.
+
 For authorized local inspection, run `python3 -m managed.control status`,
 `python3 -m managed.control work`, or `python3 -m managed.control reviews`
 with the configured private data checkout and an authenticated GitHub CLI.

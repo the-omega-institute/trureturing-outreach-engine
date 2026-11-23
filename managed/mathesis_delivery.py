@@ -444,6 +444,21 @@ def migrate_legacy_deliveries(ledger, config, root, folder, client, secret, limi
     return summary
 
 
+def _needs_delivery(row, active, revisions=None):
+    value = row['data'].get('mathesis_delivery', {})
+    if revisions and revisions.reason(row) and value.get('phase') not in {'pending', 'conflict'}:
+        return False
+    migration = value.get('legacy_migration')
+    if value.get('collection_envelope') and migration and migration.get('phase') != 'redelivered':
+        return False  # Migration owns the saved request until it finishes.
+    if value.get('phase') in {'ready', 'pending', 'conflict'}:
+        return True
+    envelope = value.get('collection_envelope', value.get('envelope', {}))
+    return (active and value.get('phase') == 'delivered'
+            and envelope.get('metadata', {}).get('schema') == 'mathesis.pre-reviewed-delivery.v1'
+            and value.get('public_link', {}).get('phase') != 'queued')
+
+
 def advance(ledger, config, root, folder, client=None, secret=None, note_gh=None, *, attempted=None, again=False):
     """Persist intent, deliver, GET the receipt, then finish. Never await review.
 
@@ -462,11 +477,31 @@ def advance(ledger, config, root, folder, client=None, secret=None, note_gh=None
     active = not config['paused'] and config['kinds'].get('mathesis') and settings.get('mode') == 'deliver'
     secret = secret or os.environ.get('OUTREACH_REVIEW_KEY')
     identity_verified = False
+    # Inspect only Mathesis rows before loading bulky mail/results for lineage.
+    # In particular, publication often selects nothing for the second pass, or
+    # the first pass has already used every delivery slot. Keep legacy recovery
+    # independent of slots, including original uncertain receipt handles.
+    mathesis_rows = [{'id': row['id'], 'kind': 'mathesis',
+                      'data': {'mathesis_delivery': json.loads(row['delivery'])}}
+                     for row in ledger.tasks.db.execute("""SELECT id,
+                         json_extract(data, '$.mathesis_delivery') AS delivery FROM tasks
+                         WHERE kind='mathesis' AND json_type(data, '$.mathesis_delivery')='object'
+                         ORDER BY rowid""")]
+    legacy = active and not test and migrate and any(
+        (state := _legacy_migration_state(row)) is not None
+        and state.get('phase') not in {'redelivered', 'skipped'} for row in mathesis_rows)
+    candidates = slots and any(row['id'] not in (attempted or ()) and _needs_delivery(row, active)
+                               for row in mathesis_rows)
+    if not legacy and not candidates:
+        # Preserve the first/second pass's deferred-work bookkeeping even when
+        # there is no batch to load. The second pass retains earlier deferrals.
+        list(units(ledger, 'mathesis', [], keep_pending=again))
+        return
     all_rows = ledger.tasks.all()
     revisions = note_revisions.Revisions(ledger.tasks, all_rows)
     legacy_candidates = [r for r in all_rows if _legacy_migration_state(r) is not None
                          and not revisions.reason(r)]
-    if active and legacy_candidates and not test and migrate:
+    if legacy and legacy_candidates:
         if client is None:
             token = os.environ.get('MATHESIS_ACCESS_TOKEN') or os.environ.get('CMA_ACCESS_TOKEN')
             require(token, 'Mathesis submitting identity is unavailable')
@@ -476,21 +511,7 @@ def advance(ledger, config, root, folder, client=None, secret=None, note_gh=None
         migrate_legacy_deliveries(ledger, config, root, folder, client, secret,
                                   limit=settings.get('legacy_migration_per_tick', 3))
         all_rows = ledger.tasks.all()
-    def needs_delivery(row):
-        value = row['data'].get('mathesis_delivery', {})
-        if revisions.reason(row) and value.get('phase') not in {'pending', 'conflict'}:
-            return False
-        migration = value.get('legacy_migration')
-        if value.get('collection_envelope') and migration and migration.get('phase') != 'redelivered':
-            # The migration owns the saved collection request until it finishes.
-            return False
-        if value.get('phase') in {'ready', 'pending', 'conflict'}:
-            return True
-        envelope = value.get('collection_envelope', value.get('envelope', {}))
-        return (active and value.get('phase') == 'delivered'
-                and envelope.get('metadata', {}).get('schema') == 'mathesis.pre-reviewed-delivery.v1'
-                and value.get('public_link', {}).get('phase') != 'queued')
-    rows = [r for r in all_rows if r['kind'] == 'mathesis' and needs_delivery(r)
+    rows = [r for r in all_rows if r['kind'] == 'mathesis' and _needs_delivery(r, active, revisions)
             and r['id'] not in (attempted or ())]
     correspondence = linked_contacts(all_rows, root, config) if rows else {}
     # New deliveries before re-polling already delivered collections.

@@ -81,6 +81,11 @@ class FakeGitHub:
         self.uploads = []
         self.fail_dispatch = False
         self.fail_upload = None
+        self.authored_publications = []
+
+    @property
+    def dispatches(self):
+        return [call for call in self.calls if 'event_type=research-updates' in call]
 
     def release(self, tag):
         if tag not in self.releases:
@@ -122,6 +127,9 @@ class FakeGitHub:
             if self.fail_dispatch:
                 raise RuntimeError('Dispatch temporarily unavailable')
             return b''
+        if any('/contents/site/assets/research-news.json' in arg for arg in args):
+            catalog = {'publications': self.authored_publications}
+            return json.dumps({'content': base64.b64encode(w.encode(catalog)).decode()}).encode()
         return json.dumps({'content': base64.b64encode(w.encode(empty_feed())).decode()}).encode()
 
 

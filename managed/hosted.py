@@ -1,5 +1,6 @@
 """GitHub-hosted commands with one private output boundary."""
 import base64
+from contextlib import contextmanager
 import json
 import os
 from pathlib import Path
@@ -104,15 +105,8 @@ def command(action):
         return main(['--apply', '--push'])
     from scripts.short_notes import service
     if action == 'pages':
-        try:
-            result = service.execute(service.parse_args(['verify-feed']))
-        except (ValueError, RuntimeError, OSError, KeyError, TypeError) as exc:
-            print(type(exc).__name__, str(exc))
-            result = {'status': 'failed'}
-        print(service.w.encode(result).decode(), end='')
-        if result.get('status') == 'deployed':
-            return 0
-        return service.main(['sync'])
+        with feed_cache():
+            return service.main(['sync'])
     selection = json.loads(os.environ.get('OUTREACH_NOTE_REQUEST') or '{}')
     for key, variable in (('id', 'NOTE_ID'), ('revision', 'NOTE_REVISION'),
                           ('recover_record', 'RECOVER_RECORD'), ('reuse_draft_from', 'REUSE_DRAFT_FROM'),
@@ -120,7 +114,51 @@ def command(action):
         if key in selection:
             value = json.dumps(selection[key]) if key == 'publication' else str(selection[key])
             os.environ[variable] = value
-    return service.main(['ci'])
+    with feed_cache():
+        return service.main(['ci'])
+
+
+@contextmanager
+def feed_cache():
+    """Restore a disposable control-Release asset outside the data checkout."""
+    from .control import Releases
+    from .location import ENGINE_ROOT, hosted
+    from scripts.short_notes.service import FEED_CACHE_ASSET, FEED_CACHE_ENV
+    if not hosted() or DATA_ROOT == ENGINE_ROOT:
+        yield
+        return
+    releases = Releases()
+    with TemporaryDirectory(prefix='outreach-feed-cache-') as directory:
+        path = Path(directory) / FEED_CACHE_ASSET
+        private = False
+        try:
+            releases.require_private()
+            private = True
+            release = releases.release()
+            if any(asset['name'] == FEED_CACHE_ASSET for asset in (release or {}).get('assets', [])):
+                releases.download(FEED_CACHE_ASSET, directory)
+        except (ValueError, RuntimeError, OSError, subprocess.TimeoutExpired):
+            # Missing/unavailable/partial cache downloads are just cold jobs.
+            path.unlink(missing_ok=True)
+        before = path.read_bytes() if path.is_file() else None
+        previous = os.environ.get(FEED_CACHE_ENV)
+        os.environ[FEED_CACHE_ENV] = str(path)
+        try:
+            yield
+        finally:
+            if previous is None:
+                os.environ.pop(FEED_CACHE_ENV, None)
+            else:
+                os.environ[FEED_CACHE_ENV] = previous
+            if private and path.is_file() and path.read_bytes() != before:
+                try:
+                    releases.ensure()
+                    # Only this disposable asset is mutable; never use the
+                    # ledger pointer or immutable-input upload interfaces.
+                    releases.run('release', 'upload', releases.tag, str(path),
+                                 '--repo', releases.repo, '--clobber')
+                except (ValueError, RuntimeError, OSError, subprocess.TimeoutExpired) as error:
+                    print('feed-cache upload skipped: ' + type(error).__name__, file=sys.stderr)
 
 
 if __name__ == '__main__':

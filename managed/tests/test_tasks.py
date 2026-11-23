@@ -59,6 +59,94 @@ class TaskTests(unittest.TestCase):
         self.temp=tempfile.TemporaryDirectory();self.root=Path(self.temp.name)
         self.tasks=Tasks(self.root/'test.sqlite3')
     def tearDown(self):self.tasks.close();self.temp.cleanup()
+    def test_bulk_reads_use_one_query_and_return_independent_current_rows(self):
+        for name, kind in [('first', 'research'), ('second', 'mathesis'), ('third', 'reply')]:
+            self.tasks.add(request(name, kind=kind))
+        statements = []
+        self.tasks.db.set_trace_callback(statements.append)
+        rows = self.tasks.all()
+        self.assertEqual([row['id'] for row in rows], ['first', 'second', 'third'])
+        self.assertEqual(len(statements), 1)
+        self.assertEqual(rows, [self.tasks.get(row['id']) for row in rows])
+        rows[0]['data']['uncommitted'] = True
+        current = self.tasks.get('first')
+        self.tasks.update('first', current['revision'], 'held', {'reason': 'new state'})
+        self.assertEqual(self.tasks.all()[0]['data'], {'reason': 'new state'})
+        statements.clear()
+        self.assertEqual([row['id'] for row in self.tasks.of_kinds('reply', 'mathesis')], ['second', 'third'])
+        self.assertEqual(len(statements), 1)
+        self.assertEqual(self.tasks.of_kinds(), [])
+
+    def test_bulk_reads_observe_other_connections_and_transaction_rollback(self):
+        self.tasks.add(request())
+        other = Tasks(self.tasks.path)
+        try:
+            row = other.get('job-1')
+            other.update(row['id'], row['revision'], 'held', {'reason': 'other connection'})
+        finally:
+            other.close()
+        self.assertEqual(self.tasks.all()[0]['data']['reason'], 'other connection')
+        with self.assertRaises(RuntimeError):
+            with self.tasks.tx():
+                row = self.tasks.get('job-1')
+                self.tasks._update(row['id'], row['revision'], 'queued', {})
+                self.assertEqual(self.tasks.all()[0]['state'], 'queued')
+                raise RuntimeError('rollback')
+        self.assertEqual(self.tasks.all()[0]['state'], 'held')
+
+    def test_row_version_tracks_raw_writes_rollback_and_other_connections(self):
+        row = self.tasks.add(request())
+        original = self.tasks.row_version()
+        self.tasks.db.execute("INSERT INTO pipeline_state VALUES('bookkeeping','{}')")
+        self.assertEqual(self.tasks.row_version(), original)
+        self.tasks.db.execute("UPDATE tasks SET data='{}' WHERE id=?", (row['id'],))
+        raw = self.tasks.row_version()
+        self.assertNotEqual(raw, original)
+        with self.assertRaises(RuntimeError):
+            with self.tasks.tx():
+                self.tasks.db.execute('DELETE FROM tasks')
+                self.assertNotEqual(self.tasks.row_version(), raw)
+                raise RuntimeError('rollback')
+        self.assertNotEqual(self.tasks.row_version(), raw)
+        other = Tasks(self.tasks.path)
+        try:
+            other.update(row['id'], row['revision'], 'held', {'reason': 'external'})
+        finally:
+            other.close()
+        self.assertNotEqual(self.tasks.row_version(), raw)
+        self.tasks.snapshot(self.root / 'snapshot.sqlite3')
+        import sqlite3
+        snapshot = sqlite3.connect(self.root / 'snapshot.sqlite3')
+        try:
+            self.assertEqual(snapshot.execute(
+                "SELECT name FROM sqlite_master WHERE name LIKE 'task_rows_%'").fetchall(), [])
+        finally:
+            snapshot.close()
+
+    def test_row_version_invalidates_on_failed_writes_and_all_rollback_interfaces(self):
+        import sqlite3
+        self.tasks.add(request())
+        for execute in (self.tasks.db.execute, self.tasks.db.cursor().execute,
+                        lambda sql: self.tasks.db.executemany(sql, [()])):
+            with self.subTest(execute=execute):
+                version = self.tasks.row_version()
+                with self.assertRaises(sqlite3.IntegrityError):
+                    execute("UPDATE tasks SET state=NULL")
+                self.assertNotEqual(self.tasks.row_version(), version)
+        for rollback in (lambda: self.tasks.db.execute('ROLLBACK'),
+                         lambda: self.tasks.db.cursor().execute('/* comment */ ROLLBACK'),
+                         self.tasks.db.rollback,
+                         lambda: self.tasks.db.executescript('BEGIN; SELECT 1; ROLLBACK;')):
+            self.tasks.db.execute('BEGIN')
+            version = self.tasks.row_version()
+            rollback()
+            self.assertNotEqual(self.tasks.row_version(), version)
+        version = self.tasks.row_version()
+        with self.assertRaises(RuntimeError):
+            with self.tasks.db:
+                self.tasks.db.execute('BEGIN')
+                raise RuntimeError('context rollback')
+        self.assertNotEqual(self.tasks.row_version(), version)
     def test_restart_replay_and_conflicting_inputs(self):
         r=request();self.tasks.add(r);self.tasks.close();self.tasks=Tasks(self.root/'test.sqlite3')
         self.assertEqual(self.tasks.add(r)['state'],'queued')

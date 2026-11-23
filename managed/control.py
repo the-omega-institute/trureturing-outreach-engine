@@ -2121,9 +2121,9 @@ def reclassified_retry(data):
             and (execution_failure_class(data.get('response_error'))=='rate-limit' or saved_http_failure(data)))
 
 
-def recover_execution_failures(ledger,cma,config):
+def recover_execution_failures(ledger,cma,config,*,rows=None):
     """One pass per legacy row, before cleanup; scheduled retries keep their keys."""
-    rows=[r for r in ledger.tasks.all() if r['state']=='failed' and
+    rows=[r for r in (ledger.tasks.all() if rows is None else rows) if r['state']=='failed' and
           (not r['data'].get('recovery') or r['data']['recovery']['status']=='lookup-pending' or
            reclassified_retry(r['data'])) and
           (r['data'].get('response_error') is not None or
@@ -2267,9 +2267,9 @@ def queue_credit_retry(ledger,row,response):
     return row
 
 
-def recover_credit_failures(ledger,cma,gate):
+def recover_credit_failures(ledger,cma,gate,*,rows=None):
     """Classify each legacy failure once, before cleanup or any admission."""
-    rows=[r for r in ledger.tasks.all() if r['state']=='failed'
+    rows=[r for r in (ledger.tasks.all() if rows is None else rows) if r['state']=='failed'
           and r['data'].get('reason')=='Original CMA response ended failed'
           and r['data'].get('agent_id') and r['data'].get('response_id') and not r['data'].get('credit_checked')]
     for row in units(ledger,'credit-recovery',rows):
@@ -2454,22 +2454,31 @@ def advance(ledger,cma,config,folder,revision=None,mailbox=None,oracle_capacity=
     # The mailbox owner appears in every thread; a legacy table-1 row for that
     # address must not serialize all scholars' work behind one owner.
     mailbox_self=self_contact_ids(config,ROOT)
-    initial_rows = tasks.all()
+    snapshot={'version':None,'rows':None}
+    def current_rows():
+        # Reuse read-only rows inside this serialized stage. Task writes (even
+        # raw SQL/other connections) invalidate; pool/tick bookkeeping does not.
+        version=tasks.row_version()
+        if snapshot['version']!=version:
+            snapshot.update(version=version,rows=tasks.all())
+        return snapshot['rows']
+    initial_rows = current_rows()
     correspondence = linked_contacts(initial_rows, ROOT, config)
     revisions = note_revisions.Revisions(tasks, initial_rows) if config['kinds'].get('mathesis') else None
     pool=SandboxPool(ledger,config['sandbox_pool'],config['kinds'],paused=config['paused'],
-                     correspondence=correspondence) if config.get('sandbox_pool') else None
+                     correspondence=correspondence,rows=initial_rows) if config.get('sandbox_pool') else None
     grouped=bool(pool and config['sandbox_pool'].get('groups'))
-    failure_pool=pool or SandboxPool(ledger,{'max_sandboxes':1,'agents_per_sandbox':1})
+    failure_pool=pool or SandboxPool(ledger,{'max_sandboxes':1,'agents_per_sandbox':1},rows=initial_rows)
     credit=CreditGate(ledger,config)
-    with phase(ledger,'credit-recovery'):recover_credit_failures(ledger,cma,credit)
-    with phase(ledger,'execution-recovery'):recover_execution_failures(ledger,cma,config)
+    with phase(ledger,'credit-recovery'):recover_credit_failures(ledger,cma,credit,rows=current_rows())
+    with phase(ledger,'execution-recovery'):recover_execution_failures(ledger,cma,config,rows=current_rows())
     with phase(ledger,'pool-health'):
-        if failure_pool:failure_pool.health(cma)
+        if failure_pool:failure_pool.health(cma,rows=current_rows())
     # Limit fresh Sandbox creates after capacity failures in the same group.
     capacity_limited=set()
     # A repinned Agent hold still owns its original cleanup handles.
-    rows=[r for r in tasks.all() if (r['state']!='superseded' or
+    stage_rows = current_rows()
+    rows=[r for r in stage_rows if (r['state']!='superseded' or
           r['data'].get('reason')==WORKFLOW_PIN_MISMATCH) and
           (r['state'] in ACTIVE|{'queued','approved'} or r['data'].get('agent_id') or
            r['data'].get('operation_id') or (r['state']=='held' and unstarted(r)) or policy_mismatch_hold(r))]
@@ -2602,22 +2611,15 @@ def advance(ledger,cma,config,folder,revision=None,mailbox=None,oracle_capacity=
             pending=tick.pending.setdefault('advance',[])
             if row['id'] not in pending:pending.append(row['id'])
         return ready
-    snapshot={'version':None,'rows':None}
     from collections import Counter
     skips=Counter()  # content-free admission decisions, logged once per tick
-    def current_rows():
-        # One full-ledger read per state change instead of two per queued row.
-        version=ledger.version()
-        if snapshot['version']!=version:
-            snapshot.update(version=version,rows=tasks.all())
-        return snapshot['rows']
     def active_count():
         marks=','.join('?'*len(ACTIVE))
         return tasks.db.execute('SELECT COUNT(*) FROM tasks WHERE state IN ('+marks+')',tuple(ACTIVE)).fetchone()[0]
     # Historical Agent cleanup joins the same fair work queue. Keeping a
     # separate trailing pass left it permanently behind live work as well.
     history_rows=[];history_retired=0
-    for row in tasks.all():
+    for row in stage_rows:
         if row['state'] in ACTIVE:continue
         data=row['data']
         for index,entry in enumerate(data.get('execution_history',[])):
@@ -2885,7 +2887,7 @@ def advance(ledger,cma,config,folder,revision=None,mailbox=None,oracle_capacity=
                 if retries:data.update(capacity_retries=retries,previous_operations=row['data'].get('previous_operations',[]))
                 row=tasks.update(row['id'],row['revision'],'provisioning',data)
                 if pool_entry:pool.assigned(pool_entry)
-                if pool:pool.observe_live(tasks.all())
+                if pool:pool.observe_live(current_rows())
                 ledger.save()
         try:
             if row['state']=='approved':
@@ -3150,7 +3152,7 @@ def advance(ledger,cma,config,folder,revision=None,mailbox=None,oracle_capacity=
                 with unit(ledger,'advance',row['id'],'retire') as ready, \
                         recheck.attempt(ledger,'retire',row['id'],data['agent_id']):
                     if not ready:continue
-                    if pool:pool.observe_live(tasks.all())
+                    if pool:pool.observe_live(current_rows())
                     ledger.save(force=True)
                     retire_key='outreach-retire-'+row['request_hash']
                     if data.get('execution_restart'):retire_key+='-execution-'+data['execution_restart']
@@ -3166,7 +3168,7 @@ def advance(ledger,cma,config,folder,revision=None,mailbox=None,oracle_capacity=
         updates.append(row['id'])
     if skips:print('admission-skips '+json.dumps(dict(sorted(skips.items()))),file=sys.stderr,flush=True)
     with phase(ledger,'pool-idle'):
-        if pool:pool.idle(cma)
+        if pool:pool.idle(cma,rows=current_rows())
     return updates
 
 

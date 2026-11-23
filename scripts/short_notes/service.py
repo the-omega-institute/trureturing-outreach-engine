@@ -30,12 +30,88 @@ try:
     from . import workflow as w
 except ImportError:
     import workflow as w
-from managed.location import DATA_ROOT, settings
+from managed.location import DATA_ROOT, hosted, settings
 
 CATALOG = DATA_ROOT / 'tables/publications.json'
 SUBMISSIONS = DATA_ROOT / 'tables/submissions.json'
 SITE = 'https://www.trureturing.org/'
 REQUEST_PREFIX = 'request-'
+FEED_CACHE_ASSET = 'pages-feed-cache.json'
+FEED_CACHE_ENV = 'OUTREACH_FEED_CACHE'
+
+
+def feed_digest(feed):
+    """Hash displayed content; a new clock timestamp is not a content change."""
+    return hashlib.sha256(w.encode({key: feed.get(key, []) for key in
+                                   ('publications', 'collaborations', 'notes')})).hexdigest()
+
+
+def manifest_identity(asset):
+    if not asset or not (asset.get('id') or asset.get('digest')):
+        return None
+    return hashlib.sha256(w.encode({k: asset.get(k) for k in
+                                   ('name', 'id', 'digest', 'size', 'created_at', 'updated_at')})).hexdigest()
+
+
+class FeedCache:
+    """Private, disposable projection cache, never a delivery receipt.
+
+    The key covers the catalog, board, projection code/config, note states and
+    immutable manifest asset identities. Live site verification still runs on
+    a hit. A missing/corrupt cache or an asset without an identity is a miss.
+    """
+    def __init__(self, path):
+        self.path = Path(path)
+        try:
+            value = w.read(self.path)
+            self.value = value if isinstance(value, dict) else {}
+        except (OSError, ValueError):
+            self.value = {}
+
+    def key(self, catalog, releases, submissions):
+        notes = {}
+        for tag, release in sorted(releases.items()):
+            state = w.release_state(release, tag.removeprefix('short-note-'))
+            manifests = []
+            for asset in release['assets']:
+                if re.fullmatch(r'note-v[0-9]+\.json', asset['name']):
+                    if not (asset.get('id') or asset.get('digest')):
+                        return None
+                    manifests.append({k: asset.get(k) for k in
+                                      ('name', 'id', 'digest', 'size', 'created_at', 'updated_at')})
+            notes[tag] = {'state': {k: v for k, v in (state or {}).items()
+                                   if k not in {'pages', 'deliveries'}},
+                          'manifests': sorted(manifests, key=lambda a: a['name'])}
+        code = [hashlib.sha256(path.read_bytes()).hexdigest() for path in
+                (Path(__file__), Path(w.__file__), ROOT / 'managed/location.py')]
+        return hashlib.sha256(w.encode({'catalog': catalog, 'submissions': submissions,
+                                        'notes': notes, 'code': code, 'mathesis': settings('mathesis')})).hexdigest()
+
+    def project(self, catalog, gh, submissions, releases):
+        key = self.key(catalog, releases, submissions)
+        feed = self.value.get('feed')
+        try:
+            if key and key == self.value.get('inputs_sha256'):
+                w.validate_feed(feed)
+                if feed_digest(feed) == self.value.get('feed_sha256'):
+                    return copy.deepcopy(feed)
+        except (ValueError, TypeError, KeyError, AttributeError):
+            pass
+        manifests = self.value.get('manifests', {})
+        manifests = {tag: entry for tag, entry in manifests.items() if tag in releases} if isinstance(manifests, dict) else {}
+        feed = w.project_pages_feed(projection(catalog, gh, submissions, releases=releases, manifests=manifests))
+        self.value = {'inputs_sha256': key, 'feed': feed, 'feed_sha256': feed_digest(feed), 'manifests': manifests}
+        return feed
+
+    def save(self, feed):
+        self.value.update(feed=feed, feed_sha256=feed_digest(feed))
+        raw = w.encode(self.value)
+        if self.path.is_file() and self.path.read_bytes() == raw:
+            return
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = self.path.with_suffix('.json.tmp')
+        temporary.write_bytes(raw)
+        temporary.replace(self.path)
 
 
 def validate_catalog(catalog):
@@ -260,9 +336,9 @@ def enqueue(catalog, request, gh):
     return {'id': note['id'], 'request': name, 'status': 'queued'}
 
 
-def queue(catalog, gh, retry_failed=False):
+def queue(catalog, gh, retry_failed=False, *, releases=None):
     rows = []
-    releases = note_releases(catalog, gh)
+    releases = note_releases(catalog, gh) if releases is None else releases
     for note in catalog['notes']:
         release = releases.get(w.tag_for(note['id']))
         if release is None:
@@ -305,13 +381,13 @@ def queue(catalog, gh, retry_failed=False):
     return sorted(rows, key=lambda row: (row['id'], row['operation'].get('revision', 10**9), row['order']))
 
 
-def projection(catalog, gh, submissions=None):
+def projection(catalog, gh, submissions=None, *, releases=None, manifests=None):
     """Full selected scientific metadata. Apply project_pages_feed for Pages."""
     feed = {'schema_version': 'research-updates.v1', 'updated_at': w.now(),
             'publications': copy.deepcopy(catalog['publications']),
             'collaborations': copy.deepcopy(catalog['collaborations'])}
     feed['publications'].extend(submission_publications(submissions, feed['publications']))
-    releases = note_releases(catalog, gh)
+    releases = note_releases(catalog, gh) if releases is None else releases
     notes = []
     for note in catalog['notes']:
         release = releases.get(w.tag_for(note['id']))
@@ -322,7 +398,7 @@ def projection(catalog, gh, submissions=None):
             check_links(note, state['publication'])
             feed['publications'].append(copy.deepcopy(state['publication']))
         if state:
-            public_note = note_projection(note, state, gh)
+            public_note = note_projection(note, state, gh, release=release, manifests=manifests)
             if public_note:
                 notes.append(public_note)
     if notes:
@@ -335,7 +411,7 @@ def projection(catalog, gh, submissions=None):
     return feed
 
 
-def note_projection(note, state, gh):
+def note_projection(note, state, gh, *, release=None, manifests=None):
     """Keep note citations even after a journal paper becomes the preferred link."""
     published = [int(v) for v, entry in state['versions'].items() if entry.get('publication')]
     mathesis = state.get('mathesis_publication')
@@ -344,8 +420,17 @@ def note_projection(note, state, gh):
         return None
     if state['zenodo_api'] != 'https://zenodo.org/api':
         raise ValueError('Sandbox output must never enter the public projection')
-    with tempfile.TemporaryDirectory() as temp:
-        package = w.read(gh.download(w.tag_for(note['id']), f'note-v{revision}.json', temp))
+    tag, name = w.tag_for(note['id']), f'note-v{revision}.json'
+    asset = next((a for a in (release or {}).get('assets', []) if a['name'] == name), None)
+    identity = manifest_identity(asset)
+    cached = manifests.get(tag, {}) if manifests is not None else {}
+    package = cached.get('package') if isinstance(cached, dict) else None
+    if (not identity or not isinstance(package, dict) or cached.get('identity') != identity
+            or hashlib.sha256(w.encode(package)).hexdigest() != cached.get('sha256')):
+        with tempfile.TemporaryDirectory() as temp:
+            package = w.read(gh.download(tag, name, temp))
+    if manifests is not None and identity:
+        manifests[tag] = {'identity': identity, 'package': package, 'sha256': hashlib.sha256(w.encode(package)).hexdigest()}
     meta = w.validate_metadata(package['metadata'])
     check_links(note, meta)
     if meta['revision'] != revision:
@@ -527,12 +612,12 @@ def pages_coverage(state, public):
             if receipt.get('public_note') == public and receipt.get('publication') == paper else 'outdated')
 
 
-def synchronize(catalog, gh, pages, submissions=None):
-    feed = w.project_pages_feed(projection(catalog, gh, submissions))
+def synchronize(catalog, gh, pages, submissions=None, *, feed=None, releases=None):
+    releases = note_releases(catalog, gh) if releases is None else releases
+    feed = w.project_pages_feed(projection(catalog, gh, submissions, releases=releases)) if feed is None else feed
     receipt = w.deliver_feed(feed, pages)
     published = {p['id']: p for p in feed['publications']}
     public_notes = {n['id']: n for n in feed.get('notes', [])}
-    releases = note_releases(catalog, gh)
     for note in catalog['notes']:
         release = releases.get(w.tag_for(note['id']))
         state = w.release_state(release, note['id']) if release else None
@@ -549,20 +634,38 @@ def synchronize(catalog, gh, pages, submissions=None):
     return receipt
 
 
-def drain(catalog, gh, zenodo, pages, limit=10, retry_failed=False, budget_seconds=900, submissions=None):
+def synchronize_if_changed(catalog, gh, pages, submissions=None, *, cache, releases=None, fetch=None, site=SITE):
+    releases = note_releases(catalog, gh) if releases is None else releases
+    desired = cache.project(catalog, gh, submissions, releases)
+    verified = verify_feed(catalog, gh, site, fetch, submissions, expected=desired, pages=pages)
+    release = pages.release('research-updates')
+    pending = any(asset['name'] == 'research-updates.pending.json' for asset in (release or {}).get('assets', []))
+    if verified['status'] == 'deployed' and not pending:
+        cache.save(desired)
+        return verified
+    receipt = synchronize(catalog, gh, pages, submissions, feed=desired, releases=releases)
+    cache.save(desired)
+    return receipt
+
+
+def drain(catalog, gh, zenodo, pages, limit=10, retry_failed=False, budget_seconds=900, submissions=None,
+          *, cache=None, fetch=None):
     if not 1 <= limit <= 100 or budget_seconds <= 0:
         raise ValueError('Select a batch limit of 1..100 and a positive time budget')
-    planned = [row for row in queue(catalog, gh, retry_failed) if row['eligible']]
+    releases = note_releases(catalog, gh)
+    planned = [row for row in queue(catalog, gh, retry_failed, releases=releases) if row['eligible']]
     if any(row['operation']['action'] == 'publish' for row in planned) and zenodo is None:
         raise ValueError('ZENODO_TOKEN is required before processing queued publications')
     if planned and pages is None:
         raise ValueError('PAGES_TOKEN is required before processing delivery requests')
     accepted, failed = [], []
+    attempted = 0
     started = time.monotonic()
     for row in planned[:limit]:
         if time.monotonic() - started >= budget_seconds:
             break
         request = row['operation']
+        attempted += 1
         try:
             note = catalog_note(catalog, row['id'], require_active=True)
             if request['action'] == 'promote':
@@ -585,7 +688,10 @@ def drain(catalog, gh, zenodo, pages, limit=10, retry_failed=False, budget_secon
     projection_changed = False
     if accepted:
         try:
-            synchronize(catalog, gh, pages, submissions)
+            if cache is None:
+                synchronize(catalog, gh, pages, submissions)
+            else:
+                synchronize_if_changed(catalog, gh, pages, submissions, cache=cache, fetch=fetch)
             for row in accepted:
                 mark_delivery(gh, row, 'dispatched')
         except (ValueError, RuntimeError, OSError, KeyError) as error:
@@ -596,16 +702,25 @@ def drain(catalog, gh, zenodo, pages, limit=10, retry_failed=False, budget_secon
         # Article/relationship updates do not require another note publication.
         # Do not redispatch an unchanged feed on every hourly wake.
         try:
-            desired = w.project_pages_feed(projection(catalog, gh, submissions))
-            with tempfile.TemporaryDirectory() as temp:
-                current, _, names = w.pages_feed(pages, temp)
-            if ('research-updates.pending.json' in names or not current.get('updated_at')
-                    or any(current.get(k, []) != desired.get(k, []) for k in ('publications', 'collaborations', 'notes'))):
-                synchronize(catalog, gh, pages, submissions)
-                projection_changed = True
+            if attempted:
+                releases = note_releases(catalog, gh)
+            if cache is not None:
+                receipt = synchronize_if_changed(catalog, gh, pages, submissions,
+                                                 cache=cache, releases=releases, fetch=fetch)
+                projection_changed = receipt['status'] != 'deployed'
+            else:
+                desired = w.project_pages_feed(projection(catalog, gh, submissions, releases=releases))
+                with tempfile.TemporaryDirectory() as temp:
+                    current, _, names = w.pages_feed(pages, temp)
+                if ('research-updates.pending.json' in names or not current.get('updated_at')
+                        or feed_digest(current) != feed_digest(desired)
+                        or verify_feed(catalog, gh, site=SITE, fetch=fetch, submissions=submissions,
+                                       expected=desired, pages=pages)['status'] != 'deployed'):
+                    synchronize(catalog, gh, pages, submissions, feed=desired, releases=releases)
+                    projection_changed = True
         except (ValueError, RuntimeError, OSError, KeyError) as error:
             failed.append({'id': 'pages', 'error': str(error)[:500]})
-    remaining = sum(row['eligible'] for row in queue(catalog, gh))
+    remaining = (sum(row['eligible'] for row in queue(catalog, gh)) if attempted else len(planned))
     return {'processed': len(accepted), 'failed': failed, 'remaining': remaining,
             'status': 'needs_attention' if failed else 'dispatch_accepted' if accepted or projection_changed else 'idle'}
 
@@ -686,9 +801,9 @@ def verify_deployment(catalog, note_id, gh, site=SITE, fetch=None):
     return receipt
 
 
-def verify_feed(catalog, gh, site=SITE, fetch=None, submissions=None):
+def verify_feed(catalog, gh, site=SITE, fetch=None, submissions=None, *, expected=None, pages=None):
     """Verify papers, public note links and brief relationships on the served site."""
-    expected = w.project_pages_feed(projection(catalog, gh, submissions))
+    expected = w.project_pages_feed(projection(catalog, gh, submissions)) if expected is None else expected
     target = w.url(site.rstrip('/') + '/assets/publication-index.json')
     try:
         if fetch:
@@ -699,17 +814,40 @@ def verify_feed(catalog, gh, site=SITE, fetch=None, submissions=None):
             if len(raw) > w.MAX_INDEX_BYTES:
                 raise ValueError('Public publication index exceeds the verification budget')
             index = json.loads(raw)
-        if (index.get('schema_version') != 'publication-index.v1'
+        if (not isinstance(index, dict) or index.get('schema_version') != 'publication-index.v1'
                 or not isinstance(index.get('publications'), list)
-                or not index.get('updated_at')
+                or not isinstance(index.get('updated_at'), str) or not index['updated_at']
                 or datetime.fromisoformat(index['updated_at'].replace('Z', '+00:00')).tzinfo is None):
             raise ValueError('The served public index has no valid feed identity')
         if any(not w.is_pages_publication(p) for p in index['publications']):
             raise ValueError('The served Research index contains an ineligible archive or draft')
+        def identity(paper):
+            return (paper['id'], w.publication_identity(paper['url']))
+        def aliases(papers):
+            return {(prefix + p['id'], w.publication_identity(p['url']))
+                    for p in papers for prefix in ('', 'paper-')}
+        # The index has no source tag. Pages merges its authored catalog with
+        # this complete feed, retaining authored anchors and illustrations.
+        # Only those independent catalog papers may be extra. In particular,
+        # neither the released feed nor a disposable cache proves a removal.
+        authored = w.pages_authored_publications(pages if pages is not None else w.GitHub(w.PAGES))
+        desired_ids = aliases(expected['publications'])
+        unrelated_ids = aliases(authored) - desired_ids
+        # Managed notes and submission rows remain source-owned when their
+        # paper is withdrawn or becomes archive-only, even if Pages also has
+        # an authored card for the old citation.
+        owned = {prefix + row['id'] for row in
+                 [*catalog['notes'], *catalog['publications'], *(submissions or {}).get('papers', [])]
+                 for prefix in ('', 'paper-')}
+        actual = [p for p in index['publications']
+                  if p['id'] in owned or identity(p) not in unrelated_ids]
+        if (len(actual) != len(expected['publications'])
+                or any(identity(p) not in desired_ids for p in actual)):
+            raise ValueError('The served site has different publications from this feed')
         for paper in expected['publications']:
             if not any(p.get('id') in (paper['id'], 'paper-' + paper['id'])
                        and w.publication_identity(p['url']) == w.publication_identity(paper['url'])
-                       and all(p.get(k) == paper[k] for k in ('title', 'authors', 'date', 'summary', 'problem_ids', 'topic', 'evidence_url'))
+                       and all(p.get(k) == value for k, value in paper.items() if k not in ('id', 'url', 'status'))
                        and p.get('status', '').lower() == paper['status']
                        for p in index['publications']):
                 raise ValueError('The served site does not display the current paper: ' + paper['id'])
@@ -719,7 +857,7 @@ def verify_feed(catalog, gh, site=SITE, fetch=None, submissions=None):
         return {'status': 'deployed', 'index_url': target, 'verified_at': w.now(),
                 'publications': len(expected['publications']), 'notes': len(expected.get('notes', [])),
                 'research_updates': len(expected['collaborations']), 'feed_updated_at': index['updated_at']}
-    except (ValueError, OSError, KeyError, TypeError) as error:
+    except (ValueError, RuntimeError, OSError, KeyError, TypeError) as error:
         return {'status': 'verification_pending', 'index_url': target, 'error': str(error)[:500]}
 
 
@@ -822,6 +960,8 @@ def execute(args):
     catalog = validate_catalog(w.read(args.catalog))
     submission_board = load_submission_board()
     gh = w.GitHub(w.OUTREACH)
+    cache_path = os.environ.get(FEED_CACHE_ENV)
+    cache = FeedCache(cache_path) if hosted() and DATA_ROOT != ROOT and cache_path else None
     if args.command == 'ci':
         args.command = os.environ.get('NOTE_ACTION') or 'drain'
         if args.command not in ('reserve', 'publish', 'promote', 'sync', 'drain', 'verify', 'verify-feed', 'doctor', 'status'):
@@ -887,7 +1027,7 @@ def execute(args):
                            getattr(args, 'retry_failed', False), submissions=submission_board)
     elif args.command == 'drain':
         result = drain(catalog, gh, zenodo, pages, args.limit, args.retry_failed,
-                       submissions=submission_board)
+                       submissions=submission_board, cache=cache)
     elif args.command == 'queue':
         result = [{k: v for k, v in row.items() if k not in ('operation', 'order')}
                   for row in queue(catalog, gh, args.retry_failed)]
@@ -898,13 +1038,14 @@ def execute(args):
     elif args.command == 'coverage':
         result = coverage(catalog, gh, w.read(DATA_ROOT / 'tables/results.json'))
     elif args.command == 'verify-feed':
-        result = verify_feed(catalog, gh, args.site, submissions=submission_board)
+        result = verify_feed(catalog, gh, args.site, submissions=submission_board, pages=pages)
     elif args.command == 'link-mathesis':
         result = record_mathesis(catalog, args.id, w.read(args.receipt), gh)
     elif args.command == 'sync':
         if pages is None:
             raise ValueError('PAGES_TOKEN is required for public feed delivery')
-        result = synchronize(catalog, gh, pages, submission_board)
+        result = (synchronize_if_changed(catalog, gh, pages, submission_board, cache=cache)
+                  if cache is not None else synchronize(catalog, gh, pages, submission_board))
     elif args.command == 'verify':
         result = verify_deployment(catalog, args.id, gh, args.site)
     elif args.command == 'status':

@@ -172,7 +172,7 @@ def summary(tasks, rows=None):
 
 
 class SandboxPool:
-    def __init__(self, ledger, config, kinds=None, *, paused=False, correspondence=()):
+    def __init__(self, ledger, config, kinds=None, *, paused=False, correspondence=(), rows=None):
         self.ledger=ledger
         self.kinds = kinds or {}
         self.paused = paused
@@ -195,7 +195,7 @@ class SandboxPool:
                 'Invalid pool idle pause seconds')
         self.entries=self.read('sandbox_pool')
         self.failed=self.read('sandbox_pool_cleanup')
-        rows=ledger.tasks.all()
+        rows=ledger.tasks.all() if rows is None else rows
         for entry in [*self.entries,*self.failed]:
             if 'agents_placed' not in entry:entry['agents_placed']=placements(rows,entry)
             self.draining(entry)
@@ -388,9 +388,9 @@ class SandboxPool:
         self.errors.append({'sandbox_id':sandbox_id,'error':type(exc).__name__+': '+str(exc)[:300]})
         self.write('sandbox_pool_errors',self.errors)
 
-    def health(self, cma):
+    def health(self, cma, *, rows=None):
         self.available.clear();self.observed.clear();self.errors=[]
-        rows=self.ledger.tasks.all()
+        rows=self.ledger.tasks.all() if rows is None else rows
         self.observe_live(rows)
         # Failed entries remain on a cleanup list until their last Agent retires
         # and Sandbox retirement is observed. This also replays a lost DELETE.
@@ -483,8 +483,9 @@ class SandboxPool:
             self.write('sandbox_pool',self.entries)
             self.ledger.save()
 
-    def idle(self, cma):
-        rows=self.ledger.tasks.all();self.observe_live(rows)
+    def idle(self, cma, *, rows=None):
+        rows=self.ledger.tasks.all() if rows is None else rows
+        self.observe_live(rows)
         now=self.ledger.tasks.clock()
         for entry in list(self.entries):
             sandbox_id=entry['sandbox_id'];sandbox=self.observed.get(sandbox_id)

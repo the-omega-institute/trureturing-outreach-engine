@@ -4,6 +4,7 @@ Classification is a proposal until Claude reviews the exact result. Questions
 and independent-paper work stay separate from the permission to send mail.
 """
 import copy
+from datetime import datetime, timezone
 import json
 from pathlib import Path
 import re
@@ -15,12 +16,13 @@ from .tick import units
 from .queue import digest, require
 from .mail_domains import home_domains, home_recipient_override
 from .tasks import (ACTIVE, matches_workflow, owner_draft_rebindable, parked,
-                    newer_reply, review_current, submission_ready_unreviewed, validate_request)
-from .thread_staging import effective_inputs, inbound_tasks
+                    review_current, submission_ready_unreviewed, validate_request)
+from .thread_staging import answer_continuation, effective_inputs, inbound_tasks
 from . import note_closure, note_revisions
 
 MAIL = {'firstcontact', 'reply'}
 HOME_RECIPIENT_MIGRATION_LIMIT = 32
+MAILBOX_NO_TASK_LIMIT = 100
 REVIEWED = {'approved', 'awaiting-mailbox', 'owner-draft', 'handoff-ready',
             'verified', 'no-reply', 'round-complete', 'submission-ready'}
 def submission_rounds():
@@ -579,8 +581,6 @@ def reconcile(ledger, config, root, revision=None):
 
 
 QUESTION_CLOSE_LIMIT = 32
-QUESTION_SUCCESSORS = REVIEWED | {'awaiting-user', 'awaiting-review', 'decision-recorded',
-                                  'revising', 'bounced', 'answered-by-mail'}
 
 
 def _question_context(row):
@@ -694,24 +694,13 @@ def close_user_questions(ledger, config, root):
     persons = people(root)
     by_owner = {owner: p for p in persons for owner in
                 [*[r['id'] for r in p['records']], *p['emails']]}
-    rows = tasks.all()
     account = str(config.get('mailbox', {}).get('account') or '').strip().casefold()
     for row in units(ledger, 'user-question-closure', [tasks.get(i) for i in ids], preserve_order=True):
-        successors = [r for r in rows if r['owner'] == row['owner'] and
-                      r['state'] in QUESTION_SUCCESSORS and newer_reply(r, row)]
-        # Prefer the newest dated inbound, independent of insertion order.
-        newest = next((r for r in successors if not any(newer_reply(n, r) for n in successors)), None)
-        if newest:
-            closure = {'reason': 'superseded', 'evidence': {'superseded_by': newest['id']}}
-        else:
-            evidence = _question_sent_evidence(row, by_owner.get(row['owner']), account)
-            closure = {'reason': 'answered-by-mail', 'evidence': evidence} if evidence else None
+        evidence = _question_sent_evidence(row, by_owner.get(row['owner']), account)
         with tasks.tx():
-            if closure:
-                data = {**row['data'], 'user_question_closed': closure}
-                if newest:
-                    data['superseded_by'] = newest['id']
-                tasks._update(row['id'], row['revision'], closure['reason'], data)
+            if evidence:
+                data = {**row['data'], 'user_question_closed': {'reason': 'answered-by-mail', 'evidence': evidence}}
+                tasks._update(row['id'], row['revision'], 'answered-by-mail', data)
             db.execute('INSERT OR REPLACE INTO pipeline_state VALUES(?,?)',
                        ('user-question-cursor', json.dumps(row['id'])))
         ledger.save()
@@ -756,6 +745,7 @@ def work(tasks, root, config=None):
                           given_up_digests, ingest_rejections)
     from .correspondence import linked_contacts
     from .lanes import lane, summary as lane_summary
+    from .mailbox import recent_no_task
     from .mailbox_triage import inventory as mailbox_inventory
     from .draft_status import inventory as draft_inventory, recent_owner_edits
     from .registry import reply_mail_thread_contacts, bounce_updates
@@ -906,14 +896,21 @@ def work(tasks, root, config=None):
                              'review_current':current, 'blocker':blocker,
                              'stale_draft_conflict':data.get('stale_draft_conflict'),
                              'last_error':data.get('last_error')})
-    questions = [{'task_id':r['id'], 'result_hash':digest(r['data']['result']),
-                  'request':r['request'], 'result':r['data'].get('result'),
-                  'mailbox_observation':effective_inputs(r).get('mailbox_observation'),
-                  'questions':r['data']['result'].get('routing', {}).get('questions', [])}
-                 for r in rows if r['state'] == 'awaiting-user']
+    questions = []
+    open_questions = {task_id: opened for task_id, opened, _ in tasks.owner_questions(correspondence_only=False)}
+    for task_id, opened_at in open_questions.items():
+        row = tasks.get(task_id)
+        result = row['data']['result']
+        inputs = effective_inputs(row)
+        questions.append({'task_id': task_id, 'owner': row['owner'], 'opened_at': opened_at,
+                          'result_hash': digest(result), 'request': {**row['request'], 'inputs': inputs},
+                          'result': result, 'mailbox_observation': inputs.get('mailbox_observation'),
+                          'questions': (result.get('routing') or {}).get('questions', [])})
     follow = [{'id':r['id'], 'kind':r['kind'], 'state':r['state'],
                'reason':r['data'].get('last_error') or r['data'].get('reason') or
                         r['data'].get('review', {}).get('reason') or r['data'].get('result',{}).get('report',''),
+               **({'owner_question_blockers':r['data']['owner_question_blockers']}
+                  if r['data'].get('owner_question_blockers') else {}),
                **({'delivery_conflicts':r['data']['delivery_conflicts']}
                   if r['data'].get('delivery_conflicts') else {}),
                'continuation_id':r['data'].get('continuation_id'),
@@ -926,6 +923,9 @@ def work(tasks, root, config=None):
     active_papers = {r['request']['inputs'].get('paper', {}).get('id') for r in rows if r['kind'] == 'submission'}
     mailbox=tasks.db.execute("SELECT payload FROM pipeline_state WHERE key='mailbox'").fetchone()
     mailbox=json.loads(mailbox[0]) if mailbox else {}
+    no_task = mailbox.get('no_task', {})
+    if no_task:
+        no_task = recent_no_task(no_task, datetime.fromtimestamp(tasks.clock(), timezone.utc))
     errors=tasks.db.execute("SELECT payload FROM pipeline_state WHERE key='connector_errors'").fetchone()
     oracle_capacity=tasks.db.execute("SELECT payload FROM pipeline_state WHERE key='oracle_capacity'").fetchone()
     oracle_capacity=json.loads(oracle_capacity[0]) if oracle_capacity else None
@@ -997,8 +997,22 @@ def work(tasks, root, config=None):
                              'draft_receipt':r['data'].get('draft_receipt'),
                              'sent_receipt':r['data'].get('sent_receipt')} for r in rows],
             'user_questions':questions,
+            'mailbox_retry_exhausted': [
+                {'task_id': r['id'], 'owner': r['owner'], 'request': r['request'],
+                 'mailbox_observation': effective_inputs(r).get('mailbox_observation'),
+                 'reason': r['data'].get('reason'), **r['data']['mailbox_retry']}
+                for r in rows if r['state'] == 'held'
+                and r['data'].get('mailbox_retry', {}).get('status') == 'exhausted'],
+            'mailbox_no_task':list(no_task.values())[:MAILBOX_NO_TASK_LIMIT],
             'user_questions_closed':[{'task_id':r['id'], 'owner':r['owner'], **r['data']['user_question_closed']}
-                                     for r in all_rows if r['data'].get('user_question_closed')],
+                                     for r in all_rows if r['id'] not in open_questions and r['data'].get('user_question_closed')],
+            'superseded_answer_continuations':[
+                {'task_id': r['id'], 'owner': r['owner'], 'kind': r['kind'],
+                 'superseded_by': r['data']['superseded_by'], 'reason': r['data'].get('reason'),
+                 'answers': [*(r['request']['inputs'].get('user_answers') or []),
+                             *r['data'].get('carried_user_answers', [])]}
+                for r in all_rows if r['state'] == 'superseded' and r['data'].get('superseded_by')
+                and (answer_continuation(r) or r['data'].get('carried_user_answers'))],
             'reviews':reviews,
             'artifact_collections_in_progress':artifact_collections,
             'guard_continuations_without_checkpoint':guard_without_checkpoint,

@@ -13,10 +13,11 @@ from . import note_closure
 
 KINDS={'firstcontact','reply','research','shortnote','daily','mathesis','submission'}
 NOTE_KINDS={'shortnote','mathesis'}
+CORRESPONDENCE_KINDS={'reply','research'}
 ACTIVE={'provisioning','admitting','running','admission-unknown','provision-unknown','credit-wait'}
 STATES=ACTIVE|{'queued','awaiting-review','approved','bounced','held','failed',
-              'awaiting-mailbox','owner-draft','handoff-ready','verified',
-              'awaiting-user','answered-by-mail','decision-recorded','revising','no-reply','round-complete','submission-ready','superseded'}
+              'awaiting-mailbox','owner-draft','owner-discarded','handoff-ready','verified',
+              'awaiting-user','answered-by-mail','question-closed','decision-recorded','revising','no-reply','round-complete','submission-ready','superseded'}
 WORKFLOW_CHANGED='Workflow changed; stage a new request revision'
 WORKFLOW_PIN_MISMATCH='Workflow hash does not match the pinned source revision'
 POLICY_IDENTITY_MISMATCH='Policy identity mismatch'
@@ -94,9 +95,13 @@ def owner_draft_rebindable(row, current_hash):
 
 def unstarted(row):
     # Even an uncertain creation/admission intent must retain its original keys.
-    return not ({'agent_id','operation_id','response_id','create_body','create_key',
-                 'command_key','prompt','owned_sandbox_id','response_text','result','review'}
-                & row['data'].keys())
+    data = row['data']
+    handles = {'agent_id','operation_id','response_id','create_body','create_key',
+               'command_key','owned_sandbox_id','response_text','result','review'}
+    # A restart caches the previous prompt before creating its next Agent.
+    if row['kind'] not in CORRESPONDENCE_KINDS or not data.get('execution_restart'):
+        handles.add('prompt')
+    return not handles & data.keys()
 
 
 def policy_mismatch_hold(row):
@@ -163,6 +168,12 @@ def validate_request(request):
         require(isinstance(request[key],str) and bool(request[key].strip()),'Missing '+key)
     require(len(request['id'])<=120 and all(c.isalnum() or c in '-_.' for c in request['id']),'Unsafe task ID')
     require(isinstance(request['inputs'],dict),'Task inputs must be an object')
+    if 'supersedes_owner_questions' in request['inputs']:
+        supersedes = request['inputs']['supersedes_owner_questions']
+        require(request['kind'] == 'reply' and isinstance(supersedes, dict) and supersedes
+                and all(isinstance(key, str) and key.strip() and isinstance(reason, str) and reason.strip()
+                        for key, reason in supersedes.items()),
+                'Question supersession requires reply task IDs and operator reasons')
     if 'reply_origin_task_id' in request['inputs']:
         origin = request['inputs']['reply_origin_task_id']
         require(request['kind'] in NOTE_KINDS and isinstance(origin, str) and origin.strip(),
@@ -190,10 +201,10 @@ def owners(row,ignore=frozenset()):
 
 
 def newer_reply(new, old):
-    """Require dated inbound evidence, not task insertion/update order."""
+    """Compare dated inbound evidence within one correspondence kind."""
     from .mailbox import instant
     from .thread_staging import effective_inputs
-    if new['kind'] != 'reply' or old['kind'] != 'reply':return False
+    if new['kind'] != old['kind'] or old['kind'] not in CORRESPONDENCE_KINDS:return False
     def target(row):
         data=row['data'];inputs=effective_inputs(row)
         packet=data.get('packet_override') or (data.get('result') or {}).get('packet') or {}
@@ -216,6 +227,17 @@ def newer_reply(new, old):
         return at is not None and before is not None and at > before
     except (KeyError, TypeError, ValueError, AttributeError):
         return False
+
+
+def question_thread(row):
+    from .thread_staging import effective_inputs
+    inputs = effective_inputs(row)
+    data = row['data']
+    packet = data.get('packet_override') or (data.get('result') or {}).get('packet') or {}
+    if conversation := inputs.get('thread_id') or packet.get('thread_id'):
+        return ('graph', conversation)
+    if record := (inputs.get('thread_ref') or {}).get('thread_id'):
+        return ('registry', record)
 
 
 def _starts_with_rollback(sql):
@@ -389,6 +411,49 @@ class Tasks:
         require(column in {'state','kind'},'Unknown task count column')
         return dict(self.db.execute(f'SELECT {column},COUNT(*) FROM tasks GROUP BY {column} ORDER BY {column}'))
 
+    def owner_questions(self, *, correspondence_only=True):
+        """Reviewed questions awaiting a user decision and their original wait times."""
+        return self.db.execute("""
+            SELECT id, COALESCE(json_extract(data,'$.owner_question_opened_at'),
+                (SELECT MIN(e.at) FROM task_events e WHERE e.id=tasks.id AND e.state='awaiting-user'),
+                (SELECT MIN(e.at) FROM task_events e WHERE e.id=tasks.id))
+                AS opened_at, json_array_length(data,'$.result.routing.questions') AS question_count
+            FROM tasks
+            WHERE state='awaiting-user' AND (
+                NOT ? OR (kind IN ('reply','research')
+                          AND json_array_length(data,'$.result.routing.questions') > 0))
+            ORDER BY opened_at NULLS LAST,id
+        """, (correspondence_only,)).fetchall()
+
+    def route_no_reply(self, row, data):
+        """Apply a reviewed close and any explicit supersessions atomically."""
+        thread = question_thread(row)
+        supersedes = row['request']['inputs'].get('supersedes_owner_questions', {})
+        with self.tx():
+            blockers, replacements = [], []
+            if row['kind'] == 'reply' and thread is not None:
+                for task_id, _, _ in self.owner_questions():
+                    old = self.get(task_id)
+                    if question_thread(old) != thread or newer_reply(old, row):
+                        continue
+                    if task_id in supersedes:
+                        replacements.append(old)
+                    else:
+                        blockers.append(task_id)
+            if blockers:
+                data['owner_question_blockers'] = blockers
+                if row['state'] != 'held' or row['data'] != data:
+                    self._update(row['id'], row['revision'], 'held', data)
+                return False
+            for old in replacements:
+                evidence = {'superseded_by': row['id'], 'reason': supersedes[old['id']].strip()}
+                self._update(old['id'], old['revision'], 'superseded',
+                             {**old['data'], 'superseded_by': row['id'],
+                              'user_question_closed': {'reason': 'superseded', 'evidence': evidence}})
+            data.pop('owner_question_blockers', None)
+            self._update(row['id'], row['revision'], 'no-reply', data)
+        return True
+
     def lane_rows(self):
         """Project only lane/lineage fields in SQLite, excluding bulky payloads.
 
@@ -450,30 +515,34 @@ class Tasks:
             return ('evidence_ref', answer['evidence_ref'])
         return ('answer', canonical(answer))
     def _carry_user_answers(self, row, answers):
-        """Enrich a newly staged successor with durable answers from its predecessor.
-
-        Mailbox hydration creates the successor before it can compare the complete
-        conversations.  Once that comparison is available, the successor request
-        becomes the durable execution input and must include the prior decision
-        envelopes, including their evidence references.
-        """
-        if row['kind'] != 'reply' or not answers:
+        """Preserve signed answers without changing an already bound request."""
+        if row['kind'] not in CORRESPONDENCE_KINDS or not answers:
             return row
-        request = copy.deepcopy(row['request'])
-        inputs = request['inputs']
+        inputs = row['request']['inputs']
         existing = inputs.get('user_answers') or []
-        merged = list(existing)
-        keys = {self._answer_key(answer) for answer in merged}
+        recorded = row['data'].get('carried_user_answers', [])
+        keys = {self._answer_key(answer) for answer in [*existing, *recorded]}
+        inherited = []
         for answer in answers:
             key = self._answer_key(answer)
             if key not in keys:
-                merged.append(copy.deepcopy(answer)); keys.add(key)
-        if merged == existing and inputs.get('user_decision_ever') is True:
+                inherited.append(answer)
+                keys.add(key)
+        if row['state'] not in {'queued', 'held', 'credit-wait'} or not unstarted(row):
+            if inherited:
+                self._update(row['id'], row['revision'], row['state'],
+                             {**row['data'], 'carried_user_answers': [*recorded, *inherited]})
+                return self.get(row['id'])
             return row
-        inputs['user_answers'] = merged
+        if not inherited and inputs.get('user_decision_ever') is True:
+            return row
+        request = copy.deepcopy(row['request'])
+        inputs = request['inputs']
+        inputs['user_answers'] = [*existing, *inherited]
         inputs['user_decision_ever'] = True
+        outcome = 'reply' if row['kind'] == 'reply' else 'research task'
         instruction = ('Recorded user answers are decided. Treat those questions as settled; '
-                       'do not ask the owner again, and use the answers to complete the reply.')
+                       f'do not ask the owner again, and use the answers to complete the {outcome}.')
         if instruction not in str(inputs.get('instructions', '')):
             inputs['instructions'] = (str(inputs.get('instructions', '')).rstrip() + '\n' + instruction).strip()
         validate_request(request)
@@ -513,6 +582,18 @@ class Tasks:
         """Hydrated staged requests learn their actual conversation later."""
         with self.tx():row=self._supersede_reply_drafts(self.get(task_id))
         return self.get(row['id'])
+
+    def supersede_inbound(self, row, successor_id, reason):
+        """Supersede covered work and transfer any held answers in one transaction."""
+        with self.tx():
+            if row['state'] == 'held':
+                answers = [*(row['request']['inputs'].get('user_answers') or []),
+                           *row['data'].get('carried_user_answers', [])]
+                if answers:
+                    self._carry_user_answers(self.get(successor_id), answers)
+            self._update(row['id'], row['revision'], 'superseded',
+                         {**row['data'], 'superseded_by': successor_id, 'reason': reason})
+
     def update(self,task_id,expected,state,data):
         with self.tx():
             self._update(task_id,expected,state,data)
@@ -541,7 +622,8 @@ class Tasks:
                           != (source_revision, policy_revision, workflow_hash))
             stale = (reason == WORKFLOW_CHANGED and unstarted(old)
                      and ((old['state'] == 'queued' and request['workflow_hash'] != workflow_hash)
-                          or (old['state'] == 'held' and old['data'].get('reason') == WORKFLOW_CHANGED)))
+                          or (old['kind'] in CORRESPONDENCE_KINDS and old['state'] == 'held'
+                              and old['data'].get('reason') == WORKFLOW_CHANGED)))
             require(mismatched or stale, 'Only workflow-stale or pin-mismatched work can be re-pinned')
             successor = {**request, **pin, 'id': old['kind']+'-'+digest({'supersedes': task_id, **pin})[:32]}
             if policy_revision is None:
@@ -558,7 +640,8 @@ class Tasks:
                 queued = self.get(successor['id'])
                 self._update(queued['id'], queued['revision'], 'held', {**old['data'], **queued['data']})
             self._update(task_id,expected,'superseded',
-                         {**(old['data'] if identity_hold else {}),
+                         {**(old['data'] if identity_hold or (old['kind'] in CORRESPONDENCE_KINDS
+                                                           and old['data'].get('execution_history')) else {}),
                           'reason':reason,'successor':successor['id']})
             self.db.execute('UPDATE pipeline_sources SET task_id=? WHERE task_id=?',
                             (successor['id'],task_id))
@@ -756,35 +839,50 @@ class Tasks:
         return self.get(row['id'])
 
     def decision(self,envelope,secret):
-        """Record an actual user answer; the reviewer key never authorizes sending."""
+        """Record actual user answers or close the reviewed questions."""
         require(bool(secret),'Reviewer verification key is not configured')
-        require(set(envelope)=={'schema_version','task_id','result_hash','answers',
-                               'evidence_ref','reviewer','signature'},'Invalid user decision envelope')
+        fields = {'schema_version','task_id','result_hash','evidence_ref','reviewer','signature'}
+        require(isinstance(envelope, dict) and set(envelope) in
+                (fields | {'answers'}, fields | {'action', 'reason'}), 'Invalid user decision envelope')
+        closing = 'action' in envelope
+        if closing:
+            require(envelope['action'] == 'close' and isinstance(envelope['reason'], str)
+                    and envelope['reason'].strip(), 'Question closure needs a reason')
         signed={k:v for k,v in envelope.items() if k!='signature'}
         expected=hmac.new(secret.encode(),canonical(signed).encode(),hashlib.sha256).hexdigest()
         require(hmac.compare_digest(expected,envelope['signature']),'Decision signature failed')
         require(envelope['schema_version']==1 and envelope['reviewer']=='local-claude-loop',
-                'Only the local operator records user answers')
+                'Only the local operator records user decisions')
         require(isinstance(envelope['evidence_ref'],str) and envelope['evidence_ref'].strip(),
-                'Preserve the actual user-answer source')
+                'Preserve the evidence source for the decision')
         event_id=digest(envelope)
         with self.tx():
             if self.db.execute('SELECT 1 FROM control_events WHERE id=?',(event_id,)).fetchone():
                 return self.get(envelope['task_id'])
             row=self.get(envelope['task_id'])
-            require(row['state']=='awaiting-user','Task is not awaiting a user decision')
-            require(digest(row['data']['result'])==envelope['result_hash'],'Decision targets an obsolete result')
-            questions=row['data']['result'].get('routing',{}).get('questions',[])
-            answers=envelope['answers']
-            require(isinstance(answers,dict) and set(answers)=={q['id'] for q in questions}
-                    and answers and all(isinstance(v,str) and v.strip() for v in answers.values()),
-                    'Answer every current question with the actual user response')
-            data={**row['data'],'user_decision':envelope}
-            self.db.execute("UPDATE tasks SET state='decision-recorded',revision=revision+1,data=?,updated=? WHERE id=?",
-                            (canonical(data),self.clock(),row['id']))
+            require(row['state']=='awaiting-user', 'Task is not awaiting a user decision')
+            result = row['data']['result']
+            require(digest(result)==envelope['result_hash'],'Decision targets an obsolete result')
+            questions = result.get('routing', {}).get('questions', [])
+            data = dict(row['data'])
+            if closing:
+                require(row['kind'] in CORRESPONDENCE_KINDS and questions,
+                        'Question closure requires open reply or research questions')
+                data['user_question_closed'] = {'reason': 'question closed', 'evidence': {
+                    'reason': envelope['reason'].strip(), 'evidence_ref': envelope['evidence_ref']}}
+                state = 'question-closed'
+            else:
+                answers = envelope['answers']
+                require(isinstance(answers,dict) and set(answers)=={q['id'] for q in questions}
+                        and answers and all(isinstance(v,str) and v.strip() for v in answers.values()),
+                        'Answer every current question with the actual user response')
+                data['user_decision'] = envelope
+                state = 'decision-recorded'
+            self.db.execute('UPDATE tasks SET state=?,revision=revision+1,data=?,updated=? WHERE id=?',
+                            (state,canonical(data),self.clock(),row['id']))
             self.db.execute('INSERT INTO control_events VALUES(?,?)',(event_id,canonical(envelope)))
             self.db.execute('INSERT INTO task_events(id,state,revision,at,data) VALUES(?,?,?,?,?)',
-                            (row['id'],'decision-recorded',row['revision']+1,self.clock(),canonical({'decision':event_id})))
+                            (row['id'],state,row['revision']+1,self.clock(),canonical({'decision':event_id})))
         return self.get(row['id'])
 
     def draft_revision(self, envelope, secret):

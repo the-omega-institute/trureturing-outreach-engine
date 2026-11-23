@@ -25,9 +25,11 @@ class OwnerSentGraph(DraftGraph):
     def request(self, path, method='GET', body=None):
         if method != 'GET':
             raise AssertionError('Owner-send reconciliation wrote to Graph: ' + method)
-        if path == '/me/mailFolders/drafts?$select=id':
-            self.calls.append((path, method, body))
-            return {'id': 'drafts-folder'}
+        folders = {'drafts': 'drafts-folder', 'deleteditems': 'deleted-folder'}
+        for name, identity in folders.items():
+            if path == '/me/mailFolders/' + name + '?$select=id':
+                self.calls.append((path, method, body))
+                return {'id': identity}
         try:
             return super().request(path, method, body)
         except KeyError:
@@ -214,6 +216,12 @@ class OwnerSentTests(unittest.TestCase):
         self.assertIsNone(row['data']['sent_receipt'])
         self.assertEqual(row['data']['owner_draft_status'], 'draft-missing-not-sent')
 
+    def assert_discarded(self, folder):
+        row = self.row()
+        self.assertEqual(row['state'], 'owner-discarded')
+        self.assertIsNone(row['data']['sent_receipt'])
+        self.assertEqual(row['data']['owner_draft_discard']['folder'], folder)
+
     def inventory(self):
         with patch('managed.daily_local.status', return_value={}):
             return automation.work(self.ledger.tasks, self.root)
@@ -337,7 +345,7 @@ class OwnerSentTests(unittest.TestCase):
         self.tick()
         self.assert_missing()
 
-    def test_no_match_keeps_missing_draft_pending_without_deleting(self):
+    def test_no_match_keeps_404_draft_missing_without_deleting(self):
         self.outlook_send(conversationId='other-thread', subject='Unrelated subject')
         self.tick()
         self.assert_missing()
@@ -376,6 +384,49 @@ class OwnerSentTests(unittest.TestCase):
         self.tick()
         self.assert_missing()
         self.assertIn('draft-1', self.graph.drafts)
+
+    def test_deleted_items_is_terminal_and_keeps_folder_and_modified_time(self):
+        self.graph.drafts['draft-1'].update(parentFolderId='deleted-folder', lastModifiedDateTime=SENT)
+        self.update(draft_revision_requests=[{'reason': 'Synthetic revision'}])
+        self.tick()
+        self.assert_discarded('deleteditems')
+        row = self.row()
+        discard = row['data']['owner_draft_discard']
+        self.assertEqual(discard['parentFolderId'], 'deleted-folder')
+        self.assertEqual(discard['lastModifiedDateTime'], SENT)
+        self.assertNotIn('draft_revision_intent', row['data'])
+        self.assertEqual(self.inventory()['owner_drafts'], [])
+        calls = list(self.graph.calls)
+        self.tick()
+        self.assertEqual(self.graph.calls, calls)
+
+    def test_sent_copy_in_deleted_items_is_missing_without_sent_items_evidence(self):
+        message = self.outlook_send(sent_id='draft-1', parentFolderId='deleted-folder')
+        self.graph.drafts['draft-1'] = self.graph.sent.pop(message['id'])
+        self.tick()
+        self.assert_missing()
+        self.assertNotIn('owner_draft_discard', self.row()['data'])
+
+    def test_coordinator_stale_draft_move_stays_available_for_successor_reconciliation(self):
+        successor = self.ledger.tasks.add(request('replacement', 'contact-a', 'reply'))
+        self.graph.drafts['draft-1']['parentFolderId'] = 'deleted-folder'
+        before = self.row()
+        for phase in ('move-intent', 'moved'):
+            with self.subTest(phase=phase):
+                successor = self.ledger.tasks.update(successor['id'], successor['revision'], 'held', {
+                    'stale_draft_replacement': {'remote_id': 'draft-1', 'phase': phase}})
+                with patch.object(self.ledger.tasks, 'clock', return_value=
+                                  self.ledger.tasks.clock() + delivery.OWNER_SENT_RECHECK_SECONDS):
+                    self.tick()
+                self.assertEqual(self.row(), before)
+
+    def test_sent_copy_wins_over_a_readable_deleted_draft(self):
+        original = self.graph.drafts['draft-1'].copy()
+        message = self.outlook_send()
+        self.graph.drafts['draft-1'] = {**original, 'parentFolderId': 'deleted-folder',
+                                        'lastModifiedDateTime': SENT}
+        self.tick()
+        self.assert_sent(message)
 
     def test_sent_message_can_retain_the_draft_immutable_id(self):
         message = self.outlook_send(sent_id='draft-1')

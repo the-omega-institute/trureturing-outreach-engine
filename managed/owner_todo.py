@@ -175,34 +175,41 @@ def owner_todo(work, root, now=None) -> dict:
     view['operator_check'] = {'title': OPERATOR_TITLE, 'rows': []}
     view['confirmations'] = list(_journal_confirmations(work.get('mailbox_attention', []), excluded))
 
-    grouped = defaultdict(list)
-    for item in work.get('user_questions', []):
-        if item['task_id'] in excluded:
-            continue
+    def waiting(task, field):
+        opened = timestamp(task.get(field))
+        return max(0, int((now - opened).total_seconds())) if opened else None
+
+    def age_note(age):
+        if age is None:
+            return '等待时间未知'
+        days, hours = divmod(age // 3600, 24)
+        return f'已等待 {days} 天 {hours} 小时'
+
+    items = sorted(work.get('user_questions', []),
+                   key=lambda item: timestamp(item.get('opened_at')) or datetime.max.replace(tzinfo=timezone.utc))
+    for item in items:
         task = {**tasks.get(item['task_id'], {}), **item}
         result = task.get('result') or {}
-        questions = (result.get('routing') or {}).get('questions', item.get('questions', [])) or []
-        row, incoming, person = row_for(task, decision=True)
-        key = person['id'] if person else row['email'].casefold() or row['task_id']
+        questions = item.get('questions') or (result.get('routing') or {}).get('questions', [])
+        row, _, _ = row_for(task, decision=True)
+        age = waiting(item, 'opened_at')
         for question in questions:
-            entry = {**row, 'question_id': question.get('id'), 'content': question['question'],
-                     'reason': _decision_reason(question)}
-            grouped[key].append((incoming or EARLIEST, entry))
-    for group in grouped.values():
-        latest = max(group, key=lambda item: (bool(item[1]['incoming_date'])
-                     and item[1].get('incoming_date_source') != 'registry', item[0]))[1]
-        entries = [entry for _, entry in group]
-        content = (entries[0]['content'] if len(entries) == 1 else '\n'.join(
-            f"{number}. {entry['content']}" for number, entry in enumerate(entries, 1)))
-        reasons = '、'.join(dict.fromkeys(entry['reason'] for entry in entries))
-        date_label = '登记的最近来信日期：' if latest.get('incoming_date_source') == 'registry' else '来信日期：'
-        first = entries[0]
-        view['questions'].append({
-            **latest, 'email': latest['email'] or next((e['email'] for e in entries if e['email']), ''),
-            'task_id': first['task_id'], 'question_id': first['question_id'], 'content': content,
-            'notes': '为什么要你定：' + reasons + '；' + date_label + (latest['incoming_date'] or '未知'),
-            'questions': entries,
-        })
+            quote = question.get('source_quote')
+            content = question['question'] + ('\n“' + quote + '”' if quote else '')
+            reason = _decision_reason(question)
+            date_label = '登记的最近来信日期' if row.get('incoming_date_source') == 'registry' else '来信日期'
+            view['questions'].append({**row, 'question_id': question.get('id'),
+                'content': content, 'source_quote': quote, 'age_seconds': age, 'reason': reason,
+                'notes': age_note(age) + '，' + reason + '，' + date_label + '：' + (row['incoming_date'] or '未知')})
+
+    holds = sorted(work.get('mailbox_retry_exhausted', []), key=lambda item: item['since'])
+    for item in holds:
+        task = {**tasks.get(item['task_id'], {}), **item}
+        row, _, _ = row_for(task, decision=True)
+        age = waiting(item, 'since')
+        view['operator_check']['rows'].append({
+            **row, 'age_seconds': age, 'attempts': item['attempts'],
+            'content': item['reason'], 'notes': age_note(age)})
 
     drafts, old_drafts = [], []
     for task in draft_tasks.values():

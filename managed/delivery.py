@@ -281,9 +281,24 @@ def _reconcile_owner_sent(ledger, config, mailbox, row):
     since = _owner_draft_since(row)
     if since is None:
         return False
-    draft = _read_live_draft(mailbox, receipt['remote_id'], after_delete=True)
+    discarded = None
+    try:
+        draft = _read_remote_draft(mailbox, receipt['remote_id'])
+    except HTTPError as exc:
+        if exc.code != 403:
+            raise
+        draft = None  # A forbidden read alone cannot establish discard.
     if draft is not None and draft.get('isDraft') is not False:
-        return False
+        parent = draft.get('parentFolderId')
+        drafts_folder = getattr(mailbox, 'drafts_folder_id', None)
+        deleted_folder = getattr(mailbox, 'deleted_items_folder_id', None)
+        if not parent or (callable(drafts_folder) and parent == drafts_folder()):
+            return False
+        if callable(deleted_folder) and parent == deleted_folder():
+            discarded = {'folder': 'deleteditems', 'parentFolderId': parent,
+                         'lastModifiedDateTime': draft.get('lastModifiedDateTime')}
+        elif not callable(drafts_folder):
+            return False
     data = dict(row['data'])
     packet = data.get('packet_override') or data.get('result', {}).get('packet')
     if not isinstance(packet, dict):
@@ -297,9 +312,13 @@ def _reconcile_owner_sent(ledger, config, mailbox, row):
     # also yields to a task whose own conversation contains the message: a
     # superseded draft with the same subject was deleted, not sent.
     claimed, owned = set(), set()
+    coordinator_retired = False
     for other in ledger.tasks.all():
         if other['id'] == row['id']:
             continue
+        replacement = other['data'].get('stale_draft_replacement') or {}
+        if replacement.get('remote_id') == receipt['remote_id']:
+            coordinator_retired = True
         other_receipt = other['data'].get('sent_receipt') or {}
         if other_receipt.get('remote_id'):
             claimed.add(other_receipt['remote_id'])
@@ -355,10 +374,24 @@ def _reconcile_owner_sent(ledger, config, mailbox, row):
         data.pop('last_error', None)
         state = 'verified'
     else:
-        state = row['state']
-        data['owner_draft_status'] = 'sent-ambiguous' if matches else 'draft-missing-not-sent'
-        if matches:
-            data['owner_draft_note'] = f'{len(matches)} Sent Items messages match the missing owner draft; reconcile manually'
+        if coordinator_retired:
+            return True  # Leave the stale-draft move and its recovery to the successor.
+        intent = data.get('draft_revision_intent') or {}
+        if (not matches and (draft is None or discarded is not None)
+                and intent.get('phase') == 'delete-intent' and intent.get('new_remote_id')
+                and intent.get('old_remote_id') == receipt['remote_id']):
+            return False  # Resume the coordinator's own checkpointed draft replacement.
+        if not matches and discarded is not None:
+            data['owner_draft_status'] = 'discarded'
+            data['owner_draft_discard'] = {'remote_id': receipt['remote_id'],
+                                           'observed_at': ledger.tasks.clock(), **discarded}
+            data.pop('last_error', None)
+            state = 'owner-discarded'
+        else:
+            state = row['state']
+            data['owner_draft_status'] = 'sent-ambiguous' if matches else 'draft-missing-not-sent'
+            if matches:
+                data['owner_draft_note'] = f'{len(matches)} Sent Items messages match the missing owner draft; reconcile manually'
     if data != row['data'] or state != row['state']:
         ledger.tasks.update(row['id'], row['revision'], state, data)
         ledger.save()

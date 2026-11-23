@@ -11,7 +11,7 @@ from urllib.error import HTTPError
 from urllib.parse import parse_qs, urlencode, urlsplit
 
 from fixture_config import use_example_config
-from managed import control, firstcontact_history, mailbox
+from managed import automation, control, firstcontact_history, mailbox
 from managed.queue import Queue, GateError
 from managed.thread_staging import effective_inputs
 from test_tasks import CMA, Releases, request
@@ -74,6 +74,11 @@ class FirstcontactHistoryTests(unittest.TestCase):
         with patch.object(control, 'ROOT', self.root), patch.object(control, 'workflow', return_value=self.req['workflow_hash']):
             control.advance(self.ledger, self.cma, self.cfg, self.folder, mailbox=self.box)
         return self.ledger.tasks.get(self.req['id'])
+
+    def retry_when_due(self):
+        next_at = self.ledger.tasks.get(self.req['id'])['data']['mailbox_retry']['next_at']
+        self.ledger.tasks.clock = lambda: next_at
+        return self.tick()
 
     def message(self, folder='inbox', recipient='alias@example.invalid'):
         return {'id': 'graph-1', 'internetMessageId': '<prior@example.invalid>',
@@ -415,9 +420,35 @@ class FirstcontactHistoryTests(unittest.TestCase):
         self.assertEqual(len(self.graph.paths), 1)  # search failure does not trigger a full scan
         self.assertIn('$search', parse_qs(urlsplit(self.graph.paths[0]).query))
         self.graph.error = None
+        self.assertNotIn('mailbox_retry', row['data'])
         row = self.tick()
         self.assertEqual(row['state'], 'running'); self.assertEqual(len(self.cma.creates), 1)
         self.assertTrue(row['data']['mailbox_history']['complete'])
+
+    def test_legacy_reply_hold_gets_one_bounded_backoff_window(self):
+        self.cfg['kinds']['reply'] = True
+        self.req = request('legacy-reply', 'contact-a', 'reply')
+        self.req['inputs'] = {'thread': [self.message()]}
+        row = self.ledger.tasks.add(self.req)
+        self.ledger.tasks.update(row['id'], row['revision'], 'held', {
+            'reason': 'Reply mailbox history failed: HTTPError: HTTP Error 502: Synthetic outage',
+            'mailbox_history_retries': control.RESOLUTION_RETRIES})
+        with patch('managed.firstcontact_history.resolve_reply',
+                   side_effect=ConnectionResetError('Synthetic reset')) as failed:
+            row = self.tick()
+            self.assertEqual(row['state'], 'queued')
+            self.assertEqual(row['data']['mailbox_history_retries'], 1)
+            self.tick()
+            failed.assert_called_once()
+            for _ in range(control.RESOLUTION_RETRIES):
+                row = self.retry_when_due()
+            self.assertEqual(row['state'], 'held')
+            self.assertEqual(row['data']['mailbox_retry']['status'], 'exhausted')
+            self.tick()
+            self.assertEqual(failed.call_count, control.RESOLUTION_RETRIES + 1)
+        work = automation.work(self.ledger.tasks, self.root)
+        self.assertEqual(work['mailbox_retry_exhausted'][0]['task_id'], row['id'])
+        self.assertFalse(self.cma.creates)
 
     def test_transient_exhaustion_and_permanent_error_hold_with_reason(self):
         for code in (429, 403):
@@ -427,9 +458,12 @@ class FirstcontactHistoryTests(unittest.TestCase):
                 self.addCleanup(self.graph.error.close)
                 row = self.tick(add=True)
                 for _ in range(control.RESOLUTION_RETRIES):
-                    row = self.tick()
+                    if row['state'] == 'queued':
+                        row = self.tick()
                 self.assertEqual(row['state'], 'held'); self.assertFalse(self.cma.creates)
-                self.assertIn('First-contact mailbox history failed: HTTPError:', row['data']['reason'])
+                self.assertIn('HTTPError:', row['data']['reason'])
+                self.assertNotIn('mailbox_retry', row['data'])
+                self.assertEqual(self.tick(), row)
                 self.assertFalse(row['data']['mailbox_history']['complete'])
 
     def test_configured_adapter_failure_records_incomplete_snapshot(self):

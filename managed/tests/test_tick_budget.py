@@ -1,5 +1,6 @@
 """Offline fake-clock ticks, including restoration of deferred work."""
 from contextlib import ExitStack, redirect_stderr
+from datetime import datetime, timedelta, timezone
 import hashlib
 import hmac
 import io
@@ -345,8 +346,9 @@ class TickBudgetTests(unittest.TestCase):
         self.remote.download=slow_download
         box=Mock(settings={'reconciled':True,'live_since':'2020-01-01T00:00:00Z'})
         box.verify_owner.return_value='owner@example.invalid'
+        received = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
         box.messages.return_value=[{'id':name,'conversationId':name,'internetMessageId':f'<{name}@example.invalid>',
-                                    'receivedDateTime':'2020-01-02T00:00:00Z'} for name in ('first','second')]
+                                    'receivedDateTime':received} for name in ('first','second')]
         def slow_thread(conversation):
             self.clock.advance(60)
             return []
@@ -365,7 +367,8 @@ class TickBudgetTests(unittest.TestCase):
                 mailbox=json.loads(ledger.tasks.db.execute(
                     "SELECT payload FROM pipeline_state WHERE key='mailbox'").fetchone()[0])
                 self.assertEqual([(m['id'],m['intake_reason']) for m in mailbox['unmapped']],
-                                 [('second','tick budget; retained')])
+                                 [('first','Inbox message missing from conversation readback; retained'),
+                                  ('second','tick budget; retained')])
             finally:ledger.tasks.close()
 
     def test_empty_inbox_releases_intake_reserve_before_advance(self):

@@ -44,3 +44,30 @@ still follow their original recovery paths.
 For authorized local inspection, run `python3 -m managed.control status`,
 `python3 -m managed.control work`, or `python3 -m managed.control reviews`
 with the configured private data checkout and an authenticated GitHub CLI.
+
+## Close an owner question
+
+To close reviewed reply or research questions without requesting another CMA
+round, take the task ID and result hash from the `user_questions` section of
+`work`. Create a decision envelope with these fields.
+
+```json
+{
+  "schema_version": 1,
+  "task_id": "reply-fixture",
+  "result_hash": "<result_hash reported by work>",
+  "action": "close",
+  "reason": "The correspondent withdrew the request.",
+  "evidence_ref": "fixture:withdrawal",
+  "reviewer": "local-claude-loop"
+}
+```
+
+Compute the hex HMAC-SHA256 of the envelope serialized with
+`managed.queue.canonical`, using the same key as signed answers and reviews.
+Add the hex digest as `signature` and stage the signed file with
+`python3 -m managed.control decision /path/to/decision.json`. The coordinator
+checks the signature and result hash and accepts closure while the task is
+`awaiting-user`. It records `question-closed` with the reason and evidence
+reference and discards any unsent letter in that result. The closure appears
+in `work.user_questions_closed`.

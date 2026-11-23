@@ -52,32 +52,22 @@ class OwnerTodoTests(unittest.TestCase):
     def view(self, work):
         return owner_todo(work, self.root, now=NOW)
 
-    def test_questions_group_by_person_with_dates_and_record_id_lookup(self):
-        item = {'task_id': 'choice', 'request': {'owner': 'contact-a-alias', 'inputs': {
-                    'mailbox_observation': {'email': 'unlisted@example.invalid',
-                                            'at': '2026-11-01T09:30:00Z'}}},
-                'result': {'packet': None, 'routing': {'questions': [
-                    {'id': 'author-order', 'question': '是否采用这个署名顺序？',
-                     'source_quote': '合成引文，不在待办中展示。'},
-                    {'id': 'choice-two', 'question': '你倾向哪个选项？', 'source_quote': '合成引文。'}]}}}
-        related = {'task_id': 'thread-q', 'request': {'owner': 'contact-a', 'inputs': {'thread': [
-            {'from': {'emailAddress': {'address': 'alias@example.invalid'}}, 'receivedDateTime': '2026-11-02T07:00:00Z'},
-            {'from': {'emailAddress': {'address': 'owner@example.invalid'}}, 'receivedDateTime': '2026-11-03T07:00:00Z'},
-        ]}}, 'questions': [{'id': 'q3', 'question': '要接受邀请吗？'}]}
-        work = {'user_questions': [item, related], 'mailbox_account': 'owner@example.invalid'}
+    def test_questions_show_original_quote_and_age_oldest_first_across_threads(self):
+        newer = {'task_id': 'choice-new', 'opened_at': '2026-11-03T00:00:00Z',
+                 'request': {'owner': 'contact-a-alias'},
+                 'questions': [{'id': 'author-order', 'question': '是否采用这个署名顺序？',
+                                'source_quote': 'Our suggested author order is Avery and Ellis.'}]}
+        older = {'task_id': 'choice-old', 'opened_at': '2026-11-01T00:00:00Z',
+                 'request': {'owner': 'contact-a'},
+                 'questions': [{'id': 'meeting', 'question': '是否会面？', 'source_quote': 'Can we meet?'}]}
+        work = {'user_questions': [newer, older], 'mailbox_account': 'owner@example.invalid'}
         original = copy.deepcopy(work)
-        row, = self.view(work)['questions']
-        self.assertEqual(row['content'], '1. 是否采用这个署名顺序？\n2. 你倾向哪个选项？\n3. 要接受邀请吗？')
-        self.assertEqual([r['question_id'] for r in row['questions']], ['author-order', 'choice-two', 'q3'])
-        self.assertEqual(row['person'], '甲教授')
-        self.assertEqual(row['email'], 'alias@example.invalid')
-        self.assertEqual(row['task_id'], 'choice')
-        self.assertEqual(row['incoming_date'], '2026-11-02')
-        self.assertEqual(row['questions'][0]['incoming_date'], '2026-11-01')
-        self.assertIn('涉及署名或作者顺序', row['notes'])
-        self.assertIn('需要你本人决定', row['notes'])
-        self.assertIn('来信日期：2026-11-02', row['notes'])
-        self.assertNotIn('合成引文', json.dumps(row, ensure_ascii=False))
+        rows = self.view(work)['questions']
+        self.assertEqual([r['task_id'] for r in rows], ['choice-old', 'choice-new'])
+        self.assertEqual([r['person'] for r in rows], ['甲教授', '甲教授'])
+        self.assertEqual([r['age_seconds'] for r in rows], [216000, 43200])
+        self.assertIn('“Can we meet?”', rows[0]['content'])
+        self.assertIn('已等待 2 天 12 小时', rows[0]['notes'])
         self.assertEqual(work, original)
 
     def test_question_falls_back_to_registered_address_and_recent_inbound(self):
@@ -99,7 +89,7 @@ class OwnerTodoTests(unittest.TestCase):
         ]
         rows = self.view({'user_questions': [{'task_id': 'q', 'result': {
             'routing': {'questions': questions}}}]})['questions']
-        self.assertEqual([q['reason'] for q in rows[0]['questions']], [
+        self.assertEqual([q['reason'] for q in rows], [
             '涉及投稿或发表安排', '涉及合作或个人承诺', '涉及邀请或时间安排', '涉及个人身份或项目情况',
             '涉及个人事项'])
 
@@ -111,6 +101,15 @@ class OwnerTodoTests(unittest.TestCase):
             {'task_id': 'q', 'questions': [{'id': 'q1', 'question': '请选择。'}]}]})['questions']
         self.assertEqual(rows[0]['person'], '甲教授')
         self.assertEqual(rows[0]['email'], 'ALIAS@example.invalid')
+
+    def test_exhausted_mailbox_retries_are_visible_only_to_the_operator(self):
+        item = {'task_id': 'reply-retry', 'owner': 'contact-a', 'attempts': 9,
+                'since': '2026-11-03T00:00:00Z', 'reason': 'Synthetic mailbox retry budget exhausted'}
+        view = self.view({'mailbox_retry_exhausted': [item]})
+        row, = view['operator_check']['rows']
+        self.assertEqual((row['task_id'], row['attempts'], row['content']),
+                         (item['task_id'], item['attempts'], item['reason']))
+        self.assertNotIn(item['reason'], render_markdown(view))
 
     def test_drafts_sorted_by_save_date_and_brief_notes(self):
         first = draft('first', '2026-10-30T12:00:00Z')

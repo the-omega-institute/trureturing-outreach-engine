@@ -491,7 +491,7 @@ class ObservationCadenceTests(unittest.TestCase):
 
     def test_missing_owner_draft_skips_all_graph_reads_until_recheck_is_due(self):
         fixture = self.fixture(owner_tests.OwnerSentTests)
-        fixture.graph.drafts.clear()
+        fixture.graph.drafts['draft-1']['parentFolderId'] = 'archive-folder'
         fixture.update(draft_revision_requests=[{'reason': 'Must stay pending'}])
         fixture.tick(); fixture.assert_missing()
         calls = list(fixture.graph.calls)

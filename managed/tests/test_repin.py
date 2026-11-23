@@ -72,6 +72,32 @@ class RepinTests(unittest.TestCase):
         self.assertEqual(self.ledger.tasks.get('other')['state'],'held')
         self.assertEqual(len(self.ledger.tasks.all()),3)
 
+    def test_cached_prompt_from_a_restart_does_not_pin_a_workflow_hold(self):
+        old = self.ledger.tasks.add(request('restart'))
+        evidence = [{'agent_id': 'retired-fixture', 'cleanup': {'deleted': True}}]
+        self.ledger.tasks.update(old['id'], old['revision'], 'held', {
+            'reason': WORKFLOW_CHANGED, 'prompt': 'Synthetic old prompt',
+            'execution_restart': 'retry-1', 'execution_history': evidence})
+        self.tick()
+        successor = self.successor(old)
+        self.assertEqual(successor['state'], 'queued')
+        self.assertNotIn('prompt', successor['data'])
+        self.assertEqual(self.ledger.tasks.get(old['id'])['data']['execution_history'], evidence)
+        self.assertFalse(self.cma.creates)
+
+    def test_held_workflow_change_does_not_resume_non_correspondence(self):
+        from managed.tasks import unstarted
+        for kind in ('shortnote', 'mathesis', 'firstcontact', 'submission'):
+            self.cfg['kinds'][kind] = True
+            row = self.ledger.tasks.add({**request(kind + '-held', kind=kind),
+                                         'workflow_hash': self.committed['a' * 40]})
+            held = self.ledger.tasks.update(row['id'], row['revision'], 'held', {'reason': WORKFLOW_CHANGED})
+            self.assertFalse(unstarted({**held, 'data': {'prompt': 'Old prompt', 'execution_restart': 'retry-1'}}))
+        before = self.ledger.tasks.all()
+        self.tick()
+        self.assertEqual(self.ledger.tasks.all(), before)
+        self.assertFalse(self.cma.creates)
+
     def test_handles_results_reviews_and_uncertain_intents_prevent_repin(self):
         for state in ['queued','held']:
             for key,value in [('agent_id','agt_original'),('operation_id','op_original'),

@@ -12,7 +12,8 @@ from .registry import email, people
 
 from .location import DATA_ROOT as ROOT, load_config, owner_labels
 CLOSED = {'closed', 'declined', 'stopped', 'cancelled'}
-TERMINAL = {'superseded', 'answered-by-mail', 'verified', 'no-reply', 'handoff-ready', 'round-complete', 'submission-ready'}
+TERMINAL = {'superseded', 'answered-by-mail', 'question-closed', 'verified', 'no-reply', 'owner-discarded',
+            'handoff-ready', 'round-complete', 'submission-ready'}
 
 
 def active(items):

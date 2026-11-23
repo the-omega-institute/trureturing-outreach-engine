@@ -18,7 +18,8 @@ class OracleCapacityTests(unittest.TestCase):
         db.execute('CREATE TABLE pipeline_state(key TEXT PRIMARY KEY, payload TEXT NOT NULL)')
         if value is not None:
             db.execute('INSERT INTO pipeline_state VALUES(?,?)',('oracle_capacity',canonical(value)))
-        return SimpleNamespace(tasks=SimpleNamespace(db=db,all=lambda:[],reviews=lambda:[]))
+        return SimpleNamespace(tasks=SimpleNamespace(db=db,all=lambda:[],reviews=lambda:[],
+                                                     owner_questions=lambda *, correspondence_only=True:[]))
 
     def test_snapshot_summarizes_recent_available_cooling_and_queue(self):
         payload={'workers':[

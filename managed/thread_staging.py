@@ -11,15 +11,16 @@ from tempfile import TemporaryDirectory
 from .location import owner_labels, source_head
 from .queue import digest, require
 from .registry import email, people, preflight
-from .tasks import ACTIVE, STATES
+from .tasks import ACTIVE, STATES, newer_reply
 
 
 MAX_CONVERSATIONS = 3
 MAX_MESSAGES = 100
 LEGACY_RESOLUTION_REASON = 'Thread resolution failed: GateError: Known messages do not identify one conversation'
 # A revising parent has handed off to its continuation, which carries the target.
-INBOUND_STATES = STATES - {'verified', 'failed', 'no-reply', 'superseded', 'answered-by-mail',
-                           'handoff-ready', 'round-complete', 'submission-ready', 'revising'}
+INBOUND_STATES = STATES - {'verified', 'failed', 'no-reply', 'superseded', 'answered-by-mail', 'question-closed',
+                           'handoff-ready', 'round-complete', 'submission-ready', 'revising', 'owner-discarded'}
+FINISHED_INBOUND_STATES = {'verified', 'no-reply', 'answered-by-mail', 'question-closed', 'owner-discarded'}
 # The operator may deliberately restage a message whose task is parked, saved as
 # an owner draft or waiting for a user answer; only work still in flight blocks it.
 IN_FLIGHT_STATES = ACTIVE | {'queued', 'awaiting-review', 'bounced', 'approved', 'awaiting-mailbox'}
@@ -92,22 +93,26 @@ def message_ids(event):
             if (identity := normalize_message_id((event or {}).get(key)))]
 
 
-def inbound_tasks(rows):
-    """Index active reply tasks by every covered Internet Message-ID.
+def inbound_tasks(rows, *, include_finished=False, kind='reply'):
+    """Index tasks of one kind by covered Internet Message-ID.
 
-    Research tasks are left out: one staged on a thread must not suppress the
-    reply to a message that arrives while it runs.
+    Mailbox intake indexes replies only, so research never suppresses a reply.
     """
     groups = {}
     for row in rows:
-        if row['kind'] != 'reply' or row['state'] not in INBOUND_STATES:
+        finished = include_finished and row['state'] in FINISHED_INBOUND_STATES
+        if row['kind'] != kind or not (row['state'] in INBOUND_STATES or finished):
             continue
         inputs = row['request']['inputs']
         resolved = row['data'].get('thread_inputs') or {}
         ref = inputs.get('thread_ref')
         ids = ref.get('internetMessageIds') if isinstance(ref, dict) else None
         values = [inputs.get('latest_inbound_message_id'), resolved.get('latest_inbound_message_id')]
-        if isinstance(ids, list):
+        if finished:
+            data = row['data']
+            packet = data.get('packet_override') or (data.get('result') or {}).get('packet') or {}
+            values.append(packet.get('latest_inbound_message_id'))
+        if isinstance(ids, list) and not finished:
             values.extend(ids)
         for identity in dict.fromkeys(map(normalize_message_id, values)):
             if identity:
@@ -115,11 +120,43 @@ def inbound_tasks(rows):
     return groups
 
 
-def active_inbound_tasks(tasks):
-    marks = ','.join('?' for _ in INBOUND_STATES)
+def answer_continuation(row):
+    inputs = row['request']['inputs']
+    return (inputs.get('automation_parent', {}).get('purpose') == 'user-answer'
+            or bool(inputs.get('user_answers')))
+
+
+def later_inbound_task(row, rows, *, answers_only=False):
+    """Return the newest covering task from the ledger's creation order."""
+    kind = row['kind']
+    identity = normalize_message_id(effective_inputs(row).get('latest_inbound_message_id'))
+    identities = [identity] if identity else inbound_tasks([row], include_finished=True, kind=kind)
+    if not identities:
+        return None
+    later = []
+    for other in reversed(rows):
+        if other['id'] == row['id']:
+            break
+        if other['kind'] == kind and (not answers_only or answer_continuation(other)):
+            later.append(other)
+    groups = inbound_tasks(later, include_finished=True, kind=kind)
+    candidates = {task['task_id'] for identity in identities for task in groups.get(identity, ())}
+    return next((other['id'] for other in later if other['id'] in candidates), None)
+
+
+def newer_conversation_task(row, rows):
+    """Find work on a later inbound in the same conversation and task kind."""
+    states = (INBOUND_STATES - {'held'}) | FINISHED_INBOUND_STATES | {'handoff-ready'}
+    return next((other['id'] for other in reversed(rows)
+                 if other['state'] in states and newer_reply(other, row)), None)
+
+
+def active_inbound_tasks(tasks, *, include_finished=False):
+    states = INBOUND_STATES | (FINISHED_INBOUND_STATES if include_finished else set())
+    marks = ','.join('?' for _ in states)
     rows = tasks.db.execute("SELECT id FROM tasks WHERE kind='reply' "
-                            f"AND state IN ({marks}) ORDER BY rowid", tuple(INBOUND_STATES))
-    return inbound_tasks(tasks.get(row[0]) for row in rows)
+                            f"AND state IN ({marks}) ORDER BY rowid", tuple(states))
+    return inbound_tasks((tasks.get(row[0]) for row in rows), include_finished=include_finished)
 
 
 def require_uncovered_inbound(value, tasks):

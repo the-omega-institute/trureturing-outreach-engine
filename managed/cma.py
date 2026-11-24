@@ -193,17 +193,64 @@ class CMA:
     def _gone(exc):
         """Whether CMA has already torn down the object we are reconciling."""
         code=getattr(exc,'code',None)
-        if code in {404,410}:return True
+        if code==410:return True
+        body=getattr(exc,'body',None)
+        if body is None and hasattr(exc,'read'):
+            try:
+                raw=exc.read()
+                if raw:
+                    body=raw.decode('utf-8',errors='replace') if isinstance(raw,bytes) else raw
+                    try:exc.body=json.loads(body)
+                    except (TypeError,ValueError):exc.body=body
+            except Exception:
+                body=None
+        # A NyxID routing 404 is commonly just {"status": 404}; treating that
+        # as a deleted Agent would skip the owned-Sandbox reconciliation. CMA's
+        # resource responses carry an explicit resource/not-found or gone
+        # marker, which is the only safe 404 shape to accept here.
+        if code==404:
+            body=getattr(exc,'body',body)
+            if isinstance(body,dict):
+                values=[]
+                def visit(value):
+                    if isinstance(value,dict):
+                        for key,item in value.items():
+                            if key not in {'status','http_status'}:values.append(item)
+                            visit(item)
+                    elif isinstance(value,(list,tuple)):
+                        for item in value:visit(item)
+                    elif isinstance(value,str):values.append(value)
+                visit(body)
+                text=' '.join(str(value) for value in values).casefold()
+            else:
+                text=str(body or '').casefold()
+            return any(mark in text for mark in
+                       ('agent_not_found','agent not found','agent gone','agent_gone','agent retired',
+                        'sandbox_not_found','sandbox not found','sandbox_gone',
+                        'sandbox gone','sandbox_retired','sandbox retired',
+                        'resource_not_found'))
         text=' '.join(str(value) for value in
                       (getattr(exc,'body',''),exc)).casefold()
         return any(mark in text for mark in
                    ('sandbox_not_found','sandbox not found','sandbox_gone',
-                    'sandbox gone','sandbox_retired','sandbox retired'))
+                    'sandbox gone','sandbox_retired','sandbox retired',
+                    'agent_not_found','agent not found','agent gone','agent_gone','agent retired'))
 
     @staticmethod
     def _error(action, exc):
+        body=getattr(exc,'body',None)
+        if body is None and hasattr(exc,'read'):
+            try:
+                raw=exc.read()
+                body=raw.decode('utf-8',errors='replace') if isinstance(raw,bytes) else raw
+            except Exception:
+                body=None
+        if body is None:body=str(exc)
+        if not isinstance(body,str):
+            try:body=json.dumps(body,ensure_ascii=False,sort_keys=True)
+            except (TypeError,ValueError):body=str(body)
         return {'action':action,'status':getattr(exc,'code',None),
-                'error':getattr(exc,'body',str(exc))}
+                'error':body[:500]}
 
     @staticmethod
     def _operator_check(agent_id, reason, sandbox_id=None):
@@ -215,17 +262,17 @@ class CMA:
     def _retire_agent(self, agent_id, key, agent=None, sandbox_id=None):
         """Stop and delete one Agent, retaining the original keys on replay.
 
-        Failed and ready Agents are terminal/idle enough to submit the delete
-        after the stop request. Working Agents still need an observed stopped
-        state. A missing Sandbox is a durable operator check: repeating the
-        same stop forever cannot repair a CMA object that no longer exists.
+        Failed Agents are terminal enough to submit the delete after a stop
+        refusal. Ready and working Agents still need an observed stopped state.
+        A missing Sandbox is a durable operator check: repeating the same stop
+        forever cannot repair a CMA object that no longer exists.
         """
         try:
             agent=agent or self.request('/api/v1/agents/'+agent_id)
         except Exception as exc:
             if CMA._gone(exc):
                 return {'agent_id':agent_id,'stopped':True,'deleted':True,
-                        'status':'deleted','errors':[],
+                        'status':'gone','gone':True,'errors':[],
                         'operator_check':CMA._operator_check(
                             agent_id,'Sandbox or Agent is already gone; verify CMA cleanup manually',sandbox_id)}
             raise
@@ -237,7 +284,7 @@ class CMA:
             if getattr(self,'retire_wait',0):
                 try:agent=CMA._await_status(self,agent_id,{'deleted'},agent)
                 except Exception as exc:
-                    if CMA._gone(exc):return {**result,'deleted':True,'status':'deleted'}
+                    if CMA._gone(exc):return {**result,'deleted':True,'status':'gone','gone':True}
                     raise
                 result.update(status=agent.get('status'),deleted=agent.get('status')=='deleted')
             return result
@@ -282,10 +329,11 @@ class CMA:
         status=agent.get('status')
         result.update(status=status,stopped=status in {'stopped','stopping','deleting','deleted'},
                       deleted=status=='deleted')
-        # CMA reports failed and ready Agents as non-running terminal/idle
-        # objects. The stop request above is still recorded, but waiting for a
-        # second status transition would strand them indefinitely.
-        can_delete=status in {'stopped','deleted'} or original_status in {'failed','ready'}
+        # A stop refusal for a failed Agent is terminal and CMA permits its
+        # deletion. A ready Agent still needs an observed stopped state: a
+        # successful stop request can be asynchronous and a cached ready view
+        # is not proof that DELETE is safe.
+        can_delete=status in {'stopped','deleted'} or original_status=='failed'
         if not can_delete:
             return result
         if status=='deleted':return result
@@ -297,43 +345,59 @@ class CMA:
                 agent=None
         except Exception as exc:
             if CMA._gone(exc):
-                return {**result,'stopped':True,'deleted':True,'status':'deleted'}
+                return {**result,'stopped':True,'deleted':True,'status':'gone','gone':True}
             if getattr(exc,'code',None) not in {400,409,422}:raise
             result['errors'].append(CMA._error('delete',exc));return result
         try:
             agent=CMA._await_status(self,agent_id,{'deleted'},agent)
         except Exception as exc:
             if CMA._gone(exc):
-                return {**result,'stopped':True,'deleted':True,'status':'deleted'}
+                return {**result,'stopped':True,'deleted':True,'status':'gone','gone':True}
             raise
         result.update(status=agent.get('status'),stopped=True,deleted=agent.get('status')=='deleted')
         return result
 
-    def retire(self, agent_id, key, owned_sandbox_id=None):
+    def retire(self, agent_id, key, owned_sandbox_id=None, *, sweep_owned=False,
+                       task_ids=frozenset()):
         try:agent=self.request('/api/v1/agents/'+agent_id)
         except Exception as exc:
-            if self._gone(exc):
-                return {'agent_id':agent_id,'stopped':True,'deleted':True,
-                        'status':'deleted','errors':[]}
-            raise
+            if CMA._gone(exc):
+                result={'agent_id':agent_id,'stopped':True,'deleted':True,
+                        'status':'gone','gone':True,'errors':[]}
+            elif getattr(exc,'code',None)==404 and owned_sandbox_id:
+                # A routing 404 is not proof that the Agent is gone, but the
+                # caller still supplied the original Sandbox identity. Reconcile
+                # that Sandbox and retain the routing check in the result.
+                result={'agent_id':agent_id,'stopped':False,'deleted':False,
+                        'status':'routing-404','errors':[],
+                        'operator_check':CMA._operator_check(
+                            agent_id,'Agent GET returned an unclassified 404; verify CMA routing/resource shape',
+                            owned_sandbox_id)}
+            else:
+                raise
+            if owned_sandbox_id:
+                return self.retire_sandbox(agent_id,owned_sandbox_id,key,result,
+                                           sweep_owned=sweep_owned,task_ids=task_ids)
+            return result
         sid=owned_sandbox_id or (agent.get('sandbox') or {}).get('id')
         result=self._retire_agent(agent_id,key,agent,sid)
         if owned_sandbox_id and result.get('deleted') and not result.get('operator_check'):
-            return self.retire_sandbox(agent_id,owned_sandbox_id,key,result)
+            return self.retire_sandbox(agent_id,owned_sandbox_id,key,result,
+                                       sweep_owned=sweep_owned,task_ids=task_ids)
         return result
 
     @staticmethod
-    def _ours(agent, owned_ids):
+    def _ours(agent, owned_ids, task_ids=None):
         if agent.get('id') in owned_ids:return True
-        return any(isinstance(agent.get(field),str) and agent[field].startswith('outreach-')
-                   for field in ('title','name'))
+        name=agent.get('name')
+        return (isinstance(name,str) and name in {'outreach-'+task_id for task_id in (task_ids or ())})
 
     def retire_sandbox(self,agent_id,sandbox_id,key,result,dead_ok=False,finished=frozenset(),
-                       max_agent_deletions=None):
+                       max_agent_deletions=None, sweep_owned=True, task_ids=None):
         result=dict(result or {})
         try:sandbox=self.request('/api/v1/sandboxes/'+sandbox_id)
         except Exception as exc:
-            if self._gone(exc):
+            if CMA._gone(exc):
                 result.update(sandbox_id=sandbox_id,sandbox_retired=True,
                               operator_check={'kind':'cma-sandbox-cleanup','sandbox_id':sandbox_id,
                                               'reason':'Sandbox is already gone; verify its Agents manually'})
@@ -353,7 +417,15 @@ class CMA:
         if agent_id:owned_ids.add(agent_id)
         previous_checks=result.get('operator_check') or {}
         checked=set(previous_checks.get('agents',[])) if isinstance(previous_checks,dict) else set()
-        owned=[a for a in items if CMA._ours(a,owned_ids)]
+        preserve_check=result.get('status')=='routing-404'
+        present_ids={a.get('id') for a in items if a.get('id') and a.get('status')!='deleted'}
+        checked &= present_ids
+        if not checked and not preserve_check:
+            result.pop('operator_check',None)
+        if sweep_owned:
+            owned=[a for a in items if CMA._ours(a,owned_ids,task_ids)]
+        else:
+            owned=[a for a in items if a.get('id') in owned_ids]
         outcomes_by_id={item.get('agent_id'):item for item in result.get('agent_cleanup',[])
                         if isinstance(item,dict) and item.get('agent_id')}
         pending=[];checks=list(checked);processed=0;processed_ids=set()
@@ -367,11 +439,17 @@ class CMA:
                 pending.append(aid);continue
             processed+=1
             processed_ids.add(aid)
-            try:outcome=CMA._retire_agent(self,aid,key+'-agent-'+aid,item,sandbox_id)
+            prior_attempts=outcomes_by_id.get(aid,{}).get('cleanup_attempts',0)
+            agent_key=key+'-agent-'+aid
+            if prior_attempts:agent_key+='-retry-'+str(prior_attempts)
+            try:outcome=CMA._retire_agent(self,aid,agent_key,item,sandbox_id)
             except Exception as exc:
                 outcome={'agent_id':aid,'stopped':False,'deleted':False,'status':item.get('status'),
                          'errors':[CMA._error('retire',exc)]}
-            attempts=outcomes_by_id.get(aid,{}).get('cleanup_attempts',0)+1
+            prior=outcomes_by_id.get(aid,{})
+            failed=(not outcome.get('deleted') and
+                    bool(outcome.get('errors') or outcome.get('cleanup_error')))
+            attempts=prior.get('cleanup_attempts',0)+(1 if failed else 0)
             outcome['cleanup_attempts']=attempts
             if (not outcome.get('deleted') and attempts>=3 and
                     not outcome.get('operator_check')):
@@ -391,12 +469,12 @@ class CMA:
             operator={'kind':'cma-agent-cleanup','sandbox_id':sandbox_id,'agents':sorted(set(checks)),
                       'reason':'Engine-owned Agent cleanup requires an operator check; see agent outcomes'}
             result.update(sandbox_id=sandbox_id,sandbox_retired=False,operator_check=operator,
-                          agent_cleanup=outcomes)
+                          agent_cleanup=outcomes,_agent_deletions=processed)
             if pending:result['owned_agents_pending']=pending
             return result
         if pending or agents.get('next'):
             result.update(sandbox_id=sandbox_id,sandbox_retired=False,agent_cleanup=outcomes,
-                          owned_agents_pending=pending,
+                          owned_agents_pending=pending,_agent_deletions=processed,
                           reason='Engine Agent cleanup pending')
             if agents.get('next'):result['agent_inventory_pending']=True
             return result
@@ -405,21 +483,72 @@ class CMA:
         # the old dead-Sandbox retirement behavior; every live/ready foreign
         # Agent keeps the Sandbox.
         result.pop('owned_agents_pending',None);result.pop('agent_inventory_pending',None)
-        settled={'deleted','failed','stopped'} if dead_ok else {'deleted'}
-        foreign=[a for a in items if not CMA._ours(a,owned_ids) and
-                 a.get('status') not in settled]
+        if sweep_owned:
+            foreign=[a for a in items if not CMA._ours(a,owned_ids,task_ids) and
+                     a.get('status')!='deleted']
+        else:
+            foreign=[a for a in items if a.get('id') not in owned_ids and
+                     a.get('status')!='deleted']
         if foreign:
+            foreign_ids=[a.get('id') for a in foreign if a.get('id')]
             return {**result,'sandbox_id':sandbox_id,'sandbox_retired':False,
                     'reason':'Other Agent work found; retained Sandbox',
-                    'foreign_agents':[a.get('id') for a in foreign if a.get('id')]}
+                    'foreign_agents':foreign_ids,
+                    '_agent_deletions':processed,
+                    'operator_check':{'kind':'cma-sandbox-cleanup','sandbox_id':sandbox_id,
+                                      'agents':foreign_ids,
+                                      'reason':'Foreign Agents remain; operator must reconcile them before Sandbox DELETE'}}
         workspaces=self.request('/api/v1/sandboxes/'+sandbox_id+'/workspaces')
         if workspaces.get('next') or len(workspaces['items'])>1:
-            return {**result,'sandbox_id':sandbox_id,'sandbox_retired':False,'reason':'Additional workspaces found; retained Sandbox'}
+            return {**result,'sandbox_id':sandbox_id,'sandbox_retired':False,'reason':'Additional workspaces found; retained Sandbox',
+                    '_agent_deletions':processed}
         result.pop('reason',None);result.pop('foreign_agents',None)
-        self.request('/api/v1/sandboxes/'+sandbox_id,'DELETE',None,key+'-sandbox-delete')
-        sandbox=self.request('/api/v1/sandboxes/'+sandbox_id)
+        if (sandbox.get('status')=='retiring' and result.get('sandbox_delete_requested') and
+                not result.get('sandbox_delete_error')):
+            # A prior DELETE was admitted but its response was lost. Reconcile
+            # the GET state and keep the original key; do not issue a second
+            # DELETE while CMA is already retiring the Sandbox.
+            return {**result,'sandbox_id':sandbox_id,'sandbox_retired':False,
+                    '_agent_deletions':processed}
+        sandbox_attempts=int(result.get('sandbox_delete_attempts',0) or 0)
+        sandbox_key=key+'-sandbox-delete'
+        if sandbox_attempts:sandbox_key+='-retry-'+str(sandbox_attempts)
+        try:
+            self.request('/api/v1/sandboxes/'+sandbox_id,'DELETE',None,sandbox_key)
+        except Exception as exc:
+            if CMA._gone(exc):
+                return {**result,'sandbox_id':sandbox_id,'sandbox_retired':True,
+                        'sandbox_status':'gone','sandbox_gone':True,
+                        'sandbox_delete_requested':True,'_agent_deletions':processed}
+            if getattr(exc,'code',None) is None:
+                # The DELETE may have been admitted before the transport
+                # failed. Preserve that uncertainty and the original key; a
+                # later GET skips replay while CMA reports `retiring`, but
+                # retries the same key if the Sandbox is still active.
+                return {**result,'sandbox_id':sandbox_id,'sandbox_retired':False,
+                        'sandbox_delete_requested':True,
+                        'sandbox_transport_error':CMA._error('delete',exc),
+                        '_agent_deletions':processed}
+            if getattr(exc,'code',None) not in {400,409,422}:
+                raise
+            updated={**result,'sandbox_id':sandbox_id,'sandbox_retired':False,
+                     'sandbox_delete_attempts':sandbox_attempts+1,
+                     'sandbox_delete_error':CMA._error('delete',exc),
+                     'sandbox_delete_requested':False,'_agent_deletions':processed}
+            if updated['sandbox_delete_attempts']>=3:
+                updated['operator_check']={'kind':'cma-sandbox-cleanup','sandbox_id':sandbox_id,
+                    'reason':'Sandbox DELETE was refused after three bounded attempts'}
+            return updated
+        try:
+            sandbox=self.request('/api/v1/sandboxes/'+sandbox_id)
+        except Exception as exc:
+            if CMA._gone(exc):
+                return {**result,'sandbox_id':sandbox_id,'sandbox_retired':True,
+                        'sandbox_status':'gone','sandbox_gone':True,
+                        'sandbox_delete_requested':True,'_agent_deletions':processed}
+            raise
         return {**result,'sandbox_id':sandbox_id,'sandbox_retired':sandbox.get('status')=='retired',
-                'sandbox_delete_requested':True}
+                'sandbox_delete_requested':True,'_agent_deletions':processed}
 
 
 def output_text(response):

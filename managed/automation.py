@@ -995,7 +995,11 @@ def work(tasks, root, config=None):
                              'packet_override':r['data'].get('packet_override'),
                              'routing_override':r['data'].get('routing_override'),
                              'draft_receipt':r['data'].get('draft_receipt'),
-                             'sent_receipt':r['data'].get('sent_receipt')} for r in rows],
+                             'sent_receipt':r['data'].get('sent_receipt'),
+                             **({'cleanup_operator_check':r['data']['cleanup']['operator_check']}
+                                if isinstance(r['data'].get('cleanup'),dict) and
+                                r['data']['cleanup'].get('operator_check') else {})}
+                            for r in rows],
             'user_questions':questions,
             'mailbox_retry_exhausted': [
                 {'task_id': r['id'], 'owner': r['owner'], 'request': r['request'],
@@ -1051,6 +1055,12 @@ def work(tasks, root, config=None):
             'sandbox_pool':pool_summary(tasks,all_rows),
             'failed_sandboxes':json.loads((tasks.db.execute(
                 "SELECT payload FROM pipeline_state WHERE key='sandbox_pool_cleanup'").fetchone() or ['[]'])[0]),
+            'sandbox_pool_operator_checks':json.loads((tasks.db.execute(
+                "SELECT payload FROM pipeline_state WHERE key='sandbox_pool_operator_checks'").fetchone() or ['[]'])[0]),
+            'task_cleanup_operator_checks':[{'task_id':r['id'],
+                'check':r['data']['cleanup']['operator_check']}
+                for r in all_rows if isinstance(r['data'].get('cleanup'),dict) and
+                r['data']['cleanup'].get('operator_check')],
             'sandbox_requeued_tasks':[{'task_id':r['id'],'state':r['state'],
                 'sandbox_failures':r['data'].get('sandbox_failures',0),
                 'history':r['data']['sandbox_failure_history']} for r in all_rows

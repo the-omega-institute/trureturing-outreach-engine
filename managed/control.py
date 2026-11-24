@@ -408,7 +408,7 @@ class Releases:
 
 
 SNAPSHOTS_KEPT=3
-INPUT_PREFIXES=('request-','local-result-','submission-review-','review-','decision-','draft-revision-','mathesis-','prompt-requeue-','failed-requeue-','pool-adopt-',BACKFILL_PREFIX+'-',PRIOR_WORK_BACKFILL+'-')
+INPUT_PREFIXES=('request-','local-result-','submission-review-','review-','decision-','draft-revision-','mathesis-','prompt-requeue-','failed-requeue-','pool-adopt-','pool-clear-check-','task-clear-check-',BACKFILL_PREFIX+'-',PRIOR_WORK_BACKFILL+'-')
 SAVE_INTERVAL=45
 INGEST_REJECTION_LIMIT=3
 
@@ -573,6 +573,10 @@ class Ledger:
                     requeue_failed_task(self,value,review_secret)
                 elif name.startswith('pool-adopt-'):
                     adopt_pool_sandbox(self,value,review_secret)
+                elif name.startswith('pool-clear-check-'):
+                    clear_sandbox_operator_check(self,value,review_secret)
+                elif name.startswith('task-clear-check-'):
+                    clear_task_operator_check(self,value,review_secret)
                 elif name.startswith('local-result-'):
                     from .local_run import ingest
                     ingest(self,value,review_secret)
@@ -1723,6 +1727,61 @@ def adopt_pool_sandbox(ledger,value,secret):
         db.execute('INSERT INTO control_events VALUES(?,?)',(event,canonical(value)))
 
 
+def clear_sandbox_operator_check(ledger,value,secret):
+    """Apply a signed operator acknowledgement to one pool cleanup check."""
+    require(bool(secret),'Recovery verification key is not configured')
+    require(set(value)=={'schema_version','sandbox_id','reason','signature'} and
+            value['schema_version']==1,'Invalid Sandbox cleanup acknowledgement')
+    require(isinstance(value['sandbox_id'],str) and value['sandbox_id'].startswith('sbx_') and
+            isinstance(value['reason'],str) and value['reason'].strip(),
+            'Sandbox cleanup acknowledgement needs sandbox and reason')
+    signed={k:v for k,v in value.items() if k!='signature'}
+    signature=hmac.new(secret.encode(),canonical(signed).encode(),hashlib.sha256).hexdigest()
+    require(isinstance(value['signature'],str) and hmac.compare_digest(signature,value['signature']),
+            'Cleanup acknowledgement signature failed')
+    event=digest(value)
+    with ledger.tasks.tx():
+        db=ledger.tasks.db
+        if db.execute('SELECT 1 FROM control_events WHERE id=?',(event,)).fetchone():return
+        record=db.execute("SELECT payload FROM pipeline_state WHERE key='sandbox_pool_operator_checks'").fetchone()
+        checks=json.loads(record[0]) if record else []
+        checks=[item for item in checks if item.get('sandbox_id')!=value['sandbox_id']]
+        db.execute('INSERT OR REPLACE INTO pipeline_state VALUES(?,?)',
+                   ('sandbox_pool_operator_checks',canonical(checks)))
+        record=db.execute("SELECT payload FROM pipeline_state WHERE key='sandbox_pool_cleanup'").fetchone()
+        cleanup=json.loads(record[0]) if record else []
+        for entry in cleanup:
+            if entry.get('sandbox_id')==value['sandbox_id']:
+                entry.pop('operator_check',None)
+                if isinstance(entry.get('cleanup'),dict):entry['cleanup'].pop('operator_check',None)
+        db.execute('INSERT OR REPLACE INTO pipeline_state VALUES(?,?)',
+                   ('sandbox_pool_cleanup',canonical(cleanup)))
+        db.execute('INSERT INTO control_events VALUES(?,?)',(event,canonical(value)))
+
+
+def clear_task_operator_check(ledger,value,secret):
+    """Apply a signed operator acknowledgement to one task cleanup check."""
+    require(bool(secret),'Recovery verification key is not configured')
+    require(set(value)=={'schema_version','task_id','reason','signature'} and
+            value['schema_version']==1,'Invalid task cleanup acknowledgement')
+    require(isinstance(value['task_id'],str) and value['task_id'].strip() and
+            isinstance(value['reason'],str) and value['reason'].strip(),
+            'Task cleanup acknowledgement needs task and reason')
+    signed={k:v for k,v in value.items() if k!='signature'}
+    signature=hmac.new(secret.encode(),canonical(signed).encode(),hashlib.sha256).hexdigest()
+    require(isinstance(value['signature'],str) and hmac.compare_digest(signature,value['signature']),
+            'Cleanup acknowledgement signature failed')
+    event=digest(value)
+    with ledger.tasks.tx():
+        db=ledger.tasks.db
+        if db.execute('SELECT 1 FROM control_events WHERE id=?',(event,)).fetchone():return
+        row=ledger.tasks.get(value['task_id'])
+        data=dict(row['data']);cleanup=dict(data.get('cleanup') or {})
+        cleanup.pop('operator_check',None);data['cleanup']=cleanup
+        ledger.tasks._update(row['id'],row['revision'],row['state'],data)
+        db.execute('INSERT INTO control_events VALUES(?,?)',(event,canonical(value)))
+
+
 def requeue_failed_task(ledger,value,secret):
     """Apply an exact, operator-signed restart only in the serialized writer."""
     require(bool(secret),'Recovery verification key is not configured')
@@ -2004,11 +2063,16 @@ def recover_transport_exception(ledger,row,exc,config,retry_state=None):
     error_class=('rate-limit' if type(status) is int and status in TRANSIENT_HTTP else
                  'network' if not isinstance(exc,HTTPError) and status is None and
                  isinstance(exc,(URLError,TimeoutError,ConnectionError)) else None)
+    cleanup_observation=retry_state=='cleanup'
     state=retry_state or row['state']
-    if error_class is None or state not in {'provisioning','provision-unknown','admitting','admission-unknown','running'}:
+    allowed_states={'provisioning','provision-unknown','admitting','admission-unknown','running'}
+    if cleanup_observation:
+        allowed_states.add('cleanup')
+    if error_class is None or state not in allowed_states:
         return False
     data=dict(row['data'])
-    counter='rate_limit_retries' if error_class=='rate-limit' else 'transport_retries'
+    counter=('cleanup_transport_retries' if cleanup_observation else
+             ('rate_limit_retries' if error_class=='rate-limit' else 'transport_retries'))
     attempts=data.get(counter,0)
     limit=rate_limit_budget(config) if error_class=='rate-limit' else TRANSPORT_RETRIES
     message=type(exc).__name__+': '+str(exc)[:300]
@@ -2021,11 +2085,19 @@ def recover_transport_exception(ledger,row,exc,config,retry_state=None):
                         next_at=ledger.tasks.clock()+retry_delay(attempts),
                         reason='Reconcile the original CMA operation/command/response')
         state={'provisioning':'provision-unknown','admitting':'admission-unknown'}.get(state,state)
+        if cleanup_observation:
+            state=row['state']
     else:
-        state='failed'
+        state=row['state'] if cleanup_observation else 'failed'
         recovery.update(status='needs-operator',suggested_exit='local-codex',
                         reason='CMA transport retry limit reached; reconcile original handles before recovery')
         data['reason']=recovery['reason']
+        if cleanup_observation:
+            cleanup=dict(data.get('cleanup') or {})
+            cleanup['operator_check']={'kind':'cma-agent-cleanup',
+                'agent_id':data.get('agent_id'),
+                'reason':'Agent retirement transport retries exhausted; reconcile the original handle'}
+            data['cleanup']=cleanup
     # No external effect follows this update. The tick flushes it; the next
     # create/admit still requires its usual forced intent checkpoint.
     ledger.tasks.update(row['id'],row['revision'],state,data);ledger.save()
@@ -3253,10 +3325,17 @@ def advance(ledger,cma,config,folder,revision=None,mailbox=None,oracle_capacity=
                     ledger.save(force=True)
                     retire_key='outreach-retire-'+row['request_hash']
                     if data.get('execution_restart'):retire_key+='-execution-'+data['execution_restart']
-                    attempts=cleanup.get('cleanup_attempts',0)+1
+                    prior_attempts=cleanup.get('cleanup_attempts',0)
+                    if prior_attempts:retire_key+='-retry-'+str(prior_attempts)
                     try:
                         result=cma.retire(data['agent_id'],retire_key,owned_sandbox)
                     except Exception as exc:
+                        # A lost transport response is an observation failure;
+                        # recover it under the original handle/key instead of
+                        # spending the lifecycle refusal budget.
+                        if recover_transport_exception(ledger,row,exc,config,retry_state='cleanup'):
+                            continue
+                        attempts=prior_attempts+1
                         result={**cleanup,'agent_id':data['agent_id'],
                                 'deleted':False,'cleanup_attempts':attempts,
                                 'cleanup_error':type(exc).__name__+': '+str(exc)[:300]}
@@ -3265,12 +3344,22 @@ def advance(ledger,cma,config,folder,revision=None,mailbox=None,oracle_capacity=
                                 'agent_id':data['agent_id'],
                                 'reason':'Agent retirement raised errors after three bounded attempts'}
                     else:
+                        # Only a refusal/error consumes the bounded cleanup
+                        # budget. In-flight stopping/deleting observations are
+                        # normal progress and must be revisited with the same
+                        # lifecycle key.
+                        failed=(not result.get('deleted') and
+                                bool(result.get('errors') or result.get('cleanup_error') or
+                                     result.get('sandbox_delete_error')))
+                        attempts=prior_attempts+(1 if failed else 0)
                         result={**result,'cleanup_attempts':attempts}
-                        if (not result.get('deleted') and attempts>=RETIRE_TASK_RETRIES and
+                        unfinished=(not result.get('deleted') or
+                                    (owned_sandbox and not result.get('sandbox_retired')))
+                        if (unfinished and attempts>=RETIRE_TASK_RETRIES and
                                 not result.get('operator_check')):
                             result['operator_check']={'kind':'cma-agent-cleanup',
                                 'agent_id':data['agent_id'],
-                                'reason':'Agent retirement did not complete after three bounded attempts'}
+                                'reason':'Agent or owned Sandbox retirement did not complete after three bounded attempts'}
                     data['cleanup']=result
                     row=tasks.update(row['id'],row['revision'],row['state'],data);ledger.save()
         except Exception as exc:
@@ -3571,6 +3660,11 @@ def status_summary(tasks,config,ingest_errors=None,connector_errors=None):
     rows=tasks.lane_rows()
     counts=tasks.counts()
     stored=tasks.db.execute("SELECT payload FROM pipeline_state WHERE key='connector_errors'").fetchone()
+    pool_checks=tasks.db.execute("SELECT payload FROM pipeline_state WHERE key='sandbox_pool_operator_checks'").fetchone()
+    task_checks=[]
+    for record in tasks.db.execute("SELECT id,json_extract(data,'$.cleanup.operator_check') AS operator_check "
+                                   "FROM tasks WHERE json_type(data,'$.cleanup.operator_check')='object'"):
+        task_checks.append({'task_id':record['id'],'check':json.loads(record['operator_check'])})
     rejected=ingest_rejections(tasks)
     return {'schema_version':1,'paused':config['paused'],
             'counts':counts,'counts_by_kind':tasks.counts('kind'),
@@ -3582,7 +3676,9 @@ def status_summary(tasks,config,ingest_errors=None,connector_errors=None):
             'admission_errors':ingest_errors if ingest_errors is not None else [
                 {'digest':sha,**entry} for sha,entry in rejected.items()],
             'connector_errors':connector_errors if connector_errors is not None else
-                (json.loads(stored[0]) if stored else [])}
+                (json.loads(stored[0]) if stored else []),
+            'sandbox_pool_operator_checks':json.loads(pool_checks[0]) if pool_checks else [],
+            'task_cleanup_operator_checks':task_checks}
 
 
 def owner_question_health(tasks):
@@ -3615,6 +3711,8 @@ def _main(argv=None):
     p=commands.add_parser('requeue-failed');p.add_argument('--task',required=True);p.add_argument('--reason',required=True)
     p=commands.add_parser('pool-adopt');p.add_argument('--sandbox',required=True);p.add_argument('--workspace',required=True)
     p.add_argument('--group',required=True);p.add_argument('--reason',required=True)
+    p=commands.add_parser('pool-clear-check');p.add_argument('--sandbox',required=True);p.add_argument('--reason',required=True)
+    p=commands.add_parser('task-clear-check');p.add_argument('--task',required=True);p.add_argument('--reason',required=True)
     p=commands.add_parser('enqueue');p.add_argument('request',type=Path)
     p=commands.add_parser('review');p.add_argument('envelope',type=Path)
     p=commands.add_parser('decision');p.add_argument('envelope',type=Path)
@@ -3660,6 +3758,16 @@ def _main(argv=None):
             secret=review_key()
             envelope['signature']=hmac.new(secret.encode(),canonical(envelope).encode(),hashlib.sha256).hexdigest()
             result=stage(envelope,'pool-adopt',releases,folder)
+        elif args.action in {'pool-clear-check','task-clear-check'}:
+            require(args.reason.strip(),'Cleanup acknowledgement needs a reason')
+            envelope={'schema_version':1,'reason':args.reason}
+            if args.action=='pool-clear-check':
+                envelope['sandbox_id']=args.sandbox;prefix='pool-clear-check'
+            else:
+                envelope['task_id']=args.task;prefix='task-clear-check'
+            secret=review_key()
+            envelope['signature']=hmac.new(secret.encode(),canonical(envelope).encode(),hashlib.sha256).hexdigest()
+            result=stage(envelope,prefix,releases,folder)
         elif args.action=='todo':
             from .owner_todo import owner_todo, render_markdown
             value=owner_todo(json.loads(args.work.read_text()),ROOT)
@@ -3824,6 +3932,14 @@ def _main(argv=None):
                         'pending':0, 'withdrawn':0, 'redelivered':0, 'skipped':0,
                         'skipped_reasons':{}})
                     result['lanes']=lane_summary(result['tasks'],config,linked_contacts(result['tasks'],ROOT,config))
+                    checks=ledger.tasks.db.execute(
+                        "SELECT payload FROM pipeline_state WHERE key='sandbox_pool_operator_checks'").fetchone()
+                    result['sandbox_pool_operator_checks']=json.loads(checks[0]) if checks else []
+                    result['task_cleanup_operator_checks']=[{'task_id':record['id'],
+                        'check':json.loads(record['operator_check'])}
+                        for record in ledger.tasks.db.execute(
+                            "SELECT id,json_extract(data,'$.cleanup.operator_check') AS operator_check "
+                            "FROM tasks WHERE json_type(data,'$.cleanup.operator_check')='object'")]
             finally:
                 try:
                     # Also flush progress on an exceptional tick exit. Hard kills

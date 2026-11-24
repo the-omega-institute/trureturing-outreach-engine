@@ -140,7 +140,10 @@ def ledger_agents(rows):
     found=set()
     for row in rows:
         data=row['data']
-        for item in [data,*data.get('execution_history',[]),*data.get('sandbox_failure_history',[])]:
+        history=[data,*data.get('execution_history',[]),*data.get('sandbox_failure_history',[]),
+                 *data.get('admission_history',[])]
+        if isinstance(data.get('credit_recovery'),dict):history.append(data['credit_recovery'])
+        for item in history:
             if isinstance(item,dict):
                 found.update(a for a in (item.get('agent_id'),(item.get('cleanup') or {}).get('agent_id')) if a)
     return frozenset(found)
@@ -210,6 +213,7 @@ class SandboxPool:
         self.write('sandbox_pool_cleanup',self.failed)
         self.available=set()
         self.observed={};self.attempted=set();self.errors=[]
+        self.agent_cleanup_remaining=AGENT_CLEANUP_PER_TICK
 
     def read(self, key):
         row=self.ledger.tasks.db.execute('SELECT payload FROM pipeline_state WHERE key=?',(key,)).fetchone()
@@ -374,32 +378,47 @@ class SandboxPool:
         cleanup=entry.get('cleanup') or {}
         # Rotation and stalled runtimes use the same durable retirement path
         # as failed/corrupt Sandboxes, even while CMA still reports active.
-        retirement_in_flight=(status=='retiring' and
-                              (cleanup.get('sandbox_delete_requested') or cleanup.get('cleanup_error') or
-                               entry.get('cleanup_error')) and
-                              not cleanup.get('owned_agents_pending') and not cleanup.get('operator_check'))
-        dead=(not retirement_in_flight and not cleanup.get('operator_check') and
-              (status=='failed' or (bool(entry.get('corrupt')) and status=='active') or
+        # A failed/rotated cleanup entry may already have sent Sandbox DELETE;
+        # CMA then reports `retiring` while the old Agent inventory is still
+        # present. Reconcile that inventory again. `cleanup_error` is a stale
+        # read/transport marker, not proof that retirement is in flight.
+        dead=(status=='failed' or (bool(entry.get('corrupt')) and status=='active') or
                ((bool(entry.get('stalled')) or bool(entry.get('rotated'))) and
                 status not in {'retired'}) or
-               (entry in self.failed and entry.get('state')=='retiring' and
-                status not in {'retired'})))
+               (entry in self.failed and entry.get('state') in {'failed','retiring'} and
+                status not in {'retired'}))
         if dead and not any(live_reference(r,entry) for r in rows):
             with unit(self.ledger,'pool-health',sandbox_id) as ready:
                 if not ready:return
                 entry.setdefault('cleanup_intent',{'key':'outreach-pool-retire-'+sandbox_id})
                 self.write('sandbox_pool_cleanup',self.failed)
                 self.ledger.save(force=True)
+                budget=self.agent_cleanup_remaining
                 entry['cleanup']=cma.retire_sandbox(None,sandbox_id,
                     entry['cleanup_intent']['key'],entry.get('cleanup') or {},dead_ok=True,
-                    finished=ledger_agents(rows),max_agent_deletions=AGENT_CLEANUP_PER_TICK)
+                    finished=ledger_agents(rows),max_agent_deletions=budget,
+                    sweep_owned=True,task_ids={r['id'] for r in rows})
+                if entry['cleanup'].get('sandbox_transport_error'):
+                    detail=entry['cleanup']['sandbox_transport_error'].get('error','transport failure')
+                    self.errors.append({'sandbox_id':sandbox_id,'error':str(detail)[:300]})
+                    self.write('sandbox_pool_errors',self.errors)
+                processed=entry['cleanup'].pop('_agent_deletions',None)
+                if processed is None:
+                    processed=min(budget,len(entry['cleanup'].get('agent_cleanup',[])))
+                self.agent_cleanup_remaining=max(0,self.agent_cleanup_remaining-int(processed or 0))
                 entry['cleanup'].setdefault('agent_sweep_version',AGENT_SWEEP_VERSION)
                 entry['cleanup_checked_at']=now
+                entry.pop('cleanup_error',None)
                 if entry['cleanup'].get('operator_check'):
                     entry['operator_check']=entry['cleanup']['operator_check']
                     checks=self.read('sandbox_pool_operator_checks') or []
                     checks=[item for item in checks if item.get('sandbox_id')!=sandbox_id]
                     checks.append({'sandbox_id':sandbox_id,'check':entry['operator_check']})
+                    self.write('sandbox_pool_operator_checks',checks)
+                else:
+                    entry.pop('operator_check',None)
+                    checks=self.read('sandbox_pool_operator_checks') or []
+                    checks=[item for item in checks if item.get('sandbox_id')!=sandbox_id]
                     self.write('sandbox_pool_operator_checks',checks)
         elif status not in {'failed','retiring'} and not dead and not cleanup.get('operator_check'):
             self.write('sandbox_retired_'+sandbox_id,entry)
@@ -411,6 +430,7 @@ class SandboxPool:
 
     def health(self, cma, *, rows=None):
         self.available.clear();self.observed.clear();self.errors=[]
+        self.agent_cleanup_remaining=AGENT_CLEANUP_PER_TICK
         rows=self.ledger.tasks.all() if rows is None else rows
         self.observe_live(rows)
         # Failed entries remain on a cleanup list until their last Agent retires
@@ -419,11 +439,18 @@ class SandboxPool:
         now=self.ledger.tasks.clock()
         for sandbox_id,entry in units(self.ledger,'pool-health',entries.items(),key=lambda r:r[0]):
             cleanup=entry.get('cleanup') or {}
+            if (entry in self.failed and (entry.get('operator_check') or cleanup.get('operator_check'))
+                    and now-entry.get('cleanup_checked_at',0)<RETAINED_RECHECK_SECONDS):
+                # An operator check is an explicit pause between slow health
+                # rechecks. Keep the retired or foreign-work entry visible;
+                # the signed acknowledgement can clear it immediately.
+                continue
             if (entry in self.failed and cleanup.get('reason') and not cleanup.get('sandbox_retired')
                     and not cleanup.get('owned_agents_pending') and not cleanup.get('operator_check')
                     and not cleanup.get('sandbox_delete_requested')
                     and not cleanup.get('agent_inventory_pending')
                     and cleanup.get('agent_sweep_version')==AGENT_SWEEP_VERSION
+                    and not entry.get('cleanup_error')
                     and now-entry.get('cleanup_checked_at',0)<RETAINED_RECHECK_SECONDS):
                 continue
             try:
@@ -459,6 +486,9 @@ class SandboxPool:
                 # An unavailable health read cannot justify replacement or reuse.
                 self.available.discard(sandbox_id)
                 if entry in self.failed:
+                    cleanup=entry.get('cleanup')
+                    if not isinstance(cleanup,dict):cleanup={};entry['cleanup']=cleanup
+                    if status=='retiring':cleanup['sandbox_delete_requested']=True
                     entry['cleanup_error']=type(exc).__name__+': '+str(exc)[:300]
                 self.error(sandbox_id,exc)
         self.write('sandbox_pool',self.entries)

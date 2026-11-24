@@ -340,7 +340,7 @@ class SandboxFailureTests(PoolFixture, unittest.TestCase):
 
     def test_failed_pool_sandbox_cleanup_ignores_only_settled_agents(self):
         cma=CMA(token='fake');calls=[]
-        for agents,deleted in [([{'id':'agt_dead','status':'failed'},{'id':'agt_off','status':'stopped'}],True),
+        for agents,deleted in [([{'id':'agt_dead','status':'failed'},{'id':'agt_off','status':'stopped'}],False),
                                ([{'id':'agt_dead','status':'failed'},{'id':'agt_live','status':'ready'}],False)]:
             def request(path,method='GET',body=None,key=None):
                 calls.append((path,method))
@@ -376,9 +376,10 @@ class SandboxFailureTests(PoolFixture, unittest.TestCase):
 
     def test_dead_sandbox_ignores_idle_agents_of_finished_ledger_executions(self):
         cma=CMA(token='fake');calls=[]
-        pages={None:{'items':[{'id':'agt_dead','status':'failed'}],'next':'agt_dead'},
-               'agt_dead':{'items':[{'id':'agt_ours','status':'ready'}]}}
+        pages={None:{'items':[{'id':'agt_dead','status':'deleted'}],'next':'agt_dead'},
+               'agt_dead':{'items':[{'id':'agt_ours','status':'stopped'}]}}
         for finished,deleted in [(frozenset({'agt_ours'}),True),(frozenset(),False)]:
+            pages['agt_dead']['items'][0]['status']='stopped' if finished else 'ready'
             def request(path,method='GET',body=None,key=None):
                 calls.append((path,method))
                 if '/agents?' in path:
@@ -395,8 +396,10 @@ class SandboxFailureTests(PoolFixture, unittest.TestCase):
     def test_ledger_agents_collects_current_and_history(self):
         from managed.sandbox_pool import ledger_agents
         rows=[{'data':{'agent_id':'a1','execution_history':[{'agent_id':'a2','cleanup':{'agent_id':'a3'}}],
-                       'sandbox_failure_history':[{'agent_id':'a4'}]}}]
-        self.assertEqual(ledger_agents(rows),{'a1','a2','a3','a4'})
+                       'sandbox_failure_history':[{'agent_id':'a4'}],
+                       'admission_history':[{'agent_id':'a5'}],
+                       'credit_recovery':{'agent_id':'a6'}}}]
+        self.assertEqual(ledger_agents(rows),{'a1','a2','a3','a4','a5','a6'})
 
     def test_operator_requeue_accepts_inactive_sandbox_provisioning_failure(self):
         row=self.queue('inactive')

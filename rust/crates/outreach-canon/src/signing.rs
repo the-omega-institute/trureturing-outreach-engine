@@ -161,6 +161,18 @@ pub fn verify_typed_envelope(signed: &Value, key: &[u8], kind: EnvelopeKind) -> 
         ],
     };
     let mut expected = required.to_vec();
+    if matches!(kind, EnvelopeKind::Decision) && fields.contains_key("action") {
+        expected.retain(|k| *k != "answers");
+        expected.extend(["action", "reason"]);
+        if signed["action"] != "close"
+            || !signed["reason"].as_str().is_some_and(|s| {
+                s.chars()
+                    .any(|c| !c.is_whitespace() && !('\u{1c}'..='\u{1f}').contains(&c))
+            })
+        {
+            return Ok(false);
+        }
+    }
     match kind {
         EnvelopeKind::Review => {
             for name in ["rebind_workflow_hash", "edited_body"] {

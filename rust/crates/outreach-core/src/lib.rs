@@ -1,11 +1,18 @@
 //! Pure read-only operator views. Adapters supply data, configuration and time.
+pub mod builders;
 mod digest;
+pub mod envelopes;
 mod exceptions;
+pub mod gates;
+pub mod ingest;
 mod lanes;
 mod registry;
+pub mod results;
 mod reviews;
 mod status;
 mod text;
+pub mod transitions;
+pub mod validation;
 pub use digest::review_digest;
 pub use exceptions::{exceptions, render_exceptions};
 pub use lanes::validate as validate_lanes;

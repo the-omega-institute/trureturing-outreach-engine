@@ -46,7 +46,7 @@ pub fn packet_address(v: &Value) -> Result<String> {
     let address = address
         .as_str()
         .ok_or_else(|| Error::new("Mailbox address must be a string"))?;
-    Ok(address.trim_matches(text::whitespace).to_lowercase())
+    Ok(text::lower(address.trim_matches(text::whitespace)))
 }
 pub fn digest_people(tables: &Value) -> Result<Vec<Value>> {
     if let Ok(persons) = people(tables) {

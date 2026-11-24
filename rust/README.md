@@ -1,4 +1,4 @@
-# Rust engine: byte contracts and read-only snapshots
+# Rust engine: byte contracts, offline signing and ingestion replay
 
 `outreach-canon` implements Python's byte contracts; `outreach-model` supplies
 ordered, lossless read models; `outreach-ledger` opens closed SQLite snapshots
@@ -7,6 +7,11 @@ values, and `outreach-cli` exposes `outreach control status --compact`, `reviews
 `review-digest`, and `exceptions`. Python remains the only ledger writer. These
 commands perform local reads and never download Releases, initialize a database,
 run migrations, stage inputs, or perform external effects.
+
+Phase 2 adds local envelope builders and an in-memory replay of all 12 ingestion
+families. The SQLite adapter still has no writer. Python under `managed/` is
+unchanged and remains the only production ledger writer. No Rust command uploads
+to a Release, edits GitHub, sends mail, or runs a coordinator tick.
 
 The toolchain is pinned to the locally installed stable **Rust 1.95.0**. Dependencies
 are centralized and pinned in `Cargo.toml`; `Cargo.lock` is checked in. Production
@@ -34,26 +39,32 @@ python3.12 -m unittest discover -s vectors
 python3.12 check_live_workflows.py
 python3.12 check_live_sql.py
 python3.12 parity/compare.py
+python3.12 parity/validators.py
+python3.12 parity/signing_ingest.py
+python3.12 parity/builders.py
 cargo run --locked -p outreach-cli -- --help
 ```
 
 Use **CPython 3.12** for generators, parity and Python suites; CI pins the same
 minor version. Its `unicodedata.unidata_version` is **15.0.0** (not 15.1).
 `unicode_vectors.py` records every code point's category/`str.isprintable()` range
-and every changed casefold, and generates the Rust tables. Rust tests check all
+and every changed casefold, and generates the Rust tables. Phase 2 also generates
+CPython's lowercase, cased and case-ignorable tables and alphanumeric ranges.
+Mailbox and packet address lowercase uses those tables, including final sigma.
+Rust tests check all
 1,112,064 Unicode scalars plus Python `repr` at every category-range boundary.
 Full casefold mappings include unchanged scalars implicitly, so newer Rust Unicode
 assignments cannot change this contract. Newer Python releases can change these
 vectors; the generator rejects a Unicode version mismatch instead of refreshing
 silently. Updating this pin requires regenerating and reviewing both tables and
 vectors. The separate NFKC registry helper still uses the pinned
-`unicode-normalization` crate's Unicode tables. Mailbox addresses, thread stages
-and decision labels that call Rust `to_lowercase`/`to_uppercase` likewise follow
+`unicode-normalization` crate's Unicode tables. Thread stages
+and decision labels that call Rust `to_lowercase`/`to_uppercase` still follow
 the Rust standard library's Unicode tables, rather than CPython 3.12's tables.
 These operations can differ from Python for characters assigned or changed
 after Unicode 15.0, and are outside the exhaustive casefold/nonprintable parity
 claim. Pinning them to CPython would require generating and reviewing
-lower/upper/NFKC tables from the selected interpreter.
+upper/NFKC tables from the selected interpreter.
 
 Canon tests read committed JSON directly; ledger tests invoke Python to create
 a temporary synthetic database through the existing Python writer. No private
@@ -100,7 +111,8 @@ advisory exceptions.
 - Plain HMAC-SHA256 envelope signing, exact lowercase hex comparison using
   `subtle::ConstantTimeEq`, the Mathesis delivery purpose wrapper, and the exact
   pre-signature field gates for review, decision, pool adoption, failed requeue,
-  draft revision, submission review and Mathesis delivery. `sign_review` also
+  draft revision, submission review and Mathesis delivery. Decisions include both
+  answer maps and explicit `close` actions. `sign_review` also
   reproduces edit/rebind validation and automatic workflow rebind, given an
   explicitly resolved current workflow hash. These are cryptographic gates;
   task state, result bindings and permissions still require coordinator checks.
@@ -330,18 +342,120 @@ in SQLite sequence order and compares borrowed event text without parsing or
 retaining historical packet payloads. Only event summaries for reviewable tasks
 cross into core.
 
-## Known gaps and phase 2
+## Offline signing, stage files and ingestion replay
 
-- Signing and ingest commands remain Python: `sign-review`, `enqueue`, `decision`,
-  and `stage-*`, along with the 12-family coordinator ingestion path, forced-save
-  intent boundary, reconciliation and all ledger writes. Canon already supplies
-  the pure signature contracts; the new read models do not confer write authority.
+`outreach-core::envelopes` supplies lossless typed review, decision (answers or
+close), draft-revision and request envelopes. Admission validators keep Python's
+field/signature/semantic gate order. `transitions` implements review binding,
+verdict, decision and draft revision without I/O. Binding comparison checks all
+four fields and refuses extra/missing fields, with Python numeric equality for
+the revision. HMAC comparison remains in canon through `subtle::ConstantTimeEq`.
+An edited review returns the exact replacement packet bytes as a required
+preservation effect; the offline adapter keeps the effect local.
+
+`ingest::Replay` owns its model, applies each admission transaction atomically,
+and models the forced-save generation without creating a snapshot. It reproduces
+prefix/name ordering, per-asset receipt identity, receipt pruning, digest checks,
+missing-key skips, duplicate control events, one failure per digest per pass,
+three-strike give-up and generation-bound receipts. The handlers cover requests,
+local results, submission reviews, reviews, decisions, draft revisions, Mathesis,
+prompt requeues, failed requeues, pool adoption and the two backfill families.
+Source, ownership, packet, continuation and sent-note revision checks use supplied
+rows/configuration and local recorded artifact bytes. Unknown model JSON stays
+lossless. The immutable adapter exports every persistent table, including the
+eight queue tables. Replay restores task migrations in memory and emits rows
+sorted by primary key, with canonical JSON columns. Known numeric time fields
+are replaced with their global order ranks, preserving ties and cross-table order.
+
+The key comes from `OUTREACH_REVIEW_KEY`, `--key-file`,
+`OUTREACH_REVIEW_KEY_FILE`, or Python's default local key path. File keys use
+Python whitespace stripping, including `\x1c`–`\x1f`. Keys never enter output.
+
+```sh
+# Python sign-review output format: indent=2, original key order, UTF-8, newline.
+rust/target/debug/outreach control sign-review unsigned.json --kind reply --output signed.json
+
+# Stage bytes: canonical JSON without a newline; no Release upload.
+mkdir -p /tmp/outreach-inputs
+rust/target/debug/outreach control review unsigned.json --kind reply --output /tmp/outreach-inputs
+rust/target/debug/outreach control decision decision-unsigned.json --output /tmp/outreach-inputs
+rust/target/debug/outreach control stage-draft-revision --snapshot /path/snapshot.sqlite3 \
+  --task TASK --packet replacement.json --reason 'Checked correction' --output /tmp/outreach-inputs
+rust/target/debug/outreach control enqueue request.json --root /path/data --output /tmp/outreach-inputs
+
+rust/target/debug/outreach control replay-ingest --snapshot /path/snapshot.sqlite3 \
+  --inputs /path/input-window --root /path/data --generation 100 --now 2000000000
+```
+
+`review`, `decision` and `draft-revision` accept unsigned or signed envelopes and
+write canonical stage files. An optional `--snapshot` preflights those envelopes
+in memory before writing. `sign-review` preserves Python's deliberately narrower
+signing checks and automatic workflow rebind. `enqueue` also checks pinned local
+Git workflow inputs. `stage-thread`, `stage-inbound`, `stage-submission`,
+`stage-mathesis` and `request-submission-review` use Python's selection arguments,
+plus `--root`, `--output` and a snapshot for selections that need existing tasks.
+Thread/submission builders resolve local Git pins; optional `--revision` and
+`--policy-revision` select explicit already-present commits. Submission staging
+copies the explicitly selected input bytes to the output directory's
+`resources/<release-tag>/<name>` tree for later operator handling. It performs no
+upload or readback against a service. Mathesis selection checks the local handoff
+and produces its ordinary or collection envelope without delivering it.
+
+The replay input directory contains control input JSON files. An optional
+`assets.json` list supplies original Release metadata (`id`, `name`, `digest`),
+including intentionally wrong digests; otherwise metadata uses the filename as
+ID and the actual file hash. Local-result artifact readbacks require recorded
+bytes at `resources/<release-tag>/<name>`. Absent resources are reported as
+rejections; offline replay cannot establish a remote readback without its bytes.
+Paths are confined to the supplied directory. `--passes` repeats the window on
+the same owned model, including idempotence, give-up and generation behavior;
+`--no-key` tests the production skip/refusal paths. Replay stdout can contain
+private task data. An `--output` for replay must name a new file: `create_new`
+prevents overwriting an input snapshot, sidecar, asset or other existing file.
+
+For an operator's real window, the local comparison script prints **counts only**:
+
+```sh
+python3.12 rust/replay_private_inputs.py /path/snapshot.sqlite3 /path/input-window \
+  --root /path/private-data --generation 100 --now 2000000000 --key-file /path/review.key
+```
+
+It opens the original read-only, runs the live Python `Ledger.ingest` on a separate
+temporary backup, runs Rust on its owned model, and compares canonical logical
+dumps, errors and generations. Only file/policy/clock/Release ports are replaced;
+Python's validators and transition methods run unchanged. It checks snapshot and
+sidecar hashes before/after, saves no dump, downloads nothing and cleans its
+temporary copy. The caller supplies the starting generation, clock, assets and
+required resource bytes; no private window is discovered automatically.
+
+The synthetic differential suites exercise 4,572 request/packet/source-gap/time
+cases (4,048 identical rejections), 241 byte-equal signing outputs, all 12 ingestion
+families across 351 replay cases / 1,401 passes (582 matching rejections), and
+15 byte-equal stage selections/resources subsequently accepted by Python.
+Replay covers PASS/BOUNCE/HOLD, answer and close decisions, wrong states, stale
+bindings, duplicate events, reply/firstcontact edits and edit refusals, agent-held
+and parked results, owner/mail workflow rebinds, invalid signature types, all
+eight queue tables, no-key ingestion and repeated rejection/give-up. Coverage
+also includes basic/week ISO dates, offsets and fractional truncation. Reply
+supersession compares integer UTC microseconds, so a one-microsecond difference
+does not disappear when converting a timestamp to a float. Generators
+use the live Python code with fixed random seeds. `validators.py` compares error
+strings as well as acceptance. Comparison uses canonical bytes, so Python's
+`True == 1 == 1.0` cannot hide a changed JSON type in a stored envelope.
+Rust must never panic for a negative case. CI runs all three new suites alongside
+the existing architecture, SQL, workflow, vector, fmt, clippy, test and deny gates.
+
+## Remaining boundaries and phase 3
+
+- Production ingestion, durable forced-save intent boundaries, reconciliation,
+  Release upload/download and all live ledger writes remain Python-owned.
+  Network adapters, full coordinator/delivery/publication stages, automatic run
+  recording and cutover belong to later phases. The local replay does not confer
+  production write authority.
 - Other phase-1 operator inventories (`work`, full `status`, `todo`) and network
   Release restore are not exposed by this CLI. The current work/status builders
   were read for their command contracts; the full automation inventory remains
   Python-owned.
-- Review-key whitespace stripping must match Rust `is_whitespace` plus
-  `\x1c`–`\x1f`. The future key-loading adapter still needs to apply that rule.
 - For `{"a":NaN,"a":1}`, Python produces `{"a":1}`; Rust rejects at parse.
   Every encountered value is validated before duplicate replacement. Nonfinite
   values and lone surrogates remain outside canon's representable domain.
@@ -350,17 +464,17 @@ cross into core.
   constructs produce an explicit error rather than silently skipping a gate.
 - `Ledger::tasks()` is the single full-task read path; `task_values()` has been
   removed. It returns typed `Task`/`Request`/`TaskData`, which the current view
-  boundary consumes into ordered values without cloning payloads. Phase 2 still
-  needs dedicated projection DTOs for partial work files and typed `Review` and
-  `Binding` throughout core views; full coordinator request validation would
+  boundary consumes into ordered values without cloning payloads. Partial work
+  views retain their permissive projection boundary; full request validation would
   reject some partial inputs that Python intentionally accepts here.
 - Ledger and CLI now use error enums (`Io`, SQL/ledger, canon data, and argument or
   snapshot errors), not `Box<dyn Error>`. Core uses canon's typed data error. Rust
-  reports errors with exit 2; exception class/message text is not a byte contract.
+  reports command failures with exit 2. Ingestion rejection text is compared with
+  Python wherever it is retained in the logical dump or returned error list.
   Config capacities and revisions use signed 64-bit integers; Python can represent
   larger values, which Rust rejects explicitly. Typed ledger reads also reject
   malformed/missing request IDs and current discriminants earlier than Python.
 - The two-day owner-question policy is in core. Pipeline scenario IDs remain in
   the frozen SQL projection because it must track the live Python query exactly;
-  moving the selector into typed core policy is deferred to phase 2 with a
+  moving that unrelated status selector into typed core policy remains later work with a
   corresponding live-query parity check.

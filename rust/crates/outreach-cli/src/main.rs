@@ -7,6 +7,7 @@ use std::{
     path::{Path, PathBuf},
     time::UNIX_EPOCH,
 };
+mod offline;
 #[derive(Debug)]
 enum Error {
     Io(std::io::Error),
@@ -51,7 +52,7 @@ impl From<&str> for Error {
     }
 }
 type Result<T> = std::result::Result<T, Error>;
-const HELP: &str = "Usage: outreach control <status --compact|reviews|review-digest|exceptions>\n  --snapshot PATH          Immutable, closed SQLite snapshot (no downloads)\n  --root PATH              Data root; defaults to OUTREACH_DATA_ROOT or engine root\n  --engine-root PATH       Public engine tree for live workflow inputs\n  --now UNIX_SECONDS       Explicit clock for reproducible question health\n  --work PATH              Work JSON; required for review-digest, optional for exceptions\n  --format json|text       digest defaults to text; exceptions defaults to json\n";
+const HELP: &str = "Usage: outreach control <COMMAND>\n  Reads: status --compact | reviews | review-digest | exceptions\n  Files: sign-review | review | decision | draft-revision | enqueue\n         stage-draft-revision | stage-thread | stage-inbound | stage-submission\n         stage-mathesis | request-submission-review\n  Replay: replay-ingest --snapshot PATH --inputs DIRECTORY\n  --snapshot PATH          Immutable, closed SQLite snapshot (no downloads)\n  --root PATH              Data root; defaults to OUTREACH_DATA_ROOT or engine root\n  --engine-root PATH       Public engine tree for live workflow inputs\n  --now UNIX_SECONDS       Explicit clock for reproducible reads/replay\n  --work PATH              Work JSON; required for review-digest, optional for exceptions\n  --format json|text       digest defaults to text; exceptions defaults to json\n  --output PATH            Local output file/directory; stage commands require it\n  --kind KIND              Bound task kind for sign-review; reply/research for stage-thread\n  --key-file PATH          Local signing key (or OUTREACH_REVIEW_KEY/_FILE)\n  Replay options: --generation INTEGER --passes 1..1000 --no-key\n  Stage options match Python; stage-draft-revision/Mathesis/submission review require --snapshot.\n  All stage commands produce local files only. Replay output files must be new.\n";
 fn json(path: &Path) -> Result<Value> {
     Ok(CanonValue::parse(&fs::read_to_string(path)?)?.into_value())
 }
@@ -91,6 +92,9 @@ fn run() -> Result<()> {
         return Err(HELP.into());
     }
     args.remove(0);
+    if offline::handles(&args) {
+        return offline::run(args);
+    }
     let snapshot = take(&mut args, "--snapshot")?;
     let engine =
         match take(&mut args, "--engine-root")?.or_else(|| env::var("OUTREACH_ENGINE_ROOT").ok()) {

@@ -67,7 +67,7 @@ fn verify(signed: &Value, key: &[u8], mathesis: bool) -> Result<bool> {
         return Ok(false);
     }
     let mut unsigned = object(signed)?.clone();
-    let Some(Value::String(signature)) = unsigned.remove("signature") else {
+    let Some(Value::String(signature)) = unsigned.shift_remove("signature") else {
         return Ok(false);
     };
     let unsigned = Value::Object(unsigned);

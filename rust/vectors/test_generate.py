@@ -7,6 +7,12 @@ import generate
 
 
 class ReproducibleVectors(unittest.TestCase):
+    def test_unicode_sources(self):
+        import unicode_vectors
+        root = Path(__file__).resolve().parents[1] / 'crates/outreach-core/src'
+        for name, source in unicode_vectors.sources(unicode_vectors.vectors()).items():
+            self.assertEqual((root / name).read_text(), source)
+
     def test_vectors_match_the_live_python_engine_byte_for_byte(self):
         root = Path(__file__).resolve().parent
         # Guard the owner decision: regenerating committed synthetic vectors

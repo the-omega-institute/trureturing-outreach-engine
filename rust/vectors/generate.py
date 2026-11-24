@@ -392,14 +392,33 @@ def serialization_vectors():
                 for allow_nan in [False, True]:
                     for indent in [None, '', '  ', '\t']:
                         for separators in [None, (',', ':'), (', ', ': ')]:
-                            # Until phase 2 retains input order, unsorted parity
-                            # is limited to dictionaries already in stored order.
-                            ordered = json.loads(canonical(value))
+                            ordered = value
                             options = dict(ensure_ascii=ensure_ascii, sort_keys=sort_keys,
                                            allow_nan=allow_nan, indent=indent, separators=separators)
                             vectors.append({'input': input_json(ordered), 'options': options,
                                             'expected': json.dumps(ordered, **options)})
     return vectors
+
+
+def ordered_vectors():
+    inputs = [' {"z":1,"a":2,"z":3,"middle":{"b":0,"a":1,"b":2}} ',
+              '{"😀":1,"a":[],"😀":{"z":1,"a":2}}',
+              '{"$serde_json::private::Number":"123","z":1,"$serde_json::private::Number":"last"}']
+    return [{'input': raw, 'expected': json.dumps(json.loads(raw), ensure_ascii=False, indent=2)}
+            for raw in inputs]
+
+
+def equality_vectors():
+    rng = random.Random(SEED + 19)
+    pairs = [(1, 1.0), (True, 1), (False, -0.0), (False, 0), (True, 1.1),
+             (2**53+1, float(2**53+1)), (2**53, float(2**53)),
+             (10**23, 1e23), (int(1e23), 1e23), (10**400, 1e308),
+             ([1, {'z': True, 'a': False}], [1.0, {'a': 0, 'z': 1}]),
+             ({'z': 1, 'a': 2}, {'a': 2.0, 'z': True}), ('1', 1), (None, False)]
+    for _ in range(512):
+        f = random_float(rng)
+        pairs.extend([(int(f), f), (int(f) + 1, f), (f, f)])
+    return [{'left': input_json(a), 'right': input_json(b), 'equal': a == b} for a, b in pairs]
 
 
 def workflow_vectors():
@@ -456,6 +475,7 @@ def workflow_vectors():
 
 
 def generate():
+    from unicode_vectors import vectors as unicode_vectors
     envelopes, verification = envelope_vectors()
     rejected = ['NaN', 'Infinity', '-Infinity', '1e400', '-1e400', '"\\ud800"',
                 '"\\udfff"', '{"\\ud800":1}', '["\\ud800"]', '"\\ud800x"',
@@ -472,12 +492,14 @@ def generate():
                 'envelopes': envelopes, 'verification': verification, 'reviews': review_vectors(),
                 'identities': identity_vectors(), 'rejections': [{'input': raw} for raw in rejected],
                 'events': event_vectors(), 'serialization': serialization_vectors(),
+                'ordered': ordered_vectors(), 'equality': equality_vectors(),
                 # Python accepts this input; the explicit Rust resource bound
                 # is a deliberate divergence, not a Python rejection oracle.
                 'depth_limits': [{'input': '[' * 513 + '0' + ']' * 513,
                                   'python_digest': digest(json.loads('[' * 513 + '0' + ']' * 513))}]}
     result = {name + '.json': {'schema_version': 1, 'seed': SEED, 'vectors': vectors}
               for name, vectors in families.items()}
+    result['unicode.json'] = {'schema_version': 1, 'vectors': [unicode_vectors()]}
     result['workflows.json'] = {'schema_version': 1, **workflow_vectors()}
     return {name: (json.dumps(value, ensure_ascii=True, indent=2, allow_nan=False) + '\n').encode()
             for name, value in result.items()}
@@ -489,6 +511,12 @@ def main():
     parser.add_argument('--output', type=Path, default=Path(__file__).resolve().parent)
     args = parser.parse_args()
     generated = generate()
+    from unicode_vectors import sources
+    for name, source in sources(json.loads(generated['unicode.json'])['vectors'][0]).items():
+        path = Path(__file__).resolve().parents[1] / 'crates/outreach-core/src' / name
+        if args.check:
+            if path.read_text() != source: raise SystemExit('Unicode source stale: ' + name)
+        else: path.write_text(source)
     for name, raw in generated.items():
         path = args.output / name
         if args.check:

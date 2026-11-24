@@ -11,6 +11,9 @@ path = "src/main.rs"
 
 [dependencies]
 outreach-core.workspace = true
+outreach-ledger.workspace = true
+outreach-model.workspace = true
+outreach-canon.workspace = true
 
 [lints]
 workspace = true

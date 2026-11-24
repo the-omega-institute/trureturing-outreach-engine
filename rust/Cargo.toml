@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/outreach-canon", "crates/outreach-model", "crates/outreach-core", "crates/outreach-cli"]
+members = ["crates/outreach-canon", "crates/outreach-model", "crates/outreach-core", "crates/outreach-cli", "crates/outreach-ledger"]
 resolver = "3"
 
 [workspace.package]
@@ -12,11 +12,16 @@ publish = false
 outreach-canon = { version = "=0.1.0", path = "crates/outreach-canon" }
 outreach-model = { version = "=0.1.0", path = "crates/outreach-model" }
 outreach-core = { version = "=0.1.0", path = "crates/outreach-core" }
+serde = "=1.0.229"
+rusqlite = { version = "=0.41.1", default-features = false, features = ["bundled"] }
+outreach-ledger = { version = "=0.1.0", path = "crates/outreach-ledger" }
+unicode-normalization = "=0.1.25"
+regex = "=1.13.2"
 hmac = "=0.12.1"
 sha2 = "=0.10.9"
 subtle = "=2.6.1"
 ryu = "=1.0.23"
-serde_json = { version = "=1.0.154", features = ["arbitrary_precision", "raw_value"] }
+serde_json = { version = "=1.0.154", features = ["arbitrary_precision", "raw_value", "preserve_order"] }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

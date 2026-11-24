@@ -2,10 +2,10 @@ name: Rust parity
 
 on:
   pull_request:
-    paths: ['rust/**', 'managed/**', '.github/workflows/rust.yml']
+    paths: ['rust/**', 'managed/**', 'scripts/short_notes/**', '.github/workflows/rust.yml']
   push:
     branches: [main]
-    paths: ['rust/**', 'managed/**', '.github/workflows/rust.yml']
+    paths: ['rust/**', 'managed/**', 'scripts/short_notes/**', '.github/workflows/rust.yml']
 
 permissions:
   contents: read
@@ -48,6 +48,10 @@ jobs:
         run: python3 -m unittest discover -s vectors
       - name: Check current Python workflow hashes
         run: python3 check_live_workflows.py
+      - name: Check current Python SQL projections
+        run: python3 check_live_sql.py
+      - name: Read-only command byte parity
+        run: python3 parity/compare.py
       - name: Clippy
         run: cargo clippy --locked --workspace --all-targets -- -D warnings
       - name: Test

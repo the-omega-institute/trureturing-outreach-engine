@@ -245,6 +245,10 @@ fn run() -> Result<()> {
                     connector_errors: ledger
                         .state("connector_errors")?
                         .unwrap_or(Value::Array(vec![])),
+                    pool_operator_checks: ledger
+                        .state("sandbox_pool_operator_checks")?
+                        .unwrap_or(Value::Array(vec![])),
+                    task_cleanup_checks: ledger.task_cleanup_checks()?,
                     old_questions: ledger
                         .old_owner_questions(now - outreach_core::OWNER_QUESTION_AGE)?,
                 },

@@ -13,7 +13,7 @@ class Mailbox:
         self.message = message
         self.settings = {'live_since': '2026-10-30T00:00:00Z'}
 
-    def messages(self, folder, query):
+    def messages(self, folder, query, **kwargs):
         self.query = query
         return [{k: v for k, v in self.message.items() if k != 'body'}]
 
@@ -33,6 +33,51 @@ def board(root):
 
 
 class SubmissionSyncTests(unittest.TestCase):
+    def test_new_coauthored_public_paper_does_not_require_a_private_board_row(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder); board(root)
+            catalog = {'schema_version': 'research-publication.v1', 'publications': [],
+                       'collaborations': [], 'notes': []}
+            path = root / 'tables/publications.json'; path.write_text(json.dumps(catalog))
+            record = {'arxiv_id': '2611.99115', 'arxiv_version': 'v1',
+                      'arxiv_url': 'https://arxiv.org/abs/2611.99115v1',
+                      'title': 'Recursive sequence families',
+                      'authors': ['Casey Lin', 'Blaire Mercer', 'Avery Reed'],
+                      'date': '2026-11-11', 'abstract': 'We characterize nested recurrences. Exact formulas follow.'}
+            message = {'from': {'emailAddress': {'address': 'no-reply@arxiv.org'}},
+                       'subject': '[arXiv] 2611.99115v1 announcement',
+                       'body': {'content': 'https://arxiv.org/abs/2611.99115v1'},
+                       'conversationId': 'private-conversation', 'internetMessageId': '<private-receipt>',
+                       'receivedDateTime': '2026-11-12T00:00:00Z'}
+            report, updated = submission_sync.reconcile(root, Mailbox(message), verify=lambda receipt: record)
+            self.assertEqual(report['status'], 'updated')
+            self.assertEqual(report['updates'], [])
+            self.assertEqual(updated, json.loads((root/'tables/submissions.json').read_text()))
+            projected, added = submission_sync.publication_catalog(root, report['publications'] * 2)
+            self.assertEqual(len(added), 1)
+            self.assertEqual(added[0]['authors'], ', '.join(record['authors']))
+            self.assertEqual(added[0]['summary'], record['abstract'])
+            self.assertNotIn('private', json.dumps(projected))
+            path.write_text(json.dumps(projected))
+            self.assertEqual(submission_sync.publication_catalog(root, report['publications']), (None, []))
+
+    def test_public_papers_by_other_authors_cannot_enter_the_catalog(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder); board(root)
+            path = root / 'tables/publications.json'
+            path.write_text(json.dumps({'schema_version': 'research-publication.v1',
+                'publications': [], 'collaborations': [], 'notes': []}))
+            self.assertEqual(submission_sync.publication_catalog(root, [
+                {'authors': ['Another Author'], 'title': 'Not our paper'}]), (None, []))
+
+    def test_public_link_in_correspondence_is_discovered_from_its_own_body(self):
+        message = {'from': {'emailAddress': {'address': 'coauthor@example.edu'}},
+                   'subject': 'Our paper is public', 'conversationId': 'c1',
+                   'uniqueBody': {'content': 'https://arxiv.org/abs/2611.99114v1'},
+                   'body': {'content': 'https://arxiv.org/abs/2611.99114v1'}}
+        self.assertEqual(submission_sync.collect(Mailbox(message), '2026-11-01T00:00:00Z'), [message])
+
+
     def test_reconcile_reads_arxiv_system_thread_and_writes_only_board_files(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder); board(root)

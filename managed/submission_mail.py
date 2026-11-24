@@ -17,6 +17,7 @@ from urllib.request import Request, urlopen
 import xml.etree.ElementTree as ET
 
 from .queue import require
+from .location import settings
 
 ARXIV_ID = re.compile(r"(?<![\w.])(?:arXiv\s*:\s*)?(\d{4}\.\d{4,5})(?:v([1-9]\d*))?", re.I)
 ARXIV_URL = re.compile(r"https?://(?:www\.)?arxiv\.org/(?:abs|pdf|html)/(\d{4}\.\d{4,5})(?:v([1-9]\d*))?(?:\.pdf)?", re.I)
@@ -60,10 +61,11 @@ def is_system_message(message):
 def parse_message(message):
     """Extract a public arXiv identity and optional metadata from one message."""
     subject = _text(message.get("subject"))
-    body_value = message.get("body", {}).get("content") if isinstance(message.get("body"), dict) else message.get("body")
+    body_field = message.get("body") or message.get("uniqueBody")
+    body_value = body_field.get("content") if isinstance(body_field, dict) else body_field
     body = _text(body_value)
     combined = subject + "\n" + body
-    if not is_system_message({**message, "body": {"content": body}}):
+    if not is_system_message({**message, "body": {"content": body}}) and not ARXIV_URL.search(combined):
         return None
     match = ARXIV_URL.search(combined)
     if match is None:
@@ -98,6 +100,7 @@ def parse_api_response(raw):
     result = {"arxiv_id": match.group(1), "arxiv_version": match.group(2) or "v1",
               "arxiv_url": _public(match.group(1), match.group(2)),
               "title": _text(entry.findtext("a:title", "", ns)), "authors": authors,
+              "abstract": _text(entry.findtext("a:summary", "", ns)),
               "date": date.fromisoformat(published).isoformat()}
     return result
 
@@ -142,7 +145,7 @@ def match(receipt, papers):
 
 def reconcile(papers, messages, verify=None):
     """Build deterministic updates from arXiv messages without mutating input."""
-    updates, ambiguous, ignored = [], [], []
+    updates, ambiguous, ignored, publications = [], [], [], []
     for message in messages:
         receipt = parse_message(message)
         if receipt is None or not receipt.get("arxiv_id"):
@@ -154,6 +157,12 @@ def reconcile(papers, messages, verify=None):
             if not receipt.get("arxiv_version") or int(known.get("arxiv_version", "v0")[1:]) >= int(receipt["arxiv_version"][1:]):
                 continue
         record = (verify or verify_public)(receipt)
+        # A public coauthored paper is independently identifiable even when no
+        # private submission-board row exists. Never infer a journal, workspace
+        # or authorship agreement merely to make the paper discoverable.
+        team = set(settings('identity')['team_authors'])
+        if team and team <= set(record.get('authors', [])):
+            publications.append(record)
         candidate = match({**receipt, **record}, papers)
         if isinstance(candidate, list):
             ambiguous.append({"receipt": receipt, "candidates": candidate})
@@ -161,7 +170,8 @@ def reconcile(papers, messages, verify=None):
             updates.append({"paper_id": candidate["id"], "record": record, "message_ref": message.get("internetMessageId")})
         else:
             ignored.append({"arxiv_id": receipt["arxiv_id"], "reason": "no unique board match"})
-    return {"updates": updates, "ambiguous": ambiguous, "ignored": ignored}
+    return {"updates": updates, "ambiguous": ambiguous, "ignored": ignored,
+            "publications": publications}
 
 
 def apply_updates(data, report):

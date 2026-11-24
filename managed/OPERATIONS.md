@@ -45,6 +45,18 @@ For authorized local inspection, run `python3 -m managed.control status`,
 `python3 -m managed.control work`, or `python3 -m managed.control reviews`
 with the configured private data checkout and an authenticated GitHub CLI.
 
+## Publication discovery from mail
+
+Receipt reconciliation reads arXiv notices and explicit public arXiv links in
+incoming correspondence. After checking the public record, a paper naming every
+configured `identity.team_authors` member can enter the existing publication
+catalog without a private submission-board row. The catalog receives public
+title, complete author order, abstract summary, date, identity and revision only.
+Private message identifiers and correspondence remain outside that projection.
+Known submission rows retain their separate reconciliation, and table writes
+use `managed.data_writes` on the configured private data branch. The existing
+Pages feed projection and delivery publish the result.
+
 ## Close an owner question
 
 To close reviewed reply or research questions without requesting another CMA

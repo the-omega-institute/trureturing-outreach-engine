@@ -54,6 +54,16 @@ def check():
         if 'outreach-canon' in path.parts:
             continue
         check_decoder_source(path.read_text(), str(path))
+    # Replay is an owned model in core, never a SQLite/network writer. Examples
+    # are development adapters and may read stdin; production core cannot do I/O.
+    for path in (ROOT / 'crates/outreach-core/src').rglob('*.rs'):
+        source = path.read_text()
+        for forbidden in ('std::fs', 'std::process', 'std::io', 'rusqlite',
+                          'TcpStream', 'UdpSocket', 'reqwest'):
+            assert forbidden not in source, f'{path}: pure core contains {forbidden}'
+    ledger = (ROOT / 'crates/outreach-ledger/src/lib.rs').read_text()
+    assert 'SQLITE_OPEN_READ_ONLY' in ledger and 'mode=ro&immutable=1' in ledger
+    assert 'SQLITE_OPEN_READ_WRITE' not in ledger and 'SQLITE_OPEN_CREATE' not in ledger
     check_decoder_guard()
     print('Workspace dependency direction and canon decoder boundary: passed')
 

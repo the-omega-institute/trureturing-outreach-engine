@@ -52,6 +52,12 @@ jobs:
         run: python3 check_live_sql.py
       - name: Read-only command byte parity
         run: python3 parity/compare.py
+      - name: Request and packet validator parity
+        run: python3 parity/validators.py
+      - name: Signing and ingestion replay parity
+        run: python3 parity/signing_ingest.py
+      - name: Offline stage builder parity
+        run: python3 parity/builders.py
       - name: Clippy
         run: cargo clippy --locked --workspace --all-targets -- -D warnings
       - name: Test

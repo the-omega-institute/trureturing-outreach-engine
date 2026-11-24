@@ -12,6 +12,72 @@ pub fn truth(v: &Value) -> bool {
 pub fn whitespace(c: char) -> bool {
     c.is_whitespace() || ('\u{1c}'..='\u{1f}').contains(&c)
 }
+pub fn split_lines(s: &str) -> Vec<&str> {
+    let mut out = Vec::new();
+    let mut start = 0;
+    let mut chars = s.char_indices().peekable();
+    while let Some((i, c)) = chars.next() {
+        if matches!(
+            c,
+            '\n' | '\r'
+                | '\x0b'
+                | '\x0c'
+                | '\u{1c}'
+                | '\u{1d}'
+                | '\u{1e}'
+                | '\u{85}'
+                | '\u{2028}'
+                | '\u{2029}'
+        ) {
+            out.push(&s[start..i]);
+            start = i + c.len_utf8();
+            if c == '\r' && chars.peek().is_some_and(|(_, c)| *c == '\n') {
+                chars.next();
+                start += 1;
+            }
+        }
+    }
+    if start < s.len() {
+        out.push(&s[start..]);
+    }
+    out
+}
+pub fn alphanumeric(c: char) -> bool {
+    let ranges: &[(u32, u32)] = include!("alphanumeric.rs");
+    let n = c as u32;
+    let index = ranges.partition_point(|(start, _)| *start <= n);
+    index > 0 && n <= ranges[index - 1].1
+}
+/// CPython 3.12 lower, including its context-sensitive Greek final sigma.
+pub fn lower(s: &str) -> String {
+    let chars: Vec<_> = s.chars().collect();
+    let mut out = String::new();
+    type Ranges = &'static [(u32, u32)];
+    let (cased, ignorable): (Ranges, Ranges) = include!("case_properties.rs");
+    let has = |ranges: &[(u32, u32)], c: char| {
+        let cp = c as u32;
+        let i = ranges.partition_point(|(a, _)| *a <= cp);
+        i > 0 && cp <= ranges[i - 1].1
+    };
+    for (i, c) in chars.iter().copied().enumerate() {
+        if c == 'Σ' {
+            let before = chars[..i]
+                .iter()
+                .rev()
+                .find(|c| !has(ignorable, **c))
+                .is_some_and(|c| has(cased, *c));
+            let after = chars[i + 1..]
+                .iter()
+                .find(|c| !has(ignorable, **c))
+                .is_some_and(|c| has(cased, *c));
+            out.push(if before && !after { 'ς' } else { 'σ' });
+        } else {
+            let mapped: Vec<char> = include!("lowercase.rs");
+            out.extend(mapped);
+        }
+    }
+    out
+}
 pub fn compact(s: &str, limit: usize) -> String {
     s.split(whitespace)
         .filter(|s| !s.is_empty())
@@ -44,7 +110,7 @@ pub fn py_str(v: &Value) -> String {
         ),
     }
 }
-fn repr(v: &Value) -> String {
+pub fn repr(v: &Value) -> String {
     if let Value::String(s) = v {
         let quote = if s.contains('\'') && !s.contains('"') {
             '"'
@@ -111,6 +177,13 @@ mod tests {
                         r["printable"].as_bool().unwrap(),
                         "U+{cp:04X}"
                     );
+                    assert_eq!(
+                        alphanumeric(ch),
+                        r["category"]
+                            .as_str()
+                            .is_some_and(|s| s.starts_with(['L', 'N'])),
+                        "alphanumeric U+{cp:04X}"
+                    );
                 }
             }
             for (cp, key) in [(start, "first_repr"), (end, "last_repr")] {
@@ -138,6 +211,20 @@ mod tests {
                     "U+{cp:04X}"
                 );
             }
+        }
+    }
+    #[test]
+    fn python_lower_observes_final_sigma_context() {
+        for (input, expected) in [
+            ("ΟΣ", "ος"),
+            ("ΟΣΑ", "οσα"),
+            ("Σ", "σ"),
+            ("ΟΣ\u{301}", "ος\u{301}"),
+            (".ʰΣ", ".ʰσ"),
+            ("aʰΣ", "aʰς"),
+            ("İ", "i\u{307}"),
+        ] {
+            assert_eq!(lower(input), expected);
         }
     }
 }

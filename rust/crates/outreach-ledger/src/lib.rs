@@ -57,6 +57,108 @@ pub struct Ledger {
     db: Connection,
 }
 impl Ledger {
+    /// Lossless replay input for every persistent table, including queue tables.
+    /// This uses only the immutable reader connection; replay never writes SQLite.
+    pub fn replay_snapshot(&self) -> Result<Value> {
+        let mut names = self
+            .db
+            .prepare("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name")?;
+        let names = names
+            .query_map([], |r| r.get::<_, String>(0))?
+            .collect::<std::result::Result<Vec<_>, _>>()?;
+        let mut tables = BTreeMap::new();
+        for name in names {
+            let quoted = format!("\"{}\"", name.replace('"', "\"\""));
+            let mut info = self.db.prepare(&format!("PRAGMA table_info({quoted})"))?;
+            let columns = info
+                .query_map([], |r| Ok((r.get::<_, String>(1)?, r.get::<_, i64>(5)?)))?
+                .collect::<std::result::Result<Vec<_>, _>>()?;
+            let mut pk: Vec<_> = columns.iter().filter(|(_, n)| *n > 0).collect();
+            pk.sort_by_key(|(_, n)| *n);
+            let mut statement = self
+                .db
+                .prepare(&format!("SELECT * FROM {quoted} ORDER BY rowid"))?;
+            let mut query = statement.query([])?;
+            let mut rows = Vec::new();
+            while let Some(row) = query.next()? {
+                let mut values = Vec::new();
+                for (i, (column, _)) in columns.iter().enumerate() {
+                    use rusqlite::types::ValueRef;
+                    let v = match row.get_ref(i)? {
+                        ValueRef::Null => Value::Null,
+                        ValueRef::Integer(n) => n.into(),
+                        ValueRef::Real(n) => outreach_canon::float(n)?,
+                        ValueRef::Text(bytes) => {
+                            let text = std::str::from_utf8(bytes)
+                                .map_err(|e| Error::Snapshot(e.to_string()))?;
+                            if [
+                                "request",
+                                "data",
+                                "payload",
+                                "packet",
+                                "receipt",
+                                "evidence",
+                                "response",
+                                "snapshot",
+                                "envelope",
+                                "authority",
+                                "readback",
+                            ]
+                            .contains(&column.as_str())
+                            {
+                                // A non-JSON opaque text column retains its exact text.
+                                CanonValue::parse(text)
+                                    .map(CanonValue::into_value)
+                                    .unwrap_or_else(|_| Value::String(text.into()))
+                            } else {
+                                Value::String(text.into())
+                            }
+                        }
+                        ValueRef::Blob(bytes) => Value::Object(
+                            [(
+                                "$sqlite_blob".into(),
+                                Value::String(bytes.iter().map(|b| format!("{b:02x}")).collect()),
+                            )]
+                            .into_iter()
+                            .collect(),
+                        ),
+                    };
+                    values.push((column.clone(), v));
+                }
+                if name == "task_events" {
+                    let raw: String = row.get("data")?;
+                    values.push(("_replay_raw_data".into(), Value::String(raw)));
+                }
+                rows.push(Value::Object(values.into_iter().collect()));
+            }
+            tables.insert(
+                name,
+                Value::Object(
+                    [
+                        (
+                            "columns".into(),
+                            Value::Array(
+                                columns
+                                    .iter()
+                                    .map(|(c, _)| Value::String(c.clone()))
+                                    .collect(),
+                            ),
+                        ),
+                        (
+                            "primary_key".into(),
+                            Value::Array(
+                                pk.iter().map(|(c, _)| Value::String(c.clone())).collect(),
+                            ),
+                        ),
+                        ("rows".into(), Value::Array(rows)),
+                    ]
+                    .into_iter()
+                    .collect(),
+                ),
+            );
+        }
+        Ok(Value::Object(tables.into_iter().collect()))
+    }
     pub fn open(snapshot: &Path) -> Result<Self> {
         // Absolute, percent-encoded URI: ?, # and non-ASCII path bytes must never
         // change mode/immutable query parameters. Missing files cannot be created.

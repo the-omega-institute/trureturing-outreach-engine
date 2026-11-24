@@ -43,4 +43,33 @@ def sources(value):
         else:
             nonprint.append([r['start'], r['end']])
     printable = head + '&[\n' + ''.join('    (0x%x, 0x%x),\n' % (a, b) for a, b in nonprint) + ']\n'
-    return {'casefold.rs': folds, 'nonprintable.rs': printable}
+    alnum = []
+    for r in value['ranges']:
+        if r['category'][0] not in 'LN':
+            continue
+        if alnum and alnum[-1][1] + 1 == r['start']:
+            alnum[-1][1] = r['end']
+        else:
+            alnum.append([r['start'], r['end']])
+    alphanumeric = head + '&[\n' + ''.join('    (0x%x, 0x%x),\n' % (a, b) for a, b in alnum) + ']\n'
+    lower = head + 'match c {\n' + ''.join(
+        "'\\u{%x}' => \"%s\".chars().collect::<Vec<_>>(),\n" % (cp, escape(chr(cp).lower()))
+        for cp in range(0x110000) if chr(cp).lower() != chr(cp)) + '_ => vec![c],\n}\n'
+    def ranges(predicate):
+        result = []
+        for cp in range(0x110000):
+            if not predicate(chr(cp)):
+                continue
+            if result and result[-1][1] + 1 == cp:
+                result[-1][1] = cp
+            else:
+                result.append([cp, cp])
+        return '&[\n' + ''.join('    (0x%x, 0x%x),\n' % (a, b) for a, b in result) + ']'
+    cased = lambda c: c.islower() or c.isupper() or unicodedata.category(c) == 'Lt'
+    # Query the live final-sigma rule to obtain Case_Ignorable, including
+    # scalars that have BOTH Cased and Case_Ignorable (modifier letters).
+    ignorable = lambda c: ('.' + c + 'Σ').lower().endswith('σ') if cased(c) else ('a' + c + 'Σ').lower().endswith('ς')
+    case_properties = head + '(' + ranges(cased) + ',\n' + ranges(ignorable) + ')\n'
+    return {'casefold.rs': folds, 'nonprintable.rs': printable,
+            'alphanumeric.rs': alphanumeric, 'lowercase.rs': lower,
+            'case_properties.rs': case_properties}

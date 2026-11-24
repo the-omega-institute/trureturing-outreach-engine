@@ -1,6 +1,6 @@
 //! Local file adapters for signing/building and in-memory ingestion replay.
 use super::*;
-use outreach_canon::{canonical, sha256, sign_envelope, sign_review};
+use outreach_canon::{canonical, sha256, sign_review};
 use outreach_core::{
     envelopes,
     ingest::{InputAsset, Replay, logical_dump},
@@ -92,17 +92,55 @@ fn workflow_value(kind: &str, root: &Path, engine: &Path) -> outreach_canon::Res
     })
     .map(Value::String)
 }
-fn publish_file(value: &Value, prefix: &str, output: &Path) -> Result<()> {
+struct OutputPolicy {
+    overwrite: bool,
+    snapshot: Option<PathBuf>,
+}
+impl OutputPolicy {
+    fn write(&self, path: &Path, bytes: &[u8]) -> Result<()> {
+        use std::io::Write;
+        let protected = self.snapshot.as_deref();
+        if let Some(snapshot) = protected {
+            validation::require(
+                path.canonicalize().ok().as_deref() != Some(snapshot),
+                "Output resolves to the input snapshot",
+            )?;
+        }
+        if let Some(parent) = path.parent().filter(|p| !p.as_os_str().is_empty()) {
+            fs::create_dir_all(parent)?;
+        }
+        let mut file = fs::OpenOptions::new()
+            .write(true)
+            .create(self.overwrite)
+            .create_new(!self.overwrite)
+            .open(path)?;
+        // Check the opened file too: hard links and path replacement must not
+        // bypass snapshot protection, even with explicit overwrite permission.
+        #[cfg(unix)]
+        if let Some(snapshot) = protected {
+            use std::os::unix::fs::MetadataExt;
+            let source = fs::metadata(snapshot)?;
+            let target = file.metadata()?;
+            validation::require(
+                (source.dev(), source.ino()) != (target.dev(), target.ino()),
+                "Output resolves to the input snapshot",
+            )?;
+        }
+        if self.overwrite {
+            file.set_len(0)?;
+        }
+        file.write_all(bytes)?;
+        Ok(())
+    }
+}
+fn publish_file(value: &Value, prefix: &str, output: &Path, policy: &OutputPolicy) -> Result<()> {
     let asset = envelopes::stage(value, prefix)?;
     let path = if output.is_dir() {
         output.join(&asset.name)
     } else {
         output.to_path_buf()
     };
-    if let Some(parent) = path.parent().filter(|p| !p.as_os_str().is_empty()) {
-        fs::create_dir_all(parent)?;
-    }
-    fs::write(&path, &asset.bytes)?;
+    policy.write(&path, &asset.bytes)?;
     println!(
         "{}",
         canonical(&object([
@@ -112,7 +150,7 @@ fn publish_file(value: &Value, prefix: &str, output: &Path) -> Result<()> {
     );
     Ok(())
 }
-fn emit(value: &Value, output: Option<&Path>, pretty: bool) -> Result<()> {
+fn emit(value: &Value, output: Option<&Path>, pretty: bool, policy: &OutputPolicy) -> Result<()> {
     let text = if pretty {
         format!(
             "{}\n",
@@ -129,10 +167,7 @@ fn emit(value: &Value, output: Option<&Path>, pretty: bool) -> Result<()> {
         canonical(value)?
     };
     if let Some(path) = output {
-        if let Some(parent) = path.parent().filter(|p| !p.as_os_str().is_empty()) {
-            fs::create_dir_all(parent)?;
-        }
-        fs::write(path, text)?;
+        policy.write(path, text.as_bytes())?;
     } else {
         print!("{text}");
     }
@@ -147,17 +182,26 @@ pub fn run(mut args: Vec<String>) -> Result<()> {
             .unwrap_or_else(|| engine.to_string_lossy().into_owned()),
     );
     let output = take(&mut args, "--output")?.map(PathBuf::from);
+    let snapshot = take(&mut args, "--snapshot")?.map(PathBuf::from);
+    let output_policy = OutputPolicy {
+        overwrite: flag(&mut args, "--overwrite"),
+        snapshot: snapshot.as_ref().map(|p| p.canonicalize()).transpose()?,
+    };
     if command == "replay-ingest" {
-        return replay(args, &root, &engine, output.as_deref());
+        return replay(args, &root, &engine, output.as_deref(), &output_policy);
     }
-    let key = if [
-        "enqueue",
-        "stage-inbound",
-        "stage-thread",
-        "stage-submission",
-    ]
-    .contains(&command.as_str())
+    let key = if command == "decision"
+        || ([
+            "enqueue",
+            "draft-revision",
+            "stage-inbound",
+            "stage-thread",
+            "stage-submission",
+        ]
+        .contains(&command.as_str())
+            && snapshot.is_none())
     {
+        take(&mut args, "--key-file")?;
         Vec::new()
     } else {
         secret(&mut args)?
@@ -165,9 +209,12 @@ pub fn run(mut args: Vec<String>) -> Result<()> {
     match command.as_str() {
         "sign-review" | "review" | "decision" | "draft-revision" | "enqueue" => {
             let kind = take(&mut args, "--kind")?;
-            let snapshot = take(&mut args, "--snapshot")?;
+
             if command == "sign-review" && snapshot.is_some() {
                 return Err("sign-review does not read a snapshot".into());
+            }
+            if command == "review" && snapshot.is_none() {
+                return Err("review requires --snapshot for the dry-run preflight".into());
             }
             if let Some(k) = &kind {
                 validation::require(
@@ -205,52 +252,33 @@ pub fn run(mut args: Vec<String>) -> Result<()> {
                     )?;
                     input
                 }
-                "sign-review" | "review" => {
-                    if command == "review" && input.get("signature").is_some() {
-                        envelopes::validate_review(&input, &key)?;
-                        input
-                    } else {
-                        let hash = kind
-                            .as_ref()
-                            .map(|k| workflow_value(k, &root, &engine))
-                            .transpose()?;
-                        let signed = sign_review(
-                            &input,
-                            &key,
-                            kind.as_deref(),
-                            hash.as_ref().and_then(Value::as_str),
-                        )?;
-                        if input.get("rebind_workflow_hash").is_none()
-                            && signed.get("rebind_workflow_hash").is_some()
-                        {
-                            eprintln!(
-                                "sign-review: added rebind_workflow_hash for the current {} workflow",
-                                kind.as_deref().unwrap_or("")
-                            );
-                        }
-                        signed
+                "sign-review" => {
+                    let hash = kind
+                        .as_ref()
+                        .map(|k| workflow_value(k, &root, &engine))
+                        .transpose()?;
+                    let signed = sign_review(
+                        &input,
+                        &key,
+                        kind.as_deref(),
+                        hash.as_ref().and_then(Value::as_str),
+                    )?;
+                    if input.get("rebind_workflow_hash").is_none()
+                        && signed.get("rebind_workflow_hash").is_some()
+                    {
+                        eprintln!(
+                            "sign-review: added rebind_workflow_hash for the current {} workflow",
+                            kind.as_deref().unwrap_or("")
+                        );
                     }
+                    signed
                 }
-                "decision" => {
-                    if input.get("signature").is_some() {
-                        envelopes::validate_decision(&input, &key)?;
-                        input
-                    } else {
-                        envelopes::build_decision(&input, &key)?
-                    }
-                }
-                _ => {
-                    let value = if input.get("signature").is_some() {
-                        input
-                    } else {
-                        sign_envelope(&input, &key)?
-                    };
-                    envelopes::validate_draft_revision(&value, &key)?;
-                    value
-                }
+                _ => input,
             };
-            if let Some(snapshot) = snapshot {
-                let ledger = Ledger::open(Path::new(&snapshot))?;
+            if command != "decision"
+                && let Some(snapshot) = &snapshot
+            {
+                let ledger = Ledger::open(snapshot)?;
                 let (tables, config) = environment_files(&root, &engine)?;
                 let wf = |kind: &str| workflow_value(kind, &root, &engine);
                 let environment = Environment {
@@ -263,14 +291,8 @@ pub fn run(mut args: Vec<String>) -> Result<()> {
                         "Recorded artifact is unavailable",
                     ))
                 };
-                let mut replay = Replay {
-                    tables: ledger.replay_snapshot()?,
-                    generation: 0,
-                    now: 0.0,
-                    saved_version: None,
-                    environment: &environment,
-                    resource: &resource,
-                };
+                let mut replay =
+                    Replay::new(ledger.replay_snapshot()?, 0, 0.0, &environment, &resource);
                 replay.restore()?;
                 let prefix = if command == "enqueue" {
                     "request-".into()
@@ -286,7 +308,7 @@ pub fn run(mut args: Vec<String>) -> Result<()> {
                 })?;
             }
             if command == "sign-review" {
-                emit(&value, output.as_deref(), true)
+                emit(&value, output.as_deref(), true, &output_policy)
             } else {
                 publish_file(
                     &value,
@@ -298,11 +320,12 @@ pub fn run(mut args: Vec<String>) -> Result<()> {
                     output
                         .as_deref()
                         .ok_or("Offline builders require --output PATH or DIRECTORY")?,
+                    &output_policy,
                 )
             }
         }
         "stage-draft-revision" | "request-submission-review" => {
-            let snapshot = required(&mut args, "--snapshot")?;
+            let snapshot = snapshot.as_deref().ok_or("Missing --snapshot")?;
             let ledger = Ledger::open(Path::new(&snapshot))?;
             let rows = ledger
                 .tasks()?
@@ -353,6 +376,7 @@ pub fn run(mut args: Vec<String>) -> Result<()> {
                 output
                     .as_deref()
                     .ok_or("Offline builders require --output PATH or DIRECTORY")?,
+                &output_policy,
             )
         }
         "stage-inbound" | "stage-thread" | "stage-submission" => {
@@ -500,7 +524,7 @@ pub fn run(mut args: Vec<String>) -> Result<()> {
                         .join("resources")
                         .join(s(&artifact["release_tag"]));
                     fs::create_dir_all(&dir)?;
-                    fs::write(dir.join(s(&artifact["name"])), raw)?;
+                    output_policy.write(&dir.join(s(&artifact["name"])), &raw)?;
                 }
                 selection.request
             };
@@ -513,10 +537,11 @@ pub fn run(mut args: Vec<String>) -> Result<()> {
                 output
                     .as_deref()
                     .ok_or("Offline builders require --output PATH or DIRECTORY")?,
+                &output_policy,
             )
         }
         "stage-mathesis" => {
-            let snapshot = required(&mut args, "--snapshot")?;
+            let snapshot = snapshot.as_deref().ok_or("Missing --snapshot")?;
             let id = required(&mut args, "--task")?;
             let directory = PathBuf::from(required(&mut args, "--directory")?);
             let decisions = json(Path::new(&required(&mut args, "--decisions")?))?;
@@ -639,6 +664,7 @@ pub fn run(mut args: Vec<String>) -> Result<()> {
                 output
                     .as_deref()
                     .ok_or("Offline builders require --output PATH or DIRECTORY")?,
+                &output_policy,
             )
         }
         _ => Err("Unknown offline command".into()),
@@ -763,8 +789,14 @@ fn safe_child(root: &Path, name: &str) -> Result<PathBuf> {
     )?;
     Ok(path)
 }
-fn replay(mut args: Vec<String>, root: &Path, engine: &Path, output: Option<&Path>) -> Result<()> {
-    let snapshot = required(&mut args, "--snapshot")?;
+fn replay(
+    mut args: Vec<String>,
+    root: &Path,
+    engine: &Path,
+    output: Option<&Path>,
+    policy: &OutputPolicy,
+) -> Result<()> {
+    let snapshot = policy.snapshot.as_deref().ok_or("Missing --snapshot")?;
     let inputs = PathBuf::from(required(&mut args, "--inputs")?);
     let generation = take(&mut args, "--generation")?
         .unwrap_or_else(|| "0".into())
@@ -814,14 +846,13 @@ fn replay(mut args: Vec<String>, root: &Path, engine: &Path, output: Option<&Pat
         read.map_err(|_| outreach_canon::Error::new("Recorded artifact is unavailable"))
     };
     let ledger = Ledger::open(Path::new(&snapshot))?;
-    let mut replay = Replay {
-        tables: ledger.replay_snapshot()?,
+    let mut replay = Replay::new(
+        ledger.replay_snapshot()?,
         generation,
         now,
-        saved_version: None,
-        environment: &environment,
-        resource: &resource,
-    };
+        &environment,
+        &resource,
+    );
     replay.restore()?;
     let manifest = inputs.join("assets.json");
     let metadata = if manifest.is_file() {
@@ -865,17 +896,5 @@ fn replay(mut args: Vec<String>, root: &Path, engine: &Path, output: Option<&Pat
         ("errors", Value::Array(errors)),
         ("tables", logical_dump(replay.tables)?),
     ]);
-    if let Some(output) = output {
-        // create_new also refuses symlinks and existing snapshot/sidecar paths.
-        // No replay output option can overwrite an operator's input file.
-        use std::io::Write;
-        fs::OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .open(output)?
-            .write_all(canonical(&value)?.as_bytes())?;
-        Ok(())
-    } else {
-        emit(&value, None, false)
-    }
+    emit(&value, output, false, policy)
 }

@@ -6,7 +6,6 @@ import os
 from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).parent / 'parity'))
-from ingestion import assets, build, compare, canonical
 
 
 def main():
@@ -19,13 +18,16 @@ def main():
     parser.add_argument('--passes', type=int, default=1)
     parser.add_argument('--key-file', type=Path)
     args = parser.parse_args()
+    # Bind production modules' default root arguments to the supplied root.
+    os.environ['OUTREACH_DATA_ROOT'] = str(args.root.resolve())
+    from ingestion import assets, build, compare, canonical
     try:
         secret = args.key_file.read_text().strip() if args.key_file else os.environ.get('OUTREACH_REVIEW_KEY', '')
         if not secret:
             raise ValueError('Missing local key')
         build()
         expected, actual = compare(args.snapshot, args.inputs, args.root, secret,
-                                   passes=args.passes, generation=args.generation, now=args.now)
+                                   passes=args.passes, generation=args.generation, now=args.now, key_file=args.key_file)
         counts = {'assets': len(assets(args.inputs)), 'passes': args.passes,
                   'tables': len(expected['tables']),
                   'rows': sum(len(t['rows']) for t in expected['tables'].values()),

@@ -6,7 +6,7 @@ use crate::{
     *,
 };
 use outreach_canon::{
-    canonical, digest, input_identity, parse, python_eq, sha256, verify_envelope,
+    canonical, decode_input, digest, input_identity, python_eq, sha256, verify_envelope,
 };
 use std::collections::BTreeSet;
 
@@ -30,6 +30,7 @@ pub struct InputAsset {
 }
 pub struct Replay<'a> {
     pub tables: Value,
+    undo: Option<Vec<Undo>>,
     pub generation: i64,
     pub now: f64,
     pub saved_version: Option<String>,
@@ -37,7 +38,43 @@ pub struct Replay<'a> {
     /// Read-only artifact port. Implementations must use local recorded bytes.
     pub resource: &'a dyn Fn(&Value) -> Result<Vec<u8>>,
 }
-impl Replay<'_> {
+enum Undo {
+    Append(&'static str, usize),
+    Replace(&'static str, usize, Value),
+}
+impl<'a> Replay<'a> {
+    pub fn new(
+        tables: Value,
+        generation: i64,
+        now: f64,
+        environment: &'a Environment<'a>,
+        resource: &'a dyn Fn(&Value) -> Result<Vec<u8>>,
+    ) -> Self {
+        Self {
+            tables,
+            generation,
+            now,
+            saved_version: None,
+            environment,
+            resource,
+            undo: None,
+        }
+    }
+    fn push_row(&mut self, table: &'static str, value: Value) -> Result<()> {
+        let len = self.rows(table).len();
+        if let Some(undo) = &mut self.undo {
+            undo.push(Undo::Append(table, len));
+        }
+        self.rows_mut(table)?.push(value);
+        Ok(())
+    }
+    fn replace_row(&mut self, table: &'static str, index: usize, value: Value) -> Result<()> {
+        let previous = std::mem::replace(&mut self.rows_mut(table)?[index], value);
+        if let Some(undo) = &mut self.undo {
+            undo.push(Undo::Replace(table, index, previous));
+        }
+        Ok(())
+    }
     /// Match Tasks.restore's existing migrations on this owned copy only.
     pub fn restore(&mut self) -> Result<()> {
         for (name, columns, pk) in [
@@ -119,19 +156,26 @@ impl Replay<'_> {
             .ok_or_else(|| Error::new(format!("Missing replay table: {table}")))
     }
     fn task(&self, id: &Value) -> Result<Value> {
-        self.rows("tasks")
+        let row = self
+            .rows("tasks")
             .iter()
             .find(|r| r["id"] == *id)
             .cloned()
-            .ok_or_else(|| Error::new("Unknown task"))
+            .ok_or_else(|| Error::new("Unknown task"))?;
+        require(
+            row["data"].is_object(),
+            "Invalid task data: expected an object",
+        )?;
+        Ok(row)
     }
     fn seen(&self, event: &str) -> bool {
         self.rows("control_events").iter().any(|r| r["id"] == event)
     }
     fn control(&mut self, v: &Value) -> Result<()> {
-        self.rows_mut("control_events")?
-            .push(object([("id", string(digest(v)?)), ("payload", v.clone())]));
-        Ok(())
+        self.push_row(
+            "control_events",
+            object([("id", string(digest(v)?)), ("payload", v.clone())]),
+        )
     }
     fn state(&self, key: &str) -> Value {
         self.rows("pipeline_state")
@@ -141,13 +185,16 @@ impl Replay<'_> {
             .unwrap_or(Value::Null)
     }
     fn set_state(&mut self, key: &str, value: Value) -> Result<()> {
-        let rows = self.rows_mut("pipeline_state")?;
-        if let Some(r) = rows.iter_mut().find(|r| r["key"] == key) {
-            r["payload"] = value;
+        let value = object([("key", string(key)), ("payload", value)]);
+        if let Some(index) = self
+            .rows("pipeline_state")
+            .iter()
+            .position(|r| r["key"] == key)
+        {
+            self.replace_row("pipeline_state", index, value)
         } else {
-            rows.push(object([("key", string(key)), ("payload", value)]));
+            self.push_row("pipeline_state", value)
         }
-        Ok(())
     }
     fn event(&mut self, row: &Value, data: Value) -> Result<()> {
         let previous = self
@@ -166,23 +213,27 @@ impl Replay<'_> {
             ),
         )?;
         let now = outreach_canon::float(self.now)?;
-        self.rows_mut("task_events")?.push(object([
-            ("seq", seq.into()),
-            ("id", row["id"].clone()),
-            ("state", row["state"].clone()),
-            ("revision", row["revision"].clone()),
-            ("at", now),
-            ("data", data),
-        ]));
+        self.push_row(
+            "task_events",
+            object([
+                ("seq", seq.into()),
+                ("id", row["id"].clone()),
+                ("state", row["state"].clone()),
+                ("revision", row["revision"].clone()),
+                ("at", now),
+                ("data", data),
+            ]),
+        )?;
         if self.tables.get("sqlite_sequence").is_some() {
-            let rows = self.rows_mut("sqlite_sequence")?;
-            if let Some(r) = rows.iter_mut().find(|r| r["name"] == "task_events") {
-                r["seq"] = seq.into();
+            let value = object([("name", string("task_events")), ("seq", seq.into())]);
+            if let Some(index) = self
+                .rows("sqlite_sequence")
+                .iter()
+                .position(|r| r["name"] == "task_events")
+            {
+                self.replace_row("sqlite_sequence", index, value)?;
             } else {
-                rows.push(object([
-                    ("name", string("task_events")),
-                    ("seq", seq.into()),
-                ]));
+                self.push_row("sqlite_sequence", value)?;
             }
         }
         Ok(())
@@ -192,13 +243,12 @@ impl Replay<'_> {
             require(sha256(raw) == a["sha256"], "Artifact checksum mismatch")?;
         }
         self.event(&c.row, c.event_data)?;
-        let row = self
-            .rows_mut("tasks")?
-            .iter_mut()
-            .find(|r| r["id"] == c.row["id"])
+        let index = self
+            .rows("tasks")
+            .iter()
+            .position(|r| r["id"] == c.row["id"])
             .ok_or_else(|| Error::new("Unknown task"))?;
-        *row = c.row;
-        Ok(())
+        self.replace_row("tasks", index, c.row)
     }
     fn update(&mut self, row: &Value, state: &str, data: Value) -> Result<()> {
         let summary = event_summary(&data);
@@ -228,24 +278,20 @@ impl Replay<'_> {
         }
     }
     pub fn apply(&mut self, family: &str, v: &Value, secret: &[u8]) -> Result<()> {
-        // Each admission path is transactional; a refused batch must retain no
-        // partial backfill, task update, event, or packet edit.
-        // Queue packets and untouched publication tables can dominate a real
-        // snapshot. They never enter an ingestion transaction's undo copy.
-        let original: Vec<_> = [
-            "tasks",
-            "task_events",
-            "control_events",
-            "pipeline_state",
-            "sqlite_sequence",
-        ]
-        .into_iter()
-        .map(|name| (name, self.tables[name].clone()))
-        .collect();
+        // Journal only changed rows and appended lengths. A refused batch
+        // restores prior values in reverse order without copying whole tables.
+        self.undo = Some(Vec::new());
         let result = self.apply_inner(family, v, secret);
+        let undo = self
+            .undo
+            .take()
+            .ok_or_else(|| Error::new("Missing replay transaction"))?;
         if result.is_err() {
-            for (name, value) in original {
-                self.tables[name] = value;
+            for entry in undo.into_iter().rev() {
+                match entry {
+                    Undo::Append(table, len) => self.rows_mut(table)?.truncate(len),
+                    Undo::Replace(table, index, value) => self.rows_mut(table)?[index] = value,
+                }
             }
         }
         result
@@ -309,7 +355,7 @@ impl Replay<'_> {
             ("data", object([])),
             ("updated", outreach_canon::float(self.now)?),
         ]);
-        self.rows_mut("tasks")?.push(row.clone());
+        self.push_row("tasks", row.clone())?;
         self.event(&row, object([]))?;
         self.supersede(&row)
     }
@@ -1015,13 +1061,16 @@ impl Replay<'_> {
             .iter()
             .map(|a| canonical(&a.metadata["digest"]))
             .collect::<Result<_>>()?;
-        let mut rejected = self.state("ingest_rejected");
-        if rejected.is_null() {
-            rejected = object([]);
-        }
-        if let Some(o) = rejected.as_object_mut() {
-            o.retain(|sha, _| present.contains(&canonical(&string(sha)).unwrap_or_default()));
-        }
+        let mut rejected = self
+            .rows("pipeline_state")
+            .iter()
+            .find(|r| r["key"] == "ingest_rejected")
+            .map(|r| r["payload"].clone())
+            .unwrap_or_else(|| object([]));
+        let entries = rejected
+            .as_object_mut()
+            .ok_or_else(|| Error::new("Invalid ingest_rejected: expected an object"))?;
+        entries.retain(|sha, _| present.contains(&canonical(&string(sha)).unwrap_or_default()));
         self.rejections(&rejected)?;
         let identities: BTreeSet<_> = assets
             .iter()
@@ -1071,8 +1120,7 @@ impl Replay<'_> {
                     sha == format!("sha256:{}", sha256(&a.raw)),
                     "Queue asset mismatch",
                 )?;
-                let raw = std::str::from_utf8(&a.raw).map_err(|e| Error::new(e.to_string()))?;
-                let v = parse(raw)?;
+                let v = decode_input(&a.raw)?;
                 if secret.is_empty()
                     && ![
                         "request-",

@@ -15,7 +15,7 @@ from unittest.mock import patch
 ENGINE = Path(__file__).resolve().parents[2]
 RUST = ENGINE / 'rust'
 sys.path.insert(0, str(ENGINE))
-os.environ['OUTREACH_DATA_ROOT'] = str(RUST / 'vectors/nonexistent')
+os.environ.setdefault('OUTREACH_DATA_ROOT', str(ENGINE))
 os.environ['GITHUB_ACTIONS'] = 'false'
 from managed import control, location, automation, policy
 from managed.queue import canonical, digest
@@ -181,12 +181,16 @@ def fingerprint(snapshot):
     return result
 
 
-def compare(snapshot, directory, root, secret, *, passes=1, generation=0, now=2_000_000_000.0):
+def compare(snapshot, directory, root, secret, *, passes=1, generation=0, now=2_000_000_000.0, key_file=None):
     before = fingerprint(snapshot)
     command = [str(RUST / 'target/debug/outreach'), 'control', 'replay-ingest',
                '--snapshot', str(snapshot), '--inputs', str(directory), '--root', str(root),
                '--engine-root', str(ENGINE), '--passes', str(passes), '--generation', str(generation), '--now', str(now)]
-    env = {**os.environ, 'OUTREACH_REVIEW_KEY': secret}
+    env = dict(os.environ)
+    if key_file is not None:
+        command += ['--key-file', str(key_file)]
+    else:
+        env['OUTREACH_REVIEW_KEY'] = secret
     if not secret:
         command.append('--no-key')
     rust = subprocess.run(command, capture_output=True, env=env)
@@ -199,4 +203,4 @@ def compare(snapshot, directory, root, secret, *, passes=1, generation=0, now=2_
 
 
 def build():
-    subprocess.run(['cargo', 'build', '--locked', '-q', '-p', 'outreach-cli'], cwd=RUST, capture_output=True, check=True)
+    subprocess.run(['cargo', 'build', '--offline', '--locked', '-q', '-p', 'outreach-cli'], cwd=RUST, capture_output=True, check=True)

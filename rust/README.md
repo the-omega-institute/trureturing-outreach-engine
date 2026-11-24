@@ -354,7 +354,9 @@ An edited review returns the exact replacement packet bytes as a required
 preservation effect; the offline adapter keeps the effect local.
 
 `ingest::Replay` owns its model, applies each admission transaction atomically,
-and models the forced-save generation without creating a snapshot. It reproduces
+and models the forced-save generation without creating a snapshot. Transactions
+journal appended lengths and replaced rows, then undo in reverse order on failure;
+they do not clone the tasks, history, control or pipeline tables per asset. It reproduces
 prefix/name ordering, per-asset receipt identity, receipt pruning, digest checks,
 missing-key skips, duplicate control events, one failure per digest per pass,
 three-strike give-up and generation-bound receipts. The handlers cover requests,
@@ -377,8 +379,8 @@ rust/target/debug/outreach control sign-review unsigned.json --kind reply --outp
 
 # Stage bytes: canonical JSON without a newline; no Release upload.
 mkdir -p /tmp/outreach-inputs
-rust/target/debug/outreach control review unsigned.json --kind reply --output /tmp/outreach-inputs
-rust/target/debug/outreach control decision decision-unsigned.json --output /tmp/outreach-inputs
+rust/target/debug/outreach control review signed.json --snapshot /path/snapshot.sqlite3 --output /tmp/outreach-inputs
+rust/target/debug/outreach control decision decision.json --output /tmp/outreach-inputs
 rust/target/debug/outreach control stage-draft-revision --snapshot /path/snapshot.sqlite3 \
   --task TASK --packet replacement.json --reason 'Checked correction' --output /tmp/outreach-inputs
 rust/target/debug/outreach control enqueue request.json --root /path/data --output /tmp/outreach-inputs
@@ -387,11 +389,16 @@ rust/target/debug/outreach control replay-ingest --snapshot /path/snapshot.sqlit
   --inputs /path/input-window --root /path/data --generation 100 --now 2000000000
 ```
 
-`review`, `decision` and `draft-revision` accept unsigned or signed envelopes and
-write canonical stage files. An optional `--snapshot` preflights those envelopes
-in memory before writing. `sign-review` preserves Python's deliberately narrower
-signing checks and automatic workflow rebind. `enqueue` also checks pinned local
-Git workflow inputs. `stage-thread`, `stage-inbound`, `stage-submission`,
+`review` requires `--snapshot` and runs the coordinator verdict preflight on an
+owned copy before staging the supplied signed envelope. Unsigned, stale or
+otherwise rejected reviews produce no output file. `decision` stages exactly the
+supplied value, including an unsigned envelope, without requiring a key or running
+an admission preflight. A supplied snapshot remains protected from output writes.
+`draft-revision` also stages the supplied envelope; its optional snapshot preflights
+admission. Only `sign-review` signs a supplied envelope; it preserves Python's
+narrower signing checks and automatic workflow rebind. The `stage-*` selection
+builders construct their signed envelopes from the selected task and inputs.
+`enqueue` also checks pinned local Git workflow inputs. `stage-thread`, `stage-inbound`, `stage-submission`,
 `stage-mathesis` and `request-submission-review` use Python's selection arguments,
 plus `--root`, `--output` and a snapshot for selections that need existing tasks.
 Thread/submission builders resolve local Git pins; optional `--revision` and
@@ -410,8 +417,17 @@ rejections; offline replay cannot establish a remote readback without its bytes.
 Paths are confined to the supplied directory. `--passes` repeats the window on
 the same owned model, including idempotence, give-up and generation behavior;
 `--no-key` tests the production skip/refusal paths. Replay stdout can contain
-private task data. An `--output` for replay must name a new file: `create_new`
-prevents overwriting an input snapshot, sidecar, asset or other existing file.
+private task data. All offline outputs use `create_new` by default, including
+stage resources and signing output. `--overwrite` explicitly permits replacing an
+existing output file. Outputs equal to the supplied snapshot, including symlink,
+hard-link and parent-directory aliases, are always refused, even with that flag.
+
+Input assets use a separate decoder matching `Path.read_text` and `json.loads`:
+UTF-8 errors include the byte/range and reason, universal newlines are normalized,
+and JSON syntax errors report Python's message and Unicode line/column/character
+positions. Nonfinite numeric tokens reach the ordinary field/signature gates;
+canonical encoding still refuses them. Persisted non-object `ingest_rejected`
+values and task data return errors rather than panicking.
 
 For an operator's real window, the local comparison script prints **counts only**:
 
@@ -442,8 +458,25 @@ does not disappear when converting a timestamp to a float. Generators
 use the live Python code with fixed random seeds. `validators.py` compares error
 strings as well as acceptance. Comparison uses canonical bytes, so Python's
 `True == 1 == 1.0` cannot hide a changed JSON type in a stored envelope.
-Rust must never panic for a negative case. CI runs all three new suites alongside
+Round-two regressions in `parity/ingestion_regressions.py` additionally check
+32 committed malformed-asset fixtures across four passes, nonfinite and oversized
+number gates, partial-batch rollback, command contracts, output aliases and
+explicit overwrite, corrupted ledger values, and a fresh private-script process
+with root-bound defaults and an explicit key file. These run inside the existing
+signing/ingestion CI step. Rust must never panic for a negative case.
+CI runs all three new suites alongside
 the existing architecture, SQL, workflow, vector, fmt, clippy, test and deny gates.
+
+The local synthetic transaction benchmark is reproducible with
+`python3.12 rust/benchmark_ingest.py`. It uses 2,000 tasks with about 64 MB of
+payloads, 100,000 historical events and 100 signed recovery assets. Each mode runs
+three times in a fresh process and must produce the same final table digest.
+On Darwin arm64, median process wall time / peak RSS was **1.465 s / 307.0 MiB**
+with row journaling and **7.600 s / 524.5 MiB** when emulating the removed
+five-table copy around those same transitions. These measurements include
+synthetic model construction and final hashing; the baseline mode also retains
+the new journal and adds back the old copy cost. This is a local measurement,
+not a CI timing gate.
 
 ## Remaining boundaries and phase 3
 
@@ -456,9 +489,10 @@ the existing architecture, SQL, workflow, vector, fmt, clippy, test and deny gat
   Release restore are not exposed by this CLI. The current work/status builders
   were read for their command contracts; the full automation inventory remains
   Python-owned.
-- For `{"a":NaN,"a":1}`, Python produces `{"a":1}`; Rust rejects at parse.
-  Every encountered value is validated before duplicate replacement. Nonfinite
-  values and lone surrogates remain outside canon's representable domain.
+- Strict canon parsing rejects nonfinite values before duplicate replacement;
+  ingestion decoding follows Python's last-value replacement, so
+  `{"a":NaN,"a":1}` decodes to `{"a":1}`. Nonfinite values cannot be canonically
+  encoded or signed. Lone surrogates remain outside canon's representable domain.
 - Python accepts 513 nested arrays; Rust deliberately rejects beyond 512.
   Registry affiliation regexes use Rust's regex syntax; unsupported Python regex
   constructs produce an explicit error rather than silently skipping a gate.

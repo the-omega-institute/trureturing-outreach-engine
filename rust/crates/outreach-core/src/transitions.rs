@@ -62,6 +62,10 @@ fn mail_rebindable(row: &Value, hash: &Value, ctx: &Context<'_>) -> Result<bool>
         && !ctx.attempts.iter().any(|a| a["item"] == row["id"]))
 }
 pub fn review_binding(row: &Value, ctx: &Context<'_>) -> Result<Value> {
+    require(
+        row["data"].is_object(),
+        "Invalid task data: expected an object",
+    )?;
     let mut owner = false;
     let mut mail = false;
     if ["owner-draft", "awaiting-mailbox"].contains(&s(&row["state"])) {
@@ -308,6 +312,10 @@ pub fn verdict(row: &Value, envelope: &Value, secret: &[u8], ctx: &Context<'_>) 
         "An agent-held result accepts only BOUNCE or HOLD, never PASS",
     )?;
     let event = digest(envelope)?;
+    require(
+        row["data"].is_object(),
+        "Invalid task data: expected an object",
+    )?;
     let mut data = row["data"].clone();
     data["review"] = envelope.clone();
     let mut preserved = None;
@@ -398,6 +406,10 @@ pub fn decision(row: &Value, envelope: &Value, secret: &[u8], now: f64) -> Resul
         "Decision targets an obsolete result",
     )?;
     let questions = &row["data"]["result"]["routing"]["questions"];
+    require(
+        row["data"].is_object(),
+        "Invalid task data: expected an object",
+    )?;
     let mut data = row["data"].clone();
     let state = if envelope.get("action").is_some() {
         require(
@@ -445,6 +457,10 @@ pub fn draft_revision(row: &Value, v: &Value, secret: &[u8], now: f64) -> Result
     require(
         row["state"] == "owner-draft",
         "Draft revision requires an owner draft",
+    )?;
+    require(
+        row["data"].is_object(),
+        "Invalid task data: expected an object",
     )?;
     let mut data = row["data"].clone();
     let current = if truth(&data["packet_override"]) {

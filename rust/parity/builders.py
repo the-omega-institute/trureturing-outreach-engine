@@ -143,7 +143,7 @@ def main():
                 control._main(args)
             rust_args = [str(RUST / 'target/debug/outreach'), 'control', *args, '--root', str(root), '--output', str(output)]
             if args[0] in {'stage-draft-revision', 'request-submission-review', 'review', 'stage-mathesis'}:
-                rust_args += ['--snapshot', str(snapshot)] if args[0] != 'review' else []
+                rust_args += ['--snapshot', str(snapshot)]
             process = subprocess.run(rust_args, capture_output=True, env={**os.environ, 'OUTREACH_REVIEW_KEY': KEY})
             assert process.returncode == 0, (args[0], process.stderr)
             actual = {p.name: p.read_bytes() for p in output.glob('*.json')}

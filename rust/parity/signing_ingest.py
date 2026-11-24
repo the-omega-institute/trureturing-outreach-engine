@@ -371,7 +371,7 @@ def main():
                 source.write_text(json.dumps(unsigned, ensure_ascii=False, indent=2))
                 with redirect_stderr(io.StringIO()):
                     expected = control.sign_review(unsigned, KEY, kind)
-                args = [str(RUST / 'target/debug/outreach'), 'control', 'sign-review', str(source), '--root', str(root), '--output', str(destination)]
+                args = [str(RUST / 'target/debug/outreach'), 'control', 'sign-review', str(source), '--root', str(root), '--output', str(destination), '--overwrite']
                 if kind:
                     args += ['--kind', kind]
                 rust = subprocess.run(args, capture_output=True, env={**os.environ, 'OUTREACH_REVIEW_KEY': KEY})
@@ -383,9 +383,11 @@ def main():
                 assert control.review_key() == KEY
             source.write_text(json.dumps(review, ensure_ascii=False))
             rust = subprocess.run([str(RUST / 'target/debug/outreach'), 'control', 'sign-review', str(source), '--key-file', str(key_file),
-                '--output', str(destination), '--root', str(root)], capture_output=True)
+                '--output', str(destination), '--overwrite', '--root', str(root)], capture_output=True)
             assert rust.returncode == 0 and destination.read_bytes() == (json.dumps(control.sign_review(review, KEY), ensure_ascii=False, indent=2) + '\n').encode()
             signed_files += 1
+        from ingestion_regressions import run
+        run(snapshot, root, folder, envelopes, review, KEY, NOW)
     print(f'Signing/ingestion parity: {signed_files} byte-equal signed files; {cases} replay cases / {replay_passes} passes; {rejected} matching rejections; 12 input families; originals unchanged')
 
 

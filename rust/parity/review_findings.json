@@ -1660,5 +1660,794 @@
     "work": {
       "tasks": []
     }
+  },
+  {
+    "name": "probe-threademail-lazy-address",
+    "commands": [
+      [
+        "exceptions",
+        "--work",
+        "<work>"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>",
+        "--format",
+        "text"
+      ]
+    ],
+    "tables": {
+      "threads": {
+        "lines": [
+          {
+            "id": "t1",
+            "stage": "exchange",
+            "ball": "us",
+            "correspondent": {
+              "email": "not-an-address"
+            }
+          }
+        ]
+      }
+    },
+    "work": {
+      "tasks": []
+    }
+  },
+  {
+    "name": "probe-nodecisions-optional-preflight",
+    "commands": [
+      [
+        "status",
+        "--compact"
+      ]
+    ],
+    "remove_tables": [
+      "decisions"
+    ],
+    "tables": {
+      "contacts": {
+        "contacts": [
+          {
+            "id": "c1",
+            "name": "Alice",
+            "email": "a@example.invalid",
+            "problem_ids": [
+              "p1"
+            ]
+          }
+        ]
+      }
+    },
+    "rows": [
+      {
+        "id": "n1",
+        "kind": "shortnote",
+        "state": "approved"
+      }
+    ],
+    "pipeline_sources": [
+      {
+        "result_id": "p1",
+        "identity": "i",
+        "payload": "{}",
+        "baseline": 0,
+        "task_id": "n1"
+      }
+    ]
+  },
+  {
+    "name": "probe-events-many-per-task",
+    "commands": [
+      [
+        "reviews"
+      ]
+    ],
+    "event_fixture": {
+      "tasks": 5000,
+      "events_per_task": 40,
+      "reviewable_tasks": 100
+    },
+    "work": {
+      "reviews": []
+    }
+  },
+  {
+    "name": "thread-mail-match-lazy-address",
+    "commands": [
+      [
+        "exceptions",
+        "--work",
+        "<work>"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>",
+        "--format",
+        "text"
+      ]
+    ],
+    "tables": {
+      "threads": {
+        "lines": [
+          {
+            "id": "t1",
+            "stage": "exchange",
+            "ball": "us",
+            "correspondent": {
+              "email": "a@example.invalid"
+            },
+            "mail_match": {
+              "emails": [
+                "not-an-address"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "work": {
+      "tasks": []
+    }
+  },
+  {
+    "name": "thread-terminal-tasks-lazy-address",
+    "commands": [
+      [
+        "exceptions",
+        "--work",
+        "<work>"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>",
+        "--format",
+        "text"
+      ]
+    ],
+    "tables": {
+      "threads": {
+        "lines": [
+          {
+            "id": "t1",
+            "stage": "exchange",
+            "ball": "us",
+            "correspondent": {
+              "email": "not-an-address"
+            }
+          }
+        ]
+      }
+    },
+    "work": {
+      "tasks": [
+        {
+          "id": "active",
+          "kind": "research",
+          "state": "verified",
+          "request": {
+            "kind": "research",
+            "inputs": {},
+            "owner": "unmatched",
+            "workflow_hash": ""
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "thread-them-obligation-invalid-address",
+    "commands": [
+      [
+        "exceptions",
+        "--work",
+        "<work>"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>",
+        "--format",
+        "text"
+      ]
+    ],
+    "failure": true,
+    "tables": {
+      "threads": {
+        "lines": [
+          {
+            "id": "t1",
+            "stage": "exchange",
+            "ball": "them",
+            "correspondent": {
+              "email": "not-an-address"
+            },
+            "their_open_requests": [
+              "Synthetic obligation"
+            ]
+          }
+        ]
+      }
+    },
+    "work": {
+      "tasks": [
+        {
+          "id": "active",
+          "kind": "research",
+          "state": "running",
+          "request": {
+            "kind": "research",
+            "inputs": {},
+            "owner": "unmatched",
+            "workflow_hash": ""
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "affair-task-invalid-observation",
+    "commands": [
+      [
+        "exceptions",
+        "--work",
+        "<work>"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>",
+        "--format",
+        "text"
+      ]
+    ],
+    "failure": true,
+    "tables": {
+      "threads": {
+        "lines": [
+          {
+            "id": "t1",
+            "stage": "exchange",
+            "ball": "us",
+            "correspondent": {
+              "email": "a@example.invalid"
+            }
+          }
+        ]
+      }
+    },
+    "work": {
+      "tasks": [
+        {
+          "id": "active",
+          "kind": "research",
+          "state": "running",
+          "request": {
+            "kind": "research",
+            "inputs": {
+              "mailbox_observation": {
+                "email": "not-an-address"
+              }
+            },
+            "owner": "t1",
+            "workflow_hash": ""
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "affair-task-invalid-recorded",
+    "commands": [
+      [
+        "exceptions",
+        "--work",
+        "<work>"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>",
+        "--format",
+        "text"
+      ]
+    ],
+    "failure": true,
+    "tables": {
+      "threads": {
+        "lines": [
+          {
+            "id": "t1",
+            "stage": "exchange",
+            "ball": "us",
+            "correspondent": {
+              "email": "a@example.invalid"
+            }
+          }
+        ]
+      }
+    },
+    "work": {
+      "tasks": [
+        {
+          "id": "active",
+          "kind": "research",
+          "state": "running",
+          "request": {
+            "kind": "research",
+            "inputs": {
+              "thread_record": {
+                "correspondent": {
+                  "email": "not-an-address"
+                }
+              }
+            },
+            "owner": "t1",
+            "workflow_hash": ""
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "affair-task-invalid-recipients",
+    "commands": [
+      [
+        "exceptions",
+        "--work",
+        "<work>"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>",
+        "--format",
+        "text"
+      ]
+    ],
+    "failure": true,
+    "tables": {
+      "threads": {
+        "lines": [
+          {
+            "id": "t1",
+            "stage": "exchange",
+            "ball": "us",
+            "correspondent": {
+              "email": "a@example.invalid"
+            }
+          }
+        ]
+      }
+    },
+    "work": {
+      "tasks": [
+        {
+          "id": "active",
+          "kind": "research",
+          "state": "running",
+          "request": {
+            "kind": "research",
+            "inputs": {
+              "recipient_emails": [
+                "not-an-address"
+              ]
+            },
+            "owner": "t1",
+            "workflow_hash": ""
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "affair-task-invalid-owner",
+    "commands": [
+      [
+        "exceptions",
+        "--work",
+        "<work>"
+      ],
+      [
+        "exceptions",
+        "--work",
+        "<work>",
+        "--format",
+        "text"
+      ]
+    ],
+    "failure": true,
+    "tables": {
+      "threads": {
+        "lines": [
+          {
+            "id": "t1",
+            "stage": "exchange",
+            "ball": "us",
+            "correspondent": {
+              "email": "a@example.invalid"
+            }
+          }
+        ]
+      }
+    },
+    "work": {
+      "tasks": [
+        {
+          "id": "active",
+          "kind": "research",
+          "state": "running",
+          "request": {
+            "kind": "research",
+            "inputs": {},
+            "owner": "bad@alias",
+            "workflow_hash": ""
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "review-marker-raw-values",
+    "commands": [
+      [
+        "reviews"
+      ]
+    ],
+    "rows": [
+      {
+        "id": "marker-0",
+        "kind": "reply",
+        "state": "awaiting-review",
+        "data": {
+          "result": {
+            "outcome": "completed",
+            "report": "Synthetic"
+          },
+          "review": {
+            "signed_review_hash": 7
+          }
+        }
+      },
+      {
+        "id": "marker-1",
+        "kind": "reply",
+        "state": "awaiting-review",
+        "data": {
+          "result": {
+            "outcome": "completed",
+            "report": "Synthetic"
+          },
+          "review": {
+            "signed_review_hash": true
+          }
+        }
+      },
+      {
+        "id": "marker-2",
+        "kind": "reply",
+        "state": "awaiting-review",
+        "data": {
+          "result": {
+            "outcome": "completed",
+            "report": "Synthetic"
+          },
+          "review": {
+            "signed_review_hash": [
+              1
+            ]
+          }
+        }
+      },
+      {
+        "id": "marker-3",
+        "kind": "reply",
+        "state": "awaiting-review",
+        "data": {
+          "result": {
+            "outcome": "completed",
+            "report": "Synthetic"
+          },
+          "review": {
+            "signed_review_hash": {
+              "future": 7
+            }
+          }
+        }
+      },
+      {
+        "id": "marker-4",
+        "kind": "reply",
+        "state": "awaiting-review",
+        "data": {
+          "result": {
+            "outcome": "completed",
+            "report": "Synthetic"
+          },
+          "review": {
+            "signed_review_hash": 0
+          }
+        }
+      },
+      {
+        "id": "marker-5",
+        "kind": "reply",
+        "state": "awaiting-review",
+        "data": {
+          "result": {
+            "outcome": "completed",
+            "report": "Synthetic"
+          },
+          "review": {
+            "signed_review_hash": false
+          }
+        }
+      },
+      {
+        "id": "marker-6",
+        "kind": "reply",
+        "state": "awaiting-review",
+        "data": {
+          "result": {
+            "outcome": "completed",
+            "report": "Synthetic"
+          },
+          "review": {
+            "signed_review_hash": []
+          }
+        }
+      },
+      {
+        "id": "marker-7",
+        "kind": "reply",
+        "state": "awaiting-review",
+        "data": {
+          "result": {
+            "outcome": "completed",
+            "report": "Synthetic"
+          },
+          "review": {
+            "signed_review_hash": {}
+          }
+        }
+      },
+      {
+        "id": "marker-8",
+        "kind": "reply",
+        "state": "awaiting-review",
+        "data": {
+          "result": {
+            "outcome": "completed",
+            "report": "Synthetic"
+          },
+          "review": {
+            "signed_review_hash": "synthetic-hash"
+          }
+        }
+      },
+      {
+        "id": "marker-9",
+        "kind": "reply",
+        "state": "awaiting-review",
+        "data": {
+          "result": {
+            "outcome": "completed",
+            "report": "Synthetic"
+          },
+          "review": {
+            "signed_review_hash": ""
+          }
+        }
+      }
+    ],
+    "task_events": [
+      {
+        "id": "marker-0",
+        "state": "awaiting-review",
+        "revision": 1,
+        "data": {}
+      },
+      {
+        "id": "marker-0",
+        "state": "awaiting-review",
+        "revision": 2,
+        "data": {
+          "review": 7
+        }
+      },
+      {
+        "id": "marker-0",
+        "state": "awaiting-review",
+        "revision": 3,
+        "data": {}
+      },
+      {
+        "id": "marker-1",
+        "state": "awaiting-review",
+        "revision": 1,
+        "data": {}
+      },
+      {
+        "id": "marker-1",
+        "state": "awaiting-review",
+        "revision": 2,
+        "data": {
+          "review": true
+        }
+      },
+      {
+        "id": "marker-1",
+        "state": "awaiting-review",
+        "revision": 3,
+        "data": {}
+      },
+      {
+        "id": "marker-2",
+        "state": "awaiting-review",
+        "revision": 1,
+        "data": {}
+      },
+      {
+        "id": "marker-2",
+        "state": "awaiting-review",
+        "revision": 2,
+        "data": {
+          "review": [
+            1
+          ]
+        }
+      },
+      {
+        "id": "marker-2",
+        "state": "awaiting-review",
+        "revision": 3,
+        "data": {}
+      },
+      {
+        "id": "marker-3",
+        "state": "awaiting-review",
+        "revision": 1,
+        "data": {}
+      },
+      {
+        "id": "marker-3",
+        "state": "awaiting-review",
+        "revision": 2,
+        "data": {
+          "review": {
+            "future": 7
+          }
+        }
+      },
+      {
+        "id": "marker-3",
+        "state": "awaiting-review",
+        "revision": 3,
+        "data": {}
+      },
+      {
+        "id": "marker-4",
+        "state": "awaiting-review",
+        "revision": 1,
+        "data": {}
+      },
+      {
+        "id": "marker-4",
+        "state": "awaiting-review",
+        "revision": 2,
+        "data": {
+          "review": "31d3d91de15d9dff8a9af19bc405b8b25d6217f08d1a8c73b94f71f3d5307ecd"
+        }
+      },
+      {
+        "id": "marker-4",
+        "state": "awaiting-review",
+        "revision": 3,
+        "data": {}
+      },
+      {
+        "id": "marker-5",
+        "state": "awaiting-review",
+        "revision": 1,
+        "data": {}
+      },
+      {
+        "id": "marker-5",
+        "state": "awaiting-review",
+        "revision": 2,
+        "data": {
+          "review": "de38f65946f60b1eb0b2e3af73a41c0494f81a6f55b31a37b3ce09fc92fc7334"
+        }
+      },
+      {
+        "id": "marker-5",
+        "state": "awaiting-review",
+        "revision": 3,
+        "data": {}
+      },
+      {
+        "id": "marker-6",
+        "state": "awaiting-review",
+        "revision": 1,
+        "data": {}
+      },
+      {
+        "id": "marker-6",
+        "state": "awaiting-review",
+        "revision": 2,
+        "data": {
+          "review": "f1906168b33caaf29ff5d24eaf36c002ea701bae7e1ca6b01d17a215b7c7bac4"
+        }
+      },
+      {
+        "id": "marker-6",
+        "state": "awaiting-review",
+        "revision": 3,
+        "data": {}
+      },
+      {
+        "id": "marker-7",
+        "state": "awaiting-review",
+        "revision": 1,
+        "data": {}
+      },
+      {
+        "id": "marker-7",
+        "state": "awaiting-review",
+        "revision": 2,
+        "data": {
+          "review": "4a99c9a4a6a1dce1e269264a29561b9171bd10b1b7112f11154b0867ee6a83e8"
+        }
+      },
+      {
+        "id": "marker-7",
+        "state": "awaiting-review",
+        "revision": 3,
+        "data": {}
+      },
+      {
+        "id": "marker-8",
+        "state": "awaiting-review",
+        "revision": 1,
+        "data": {}
+      },
+      {
+        "id": "marker-8",
+        "state": "awaiting-review",
+        "revision": 2,
+        "data": {
+          "review": "synthetic-hash"
+        }
+      },
+      {
+        "id": "marker-8",
+        "state": "awaiting-review",
+        "revision": 3,
+        "data": {}
+      },
+      {
+        "id": "marker-9",
+        "state": "awaiting-review",
+        "revision": 1,
+        "data": {}
+      },
+      {
+        "id": "marker-9",
+        "state": "awaiting-review",
+        "revision": 2,
+        "data": {
+          "review": "63730126795dc94cb214d454f7f2630bf7c230d55a73ae8e0ab6d7cc41a07e81"
+        }
+      },
+      {
+        "id": "marker-9",
+        "state": "awaiting-review",
+        "revision": 3,
+        "data": {}
+      }
+    ]
   }
 ]

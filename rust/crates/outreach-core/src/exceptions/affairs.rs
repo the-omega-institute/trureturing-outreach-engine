@@ -90,22 +90,23 @@ pub(super) fn affairs(
         {
             continue;
         }
-        // Only affairs whose owner is exactly 'us' pass the inventory gate.
-        let ball = s(&thread["ball"]);
-        if ["us", "them", owner].contains(&ball) && ball != "us" {
-            continue;
+        // Match Python's lazy thread_keys call: with no live task, an affair
+        // still produces its missing-action finding even if correspondence
+        // metadata contains a malformed address.
+        let mut addresses = BTreeSet::new();
+        if !live.is_empty() {
+            addresses = std::iter::once(&thread["correspondent"])
+                .chain(array(&thread["co_correspondents"]))
+                .filter(|p| truth(&p["email"]))
+                .map(|p| registry::email(&p["email"]))
+                .collect::<Result<_>>()?;
+            addresses.extend(
+                array(&thread["mail_match"]["emails"])
+                    .iter()
+                    .map(registry::email)
+                    .collect::<Result<Vec<_>>>()?,
+            );
         }
-        let mut addresses: BTreeSet<_> = std::iter::once(&thread["correspondent"])
-            .chain(array(&thread["co_correspondents"]))
-            .filter(|p| truth(&p["email"]))
-            .map(|p| registry::email(&p["email"]))
-            .collect::<Result<_>>()?;
-        addresses.extend(
-            array(&thread["mail_match"]["emails"])
-                .iter()
-                .map(registry::email)
-                .collect::<Result<Vec<_>>>()?,
-        );
         let mut ids: BTreeSet<_> = std::iter::once(&thread["id"])
             .chain(array(&thread["owner_ids"]))
             .map(py_str)
@@ -117,32 +118,50 @@ pub(super) fn affairs(
                 ids.extend(array(&p["records"]).iter().map(|r| py_str(&r["id"])));
             }
         }
-        let matched = live.iter().any(|r| {
-            if array(&thread["job_ids"]).contains(&r["id"]) || r["id"] == thread["running_job_id"] {
-                return true;
-            }
-            let inputs = &r["request"]["inputs"];
-            let recorded = &inputs["thread_record"];
-            let direct = fallback(&[&inputs["thread_ref"]["thread_id"], &recorded["id"]]);
-            if truth(direct) {
-                return *direct == thread["id"];
-            }
-            if [&r["owner"], &r["request"]["owner"]]
+        let matched = live
+            .iter()
+            .map(|r| -> Result<bool> {
+                if array(&thread["job_ids"]).contains(&r["id"])
+                    || r["id"] == thread["running_job_id"]
+                {
+                    return Ok(true);
+                }
+                let inputs = &r["request"]["inputs"];
+                let recorded = &inputs["thread_record"];
+                let direct = fallback(&[&inputs["thread_ref"]["thread_id"], &recorded["id"]]);
+                if truth(direct) {
+                    return Ok(*direct == thread["id"]);
+                }
+                let id_match = [&r["owner"], &r["request"]["owner"]]
+                    .into_iter()
+                    .chain(array(&inputs["owner_ids"]))
+                    .any(|v| ids.contains(&py_str(v)));
+                let mut task_addresses = BTreeSet::new();
+                for value in [
+                    &inputs["mailbox_observation"]["email"],
+                    &recorded["correspondent"]["email"],
+                ]
                 .into_iter()
-                .chain(array(&inputs["owner_ids"]))
-                .any(|v| ids.contains(&py_str(v)))
-            {
-                return true;
-            }
-            [
-                &inputs["mailbox_observation"]["email"],
-                &recorded["correspondent"]["email"],
-                &r["request"]["owner"],
-            ]
+                .chain(array(&inputs["recipient_emails"]))
+                {
+                    if truth(value) {
+                        task_addresses.insert(registry::email(value)?);
+                    }
+                }
+                if s(&r["request"]["owner"]).contains('@') {
+                    task_addresses.insert(registry::email(&r["request"]["owner"])?);
+                }
+                Ok(id_match || task_addresses.iter().any(|value| addresses.contains(value)))
+            })
+            .collect::<Result<Vec<_>>>()?
             .into_iter()
-            .chain(array(&inputs["recipient_emails"]))
-            .any(|v| s(v).contains('@') && addresses.contains(&registry::address(v)))
-        });
+            .any(|matched| matched);
+        // Inventory validates/matches eligible threads before exceptions keeps
+        // only affairs owned by 'us', including threads with open obligations.
+        let ball = s(&thread["ball"]);
+        if ["us", "them", owner].contains(&ball) && ball != "us" {
+            continue;
+        }
         if truth(&thread["job_ids"]) || truth(&thread["running_job_id"]) || matched {
             continue;
         }

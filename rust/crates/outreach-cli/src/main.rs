@@ -55,6 +55,13 @@ const HELP: &str = "Usage: outreach control <status --compact|reviews|review-dig
 fn json(path: &Path) -> Result<Value> {
     Ok(CanonValue::parse(&fs::read_to_string(path)?)?.into_value())
 }
+fn optional_json(path: &Path) -> Result<Value> {
+    match fs::read_to_string(path) {
+        Ok(text) => Ok(CanonValue::parse(&text)?.into_value()),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(Value::Null),
+        Err(error) => Err(error.into()),
+    }
+}
 fn take(args: &mut Vec<String>, name: &str) -> Result<Option<String>> {
     if let Some(index) = args.iter().position(|a| a == name) {
         args.remove(index);
@@ -211,7 +218,10 @@ fn run() -> Result<()> {
                 environment.tables["refusals"] = read_table("refusals")?;
             }
             if need_preflight {
-                environment.tables["decisions"] = read_table("decisions")?;
+                // Python's excluded_region treats a missing decision table as
+                // no exclusion; malformed present files still fail closed.
+                environment.tables["decisions"] =
+                    optional_json(&root.join("tables/decisions.json"))?;
             }
             let now = match now {
                 Some(n) if n.is_finite() => n,
@@ -240,7 +250,13 @@ fn run() -> Result<()> {
         "reviews" => {
             let ledger = ledger.as_ref().unwrap();
             let tasks = ledger.tasks()?;
-            let events = ledger.review_events(&tasks)?;
+            let mut reviewable_tasks = Vec::new();
+            for task in &tasks {
+                if outreach_core::reviewable(&task.clone().into_value()?)? {
+                    reviewable_tasks.push(task);
+                }
+            }
+            let events = ledger.review_events(&reviewable_tasks)?;
             outreach_core::reviews(
                 tasks
                     .into_iter()

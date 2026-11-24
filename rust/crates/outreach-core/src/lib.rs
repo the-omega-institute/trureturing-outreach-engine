@@ -10,7 +10,7 @@ pub use digest::review_digest;
 pub use exceptions::{exceptions, render_exceptions};
 pub use lanes::validate as validate_lanes;
 use outreach_canon::{Error, Result, Value};
-pub use reviews::reviews;
+pub use reviews::{reviewable, reviews};
 pub use status::{StatusInput, status};
 pub const OWNER_QUESTION_AGE: f64 = 2.0 * 86400.0;
 pub use text::{casefold, py_str, truth};

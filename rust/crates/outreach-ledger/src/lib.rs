@@ -2,7 +2,7 @@
 use outreach_canon::{CanonValue, Value};
 use outreach_model::*;
 use rusqlite::{Connection, OpenFlags};
-use std::path::Path;
+use std::{collections::BTreeMap, path::Path};
 
 #[derive(Debug)]
 pub enum Error {
@@ -43,6 +43,16 @@ impl From<&str> for Error {
     }
 }
 pub type Result<T> = std::result::Result<T, Error>;
+fn truthy(value: &Value) -> bool {
+    match value {
+        Value::Null => false,
+        Value::Bool(value) => *value,
+        Value::Number(value) => value.as_str().parse::<f64>().is_ok_and(|n| n != 0.0),
+        Value::String(value) => !value.is_empty(),
+        Value::Array(value) => !value.is_empty(),
+        Value::Object(value) => !value.is_empty(),
+    }
+}
 pub struct Ledger {
     db: Connection,
 }
@@ -110,47 +120,58 @@ impl Ledger {
         }
         Ok(tasks)
     }
-    /// Compare the small review marker inside SQLite; historical packet bodies
-    /// never cross the adapter boundary. Historical states are opaque strings.
-    pub fn review_events(&self, tasks: &[Task]) -> Result<Vec<Value>> {
-        let mut stmt = self.db.prepare(
-            "SELECT id,state,revision,data=? FROM task_events WHERE id=? ORDER BY revision DESC",
-        )?;
-        let mut result = Vec::new();
+    /// Compare the small review marker with SQLite text without parsing event
+    /// payloads. Historical states are opaque strings; only summaries escape.
+    pub fn review_events(&self, tasks: &[&Task]) -> Result<Vec<Value>> {
+        // The caller has already applied the Python reviewable gate. Read the
+        // event table once in sequence order instead of rescanning it for every
+        // task; task_events deliberately has no id index in the writer schema.
+        let mut markers = BTreeMap::new();
         for task in tasks {
             let review = &task.data.value()["review"];
             let marker = if review.is_object() && !review.as_object().unwrap().is_empty() {
-                let hash = match review["signed_review_hash"]
-                    .as_str()
-                    .filter(|s| !s.is_empty())
-                {
-                    Some(hash) => hash.to_owned(),
-                    None => outreach_canon::digest(review)?,
+                let hash = if truthy(&review["signed_review_hash"]) {
+                    review["signed_review_hash"].clone()
+                } else {
+                    Value::String(outreach_canon::digest(review)?)
                 };
                 Some(outreach_canon::canonical(&Value::Object(
-                    [("review".into(), Value::String(hash))]
-                        .into_iter()
-                        .collect(),
+                    [("review".into(), hash)].into_iter().collect(),
                 ))?)
             } else {
                 None
             };
-            let mut rows = stmt.query(rusqlite::params![marker, task.id.0])?;
-            while let Some(r) = rows.next()? {
-                result.push(Value::Object(
-                    [
-                        ("id".into(), Value::String(r.get(0)?)),
-                        ("state".into(), Value::String(r.get(1)?)),
-                        ("revision".into(), Value::from(r.get::<_, i64>(2)?)),
-                        (
-                            "reviewed".into(),
-                            Value::Bool(r.get::<_, Option<bool>>(3)?.unwrap_or(false)),
-                        ),
-                    ]
-                    .into_iter()
-                    .collect(),
-                ));
-            }
+            markers.insert(task.id.0.clone(), marker);
+        }
+        if markers.is_empty() {
+            return Ok(Vec::new());
+        }
+        let mut stmt = self
+            .db
+            .prepare("SELECT id,state,revision,data FROM task_events ORDER BY seq")?;
+        let mut result = Vec::new();
+        let mut rows = stmt.query([])?;
+        while let Some(r) = rows.next()? {
+            let id: String = r.get(0)?;
+            let Some(marker) = markers.get(&id) else {
+                continue;
+            };
+            let reviewed = match marker {
+                Some(marker) => {
+                    matches!(r.get_ref(3)?, rusqlite::types::ValueRef::Text(data) if marker.as_bytes() == data)
+                }
+                None => false,
+            };
+            result.push(Value::Object(
+                [
+                    ("id".into(), Value::String(id)),
+                    ("state".into(), Value::String(r.get(1)?)),
+                    ("revision".into(), Value::from(r.get::<_, i64>(2)?)),
+                    ("reviewed".into(), Value::Bool(reviewed)),
+                ]
+                .into_iter()
+                .collect(),
+            ));
         }
         Ok(result)
     }
@@ -268,7 +289,13 @@ impl Ledger {
         Ok(result)
     }
     pub fn pipeline_sources(&self) -> Result<Vec<Value>> {
-        self.json_rows("SELECT json_object('result_id',result_id,'baseline',baseline,'task_id',task_id,'state',(SELECT state FROM tasks WHERE id=pipeline_sources.task_id)) FROM pipeline_sources ORDER BY rowid")
+        // Extend the captured Python projection with its indexed state lookup.
+        // The subquery preserves the source row scan order without reimplementing
+        // the live source selection in the adapter.
+        self.json_rows(&format!(
+            "SELECT json_object('result_id',result_id,'baseline',baseline,'task_id',task_id,'state',(SELECT state FROM tasks WHERE id=sources.task_id)) FROM ({}) AS sources",
+            include_str!("pipeline_sources.sql")
+        ))
     }
     pub fn pipeline_counts(&self) -> Result<(i64, i64)> {
         Ok(self

@@ -40,6 +40,7 @@ def live_sql():
     with patch.object(pipeline, 'read', return_value={'contacts': []}):
         pipeline.status(tasks, ROOT, {}, compact=True)
     result['pipeline_counts'] = next(sql for sql in tasks.db.sql if 'SUM(' in sql)
+    result['pipeline_sources'] = next(sql for sql in tasks.db.sql if 'FROM pipeline_sources' in sql)
     return result
 
 
@@ -48,7 +49,7 @@ def main():
     for name, sql in live_sql().items():
         frozen = (folder / (name + '.sql')).read_text()
         assert ' '.join(sql.split()) == ' '.join(frozen.split()), name + ': live Python SQL changed'
-    print('Live Python SQL: lane_rows, pipeline_counts, old_owner_questions, counts (state/kind): passed')
+    print('Live Python SQL: lane_rows, pipeline_counts, pipeline_sources, old_owner_questions, counts (state/kind): passed')
 
 
 if __name__ == '__main__':

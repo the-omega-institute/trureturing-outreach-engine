@@ -47,7 +47,13 @@ assignments cannot change this contract. Newer Python releases can change these
 vectors; the generator rejects a Unicode version mismatch instead of refreshing
 silently. Updating this pin requires regenerating and reviewing both tables and
 vectors. The separate NFKC registry helper still uses the pinned
-`unicode-normalization` crate's Unicode tables.
+`unicode-normalization` crate's Unicode tables. Mailbox addresses, thread stages
+and decision labels that call Rust `to_lowercase`/`to_uppercase` likewise follow
+the Rust standard library's Unicode tables, rather than CPython 3.12's tables.
+These operations can differ from Python for characters assigned or changed
+after Unicode 15.0, and are outside the exhaustive casefold/nonprintable parity
+claim. Pinning them to CPython would require generating and reviewing
+lower/upper/NFKC tables from the selected interpreter.
 
 Canon tests read committed JSON directly; ledger tests invoke Python to create
 a temporary synthetic database through the existing Python writer. No private
@@ -248,10 +254,12 @@ continues to use `Value`; incoming adapter/model JSON uses canon exclusively.
 snapshot exercised by `managed/tests/test_exceptions.py`. The original suite
 checks **8 command variants × 61 fixtures = 488 successful byte comparisons**.
 `parity/review_findings.json` adds named, committed synthetic reproducers from the
-independent review (**51 fixtures, 120 comparisons, including 77 expected
-failures**), including all five inputs from the supplied generator, missing
+independent review (**62 fixtures, 139 comparisons, including 87 expected
+failures**), including all five inputs from the earlier supplied generator,
+the round-3 `threademail`, `nodecisions` and 200,000-event probes, missing
 workflow inputs, registry fallbacks, mailbox lower/casefold distinctions, invalid
-configurations and historical event states. The harness compares successful
+configurations, malformed affair addresses, raw review marker values and
+historical event states. The harness compares successful
 stdout bytes and separately requires both implementations to fail for negative
 fixtures; Rust must return a nonzero exit other than 101, with no panic or signal.
 It hashes the snapshot and all preexisting side-file contents before and after.
@@ -259,7 +267,8 @@ All generated databases and command outputs remain in a TemporaryDirectory or
 captured subprocess output and are removed. No file under `managed/` is changed.
 
 `check_live_sql.py` captures SQL emitted by live `Tasks.lane_rows`,
-`Tasks.owner_questions`, `Tasks.counts` (both columns), and `pipeline.status`, then
+`Tasks.owner_questions`, `Tasks.counts` (both columns), and `pipeline.status`
+(both pipeline counts and source selection), then
 compares it with the exact frozen read queries used by Rust, ignoring formatting
 whitespace. CI runs this alongside the live workflow check. The lane query now
 returns the same columns as Python; request/data cross the adapter individually,
@@ -295,25 +304,31 @@ files, with all bytes preserved.
 
 ## Local performance benchmark
 
-Run `python3.12 benchmark.py` from `rust/`. It builds release, creates 2,000
-synthetic tasks in a 98,652,160-byte closed ledger, and measures three independent
-subprocess runs per command and implementation, alternating execution order.
-Time is the median wall time; RSS is the largest child peak from `wait4`, excluding
-the parent and fixture builder. Stdout hashes must agree; time and peak RSS must
-both be at most 2× Python. This benchmark is intentionally outside CI, and removes
-its database and output files on completion.
+Run `python3.12 benchmark.py` from `rust/`. It builds release, measures the
+baseline synthetic ledger (2,000 tasks by default) and an event-heavy ledger
+(5,000 tasks, 40 events per task, 200,000 events total, with 100 reviewable
+tasks), and measures three independent subprocess runs per command and
+implementation, alternating execution order. Time is the median wall time; RSS
+is the largest child peak from `wait4`, excluding the parent and fixture builder.
+Stdout hashes must agree; time and peak RSS must both be at most 2× Python. Use
+`--no-event-case` only when a quick baseline run is needed. This benchmark is
+intentionally outside CI, and removes its database and output files on
+completion.
 
 On Darwin arm64 / CPython 3.12.13 / SQLite 3.54.1:
 
-| Command | Python seconds / peak MiB | Rust release seconds / peak MiB | Rust/Python time / RSS |
+| Case / command | Python seconds / peak MiB | Rust release seconds / peak MiB | Rust/Python time / RSS |
 | --- | ---: | ---: | ---: |
-| exceptions | 1.136 / 307.1 | 0.457 / 420.4 | 0.40× / 1.37× |
-| reviews | 2.658 / 648.0 | 0.948 / 525.6 | 0.36× / 0.81× |
+| baseline / exceptions | 1.108 / 307.1 | 0.433 / 420.3 | 0.39× / 1.37× |
+| baseline / reviews | 2.685 / 647.9 | 0.818 / 526.2 | 0.30× / 0.81× |
+| 200,000 events / reviews | 1.057 / 53.0 | 0.080 / 32.4 | 0.08× / 0.61× |
 
 The task adapter parses each request/data column once through canon and moves it
 into the view. Exceptions coalesces work sections by ownership, then builds its
-children map once. Reviews moves request/results into output and compares review
-markers inside SQLite without loading historical packet payloads.
+children map once. Reviews filters by reviewability first, then scans events once
+in SQLite sequence order and compares borrowed event text without parsing or
+retaining historical packet payloads. Only event summaries for reviewable tasks
+cross into core.
 
 ## Known gaps and phase 2
 

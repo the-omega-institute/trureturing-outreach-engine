@@ -38,9 +38,12 @@ def base(root):
     return config
 
 
-def build(root, rows, work=None):
+def build(root, rows, work=None, *, bulk=False):
     path = root / 'snapshot # π.sqlite3'
     tasks = Tasks(path, clock=lambda: NOW - 4 * 86400)
+    if bulk:
+        # Reproducible temporary synthetic data; avoid fsync per history row.
+        tasks.db.execute('PRAGMA synchronous=OFF')
     try:
         for n, original in enumerate(rows):
             row = copy.deepcopy(original)

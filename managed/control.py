@@ -1624,6 +1624,11 @@ CAPACITY_RETRIES=24
 RUNTIME_RETRIES=3
 TRANSPORT_RETRIES=2
 RETIRE_HISTORY_PER_TICK=6
+# A task cleanup refusal must remain visible without issuing an endless stream
+# of stop/delete requests. CMA lifecycle calls retain their original keys, so
+# three observations are enough before handing the unresolved object to an
+# operator.
+RETIRE_TASK_RETRIES=3
 CREDIT_RETRIES=50
 CREDIT_PROBE_ACCEPT=15*60
 RATE_LIMIT_RETRIES=5
@@ -3235,8 +3240,9 @@ def advance(ledger,cma,config,folder,revision=None,mailbox=None,oracle_capacity=
                             and 'result' not in data and not exhausted)
             owned_sandbox=pool.owned_sandbox(data) if pool else data.get('owned_sandbox_id')
             if data.get('pool_sandbox_id'):owned_sandbox=None
-            if row['state'] not in ACTIVE and not repair_pending and data.get('agent_id') and (not cleanup.get('deleted') or
-                    (owned_sandbox and not cleanup.get('sandbox_retired'))) and \
+            if row['state'] not in ACTIVE and not repair_pending and data.get('agent_id') and \
+                    not cleanup.get('operator_check') and cleanup.get('cleanup_attempts',0)<RETIRE_TASK_RETRIES and \
+                    (not cleanup.get('deleted') or (owned_sandbox and not cleanup.get('sandbox_retired'))) and \
                     recheck.due(tasks,'retire',row['id'],data['agent_id']):
                 # Deleting an Agent can destroy the only remaining artifact copy.
                 # Preserve verified result/readback (or exhausted repair evidence) first.
@@ -3247,7 +3253,25 @@ def advance(ledger,cma,config,folder,revision=None,mailbox=None,oracle_capacity=
                     ledger.save(force=True)
                     retire_key='outreach-retire-'+row['request_hash']
                     if data.get('execution_restart'):retire_key+='-execution-'+data['execution_restart']
-                    data['cleanup']=cma.retire(data['agent_id'],retire_key,owned_sandbox)
+                    attempts=cleanup.get('cleanup_attempts',0)+1
+                    try:
+                        result=cma.retire(data['agent_id'],retire_key,owned_sandbox)
+                    except Exception as exc:
+                        result={**cleanup,'agent_id':data['agent_id'],
+                                'deleted':False,'cleanup_attempts':attempts,
+                                'cleanup_error':type(exc).__name__+': '+str(exc)[:300]}
+                        if attempts>=RETIRE_TASK_RETRIES:
+                            result['operator_check']={'kind':'cma-agent-cleanup',
+                                'agent_id':data['agent_id'],
+                                'reason':'Agent retirement raised errors after three bounded attempts'}
+                    else:
+                        result={**result,'cleanup_attempts':attempts}
+                        if (not result.get('deleted') and attempts>=RETIRE_TASK_RETRIES and
+                                not result.get('operator_check')):
+                            result['operator_check']={'kind':'cma-agent-cleanup',
+                                'agent_id':data['agent_id'],
+                                'reason':'Agent retirement did not complete after three bounded attempts'}
+                    data['cleanup']=result
                     row=tasks.update(row['id'],row['revision'],row['state'],data);ledger.save()
         except Exception as exc:
             # Keep the original operation/response/key on every uncertain call.

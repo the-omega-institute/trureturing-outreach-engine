@@ -29,6 +29,11 @@ CAPACITY_BLOCK_SECONDS=2*3600
 # After this bound, missing first-Workspace identity is quota evidence and the
 # creation follows failed-Sandbox recovery instead of replaying its key forever.
 POOL_WAIT_SECONDS=30*60
+# A legacy cleanup entry may contain dozens of failed/ready Agents. Keep the
+# one-time ownership sweep inside the normal pool-health budget so one tick
+# cannot monopolize the coordinator or issue an unbounded CMA request burst.
+AGENT_CLEANUP_PER_TICK=8
+AGENT_SWEEP_VERSION=1
 
 
 def group_config(config, kinds):
@@ -366,11 +371,19 @@ class SandboxPool:
 
     def cleanup_entry(self, cma, entry, status, rows, now):
         sandbox_id=entry['sandbox_id']
+        cleanup=entry.get('cleanup') or {}
         # Rotation and stalled runtimes use the same durable retirement path
         # as failed/corrupt Sandboxes, even while CMA still reports active.
-        dead=(status=='failed' or (bool(entry.get('corrupt')) and status=='active') or
-              ((bool(entry.get('stalled')) or bool(entry.get('rotated'))) and
-               status not in {'retired','retiring'}))
+        retirement_in_flight=(status=='retiring' and
+                              (cleanup.get('sandbox_delete_requested') or cleanup.get('cleanup_error') or
+                               entry.get('cleanup_error')) and
+                              not cleanup.get('owned_agents_pending') and not cleanup.get('operator_check'))
+        dead=(not retirement_in_flight and not cleanup.get('operator_check') and
+              (status=='failed' or (bool(entry.get('corrupt')) and status=='active') or
+               ((bool(entry.get('stalled')) or bool(entry.get('rotated'))) and
+                status not in {'retired'}) or
+               (entry in self.failed and entry.get('state')=='retiring' and
+                status not in {'retired'})))
         if dead and not any(live_reference(r,entry) for r in rows):
             with unit(self.ledger,'pool-health',sandbox_id) as ready:
                 if not ready:return
@@ -378,9 +391,17 @@ class SandboxPool:
                 self.write('sandbox_pool_cleanup',self.failed)
                 self.ledger.save(force=True)
                 entry['cleanup']=cma.retire_sandbox(None,sandbox_id,
-                    entry['cleanup_intent']['key'],{},dead_ok=True,finished=ledger_agents(rows))
+                    entry['cleanup_intent']['key'],entry.get('cleanup') or {},dead_ok=True,
+                    finished=ledger_agents(rows),max_agent_deletions=AGENT_CLEANUP_PER_TICK)
+                entry['cleanup'].setdefault('agent_sweep_version',AGENT_SWEEP_VERSION)
                 entry['cleanup_checked_at']=now
-        elif status not in {'failed','retiring'} and not dead:
+                if entry['cleanup'].get('operator_check'):
+                    entry['operator_check']=entry['cleanup']['operator_check']
+                    checks=self.read('sandbox_pool_operator_checks') or []
+                    checks=[item for item in checks if item.get('sandbox_id')!=sandbox_id]
+                    checks.append({'sandbox_id':sandbox_id,'check':entry['operator_check']})
+                    self.write('sandbox_pool_operator_checks',checks)
+        elif status not in {'failed','retiring'} and not dead and not cleanup.get('operator_check'):
             self.write('sandbox_retired_'+sandbox_id,entry)
             self.failed.remove(entry)
 
@@ -399,6 +420,10 @@ class SandboxPool:
         for sandbox_id,entry in units(self.ledger,'pool-health',entries.items(),key=lambda r:r[0]):
             cleanup=entry.get('cleanup') or {}
             if (entry in self.failed and cleanup.get('reason') and not cleanup.get('sandbox_retired')
+                    and not cleanup.get('owned_agents_pending') and not cleanup.get('operator_check')
+                    and not cleanup.get('sandbox_delete_requested')
+                    and not cleanup.get('agent_inventory_pending')
+                    and cleanup.get('agent_sweep_version')==AGENT_SWEEP_VERSION
                     and now-entry.get('cleanup_checked_at',0)<RETAINED_RECHECK_SECONDS):
                 continue
             try:

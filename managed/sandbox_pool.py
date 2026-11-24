@@ -438,6 +438,7 @@ class SandboxPool:
         entries={e['sandbox_id']:e for e in [*self.entries,*self.failed]}
         now=self.ledger.tasks.clock()
         for sandbox_id,entry in units(self.ledger,'pool-health',entries.items(),key=lambda r:r[0]):
+            status=None  # A failed GET must not reuse another Sandbox's observation.
             cleanup=entry.get('cleanup') or {}
             if (entry in self.failed and (entry.get('operator_check') or cleanup.get('operator_check'))
                     and now-entry.get('cleanup_checked_at',0)<RETAINED_RECHECK_SECONDS):

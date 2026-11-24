@@ -28,9 +28,33 @@ class CMAAgentCleanupTests(unittest.TestCase):
         cma=CMA(token='fake');cma.request=request
         result=cma.retire('agt_B','outreach-retire-task-B','sbx_shared')
         self.assertFalse(any(path.endswith('/agt_A/stop') for path,_,_ in calls))
-        self.assertEqual(result['operator_check']['agents'],['agt_A'])
+        self.assertNotIn('operator_check',result)
+        self.assertNotIn('_agent_deletions',result)
+        self.assertEqual(result['foreign_agents'],['agt_A'])
         self.assertFalse(any(path.endswith('/sbx_shared') and method=='DELETE'
                              for path,method,_ in calls))
+
+    def test_delete_gone_is_distinct_from_accepted_delete(self):
+        for resource in ('agent','sandbox'):
+            for gone in (False,True):
+                with self.subTest(resource=resource,gone=gone):
+                    def request(path,method='GET',body=None,key=None):
+                        if method=='DELETE':
+                            if gone:raise CMARequestError(404,{'code':resource+'_not_found'})
+                            return {'status':'deleted'}
+                        if '/agents?' in path:return {'items':[]}
+                        if path.endswith('/workspaces'):return {'items':[{'id':'wks_test'}]}
+                        return {'status':'stopped' if resource=='agent' else 'active'}
+                    cma=CMA(token='fake');cma.request=request
+                    if resource=='agent':
+                        result=cma.retire('agt_test','stable-key')
+                        field='delete_outcome'
+                        self.assertTrue(result['deleted'])
+                    else:
+                        result=cma.retire_sandbox(None,'sbx_test','stable-key',{})
+                        field='sandbox_delete_outcome'
+                        if gone:self.assertTrue(result['sandbox_retired'])
+                    self.assertEqual(result[field],'gone' if gone else 'accepted')
 
     def test_title_prefix_is_not_ownership_without_task_name(self):
         calls=[]

@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from fixture_config import use_cli_config
 from managed import control
-from managed.queue import canonical
+from managed.queue import canonical, digest
 from managed.sandbox_pool import SandboxPool
 from test_sandbox_pool import PoolFixture
 from test_tasks import request
@@ -134,7 +134,8 @@ class PoolAdoptTests(PoolFixture, unittest.TestCase):
         self.set_cleanup([entry])
         self.ledger.tasks.db.execute('INSERT OR REPLACE INTO pipeline_state VALUES(?,?)',
                                      ('sandbox_pool_operator_checks',canonical([{'sandbox_id':'sbx_orphan','check':check}])))
-        value={'schema_version':1,'sandbox_id':'sbx_orphan','reason':'Operator reconciled Agent'}
+        value={'schema_version':1,'sandbox_id':'sbx_orphan','reason':'Operator reconciled Agent',
+               'check_digest':digest(check),'row_revision':digest(entry)}
         value['signature']=hmac.new(SECRET.encode(),canonical(value).encode(),hashlib.sha256).hexdigest()
         control.clear_sandbox_operator_check(self.ledger,value,SECRET)
         control.clear_sandbox_operator_check(self.ledger,value,SECRET)

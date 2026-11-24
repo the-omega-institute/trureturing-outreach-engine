@@ -345,9 +345,11 @@ class CMA:
                 agent=None
         except Exception as exc:
             if CMA._gone(exc):
-                return {**result,'stopped':True,'deleted':True,'status':'gone','gone':True}
+                return {**result,'stopped':True,'deleted':True,'status':'gone','gone':True,
+                        'delete_outcome':'gone'}
             if getattr(exc,'code',None) not in {400,409,422}:raise
             result['errors'].append(CMA._error('delete',exc));return result
+        result['delete_outcome']='accepted'
         try:
             agent=CMA._await_status(self,agent_id,{'deleted'},agent)
         except Exception as exc:
@@ -376,14 +378,17 @@ class CMA:
             else:
                 raise
             if owned_sandbox_id:
-                return self.retire_sandbox(agent_id,owned_sandbox_id,key,result,
-                                           sweep_owned=sweep_owned,task_ids=task_ids)
-            return result
-        sid=owned_sandbox_id or (agent.get('sandbox') or {}).get('id')
-        result=self._retire_agent(agent_id,key,agent,sid)
-        if owned_sandbox_id and result.get('deleted') and not result.get('operator_check'):
-            return self.retire_sandbox(agent_id,owned_sandbox_id,key,result,
-                                       sweep_owned=sweep_owned,task_ids=task_ids)
+                result=self.retire_sandbox(agent_id,owned_sandbox_id,key,result,
+                                          sweep_owned=sweep_owned,task_ids=task_ids)
+        else:
+            sid=owned_sandbox_id or (agent.get('sandbox') or {}).get('id')
+            result=self._retire_agent(agent_id,key,agent,sid)
+            if owned_sandbox_id and result.get('deleted') and not result.get('operator_check'):
+                result=self.retire_sandbox(agent_id,owned_sandbox_id,key,result,
+                                          sweep_owned=sweep_owned,task_ids=task_ids)
+        # The pool consumes this per-call budget counter directly. Task cleanup
+        # records describe durable outcomes and never store the internal counter.
+        result.pop('_agent_deletions',None)
         return result
 
     @staticmethod
@@ -478,10 +483,8 @@ class CMA:
                           reason='Engine Agent cleanup pending')
             if agents.get('next'):result['agent_inventory_pending']=True
             return result
-        # A task-owned context can still acquire unexpected user work. Preserve
-        # it. Failed/stopped foreign Agents in a failed pool are inert and retain
-        # the old dead-Sandbox retirement behavior; every live/ready foreign
-        # Agent keeps the Sandbox.
+        # Preserve other work in the Sandbox. The pool can classify ownership
+        # across tasks; a task retirement knows only its own Agent identity.
         result.pop('owned_agents_pending',None);result.pop('agent_inventory_pending',None)
         if sweep_owned:
             foreign=[a for a in items if not CMA._ours(a,owned_ids,task_ids) and
@@ -491,13 +494,16 @@ class CMA:
                      a.get('status')!='deleted']
         if foreign:
             foreign_ids=[a.get('id') for a in foreign if a.get('id')]
-            return {**result,'sandbox_id':sandbox_id,'sandbox_retired':False,
-                    'reason':'Other Agent work found; retained Sandbox',
-                    'foreign_agents':foreign_ids,
-                    '_agent_deletions':processed,
-                    'operator_check':{'kind':'cma-sandbox-cleanup','sandbox_id':sandbox_id,
-                                      'agents':foreign_ids,
-                                      'reason':'Foreign Agents remain; operator must reconcile them before Sandbox DELETE'}}
+            retained={**result,'sandbox_id':sandbox_id,'sandbox_retired':False,
+                      'reason':'Other Agent work found; retained Sandbox',
+                      'foreign_agents':foreign_ids,'_agent_deletions':processed}
+            # A task can share a pool Sandbox with other live tasks. Only the
+            # pool's inventory sweep can decide that remaining work is foreign.
+            if sweep_owned:
+                retained['operator_check']={'kind':'cma-sandbox-cleanup','sandbox_id':sandbox_id,
+                    'agents':foreign_ids,
+                    'reason':'Foreign Agents remain; operator must reconcile them before Sandbox DELETE'}
+            return retained
         workspaces=self.request('/api/v1/sandboxes/'+sandbox_id+'/workspaces')
         if workspaces.get('next') or len(workspaces['items'])>1:
             return {**result,'sandbox_id':sandbox_id,'sandbox_retired':False,'reason':'Additional workspaces found; retained Sandbox',
@@ -519,6 +525,7 @@ class CMA:
             if CMA._gone(exc):
                 return {**result,'sandbox_id':sandbox_id,'sandbox_retired':True,
                         'sandbox_status':'gone','sandbox_gone':True,
+                        'sandbox_delete_outcome':'gone',
                         'sandbox_delete_requested':True,'_agent_deletions':processed}
             if getattr(exc,'code',None) is None:
                 # The DELETE may have been admitted before the transport
@@ -539,6 +546,7 @@ class CMA:
                 updated['operator_check']={'kind':'cma-sandbox-cleanup','sandbox_id':sandbox_id,
                     'reason':'Sandbox DELETE was refused after three bounded attempts'}
             return updated
+        result['sandbox_delete_outcome']='accepted'
         try:
             sandbox=self.request('/api/v1/sandboxes/'+sandbox_id)
         except Exception as exc:

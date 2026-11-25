@@ -80,9 +80,9 @@ class PoolCMA(CMA):
             self.lose_transport=False;raise TimeoutError('Retry accepted; observation lost')
         return {'response_id':self.commands[key]['response_id']}
 
-    def retire(self,agent_id,key,owned_sandbox_id=None):
+    def retire(self,agent_id,key,owned_sandbox_id=None,**kwargs):
         self.retire_calls.append((agent_id,key,owned_sandbox_id))
-        return super().retire(agent_id,key,owned_sandbox_id)
+        return super().retire(agent_id,key,owned_sandbox_id,**kwargs)
 
 
 class PoolFixture:

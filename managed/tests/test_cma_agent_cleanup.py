@@ -1,8 +1,53 @@
 """Synthetic CMA ownership cleanup and bounded Sandbox retirement."""
 import copy
 import unittest
+from urllib.parse import parse_qs, urlsplit
 
-from managed.cma import CMA, CMARequestError
+from managed.cma import AGENT_CLEANUP_WAIT_SECONDS, CMA, CMARequestError
+
+
+class LifecycleCMA(CMA):
+    """Synthetic CMA with independently controlled inventory and GET views."""
+    def __init__(self, agents, *, accepted=False):
+        super().__init__(token='synthetic')
+        self.agents={aid:{'id':aid,'name':'outreach-'+aid[4:],'status':status}
+                     for aid,status in agents.items()}
+        self.accepted=accepted
+        self.calls=[]
+        self.stop_error=CMARequestError(409,{'code':'agent_not_ready'})
+        self.delete_error=None
+        self.get_error=None
+        self.omit_inventory=False
+        self.sandbox_status='retiring'
+        self.sandbox_statuses={}
+        self.inventory_by_sandbox={}
+
+    def request(self,path,method='GET',body=None,key=None):
+        self.calls.append((path,method,key))
+        if path.startswith('/api/v1/agents?'):
+            sandbox=parse_qs(urlsplit(path).query)['sandbox'][0]
+            agents=[item for aid,item in self.agents.items()
+                    if sandbox not in self.inventory_by_sandbox or aid in self.inventory_by_sandbox[sandbox]]
+            return {'items':[] if self.omit_inventory else copy.deepcopy(agents)}
+        if path.endswith('/workspaces'):return {'items':[{'id':'wks_synthetic'}]}
+        if path.startswith('/api/v1/sandboxes/'):
+            sandbox=path.split('/')[-1]
+            if method=='DELETE':self.sandbox_statuses[sandbox]='retired'
+            return {'status':self.sandbox_statuses.get(sandbox,self.sandbox_status)}
+        aid=path.split('/')[-2] if path.endswith('/stop') else path.split('/')[-1]
+        if method=='GET':
+            if self.get_error:raise self.get_error
+            if aid not in self.agents:raise CMARequestError(404,{'code':'agent_not_found'})
+            return copy.deepcopy(self.agents[aid])
+        if path.endswith('/stop'):
+            if self.stop_error:raise self.stop_error
+            self.agents[aid]['status']='stopping'
+            return {'status':'stopping'}
+        if method=='DELETE':
+            if self.delete_error:raise self.delete_error
+            if not self.accepted:self.agents[aid]['status']='deleted'
+            return {'status':'accepted' if self.accepted else 'deleted'}
+        raise AssertionError((path,method))
 
 
 class CMAAgentCleanupTests(unittest.TestCase):
@@ -109,24 +154,10 @@ class CMAAgentCleanupTests(unittest.TestCase):
         self.assertEqual(calls[2][2],'outreach-retire-failed-delete')
 
     def test_ready_agent_is_deleted_after_task_end(self):
-        calls=[];statuses=['ready','stopping','stopped','deleted']
-        def request(path, method='GET', body=None, key=None):
-            calls.append((path, method, key))
-            if path.endswith('/stop'):
-                return {}
-            if path == '/api/v1/agents/agt_ready' and method == 'DELETE':
-                return {}
-            if path == '/api/v1/agents/agt_ready':
-                return {'id':'agt_ready','status':statuses.pop(0),
-                        'sandbox':{'id':'sbx_test'}}
-            raise AssertionError(path)
-
-        cma=CMA(token='fake');cma.request=request
-        first=cma.retire('agt_ready','outreach-retire-ready')
-        self.assertFalse(first['deleted'])
-        result=cma.retire('agt_ready','outreach-retire-ready')
+        cma=LifecycleCMA({'agt_ready':'ready'})
+        result=cma.retire('agt_ready','stable-key',now=1000)
         self.assertTrue(result['deleted'])
-        self.assertEqual([method for _,method,_ in calls],['GET','POST','GET','GET','DELETE','GET'])
+        self.assertEqual([method for _,method,_ in cma.calls],['GET','DELETE'])
 
     def test_foreign_agent_is_left_alone_and_keeps_sandbox(self):
         calls=[]
@@ -203,6 +234,101 @@ class CMAAgentCleanupTests(unittest.TestCase):
         self.assertTrue(second['sandbox_retired'])
         self.assertEqual(sum(call[1] == 'DELETE' and 'agt_one' in call[0] for call in calls),1)
         self.assertEqual(sum(call[1] == 'DELETE' and 'agt_two' in call[0] for call in calls),1)
+    def test_accepted_delete_observes_stale_failed_status_until_gone(self):
+        cma=LifecycleCMA({'agt_failed':'failed'},accepted=True)
+        result={}
+        for now in range(1000,1006):
+            result=cma.retire_sandbox(None,'sbx_synthetic','original-key',result,
+                dead_ok=True,task_ids={'failed'},now=now)
+            [agent]=result['agent_cleanup']
+            self.assertEqual(agent['cleanup_attempts'],0)
+            self.assertEqual(agent['errors'],[])
+            self.assertNotIn('operator_check',result)
+        self.assertEqual([(method,key) for _,method,key in cma.calls if method!='GET'],
+            [('POST','original-key-agent-agt_failed-stop'),('DELETE','original-key-agent-agt_failed-delete')])
+        cma.agents.clear()
+        result=cma.retire_sandbox(None,'sbx_synthetic','original-key',result,
+            dead_ok=True,task_ids={'failed'},now=1006)
+        self.assertTrue(result['sandbox_retired'])
+        self.assertEqual(result['agent_cleanup'][0]['status'],'gone')
+
+    def test_accepted_delete_has_persistent_observation_deadline(self):
+        cma=LifecycleCMA({'agt_idle':'ready'},accepted=True)
+        first=cma.retire('agt_idle','original-key',now=1000)
+        before=cma.retire('agt_idle','original-key',previous=copy.deepcopy(first),
+                          now=1000+AGENT_CLEANUP_WAIT_SECONDS-1)
+        self.assertNotIn('operator_check',before)
+        expired=cma.retire('agt_idle','original-key',previous=before,
+                           now=1000+AGENT_CLEANUP_WAIT_SECONDS)
+        self.assertIn('24 hours',expired['operator_check']['reason'])
+        self.assertEqual(expired['cleanup_started_at'],1000)
+        cma.agents.clear()
+        gone=cma.retire('agt_idle','original-key',previous=expired,now=1001+AGENT_CLEANUP_WAIT_SECONDS)
+        self.assertTrue(gone['deleted'])
+        self.assertNotIn('operator_check',gone)
+        self.assertEqual(sum(method=='DELETE' for _,method,_ in cma.calls),1)
+
+    def test_accepted_delete_read_failures_keep_acceptance_and_bound_observation(self):
+        cma=LifecycleCMA({'agt_idle':'ready'},accepted=True)
+        cma.get_error=TimeoutError('lost readback')
+        first=cma._retire_agent('agt_idle','key',agent=cma.agents['agt_idle'],now=1000)
+        self.assertEqual(first['delete_outcome'],'accepted')
+        for error in (TimeoutError('lost read'),CMARequestError(503,{'code':'unavailable'})):
+            cma.get_error=error
+            result=cma.retire('agt_idle','key',previous=first,now=2000)
+            self.assertEqual(result['errors'],[])
+            self.assertNotIn('operator_check',result)
+        result=cma.retire('agt_idle','key',previous=result,now=1000+AGENT_CLEANUP_WAIT_SECONDS)
+        self.assertIn('operator_check',result)
+        self.assertEqual(sum(method=='DELETE' for _,method,_ in cma.calls),1)
+
+    def test_accepted_delete_terminal_get_refusal_is_not_deletion(self):
+        for error in (CMARequestError(403,{'code':'forbidden'}),CMARequestError(404,{'status':404}),
+                      CMARequestError(405,{'code':'method_not_allowed'})):
+            with self.subTest(error=error):
+                cma=LifecycleCMA({'agt_idle':'ready'},accepted=True)
+                result=cma.retire('agt_idle','key',now=1000)
+                cma.get_error=error
+                result=cma.retire('agt_idle','key',previous=result,now=1001)
+                self.assertFalse(result['deleted'])
+                self.assertIn('operator_check',result)
+                self.assertEqual(sum(method=='DELETE' for _,method,_ in cma.calls),1)
+
+    def test_terminal_agent_not_ready_stop_is_benign(self):
+        for status in ('failed','stopped','terminal'):
+            with self.subTest(status=status):
+                cma=LifecycleCMA({'agt_terminal':status},accepted=True)
+                result=cma.retire('agt_terminal','key',now=1000)
+                self.assertEqual(result['errors'],[])
+                self.assertEqual(result['delete_outcome'],'accepted')
+                self.assertNotIn('operator_check',result)
+                self.assertEqual(sum(method=='DELETE' for _,method,_ in cma.calls),1)
+
+    def test_working_agent_keeps_stop_then_delete_order(self):
+        cma=LifecycleCMA({'agt_working':'working'},accepted=True)
+        cma.stop_error=None
+        first=cma.retire('agt_working','key',now=1000)
+        self.assertEqual(first['status'],'stopping')
+        self.assertFalse(any(method=='DELETE' for _,method,_ in cma.calls))
+        cma.agents['agt_working']['status']='stopped'
+        second=cma.retire('agt_working','key',previous=first,now=1001)
+        cma.retire('agt_working','key',previous=second,now=1002)
+        self.assertEqual([method for _,method,_ in cma.calls if method!='GET'],['POST','DELETE'])
+
+    def test_four_ready_agents_retire_sandbox_within_budget(self):
+        for budget in (2,4):
+            with self.subTest(budget=budget):
+                cma=LifecycleCMA({'agt_'+str(n):'ready' for n in range(4)})
+                result={}
+                for tick in range(4//budget):
+                    start=len(cma.calls)
+                    result=cma.retire_sandbox(None,'sbx_synthetic','key',result,dead_ok=True,
+                        task_ids={str(n) for n in range(4)},max_agent_deletions=budget,now=1000+tick)
+                    self.assertLessEqual(sum(method=='DELETE' and '/agents/' in path
+                        for path,method,_ in cma.calls[start:]),budget)
+                self.assertTrue(result['sandbox_retired'])
+                self.assertFalse(any(method=='POST' for _,method,_ in cma.calls))
+
 
 
 if __name__ == '__main__':

@@ -66,9 +66,9 @@ class RobustnessTests(PoolFixture, unittest.TestCase):
         self.cma.response=lambda _: {'status':'completed','output':[{'type':'message','content':[
             {'type':'output_text','text':json.dumps(result)}]}]}
         retire=self.cma.retire
-        def retire_after_readback(*args):
+        def retire_after_readback(*args,**kwargs):
             remote.calls.append('retire')
-            return retire(*args)
+            return retire(*args,**kwargs)
         self.cma.retire=retire_after_readback
         return remote, reference, raw
 

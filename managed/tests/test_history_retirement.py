@@ -5,6 +5,7 @@ from managed import control
 from managed.tasks import ACTIVE
 from managed.tick import Tick
 from test_sandbox_pool import PoolFixture
+from test_cma_agent_cleanup import LifecycleCMA
 
 
 class HistoryRetirementTests(PoolFixture, unittest.TestCase):
@@ -28,6 +29,16 @@ class HistoryRetirementTests(PoolFixture, unittest.TestCase):
         self.assertTrue(entry['cleanup']['deleted'])
         self.assertEqual(entry['owned_sandbox_id'], 'sbx_old')
 
+    def test_accepted_historical_delete_is_only_observed_on_later_ticks(self):
+        self.cma=LifecycleCMA({'agt_old':'ready'},accepted=True)
+        row=self.history_row('old', [{'agent_id':'agt_old'}])
+        self.tick();self.restore()
+        for _ in range(4):self.now+=60;self.tick()
+        self.assertEqual(sum(method=='DELETE' for _,method,_ in self.cma.calls),1)
+        self.cma.agents.clear();self.tick()
+        entry=self.ledger.tasks.get(row['id'])['data']['execution_history'][0]
+        self.assertTrue(entry['cleanup']['deleted'])
+
     def test_current_agent_and_all_active_states_are_skipped(self):
         self.history_row('current', [{'agent_id': 'agt_current'}], agent_id='agt_current')
         for state in ACTIVE:
@@ -44,11 +55,11 @@ class HistoryRetirementTests(PoolFixture, unittest.TestCase):
         row = self.history_row('failure', [{'agent_id': 'agt_bad'}, {'agent_id': 'agt_good'}])
         other = self.history_row('other', [{'agent_id': 'agt_other'}])
         retire = self.cma.retire
-        def fail(agent, key, sandbox):
+        def fail(agent, key, sandbox, **kwargs):
             if agent == 'agt_bad':
                 self.cma.retire_calls.append((agent, key, sandbox))
                 raise RuntimeError('x'*400)
-            return retire(agent, key, sandbox)
+            return retire(agent, key, sandbox, **kwargs)
         self.cma.retire = fail
         self.tick()
         history = self.ledger.tasks.get(row['id'])['data']['execution_history']
@@ -61,7 +72,7 @@ class HistoryRetirementTests(PoolFixture, unittest.TestCase):
 
     def test_persistent_retire_error_stops_after_three_attempts(self):
         row = self.history_row('stuck', [{'agent_id': 'agt_stuck'}])
-        def fail(agent, key, sandbox):
+        def fail(agent, key, sandbox, **kwargs):
             self.cma.retire_calls.append((agent, key, sandbox))
             raise RuntimeError('unavailable')
         self.cma.retire = fail

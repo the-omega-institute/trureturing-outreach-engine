@@ -119,26 +119,62 @@ def descriptor(adapter, method, path, body=None, key=None):
 class Response:
     def __init__(self, response, call, extra):
         self.response, self.call, self.extra = response, call, extra
+        self.stream = response
         self.chunks = []
-    def __getattr__(self, name): return getattr(self.response, name)
-    def __enter__(self): self.response.__enter__(); return self
+    def __getattr__(self, name): return getattr(self.stream, name)
+    def __enter__(self):
+        # Read from whatever the wrapped context manager yields, exactly as the
+        # unrecorded caller would (urllib returns itself; test doubles may not).
+        entered = self.response.__enter__()
+        if entered is not None: self.stream = entered
+        return self
     def read(self, *args):
-        raw = self.response.read(*args); self.chunks.append(raw); return raw
+        raw = self.stream.read(*args); self.chunks.append(raw); return raw
     def __iter__(self):
-        for line in self.response:
+        for line in self.stream:
             self.chunks.append(line); yield line
     def __exit__(self, *args):
         try: return self.response.__exit__(*args)
         finally:
-            value = {**self.call, 'status': getattr(self.response, 'status', 200)}
-            # Write bodies are digests only. Responses retain receipts needed to
-            # replay known writes; the replay adapter never issues a write.
-            value['response_body'] = b''.join(self.chunks)
-            emit(value, self.extra)
+            try:
+                value = {**self.call, 'status': getattr(self.stream, 'status', getattr(self.response, 'status', 200))}
+                # Write bodies are digests only. Responses retain receipts needed to
+                # replay known writes; the replay adapter never issues a write.
+                value['response_body'] = b''.join(self.chunks)
+                emit(value, self.extra)
+            except Exception as error:
+                print('recording-error ' + type(error).__name__, file=sys.stderr)
 
 
 def open(adapter, opener, request, **kwargs):
     if not enabled(): return opener.open(request, **kwargs)
+    try:
+        call, extra = _open_call(adapter, request)
+    except Exception as error:
+        print('recording-error ' + type(error).__name__, file=sys.stderr)
+        return opener.open(request, **kwargs)
+    try: return Response(opener.open(request, **kwargs), call, extra)
+    except Exception as error:
+        try:
+            value = {**call, 'status': getattr(error, 'code', None), 'error': type(error).__name__}
+            # urllib errors carry a response stream. Rewind a local copy so callers
+            # observe the same body, even after the recorder has captured it.
+            from urllib.error import HTTPError
+            if isinstance(error, HTTPError) and error.fp is not None:
+                raw = error.fp.read()
+                original = error.fp
+                error.fp = error.file = io.BytesIO(raw)
+                error._closer.file = error.fp
+                original.close()
+                error.__dict__.pop('read', None)
+                value['response_body'] = raw
+            emit(value, extra)
+        except Exception as recording_error:
+            print('recording-error ' + type(recording_error).__name__, file=sys.stderr)
+        raise
+
+
+def _open_call(adapter, request):
     headers = dict(request.header_items())
     extra = [v.split(' ', 1)[-1] for k, v in headers.items() if SECRET_KEYS.search(k)]
     body = request.data
@@ -151,24 +187,8 @@ def open(adapter, opener, request, **kwargs):
             if part.get_param('name', header='content-disposition') == 'metadata': metadata = json.loads(raw)
             else: parts.append({'field': part.get_param('name', header='content-disposition'), 'filename': part.get_filename(), 'bytes': len(raw), 'sha256': hashlib.sha256(raw).hexdigest()})
         body = {'metadata': metadata, 'files': parts}
-    call = descriptor(adapter, request.get_method(), request.full_url, body,
-                      request.get_header('Idempotency-key'))
-    try: return Response(opener.open(request, **kwargs), call, extra)
-    except Exception as error:
-        value = {**call, 'status': getattr(error, 'code', None), 'error': type(error).__name__}
-        # urllib errors carry a response stream. Rewind a local copy so callers
-        # observe the same body, even after the recorder has captured it.
-        from urllib.error import HTTPError
-        if isinstance(error, HTTPError) and error.fp is not None:
-            raw = error.fp.read()
-            original = error.fp
-            error.fp = error.file = io.BytesIO(raw)
-            error._closer.file = error.fp
-            original.close()
-            error.__dict__.pop('read', None)
-            value['response_body'] = raw
-        emit(value, extra)
-        raise
+    return descriptor(adapter, request.get_method(), request.full_url, body,
+                      request.get_header('Idempotency-key')), extra
 
 
 def command_call(args):
@@ -222,24 +242,34 @@ def command_call(args):
 
 def run(args, *, record_adapter=None, **kwargs):
     if not enabled(): return subprocess.run(args, **kwargs)
-    call = command_call(args)
-    if record_adapter: call['adapter'] = record_adapter
-    from .run_log import SECRET_ENV_KEYS
-    child_secrets = [v for k, v in (kwargs.get('env') or {}).items() if k in SECRET_ENV_KEYS and v]
+    try:
+        call = command_call(args)
+        if record_adapter: call['adapter'] = record_adapter
+        from .run_log import SECRET_ENV_KEYS
+        child_secrets = [v for k, v in (kwargs.get('env') or {}).items() if k in SECRET_ENV_KEYS and v]
+    except Exception as error:
+        print('recording-error ' + type(error).__name__, file=sys.stderr)
+        return subprocess.run(args, **kwargs)
     try:
         result = subprocess.run(args, **kwargs)
     except Exception as error:
         emit({**call, 'status': getattr(error, 'returncode', None), 'error': type(error).__name__}, child_secrets)
         raise
-    value = {**call, 'status': result.returncode}
-    if not call['write']: value['response_body'] = result.stdout
-    emit(value, child_secrets)
+    try:
+        value = {**call, 'status': result.returncode}
+        if not call['write']: value['response_body'] = result.stdout
+        emit(value, child_secrets)
+    except Exception as error:
+        print('recording-error ' + type(error).__name__, file=sys.stderr)
     return result
 
 
 def check_output(args, **kwargs):
     if not enabled(): return subprocess.check_output(args, **kwargs)
-    call = command_call(args)
+    try: call = command_call(args)
+    except Exception as error:
+        print('recording-error ' + type(error).__name__, file=sys.stderr)
+        return subprocess.check_output(args, **kwargs)
     try: result = subprocess.check_output(args, **kwargs)
     except Exception as error:
         emit({**call, 'status': getattr(error, 'returncode', None), 'error': type(error).__name__}); raise
@@ -251,8 +281,11 @@ def decision(gate):
     @functools.wraps(gate)
     def wrapped(self, lane, key):
         result = gate(self, lane, key)
-        if _STAGE.get() is not None: _STAGE.get()['admissions'].append({'lane': lane, 'key': key, 'allowed': result})
-        emit({'event': 'admission', 'gate': 'tick', 'lane': lane, 'key': key, 'allowed': result})
+        try:
+            if _STAGE.get() is not None: _STAGE.get()['admissions'].append({'lane': lane, 'key': key, 'allowed': result})
+            emit({'event': 'admission', 'gate': 'tick', 'lane': lane, 'key': key, 'allowed': result})
+        except Exception as error:
+            print('recording-error ' + type(error).__name__, file=sys.stderr)
         return result
     return wrapped
 
@@ -280,24 +313,37 @@ def _capture(adapter_name, method, function, args, kwargs):
     from .scenario_contract import encode
     frame = _STAGE.get()
     if frame is None: return function(*args, **kwargs)
-    entry = {'adapter': adapter_name, 'method': method, 'kwargs': encode(kwargs)}
-    if method in _WRITE_METHODS:
-        entry['args_digest'] = hashlib.sha256(canonical(encode(args)).encode()).hexdigest()
-    else: entry['args'] = encode(args)
-    frame['script'].append(entry)
+    # Capture failures must never prevent, repeat or alter the adapter call.
+    try:
+        entry = {'adapter': adapter_name, 'method': method, 'kwargs': encode(kwargs)}
+        if method in _WRITE_METHODS:
+            entry['args_digest'] = hashlib.sha256(canonical(encode(args)).encode()).hexdigest()
+        else: entry['args'] = encode(args)
+        frame['script'].append(entry)
+    except Exception as error:
+        print('recording-error ' + type(error).__name__, file=sys.stderr)
+        frame['incomplete'] = True
+        return function(*args, **kwargs)
     try:
         result = function(*args, **kwargs)
+    except Exception as error:
+        # Do not read/seek HTTPError: observers must not change its body cursor.
+        try:
+            entry['error'] = {'type': type(error).__name__, 'message': ''}
+            frame['_errors'][id(error)] = entry['error']
+            if hasattr(error, 'code'): entry['error']['status'] = error.code
+        except Exception as recording_error:
+            print('recording-error ' + type(recording_error).__name__, file=sys.stderr)
+        raise
+    try:
         entry['result'] = encode(result)
         if adapter_name == 'releases' and method == 'run' and '--dir' in args:
             path = Path(args[args.index('--dir') + 1]) / args[args.index('--pattern') + 1]
             entry['download'] = {'name': path.name, 'base64': encode(path)['base64']}
-        return result
     except Exception as error:
-        # Do not read/seek HTTPError: observers must not change its body cursor.
-        entry['error'] = {'type': type(error).__name__, 'message': ''}
-        frame['_errors'][id(error)] = entry['error']
-        if hasattr(error, 'code'): entry['error']['status'] = error.code
-        raise
+        print('recording-error ' + type(error).__name__, file=sys.stderr)
+        frame['incomplete'] = True
+    return result
 
 
 class _StageAdapter:
@@ -338,8 +384,12 @@ def mathesis_stage(stage):
             finally: ledger.releases = remote
         def update(*a, **kw):
             row = original_update(*a, **kw)
-            at = ledger.tasks.db.execute('SELECT at FROM task_events WHERE id=? AND revision=? ORDER BY seq DESC LIMIT 1', (row['id'], row['revision'])).fetchone()[0]
-            frame['update_times'].append([row['updated'], at])
+            try:
+                at = ledger.tasks.db.execute('SELECT at FROM task_events WHERE id=? AND revision=? ORDER BY seq DESC LIMIT 1', (row['id'], row['revision'])).fetchone()[0]
+                frame['update_times'].append([row['updated'], at])
+            except Exception as error:
+                print('recording-error ' + type(error).__name__, file=sys.stderr)
+                frame['incomplete'] = True
             return row
         ledger.save = save; ledger.releases = adapter('releases', original_releases); ledger.tasks.update = update
         try:
@@ -389,8 +439,11 @@ def save_pointer(save):
         finally:
             # Use the last committed local pointer, including a debounced/no-op
             # save or a failed new pointer write. Never issue an observing GET.
-            snapshot = self.snapshot
-            pointer('end', {'schema_version': 1, 'generation': self.generation,
-                'snapshot': {'name': snapshot['name'], 'sha256': snapshot['sha256']} if snapshot else None,
-                'run_id': self.published_run, 'run_history': self.run_history})
+            try:
+                snapshot = self.snapshot
+                pointer('end', {'schema_version': 1, 'generation': self.generation,
+                    'snapshot': {'name': snapshot['name'], 'sha256': snapshot['sha256']} if snapshot else None,
+                    'run_id': self.published_run, 'run_history': self.run_history})
+            except Exception as error:
+                print('recording-error ' + type(error).__name__, file=sys.stderr)
     return wrapped

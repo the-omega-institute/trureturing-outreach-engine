@@ -331,17 +331,20 @@ class SandboxPool:
         self.write('sandbox_pool',self.entries)
 
     def rotate_empty(self, entry, rows, now):
-        """Retire an empty Sandbox only once its whole group has been idle.
+        """Retire an empty surplus Sandbox only once its whole group has been idle.
 
-        Ordinary retirement (idle or paused) waits until the group has had no
-        work for the idle period; its running Agents are never stopped. Corrupt,
-        stalled and failed Sandboxes follow their own paths.
+        Each configured group keeps its last healthy Sandbox continuously.
+        Ordinary retirement (idle or paused) of a surplus Sandbox waits until
+        the group has had no work for the idle period; running Agents are
+        never stopped. Corrupt, stalled, failed and removed-group Sandboxes
+        follow their own paths.
         """
         if any(live_reference(r,entry) for r in rows):return False
         group = entry.get('group') if self.group_limits else None
         if group is not None and group not in self.group_limits:
             self.failed_entry(entry['sandbox_id'], entry.get('workspace_id'), rotated='group-removed')
             return True
+        if self.last_healthy(entry):return False
         if self.busy(group, rows):
             entry['idle_since']=now  # The group's idle period restarts.
             return False
@@ -354,6 +357,23 @@ class SandboxPool:
                 'idle' if entry.get('state') in {'active','pausing'} else None)
         if not reason or now-entry['idle_since']<self.idle_seconds:return False
         self.failed_entry(entry['sandbox_id'],entry.get('workspace_id'),rotated=reason)
+        return True
+
+    def last_healthy(self, entry):
+        """Whether entry is the Sandbox its configured group keeps continuously.
+
+        The pipeline is continuous (owner decision 2026-11-26), so idleness, an
+        empty queue or a pause never retires a group's last healthy Sandbox.
+        The group keeps its first healthy Sandbox. A peer counts only once this
+        pass has observed it healthy: its saved state may predate a failure
+        found later in the same pass. Without configured groups nothing is kept.
+        """
+        if not self.group_limits:return False
+        for peer in self.entries:
+            if peer is entry:return True
+            if (peer.get('group')==entry.get('group') and peer.get('state') in HEALTHY and
+                    (self.observed.get(peer['sandbox_id']) or {}).get('status') in HEALTHY):
+                return False
         return True
 
     def busy(self, group, rows):

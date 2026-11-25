@@ -3,7 +3,7 @@
   "id": "mathesis-uncertain_withdrawal_retries_from_checkpoint-2",
   "source_test": "test_pre_reviewed.PreReviewedTests.test_uncertain_withdrawal_retries_from_checkpoint",
   "stage": "mathesis",
-  "now": 2000000000.0,
+  "now": 1999999900.0,
   "workflow": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
   "installation": {
     "repositories": {
@@ -47,7 +47,10 @@
       "enabled": false,
       "max_new_tasks_per_tick": 4,
       "backfill_result_ids": [],
-      "daily": false
+      "daily": false,
+      "auto_backfill": false,
+      "backfill_per_tick": 1,
+      "backfill_pending_limit": 16
     },
     "kinds": {
       "firstcontact": false,
@@ -207,6 +210,21 @@
     "cma": {
       "token_base_url": "https://worker.example.invalid",
       "proxy_base_url": "https://auth.example.invalid/api/v1/proxy/s/cma"
+    },
+    "independent_review": {
+      "enabled": false,
+      "max_active": 2,
+      "github": {
+        "service": "github-review-read",
+        "user_service_id": "dedicated-read-only-input-connection",
+        "read_only": true
+      },
+      "profile": {
+        "model": "gpt-6.2-sol",
+        "reasoning_effort": "high"
+      },
+      "register_author_contacts": true,
+      "max_active_per_group": 1
     }
   },
   "config": {
@@ -439,7 +457,7 @@
           "id": "mathesis-1",
           "state": "handoff-ready",
           "revision": 11,
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           }
@@ -449,7 +467,7 @@
           "id": "mathesis-1",
           "state": "handoff-ready",
           "revision": 12,
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           }
@@ -459,7 +477,7 @@
           "id": "mathesis-1",
           "state": "handoff-ready",
           "revision": 13,
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           }
@@ -469,7 +487,7 @@
           "id": "mathesis-1",
           "state": "handoff-ready",
           "revision": 14,
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           }
@@ -479,7 +497,7 @@
           "id": "mathesis-1",
           "state": "handoff-ready",
           "revision": 15,
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           }
@@ -818,7 +836,7 @@
               "verdict": "PASS"
             }
           },
-          "updated": 2000000000.0
+          "updated": 1999999900.0
         }
       ]
     }
@@ -837,6 +855,10 @@
       "tag": "outreach-control"
     }
   },
+  "options": {
+    "previous": []
+  },
+  "admissions": [],
   "script": [
     {
       "adapter": "mathesis",
@@ -923,7 +945,11 @@
       "kwargs": {
         "force": true
       },
-      "result": true
+      "result": true,
+      "saved_snapshot": {
+        "generation": 11,
+        "digest": "78503b6d8c1c624c396f00b8e7021618001fb2cefad5addbd9421684ea064996"
+      }
     },
     {
       "adapter": "ledger",
@@ -932,7 +958,11 @@
       "kwargs": {
         "force": true
       },
-      "result": true
+      "result": true,
+      "saved_snapshot": {
+        "generation": 12,
+        "digest": "8a925896d843b9a101c47141271c728a33f695eec277f37104a6ecb567eb4356"
+      }
     },
     {
       "adapter": "mathesis",
@@ -967,7 +997,11 @@
       "kwargs": {
         "force": true
       },
-      "result": true
+      "result": true,
+      "saved_snapshot": {
+        "generation": 13,
+        "digest": "ed2852e2f6c2f6ebbb203e0008afac0621d69b3eab694d7fcd524161f1d64b21"
+      }
     },
     {
       "adapter": "ledger",
@@ -976,7 +1010,11 @@
       "kwargs": {
         "force": true
       },
-      "result": true
+      "result": true,
+      "saved_snapshot": {
+        "generation": 14,
+        "digest": "d82186dcaa2d2fc683aab98c44e9cfe4acfd511b9988a9cdbc8aa9d4c3e08aef"
+      }
     },
     {
       "adapter": "ledger",
@@ -985,7 +1023,11 @@
       "kwargs": {
         "force": true
       },
-      "result": true
+      "result": true,
+      "saved_snapshot": {
+        "generation": 15,
+        "digest": "129b9f82a4942eb7c90bda3e120996c2cedf28f99d82dd4f3125fac4122cf226"
+      }
     },
     {
       "adapter": "mathesis",
@@ -1119,7 +1161,11 @@
       "method": "save",
       "args": [],
       "kwargs": {},
-      "result": false
+      "result": false,
+      "saved_snapshot": {
+        "generation": 15,
+        "digest": "129b9f82a4942eb7c90bda3e120996c2cedf28f99d82dd4f3125fac4122cf226"
+      }
     }
   ],
   "expected_final_rows": {
@@ -1354,7 +1400,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -1364,7 +1410,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -1374,7 +1420,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -1384,7 +1430,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -1394,7 +1440,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -1404,7 +1450,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -1414,7 +1460,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -1424,7 +1470,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -1434,7 +1480,7 @@
           "state": "verified"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -1444,7 +1490,7 @@
           "state": "verified"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -1830,7 +1876,7 @@
           "request_hash": "3ac17e5772b4cb79cd45b520af5a4040969e08d75f7345978b829b8bb8c7e6d4",
           "revision": 20,
           "state": "verified",
-          "updated": 2000000000.0
+          "updated": 1999999900.0
         }
       ]
     }

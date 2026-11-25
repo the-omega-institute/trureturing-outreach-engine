@@ -516,11 +516,16 @@ not a CI timing gate.
   corresponding live-query parity check.
 
 
-## Phase 3a: recording and the first stage
+## Offline stages and recording (phases 3a–3b)
 
-`../scenarios/schema.json` is the language-independent scenario contract.
-`../scenarios/test-map.json` records all original test IDs; the scenario README
-explains the 85 cases and the behaviors made explicit by extraction. Run:
+Python remains the only production ledger writer. Rust ports Mathesis delivery,
+publication `advance`, and sent-event reconciliation/status recording behind typed
+service traits. No Rust network adapter, production replay, uploader or cutover
+is enabled. Sandbox-pool work, including the #26 last-healthy-Sandbox behavior,
+is explicitly deferred to phase 3c.
+
+`../scenarios/README.md` describes the **241 Python-first scenarios** and their
+source-test map. Rust matches **233**, with eight intake cases skipped. Run:
 
 ```sh
 python3.12 ../scenarios/runner.py
@@ -528,70 +533,75 @@ python3.12 scenarios.py
 python3.12 -m unittest discover -s ../scenarios -p 'test_*.py'
 ```
 
-Python passes all 85 cases. Rust passes the 55 Mathesis cases and explicitly
-skips the other 30. Its stage includes receipt persistence/reconciliation,
-conflict revision pins, collection readback, legacy migration and withdrawal,
-and upgrading an unattempted old selection. The pure core receives time,
-admission decisions, artifact reads and persistence through ports. Its typed
-`MathesisClient` accepts `Persisted<ManuscriptIntent>`,
-`Persisted<CollectionIntent>` and `Persisted<WithdrawIntent>` for writes. Reading
-link requests also require a persisted capability. The capability has private
-fields and no Clone/Deserialize implementation; two compile-fail doctests check
-construction and calling a write with a raw intent. Only a successful
-`save_forced` port call constructs a capability. The offline fake acknowledges
-that boundary; a future production implementation must acknowledge the actual
-Release pointer commit. No production Rust implementation is supplied.
+`persistence::Ledger` seals the persistence port. Only that wrapper can acknowledge
+an immutable saved snapshot; permit constructors are crate-private. A permit
+contains the committed generation and snapshot digest, and the wrapper separately
+checks that its logical input still matches the saved input. Every external write
+consumes its typed `Persisted<I>`, including an uncertain call. Neither cloning
+nor deserialization can reconstruct a permit. Four compile-fail doctests cover
+construction, a raw-intent write, an external persistence implementation and reuse
+after consumption. A unit test checks changed-state and failed-save refusal.
+Scenario fakes check the actual committed digest/generation on every write.
 
-Recording is off by default. Set `OUTREACH_RECORD_DIR` to a private directory
-outside the engine checkout, with a new directory for each run. Python appends
-canonical UTF-8 JSONL to mode-0600 `calls-PID.jsonl` files, with a lock around each
-append. HTTP records include adapter, method, exact path plus path template,
-canonical body digest, idempotency key, status, read request/response bodies and
-write receipts. Write request bodies are represented by digests. CLI records
-retain exit status (not an inferred HTTP success code), read stdout and command
-identity. Retries appear as separate transport calls. Multipart request digests
-use metadata and ordered file identities, independent of the random MIME
-boundary. Transport exceptions retain their type and known status. Budget,
-credit and coordinator admission gates and committed start/end Release
-pointers are also recorded. Recording errors report their class and do not
-turn a completed effect into a failed operation.
+Publication uses typed GitHub Release and short-note service ports. It preserves
+standing decisions, exact PASS bindings, exclusions, retry schedules, priority,
+success caps, immutable publication requests, Mathesis history and signed
+selection ingestion. A note revision queued by a non-Mathesis row takes the
+delivery-only path; its signed delivery envelope can recover the final queued
+record after a lost save or interruption. The package service owns filesystem,
+metadata/PDF/ZIP validation and preparation; extraction runs the real Python
+validators, while Rust signs and ingests the resulting selection independently.
+Live Rust implementations of these adapter contracts remain later work.
 
-Redaction reuses `run_log.SECRETS` and its shared environment-key table, adds
-credential-field and URL/header masking, and masks secrets inside encoded read
-files. Receipt HMAC signatures remain verification material; signing keys and
-credential URL signatures are masked. Mathesis frames with redacted inputs are
-marked and skipped by replay. Treat all recording data as private even after
-credential masking: it can contain correspondence and scientific material.
-`managed.recording.pending_uploads()` is the documented integration hook for a
-future private-control Release uploader. Phase 3a never calls an uploader.
+Sent events use a typed metadata-only mailbox and a contact-rendering/persistence
+port. Matching uses exact receipt IDs, never subjects or bodies. Paging, aliases,
+manual-event tolerance and deduplication run in core. A forced-save
+`sent-events-pending` intent binds the page handle and contact-table digest before
+the table commit. A failed commit resumes that handle; the cursor advances only
+after success. The coordinator entry point retains a content-free status.
 
-The Mathesis recording frame relates the stage's logical input and final rows
-to ordered adapter observations. It retains the actual update timestamps and
-budget admissions, so replay does not depend on machine speed. A supplied
-closed start snapshot must match the recorded start Release pointer; a synthetic
-fixture without a pointer must match the first frame's initial rows. Earlier
-unported stages are observed at this boundary, not executed by Rust. Read
-arguments match in order; write arguments match their canonical digest and
-return a recorded receipt without issuing a write. All subprocess output from
-the Rust runner is captured; the replay command emits only
-`equal`/`different`/`skipped` counts:
+Recording is off unless `OUTREACH_RECORD_DIR` names a private directory outside
+the engine checkout. Use a new directory per run. Python writes locked canonical
+JSONL to mode-0600 `calls-PID.jsonl`; recording failures cannot change a completed
+effect. Transport records preserve ordered requests, body digests, original keys,
+statuses, read responses, write receipts, exceptions, admission decisions and
+committed Release pointers. Write bodies are digests. Multipart identity ignores
+the random MIME boundary. There is no automatic upload or retention job;
+`managed.recording.pending_uploads()` is an integration hook only.
+
+Version-2 stage frames never embed a ledger dump. They contain streaming canonical
+logical table digests, timestamps/admissions, the ordered service observations,
+and only opened data/policy files. They do not traverse `tables/` or `managed/`.
+Only the rendering service's three table output files are captured. Each complete
+stage event, including its JSONL newline, is limited to **1 MiB**; an individual
+opened file is limited to **512 KiB**. A larger or incomplete capture emits a small
+`<stage>_stage_unavailable` digest record and replay counts it as skipped. A test
+uses 300 synthetic payload rows plus an unrelated 2 MiB file and verifies a bounded
+frame without ledger rows or the unopened file. Another tests the overflow path.
+The existing private transport records are separate from this stage-frame ceiling.
+
+Redaction shares `run_log.SECRETS` and its environment-key registry. It masks
+plain, URL, JSON, base64 and hex token encodings; credential fields, credential
+URLs and generic CLI credential-header strings; and credential echoes in read
+stdout and encoded files. Signed receipt HMACs remain verification material.
+Redacted frames are skipped. Recordings remain private correspondence/research
+data after credential masking.
+
+The local command supports all three ported stages and prints **counts only**:
 
 ```sh
 cargo build --locked --offline -p outreach-core --example scenarios
 python3.12 replay_mathesis.py /private/run-recording /private/start.sqlite3 --key-file /private/review-key
 ```
 
-The key can also come from `OUTREACH_REVIEW_KEY`; it is passed to the local
-runner in memory, never written or printed. Missing keys, redacted frames and
-unavailable stage captures are skipped; snapshot mismatches, malformed records
-and replay mismatches increment `different` and give a failing exit. The
-snapshot is opened read-only/immutable and checked before and after. This
-command neither uploads recordings nor starts a coordinator tick.
-
-Phase 3b still needs the other stage ports (CMA progression and sandbox pool,
-mailbox intake, delivery/sent records, publication, pipeline and continuations,
-maintenance and question handling), wider scenario conversion, and production
-Rust adapter implementations, including complete filesystem/package validation.
-Run-wide replay across unported stages, recording upload/retention, live replay
-coverage and implementation cutover remain later work. Python remains the only
-production ledger writer throughout this slice.
+The historical command name remains compatible. The closed snapshot is opened
+read-only/immutable and hashed before and after. Its start pointer and logical
+digests must match; no key or input is discovered automatically. The key travels
+to the local runner in memory. Sent replay needs no signing key. Consecutive
+supported frames can use the preceding replay's owned logical rows; observations
+from intervening unported stages must still match the supplied snapshot boundary.
+Run-wide reconstruction across unported stages remains phase 3c/later work.
+Subprocess output is captured, so only `equal`/`different`/`skipped` counts escape.
+Missing keys, redaction and unavailable captures are skipped; malformed evidence,
+snapshot mismatches and unequal outcomes fail with `different`. No dump, upload,
+coordinator tick or live service call is performed.

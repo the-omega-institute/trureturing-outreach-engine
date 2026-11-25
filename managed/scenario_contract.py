@@ -76,3 +76,30 @@ def files(root):
             for folder in ('tables', 'managed') if (root / folder).exists()
             for p in sorted((root / folder).rglob('*')) if p.is_file()}
 
+
+
+def table_digests(tasks):
+    """Canonical logical table hashes with bounded row-at-a-time memory."""
+    import hashlib
+    result = {}
+    for (name,) in tasks.db.execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"):
+        info = list(tasks.db.execute('PRAGMA table_info("' + name + '")'))
+        columns = [r[1] for r in info]
+        keys = [r[1] for r in sorted(info, key=lambda r: r[5]) if r[5]] or ['name']
+        h = hashlib.sha256()
+        prefix = canonical({'columns': columns, 'primary_key': keys, 'rows': []})
+        h.update(prefix[:-2].encode())
+        first = True
+        order = ','.join('"' + k + '"' for k in keys)
+        for row in tasks.db.execute('SELECT * FROM "' + name + '" ORDER BY ' + order):
+            item = dict(zip(columns, row))
+            for column, value in item.items():
+                if column in JSON_COLUMNS and isinstance(value, str):
+                    try: item[column] = json.loads(value)
+                    except ValueError: pass
+            if not first: h.update(b',')
+            first = False
+            h.update(canonical(item).encode())
+        h.update(b']}')
+        result[name] = h.hexdigest()
+    return result

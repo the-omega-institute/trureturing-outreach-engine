@@ -3,7 +3,7 @@
   "id": "intake-intake_stages_reply_while_research_covers_the_message-1",
   "source_test": "test_mailbox_triage.TriageTests.test_intake_stages_reply_while_research_covers_the_message",
   "stage": "intake",
-  "now": 2000000000.0,
+  "now": 1999999900.0,
   "workflow": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
   "installation": {
     "repositories": {
@@ -47,7 +47,10 @@
       "enabled": false,
       "max_new_tasks_per_tick": 4,
       "backfill_result_ids": [],
-      "daily": false
+      "daily": false,
+      "auto_backfill": false,
+      "backfill_per_tick": 1,
+      "backfill_pending_limit": 16
     },
     "kinds": {
       "firstcontact": false,
@@ -207,6 +210,21 @@
     "cma": {
       "token_base_url": "https://worker.example.invalid",
       "proxy_base_url": "https://auth.example.invalid/api/v1/proxy/s/cma"
+    },
+    "independent_review": {
+      "enabled": false,
+      "max_active": 2,
+      "github": {
+        "service": "github-review-read",
+        "user_service_id": "dedicated-read-only-input-connection",
+        "read_only": true
+      },
+      "profile": {
+        "model": "gpt-6.2-sol",
+        "reasoning_effort": "high"
+      },
+      "register_author_contacts": true,
+      "max_active_per_group": 1
     }
   },
   "config": {
@@ -382,6 +400,10 @@
   },
   "revision": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
   "datetime": "2026-11-18T10:00:00+00:00",
+  "options": {
+    "previous": []
+  },
+  "admissions": [],
   "script": [
     {
       "adapter": "mailbox",
@@ -480,7 +502,11 @@
       "method": "save",
       "args": [],
       "kwargs": {},
-      "result": true
+      "result": true,
+      "saved_snapshot": {
+        "generation": 1,
+        "digest": "bee766e18eab733cb721b054660799e9e9131e0b8a5a810324d23bfd68f075e6"
+      }
     }
   ],
   "expected_final_rows": {
@@ -580,7 +606,7 @@
           "state": "queued"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {},
           "id": "reply-ffecc38c7e419ee1d4f101b87edf4a97",
           "revision": 1,
@@ -679,7 +705,7 @@
           "request_hash": "43f6f2ea6415f4e3a4eec1ef3c6f0083047be8cac729a9066d033f97d76f753a",
           "revision": 1,
           "state": "queued",
-          "updated": 2000000000.0
+          "updated": 1999999900.0
         },
         {
           "data": {},

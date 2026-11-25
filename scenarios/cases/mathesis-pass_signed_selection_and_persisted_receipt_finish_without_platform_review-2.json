@@ -3,7 +3,7 @@
   "id": "mathesis-pass_signed_selection_and_persisted_receipt_finish_without_platform_review-2",
   "source_test": "test_mathesis_delivery.DeliveryTests.test_pass_signed_selection_and_persisted_receipt_finish_without_platform_review",
   "stage": "mathesis",
-  "now": 2000000000.0,
+  "now": 1999999900.0,
   "workflow": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
   "installation": {
     "repositories": {
@@ -47,7 +47,10 @@
       "enabled": false,
       "max_new_tasks_per_tick": 4,
       "backfill_result_ids": [],
-      "daily": false
+      "daily": false,
+      "auto_backfill": false,
+      "backfill_per_tick": 1,
+      "backfill_pending_limit": 16
     },
     "kinds": {
       "firstcontact": false,
@@ -207,6 +210,21 @@
     "cma": {
       "token_base_url": "https://worker.example.invalid",
       "proxy_base_url": "https://auth.example.invalid/api/v1/proxy/s/cma"
+    },
+    "independent_review": {
+      "enabled": false,
+      "max_active": 2,
+      "github": {
+        "service": "github-review-read",
+        "user_service_id": "dedicated-read-only-input-connection",
+        "read_only": true
+      },
+      "profile": {
+        "model": "gpt-6.2-sol",
+        "reasoning_effort": "high"
+      },
+      "register_author_contacts": true,
+      "max_active_per_group": 1
     }
   },
   "config": {
@@ -394,7 +412,7 @@
           "id": "mathesis-1",
           "state": "handoff-ready",
           "revision": 6,
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           }
@@ -404,7 +422,7 @@
           "id": "mathesis-1",
           "state": "handoff-ready",
           "revision": 7,
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           }
@@ -414,7 +432,7 @@
           "id": "mathesis-1",
           "state": "verified",
           "revision": 8,
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           }
@@ -567,7 +585,7 @@
               "verdict": "PASS"
             }
           },
-          "updated": 2000000000.0
+          "updated": 1999999900.0
         }
       ]
     }
@@ -579,6 +597,10 @@
       "tag": "outreach-control"
     }
   },
+  "options": {
+    "previous": []
+  },
+  "admissions": [],
   "script": [
     {
       "adapter": "mathesis",
@@ -617,7 +639,11 @@
       "kwargs": {
         "force": true
       },
-      "result": true
+      "result": true,
+      "saved_snapshot": {
+        "generation": 6,
+        "digest": "537b1c4573e2f4f8ecb0df7ba849d6615eac6f5e9376b484b18371747a1a3e1b"
+      }
     },
     {
       "adapter": "ledger",
@@ -626,7 +652,11 @@
       "kwargs": {
         "force": true
       },
-      "result": true
+      "result": true,
+      "saved_snapshot": {
+        "generation": 7,
+        "digest": "52cc1fa87334cd912b770635c5eab214840d30225e44b0b8b37b06e2e2148ed1"
+      }
     }
   ],
   "expected_final_rows": {
@@ -812,7 +842,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -822,7 +852,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -832,7 +862,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -842,7 +872,7 @@
           "state": "verified"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -1003,7 +1033,7 @@
           "request_hash": "3ac17e5772b4cb79cd45b520af5a4040969e08d75f7345978b829b8bb8c7e6d4",
           "revision": 9,
           "state": "verified",
-          "updated": 2000000000.0
+          "updated": 1999999900.0
         }
       ]
     }

@@ -35,6 +35,7 @@ pub struct Replay<'a> {
     pub stage_update_times: std::collections::VecDeque<(f64, f64)>,
     pub generation: i64,
     pub now: f64,
+    pub clock_value: Value,
     pub saved_version: Option<String>,
     pub environment: &'a Environment<'a>,
     /// Read-only artifact port. Implementations must use local recorded bytes.
@@ -56,6 +57,7 @@ impl<'a> Replay<'a> {
             tables,
             generation,
             now,
+            clock_value: outreach_canon::float(now).unwrap_or(Value::Null),
             saved_version: None,
             environment,
             resource,
@@ -186,6 +188,10 @@ impl<'a> Replay<'a> {
             .find(|r| r["key"] == key)
             .map(|r| r["payload"].clone())
             .unwrap_or(Value::Null)
+    }
+    pub(crate) fn clear_state(&mut self, key: &str) -> Result<()> {
+        self.rows_mut("pipeline_state")?.retain(|r| r["key"] != key);
+        Ok(())
     }
     pub(crate) fn set_state(&mut self, key: &str, value: Value) -> Result<()> {
         let value = object([("key", string(key)), ("payload", value)]);
@@ -1068,7 +1074,7 @@ impl<'a> Replay<'a> {
         )?;
         self.control(v)
     }
-    fn mathesis(&mut self, v: &Value, key: &[u8]) -> Result<()> {
+    pub(crate) fn mathesis(&mut self, v: &Value, key: &[u8]) -> Result<()> {
         envelopes::validate_mathesis(v, key)?;
         let row = self.task(&v["task_id"])?;
         envelopes::mathesis_reviewed(&row)?;

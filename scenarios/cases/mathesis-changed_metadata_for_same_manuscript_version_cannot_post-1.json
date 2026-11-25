@@ -3,7 +3,7 @@
   "id": "mathesis-changed_metadata_for_same_manuscript_version_cannot_post-1",
   "source_test": "test_mathesis_delivery.DeliveryTests.test_changed_metadata_for_same_manuscript_version_cannot_post",
   "stage": "mathesis",
-  "now": 2000000000.0,
+  "now": 1999999900.0,
   "workflow": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
   "installation": {
     "repositories": {
@@ -47,7 +47,10 @@
       "enabled": false,
       "max_new_tasks_per_tick": 4,
       "backfill_result_ids": [],
-      "daily": false
+      "daily": false,
+      "auto_backfill": false,
+      "backfill_per_tick": 1,
+      "backfill_pending_limit": 16
     },
     "kinds": {
       "firstcontact": false,
@@ -207,6 +210,21 @@
     "cma": {
       "token_base_url": "https://worker.example.invalid",
       "proxy_base_url": "https://auth.example.invalid/api/v1/proxy/s/cma"
+    },
+    "independent_review": {
+      "enabled": false,
+      "max_active": 2,
+      "github": {
+        "service": "github-review-read",
+        "user_service_id": "dedicated-read-only-input-connection",
+        "read_only": true
+      },
+      "profile": {
+        "model": "gpt-6.2-sol",
+        "reasoning_effort": "high"
+      },
+      "register_author_contacts": true,
+      "max_active_per_group": 1
     }
   },
   "config": {
@@ -677,6 +695,10 @@
       "tag": "outreach-control"
     }
   },
+  "options": {
+    "previous": []
+  },
+  "admissions": [],
   "script": [
     {
       "adapter": "mathesis",
@@ -715,7 +737,11 @@
       "kwargs": {
         "force": true
       },
-      "result": true
+      "result": true,
+      "saved_snapshot": {
+        "generation": 4,
+        "digest": "2683427f13e998fa4182b2e112797c6032139c9273af47d3467e55ab7d0d69f8"
+      }
     },
     {
       "adapter": "mathesis",
@@ -783,7 +809,11 @@
       "kwargs": {
         "force": true
       },
-      "result": true
+      "result": true,
+      "saved_snapshot": {
+        "generation": 5,
+        "digest": "817b89357cf7fc75784bb43e9752488d56b43f3f861e8830992b56b21487dac4"
+      }
     },
     {
       "adapter": "mathesis",
@@ -813,14 +843,22 @@
       "method": "save",
       "args": [],
       "kwargs": {},
-      "result": false
+      "result": false,
+      "saved_snapshot": {
+        "generation": 5,
+        "digest": "817b89357cf7fc75784bb43e9752488d56b43f3f861e8830992b56b21487dac4"
+      }
     },
     {
       "adapter": "ledger",
       "method": "save",
       "args": [],
       "kwargs": {},
-      "result": false
+      "result": false,
+      "saved_snapshot": {
+        "generation": 5,
+        "digest": "817b89357cf7fc75784bb43e9752488d56b43f3f861e8830992b56b21487dac4"
+      }
     }
   ],
   "expected_final_rows": {
@@ -1055,7 +1093,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -1065,7 +1103,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -1075,7 +1113,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -1085,7 +1123,7 @@
           "state": "verified"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -1242,7 +1280,7 @@
           "request_hash": "ad7346ed7ec70b52bbb859d099018b2005ef3b9870b78222f43ca66dfc102844",
           "revision": 8,
           "state": "verified",
-          "updated": 2000000000.0
+          "updated": 1999999900.0
         },
         {
           "data": {
@@ -1348,7 +1386,7 @@
           "request_hash": "033f11910b791996bf860da7faacee32d02b34b0991d12a3ada807416f0104e0",
           "revision": 6,
           "state": "handoff-ready",
-          "updated": 2000000000.0
+          "updated": 1999999900.0
         }
       ]
     }

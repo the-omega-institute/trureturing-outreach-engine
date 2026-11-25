@@ -3,63 +3,270 @@
   "$id": "urn:outreach:scenario:v1",
   "title": "Offline outreach stage scenario",
   "type": "object",
-  "required": ["schema_version", "id", "stage", "initial_rows", "initial_files", "config", "now", "workflow", "script", "expected_writes", "expected_final_rows", "expected_final_files"],
+  "required": [
+    "schema_version",
+    "id",
+    "stage",
+    "initial_files",
+    "config",
+    "now",
+    "workflow",
+    "script",
+    "expected_final_files"
+  ],
   "properties": {
-    "schema_version": {"const": 1},
-    "id": {"type": "string", "minLength": 1},
-    "source_test": {"type": "string"},
-    "stage": {"enum": ["intake", "sent", "mathesis", "publication"]},
-    "initial_rows": {"$ref": "#/$defs/ledger"},
-    "expected_final_rows": {"$ref": "#/$defs/ledger"},
-    "initial_files": {"$ref": "#/$defs/files"},
-    "expected_final_files": {"$ref": "#/$defs/files"},
-    "config": {"type": "object"},
-    "installation": {"type": "object"},
-    "adapter_attributes": {"type": "object"},
-    "now": {"type": "number"},
-    "workflow": {"type": "string"},
-    "datetime": {"type": "string"},
-    "revision": {"type": "string"},
-    "options": {"type": "object"},
-    "constants": {"type": "object"},
-    "script": {"type": "array", "items": {"$ref": "#/$defs/call"}},
-    "expected_writes": {"type": "array", "items": {"type": "object"}},
-    "error": {"$ref": "#/$defs/error"}
+    "schema_version": {
+      "enum": [
+        1,
+        2
+      ]
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_test": {
+      "type": "string"
+    },
+    "stage": {
+      "enum": [
+        "intake",
+        "sent",
+        "mathesis",
+        "publication"
+      ]
+    },
+    "initial_rows": {
+      "$ref": "#/$defs/ledger"
+    },
+    "expected_final_rows": {
+      "$ref": "#/$defs/ledger"
+    },
+    "initial_files": {
+      "$ref": "#/$defs/files"
+    },
+    "expected_final_files": {
+      "$ref": "#/$defs/files"
+    },
+    "config": {
+      "type": "object"
+    },
+    "installation": {
+      "type": "object"
+    },
+    "adapter_attributes": {
+      "type": "object"
+    },
+    "now": {
+      "type": "number"
+    },
+    "workflow": {
+      "type": "string"
+    },
+    "datetime": {
+      "type": "string"
+    },
+    "revision": {
+      "type": "string"
+    },
+    "options": {
+      "type": "object"
+    },
+    "constants": {
+      "type": "object"
+    },
+    "script": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/call"
+      }
+    },
+    "expected_writes": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "error": {
+      "$ref": "#/$defs/error"
+    },
+    "initial_digests": {
+      "$ref": "#/$defs/digests"
+    },
+    "expected_final_digests": {
+      "$ref": "#/$defs/digests"
+    },
+    "update_times": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        },
+        "minItems": 2,
+        "maxItems": 2
+      }
+    },
+    "now_end": {
+      "type": "number"
+    }
   },
   "$defs": {
-    "files": {"type": "object", "additionalProperties": {"type": "string", "contentEncoding": "base64"}},
+    "files": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "contentEncoding": "base64"
+      }
+    },
     "ledger": {
       "type": "object",
       "additionalProperties": {
         "type": "object",
-        "required": ["columns", "primary_key", "rows"],
+        "required": [
+          "columns",
+          "primary_key",
+          "rows"
+        ],
         "properties": {
-          "columns": {"type": "array", "items": {"type": "string"}},
-          "primary_key": {"type": "array", "items": {"type": "string"}},
-          "rows": {"type": "array", "items": {"type": "object"}}
+          "columns": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "primary_key": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
         },
         "additionalProperties": false
       }
     },
     "error": {
       "type": "object",
-      "required": ["type", "message"],
+      "required": [
+        "type",
+        "message"
+      ],
       "properties": {
-        "type": {"type": "string"}, "message": {"type": "string"},
-        "status": {"type": "integer"}, "body": {"type": "string", "contentEncoding": "base64"},
-        "summary": {"type": "object"}
+        "type": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "status": {
+          "type": "integer"
+        },
+        "body": {
+          "type": "string",
+          "contentEncoding": "base64"
+        },
+        "summary": {
+          "type": "object"
+        },
+        "diagnostic": {
+          "type": "string"
+        }
       }
     },
     "call": {
       "type": "object",
-      "required": ["adapter", "method", "kwargs"],
+      "required": [
+        "adapter",
+        "method",
+        "kwargs"
+      ],
       "properties": {
-        "adapter": {"type": "string"}, "method": {"type": "string"},
-        "args": {"type": "array"}, "args_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "kwargs": {"type": "object"}, "result": {}, "error": {"$ref": "#/$defs/error"},
-        "download": {"type": "object", "required": ["name", "base64"]}
+        "adapter": {
+          "type": "string"
+        },
+        "method": {
+          "type": "string"
+        },
+        "args": {
+          "type": "array"
+        },
+        "args_digest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "kwargs": {
+          "type": "object"
+        },
+        "result": {},
+        "error": {
+          "$ref": "#/$defs/error"
+        },
+        "download": {
+          "type": "object",
+          "required": [
+            "name",
+            "base64"
+          ]
+        },
+        "saved_snapshot_digest": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
       },
-      "oneOf": [{"required": ["args"]}, {"required": ["args_digest"]}]
+      "oneOf": [
+        {
+          "required": [
+            "args"
+          ]
+        },
+        {
+          "required": [
+            "args_digest"
+          ]
+        }
+      ]
+    },
+    "digests": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{64}$"
+      }
     }
-  }
+  },
+  "oneOf": [
+    {
+      "properties": {
+        "schema_version": {
+          "const": 1
+        }
+      },
+      "required": [
+        "initial_rows",
+        "expected_final_rows",
+        "expected_writes"
+      ]
+    },
+    {
+      "properties": {
+        "schema_version": {
+          "const": 2
+        }
+      },
+      "required": [
+        "initial_digests",
+        "expected_final_digests",
+        "update_times",
+        "now_end"
+      ]
+    }
+  ]
 }

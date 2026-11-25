@@ -138,51 +138,300 @@
   "test_mailbox_triage.TriageTests.test_hello_stranger_stays_in_attention": [
     "intake-hello_stranger_stays_in_attention-1"
   ],
-  "test_sent_events.SentEventsTests.test_owner_draft_sent_uses_exact_sent_receipt_and_reviewed_headline": [
-    "sent-owner_draft_sent_uses_exact_sent_receipt_and_reviewed_headline-1"
+  "test_sent_events.SentEventsTests.test_bounded_paging_resumes_after_restoring_ledger": [
+    "sent-bounded_paging_resumes_after_restoring_ledger-1",
+    "sent-bounded_paging_resumes_after_restoring_ledger-2",
+    "sent-bounded_paging_resumes_after_restoring_ledger-3"
   ],
-  "test_sent_events.SentEventsTests.test_operator_created_draft_sent_without_ledger_task": [
-    "sent-operator_created_draft_sent_without_ledger_task-1"
+  "test_sent_events.SentEventsTests.test_distinct_actual_messages_inside_ten_minutes_are_both_recorded": [
+    "sent-distinct_actual_messages_inside_ten_minutes_are_both_recorded-1"
   ],
-  "test_sent_events.SentEventsTests.test_sent_evidence_preserves_conversation_account_and_sender": [
-    "sent-sent_evidence_preserves_conversation_account_and_sender-1"
+  "test_sent_events.SentEventsTests.test_failure_logs_status_without_mail_content": [
+    "sent-failure_logs_status_without_mail_content-1"
   ],
-  "test_sent_events.SentEventsTests.test_operator_direct_send_with_exact_sent_receipt_uses_owner_brief": [
-    "sent-operator_direct_send_with_exact_sent_receipt_uses_owner_brief-1"
+  "test_sent_events.SentEventsTests.test_foreign_pagination_link_is_rejected_before_use": [
+    "sent-foreign_pagination_link_is_rejected_before_use-1",
+    "sent-foreign_pagination_link_is_rejected_before_use-2",
+    "sent-foreign_pagination_link_is_rejected_before_use-3"
   ],
-  "test_sent_events.SentEventsTests.test_sent_message_matches_immutable_draft_receipt": [
-    "sent-sent_message_matches_immutable_draft_receipt-1"
-  ],
-  "test_sent_events.SentEventsTests.test_unreviewed_task_never_exports_report_or_packet": [
-    "sent-unreviewed_task_never_exports_report_or_packet-1"
+  "test_sent_events.SentEventsTests.test_graph_key_form_pagination_link_is_followed": [
+    "sent-graph_key_form_pagination_link_is_followed-1",
+    "sent-graph_key_form_pagination_link_is_followed-2"
   ],
   "test_sent_events.SentEventsTests.test_internet_identity_matches_receipt_after_graph_id_changes": [
     "sent-internet_identity_matches_receipt_after_graph_id_changes-1"
   ],
-  "test_sent_events.SentEventsTests.test_unregistered_recipient_is_skipped_without_registration": [
-    "sent-unregistered_recipient_is_skipped_without_registration-1"
+  "test_sent_events.SentEventsTests.test_manual_event_dedupes_at_inclusive_ten_minute_boundary": [
+    "sent-manual_event_dedupes_at_inclusive_ten_minute_boundary-1"
+  ],
+  "test_sent_events.SentEventsTests.test_manual_event_dedupes_send_to_another_address_of_same_person": [
+    "sent-manual_event_dedupes_send_to_another_address_of_same_person-1"
+  ],
+  "test_sent_events.SentEventsTests.test_manual_event_outside_tolerance_and_reply_event_do_not_dedupe": [
+    "sent-manual_event_outside_tolerance_and_reply_event_do_not_dedupe-1"
+  ],
+  "test_sent_events.SentEventsTests.test_manual_evidence_message_id_dedupes_regardless_of_time": [
+    "sent-manual_evidence_message_id_dedupes_regardless_of_time-1"
+  ],
+  "test_sent_events.SentEventsTests.test_newest_first_metadata_page_has_live_bounds_and_no_body": [
+    "sent-newest_first_metadata_page_has_live_bounds_and_no_body-1"
+  ],
+  "test_sent_events.SentEventsTests.test_old_future_draft_missing_id_or_invalid_timestamp_are_skipped": [
+    "sent-old_future_draft_missing_id_or_invalid_timestamp_are_skipped-1"
+  ],
+  "test_sent_events.SentEventsTests.test_operator_created_draft_sent_without_ledger_task": [
+    "sent-operator_created_draft_sent_without_ledger_task-1"
+  ],
+  "test_sent_events.SentEventsTests.test_operator_direct_send_with_exact_sent_receipt_uses_owner_brief": [
+    "sent-operator_direct_send_with_exact_sent_receipt_uses_owner_brief-1"
+  ],
+  "test_sent_events.SentEventsTests.test_operator_registry_reconcile_also_recognizes_automatic_events": [
+    "sent-operator_registry_reconcile_also_recognizes_automatic_events-1"
+  ],
+  "test_sent_events.SentEventsTests.test_oversized_metadata_page_is_rejected": [
+    "sent-oversized_metadata_page_is_rejected-1"
+  ],
+  "test_sent_events.SentEventsTests.test_owner_draft_sent_uses_exact_sent_receipt_and_reviewed_headline": [
+    "sent-owner_draft_sent_uses_exact_sent_receipt_and_reviewed_headline-1"
+  ],
+  "test_sent_events.SentEventsTests.test_pause_missing_mailbox_and_exhausted_budget_defer_reads": [
+    "sent-pause_missing_mailbox_and_exhausted_budget_defer_reads-1",
+    "sent-pause_missing_mailbox_and_exhausted_budget_defer_reads-2",
+    "sent-pause_missing_mailbox_and_exhausted_budget_defer_reads-3"
+  ],
+  "test_sent_events.SentEventsTests.test_push_failure_retries_persistence_before_advancing_cursor": [
+    "sent-push_failure_retries_persistence_before_advancing_cursor-1",
+    "sent-push_failure_retries_persistence_before_advancing_cursor-2"
+  ],
+  "test_sent_events.SentEventsTests.test_sent_evidence_preserves_conversation_account_and_sender": [
+    "sent-sent_evidence_preserves_conversation_account_and_sender-1"
+  ],
+  "test_sent_events.SentEventsTests.test_sent_message_matches_immutable_draft_receipt": [
+    "sent-sent_message_matches_immutable_draft_receipt-1"
+  ],
+  "test_sent_events.SentEventsTests.test_team_account_and_system_recipients_skipped_even_if_registered": [
+    "sent-team_account_and_system_recipients_skipped_even_if_registered-1"
+  ],
+  "test_sent_events.SentEventsTests.test_to_cc_bcc_and_verified_aliases_use_exact_addresses": [
+    "sent-to_cc_bcc_and_verified_aliases_use_exact_addresses-1",
+    "sent-to_cc_bcc_and_verified_aliases_use_exact_addresses-2",
+    "sent-to_cc_bcc_and_verified_aliases_use_exact_addresses-3"
   ],
   "test_sent_events.SentEventsTests.test_two_ticks_and_duplicate_page_rows_are_idempotent": [
     "sent-two_ticks_and_duplicate_page_rows_are_idempotent-1",
     "sent-two_ticks_and_duplicate_page_rows_are_idempotent-2"
   ],
-  "test_publication.PublicationTests.test_old_workflow_pass_still_enqueues_exact_reviewed_bytes": [
-    "publication-old_workflow_pass_still_enqueues_exact_reviewed_bytes-1"
+  "test_sent_events.SentEventsTests.test_unregistered_recipient_is_skipped_without_registration": [
+    "sent-unregistered_recipient_is_skipped_without_registration-1"
   ],
-  "test_publication.PublicationTests.test_correspondent_note_is_published_before_backlog": [
-    "publication-correspondent_note_is_published_before_backlog-1"
-  ],
-  "test_publication.PublicationTests.test_mathesis_child_publishes_instead_of_its_passed_source_note": [
-    "publication-mathesis_child_publishes_instead_of_its_passed_source_note-1"
+  "test_sent_events.SentEventsTests.test_unreviewed_task_never_exports_report_or_packet": [
+    "sent-unreviewed_task_never_exports_report_or_packet-1"
   ],
   "test_publication.PublicationTests.test_bounced_or_agent_held_earlier_revisions_do_not_block_passed_note": [
     "publication-bounced_or_agent_held_earlier_revisions_do_not_block_passed_note-1"
   ],
-  "test_publication.PublicationTests.test_passed_note_after_guard_stopped_continuation_is_published": [
-    "publication-passed_note_after_guard_stopped_continuation_is_published-1"
+  "test_publication.PublicationTests.test_changed_source_verdict_reevaluates_a_settled_exclusion": [
+    "publication-changed_source_verdict_reevaluates_a_settled_exclusion-1",
+    "publication-changed_source_verdict_reevaluates_a_settled_exclusion-2",
+    "publication-changed_source_verdict_reevaluates_a_settled_exclusion-3"
+  ],
+  "test_publication.PublicationTests.test_checkpoint_failure_prevents_registration_upload_and_selection": [
+    "publication-checkpoint_failure_prevents_registration_upload_and_selection-1"
+  ],
+  "test_publication.PublicationTests.test_correspondent_note_is_published_before_backlog": [
+    "publication-correspondent_note_is_published_before_backlog-1"
+  ],
+  "test_publication.PublicationTests.test_correspondent_note_precedes_previously_deferred_backlog": [
+    "publication-correspondent_note_precedes_previously_deferred_backlog-1"
+  ],
+  "test_publication.PublicationTests.test_default_cap_defers_untouched_rows_and_next_call_continues": [
+    "publication-default_cap_defers_untouched_rows_and_next_call_continues-1",
+    "publication-default_cap_defers_untouched_rows_and_next_call_continues-2",
+    "publication-default_cap_defers_untouched_rows_and_next_call_continues-3"
+  ],
+  "test_publication.PublicationTests.test_delivered_row_completes_its_queued_record_after_a_hold_is_removed": [
+    "publication-delivered_row_completes_its_queued_record_after_a_hold_is_removed-1",
+    "publication-delivered_row_completes_its_queued_record_after_a_hold_is_removed-2",
+    "publication-delivered_row_completes_its_queued_record_after_a_hold_is_removed-3",
+    "publication-delivered_row_completes_its_queued_record_after_a_hold_is_removed-4",
+    "publication-delivered_row_completes_its_queued_record_after_a_hold_is_removed-5"
+  ],
+  "test_publication.PublicationTests.test_delivered_row_with_another_selection_stays_untouched": [
+    "publication-delivered_row_with_another_selection_stays_untouched-1",
+    "publication-delivered_row_with_another_selection_stays_untouched-2",
+    "publication-delivered_row_with_another_selection_stays_untouched-3",
+    "publication-delivered_row_with_another_selection_stays_untouched-4",
+    "publication-delivered_row_with_another_selection_stays_untouched-5",
+    "publication-delivered_row_with_another_selection_stays_untouched-6",
+    "publication-delivered_row_with_another_selection_stays_untouched-7"
+  ],
+  "test_publication.PublicationTests.test_delivery_does_not_wait_for_doi_and_worker_later_publishes": [
+    "publication-delivery_does_not_wait_for_doi_and_worker_later_publishes-1",
+    "publication-delivery_does_not_wait_for_doi_and_worker_later_publishes-2"
+  ],
+  "test_publication.PublicationTests.test_disclosure_without_lean_and_decision_reference_come_from_record": [
+    "publication-disclosure_without_lean_and_decision_reference_come_from_record-1"
+  ],
+  "test_publication.PublicationTests.test_enqueue_response_loss_replays_original_immutable_request": [
+    "publication-enqueue_response_loss_replays_original_immutable_request-1",
+    "publication-enqueue_response_loss_replays_original_immutable_request-2"
+  ],
+  "test_publication.PublicationTests.test_exact_pass_enqueues_durable_request_and_signs_decision": [
+    "publication-exact_pass_enqueues_durable_request_and_signs_decision-1"
+  ],
+  "test_publication.PublicationTests.test_exclusion_settles_after_its_own_record_drops_note_identities": [
+    "publication-exclusion_settles_after_its_own_record_drops_note_identities-1",
+    "publication-exclusion_settles_after_its_own_record_drops_note_identities-2",
+    "publication-exclusion_settles_after_its_own_record_drops_note_identities-3",
+    "publication-exclusion_settles_after_its_own_record_drops_note_identities-4",
+    "publication-exclusion_settles_after_its_own_record_drops_note_identities-5",
+    "publication-exclusion_settles_after_its_own_record_drops_note_identities-6"
+  ],
+  "test_publication.PublicationTests.test_existing_published_doi_is_included_but_reserved_doi_is_not": [
+    "publication-existing_published_doi_is_included_but_reserved_doi_is_not-1",
+    "publication-existing_published_doi_is_included_but_reserved_doi_is_not-2",
+    "publication-existing_published_doi_is_included_but_reserved_doi_is_not-3"
+  ],
+  "test_publication.PublicationTests.test_existing_queued_revision_skips_later_duplicate_without_recording": [
+    "publication-existing_queued_revision_skips_later_duplicate_without_recording-1",
+    "publication-existing_queued_revision_skips_later_duplicate_without_recording-2"
+  ],
+  "test_publication.PublicationTests.test_failed_attempt_leaves_both_success_slots_for_new_rows": [
+    "publication-failed_attempt_leaves_both_success_slots_for_new_rows-1"
+  ],
+  "test_publication.PublicationTests.test_failure_backoff_grows_after_readback_and_resets_for_new_result": [
+    "publication-failure_backoff_grows_after_readback_and_resets_for_new_result-1",
+    "publication-failure_backoff_grows_after_readback_and_resets_for_new_result-2",
+    "publication-failure_backoff_grows_after_readback_and_resets_for_new_result-3",
+    "publication-failure_backoff_grows_after_readback_and_resets_for_new_result-4",
+    "publication-failure_backoff_grows_after_readback_and_resets_for_new_result-5",
+    "publication-failure_backoff_grows_after_readback_and_resets_for_new_result-6",
+    "publication-failure_backoff_grows_after_readback_and_resets_for_new_result-7",
+    "publication-failure_backoff_grows_after_readback_and_resets_for_new_result-8",
+    "publication-failure_backoff_grows_after_readback_and_resets_for_new_result-9",
+    "publication-failure_backoff_grows_after_readback_and_resets_for_new_result-10",
+    "publication-failure_backoff_grows_after_readback_and_resets_for_new_result-11",
+    "publication-failure_backoff_grows_after_readback_and_resets_for_new_result-12"
   ],
   "test_publication.PublicationTests.test_family_first_author_names_are_not_joint_work": [
     "publication-family_first_author_names_are_not_joint_work-1"
+  ],
+  "test_publication.PublicationTests.test_hold_joint_and_table_exclusions": [
+    "publication-hold_joint_and_table_exclusions-1",
+    "publication-hold_joint_and_table_exclusions-2",
+    "publication-hold_joint_and_table_exclusions-3",
+    "publication-hold_joint_and_table_exclusions-4",
+    "publication-hold_joint_and_table_exclusions-5",
+    "publication-hold_joint_and_table_exclusions-6",
+    "publication-hold_joint_and_table_exclusions-7"
+  ],
+  "test_publication.PublicationTests.test_lost_save_after_delivery_only_ingest_completes_the_queued_record": [
+    "publication-lost_save_after_delivery_only_ingest_completes_the_queued_record-1",
+    "publication-lost_save_after_delivery_only_ingest_completes_the_queued_record-2",
+    "publication-lost_save_after_delivery_only_ingest_completes_the_queued_record-3",
+    "publication-lost_save_after_delivery_only_ingest_completes_the_queued_record-4",
+    "publication-lost_save_after_delivery_only_ingest_completes_the_queued_record-5"
+  ],
+  "test_publication.PublicationTests.test_mathesis_child_of_a_queued_source_note_fails_and_retries_without_submitting": [
+    "publication-mathesis_child_of_a_queued_source_note_fails_and_retries_without_submitting-1",
+    "publication-mathesis_child_of_a_queued_source_note_fails_and_retries_without_submitting-2",
+    "publication-mathesis_child_of_a_queued_source_note_fails_and_retries_without_submitting-3",
+    "publication-mathesis_child_of_a_queued_source_note_fails_and_retries_without_submitting-4",
+    "publication-mathesis_child_of_a_queued_source_note_fails_and_retries_without_submitting-5",
+    "publication-mathesis_child_of_a_queued_source_note_fails_and_retries_without_submitting-6",
+    "publication-mathesis_child_of_a_queued_source_note_fails_and_retries_without_submitting-7",
+    "publication-mathesis_child_of_a_queued_source_note_fails_and_retries_without_submitting-8"
+  ],
+  "test_publication.PublicationTests.test_mathesis_child_of_a_queued_source_note_is_idempotent": [
+    "publication-mathesis_child_of_a_queued_source_note_is_idempotent-1",
+    "publication-mathesis_child_of_a_queued_source_note_is_idempotent-2",
+    "publication-mathesis_child_of_a_queued_source_note_is_idempotent-3"
+  ],
+  "test_publication.PublicationTests.test_mathesis_child_of_a_queued_source_note_uses_a_publication_slot": [
+    "publication-mathesis_child_of_a_queued_source_note_uses_a_publication_slot-1",
+    "publication-mathesis_child_of_a_queued_source_note_uses_a_publication_slot-2",
+    "publication-mathesis_child_of_a_queued_source_note_uses_a_publication_slot-3"
+  ],
+  "test_publication.PublicationTests.test_mathesis_child_of_an_already_queued_source_note_gets_its_delivery": [
+    "publication-mathesis_child_of_an_already_queued_source_note_gets_its_delivery-1",
+    "publication-mathesis_child_of_an_already_queued_source_note_gets_its_delivery-2",
+    "publication-mathesis_child_of_an_already_queued_source_note_gets_its_delivery-3"
+  ],
+  "test_publication.PublicationTests.test_mathesis_child_publishes_instead_of_its_passed_source_note": [
+    "publication-mathesis_child_publishes_instead_of_its_passed_source_note-1"
+  ],
+  "test_publication.PublicationTests.test_mathesis_is_preferred_for_same_revision_without_explicit_lineage": [
+    "publication-mathesis_is_preferred_for_same_revision_without_explicit_lineage-1"
+  ],
+  "test_publication.PublicationTests.test_mathesis_row_takes_delivery_after_a_shortnote_queues_its_revision_in_the_same_tick": [
+    "publication-mathesis_row_takes_delivery_after_a_shortnote_queues_its_revision_in_the_same_tick-1"
+  ],
+  "test_publication.PublicationTests.test_mathesis_row_with_a_delivery_and_a_queued_revision_is_unchanged": [
+    "publication-mathesis_row_with_a_delivery_and_a_queued_revision_is_unchanged-1",
+    "publication-mathesis_row_with_a_delivery_and_a_queued_revision_is_unchanged-2",
+    "publication-mathesis_row_with_a_delivery_and_a_queued_revision_is_unchanged-3"
+  ],
+  "test_publication.PublicationTests.test_missing_reviewed_file_and_catalog_pause_prevent_selection": [
+    "publication-missing_reviewed_file_and_catalog_pause_prevent_selection-1",
+    "publication-missing_reviewed_file_and_catalog_pause_prevent_selection-2"
+  ],
+  "test_publication.PublicationTests.test_new_hold_after_signing_blocks_mathesis_post": [
+    "publication-new_hold_after_signing_blocks_mathesis_post-1"
+  ],
+  "test_publication.PublicationTests.test_new_revision_waits_for_prior_receipt_and_preserves_mathesis_version": [
+    "publication-new_revision_waits_for_prior_receipt_and_preserves_mathesis_version-1",
+    "publication-new_revision_waits_for_prior_receipt_and_preserves_mathesis_version-2",
+    "publication-new_revision_waits_for_prior_receipt_and_preserves_mathesis_version-3"
+  ],
+  "test_publication.PublicationTests.test_new_rows_precede_due_failed_retries_oldest_first": [
+    "publication-new_rows_precede_due_failed_retries_oldest_first-1",
+    "publication-new_rows_precede_due_failed_retries_oldest_first-2",
+    "publication-new_rows_precede_due_failed_retries_oldest_first-3"
+  ],
+  "test_publication.PublicationTests.test_normal_path_delivery_completes_after_a_shortnote_queues_its_revision": [
+    "publication-normal_path_delivery_completes_after_a_shortnote_queues_its_revision-1",
+    "publication-normal_path_delivery_completes_after_a_shortnote_queues_its_revision-2",
+    "publication-normal_path_delivery_completes_after_a_shortnote_queues_its_revision-3",
+    "publication-normal_path_delivery_completes_after_a_shortnote_queues_its_revision-4"
+  ],
+  "test_publication.PublicationTests.test_old_workflow_pass_still_enqueues_exact_reviewed_bytes": [
+    "publication-old_workflow_pass_still_enqueues_exact_reviewed_bytes-1"
+  ],
+  "test_publication.PublicationTests.test_package_exclusion_skips_downloads_until_the_decision_changes": [
+    "publication-package_exclusion_skips_downloads_until_the_decision_changes-1",
+    "publication-package_exclusion_skips_downloads_until_the_decision_changes-2",
+    "publication-package_exclusion_skips_downloads_until_the_decision_changes-3",
+    "publication-package_exclusion_skips_downloads_until_the_decision_changes-4"
+  ],
+  "test_publication.PublicationTests.test_passed_note_after_guard_stopped_continuation_is_published": [
+    "publication-passed_note_after_guard_stopped_continuation_is_published-1"
+  ],
+  "test_publication.PublicationTests.test_pause_disabled_kind_and_missing_decision_prevent_writes": [
+    "publication-pause_disabled_kind_and_missing_decision_prevent_writes-1",
+    "publication-pause_disabled_kind_and_missing_decision_prevent_writes-2",
+    "publication-pause_disabled_kind_and_missing_decision_prevent_writes-3"
+  ],
+  "test_publication.PublicationTests.test_queued_source_note_does_not_bypass_exclusions_for_its_child": [
+    "publication-queued_source_note_does_not_bypass_exclusions_for_its_child-1",
+    "publication-queued_source_note_does_not_bypass_exclusions_for_its_child-2",
+    "publication-queued_source_note_does_not_bypass_exclusions_for_its_child-3"
+  ],
+  "test_publication.PublicationTests.test_registration_conflict_retries_and_does_not_sign_early": [
+    "publication-registration_conflict_retries_and_does_not_sign_early-1",
+    "publication-registration_conflict_retries_and_does_not_sign_early-2"
+  ],
+  "test_publication.PublicationTests.test_restored_replay_and_two_tasks_share_one_request_and_delivery": [
+    "publication-restored_replay_and_two_tasks_share_one_request_and_delivery-1",
+    "publication-restored_replay_and_two_tasks_share_one_request_and_delivery-2"
+  ],
+  "test_publication.PublicationTests.test_run_stopped_after_delivery_only_ingest_completes_the_queued_record": [
+    "publication-run_stopped_after_delivery_only_ingest_completes_the_queued_record-1",
+    "publication-run_stopped_after_delivery_only_ingest_completes_the_queued_record-2",
+    "publication-run_stopped_after_delivery_only_ingest_completes_the_queued_record-3",
+    "publication-run_stopped_after_delivery_only_ingest_completes_the_queued_record-4"
+  ],
+  "test_publication.PublicationTests.test_shortnote_pass_enqueues_without_fabricating_mathesis_review": [
+    "publication-shortnote_pass_enqueues_without_fabricating_mathesis_review-1"
   ],
   "test_publication.PublicationTests.test_shortnote_waits_untouched_for_non_passed_mathesis_child": [
     "publication-shortnote_waits_untouched_for_non_passed_mathesis_child-1",
@@ -191,7 +440,35 @@
     "publication-shortnote_waits_untouched_for_non_passed_mathesis_child-4",
     "publication-shortnote_waits_untouched_for_non_passed_mathesis_child-5"
   ],
-  "test_publication.PublicationTests.test_mathesis_is_preferred_for_same_revision_without_explicit_lineage": [
-    "publication-mathesis_is_preferred_for_same_revision_without_explicit_lineage-1"
-  ]
+  "test_publication.PublicationTests.test_shortnote_with_an_already_queued_revision_stays_untouched": [
+    "publication-shortnote_with_an_already_queued_revision_stays_untouched-1",
+    "publication-shortnote_with_an_already_queued_revision_stays_untouched-2"
+  ],
+  "test_publication.PublicationTests.test_stale_pass_changed_release_and_unreviewed_package_never_publish": [
+    "publication-stale_pass_changed_release_and_unreviewed_package_never_publish-1",
+    "publication-stale_pass_changed_release_and_unreviewed_package_never_publish-2"
+  ],
+  "test_publication.PublicationTests.test_two_mathesis_children_of_a_queued_source_note_take_one_delivery": [
+    "publication-two_mathesis_children_of_a_queued_source_note_take_one_delivery-1",
+    "publication-two_mathesis_children_of_a_queued_source_note_take_one_delivery-2",
+    "publication-two_mathesis_children_of_a_queued_source_note_take_one_delivery-3"
+  ],
+  "test_publication.PublicationTests.test_unchanged_exclusion_is_not_reevaluated_until_its_hold_is_lifted": [
+    "publication-unchanged_exclusion_is_not_reevaluated_until_its_hold_is_lifted-1",
+    "publication-unchanged_exclusion_is_not_reevaluated_until_its_hold_is_lifted-2",
+    "publication-unchanged_exclusion_is_not_reevaluated_until_its_hold_is_lifted-3",
+    "publication-unchanged_exclusion_is_not_reevaluated_until_its_hold_is_lifted-4",
+    "publication-unchanged_exclusion_is_not_reevaluated_until_its_hold_is_lifted-5",
+    "publication-unchanged_exclusion_is_not_reevaluated_until_its_hold_is_lifted-6",
+    "publication-unchanged_exclusion_is_not_reevaluated_until_its_hold_is_lifted-7"
+  ],
+  "test_publication.PublicationTests.test_both_delivery_passes_share_deliveries_per_tick": [],
+  "test_publication.PublicationTests.test_delivery_batch_takes_new_deliveries_oldest_first_before_repolls": [],
+  "test_publication.PublicationTests.test_delivery_selected_late_in_a_tick_still_goes_out_that_tick": [],
+  "test_publication.PublicationTests.test_legacy_migration_stays_after_publication": [],
+  "test_publication.PublicationTests.test_ready_delivery_precedes_publication_that_overruns_the_tick": [],
+  "test_publication.PublicationTests.test_registration_uses_current_table_sha_and_preserves_existing_pause": [],
+  "test_publication.PublicationTests.test_tick_delivers_existing_then_publishes_then_delivers_new_selections": [],
+  "test_sent_events.CommitTablesTests.test_commit_and_push_only_scoped_files_preserves_unrelated_staged_change": [],
+  "test_sent_events.CommitTablesTests.test_commit_tables_rebases_once_when_main_moved": []
 }

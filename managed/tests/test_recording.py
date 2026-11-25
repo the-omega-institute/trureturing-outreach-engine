@@ -151,5 +151,59 @@ class RecordingTests(unittest.TestCase):
         template = recording.path_template('/api/v1/submissions/synthetic/delivery?version=2')
         self.assertEqual(template, '/api/v1/submissions/{id}/delivery?version=%7Bvalue%7D')
 
+    def test_hex_tokens_and_cli_headers_including_unregistered_values(self):
+        token = 'synthetic-secret/42+'
+        with patch.dict(os.environ, {'GH_TOKEN': token}):
+            recording.emit({'value': [token.encode().hex(), token.encode().hex().upper(), ''.join(c.upper() if i % 2 else c for i,c in enumerate(token.encode().hex()))]})
+        headers = ['Authorization: synthetic-auth', 'X-Api-Key: synthetic-key',
+                   'Cookie: session=synthetic-cookie', 'X-Access-Token: synthetic-access']
+        result = subprocess.CompletedProcess(['gh'], 0, b'synthetic-auth synthetic-key synthetic-cookie synthetic-access', b'')
+        with patch.object(subprocess, 'run', return_value=result):
+            recording.run(['gh', 'api', 'repos/fixture/repo', *sum((['-H', h] for h in headers), [])])
+        raw = next(self.path.glob('*.jsonl')).read_text()
+        for value in [token.encode().hex(), token.encode().hex().upper(),
+                      'synthetic-auth', 'synthetic-key', 'synthetic-cookie', 'synthetic-access']:
+            self.assertNotIn(value, raw)
+
+    def test_large_ledger_frame_uses_digests_and_only_opened_files(self):
+        from types import SimpleNamespace
+        from managed.tasks import Tasks
+        from managed.scenario_contract import table_digests, dump, logical
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            tasks = Tasks(root / 'state.sqlite3'); self.addCleanup(tasks.close)
+            from test_tasks import request
+            for index in range(300):
+                row = tasks.add(request('synthetic-' + str(index)))
+                tasks.update(row['id'], row['revision'], row['state'], {'payload': 'x' * 8192})
+            (root / 'tables').mkdir(); (root / 'managed').mkdir()
+            (root / 'tables/read.json').write_text('{"synthetic":true}')
+            (root / 'managed/unread.txt').write_bytes(b'x' * (2 * recording.MAX_STAGE_FRAME_BYTES))
+            ledger = SimpleNamespace(tasks=tasks, releases=SimpleNamespace(repo='fixture/repo', tag='synthetic'), save=lambda: None)
+            @recording.mathesis_stage
+            def stage(ledger, config, root, *args):
+                self.assertEqual(json.loads((root / 'tables/read.json').read_text()), {'synthetic': True})
+            stage(ledger, {}, root)
+            record, = self.records()
+            self.assertEqual(record['event'], 'mathesis_stage')
+            self.assertLessEqual(len((recording.canonical(record) + '\n').encode()), recording.MAX_STAGE_FRAME_BYTES)
+            self.assertNotIn('initial_rows', record['case'])
+            self.assertEqual(set(record['case']['initial_files']), {'tables/read.json'})
+            self.assertEqual(table_digests(tasks), {k: __import__('hashlib').sha256(recording.canonical(v).encode()).hexdigest() for k,v in logical(dump(tasks)).items()})
+
+    def test_oversized_frame_is_explicitly_unavailable(self):
+        from types import SimpleNamespace
+        from managed.tasks import Tasks
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory); tasks = Tasks(root / 'state.sqlite3'); self.addCleanup(tasks.close)
+            ledger = SimpleNamespace(tasks=tasks, releases=SimpleNamespace(repo='fixture/repo', tag='synthetic'), save=lambda: None)
+            @recording.mathesis_stage
+            def stage(ledger, config, root, *args):
+                recording._STAGE.get()['script'].append({'read': 'x' * recording.MAX_STAGE_FRAME_BYTES})
+            stage(ledger, {}, root)
+            record, = self.records()
+            self.assertEqual(record['event'], 'mathesis_stage_unavailable')
+            self.assertLess(len(recording.canonical(record)), 4096)
+
 
 if __name__ == '__main__': unittest.main()

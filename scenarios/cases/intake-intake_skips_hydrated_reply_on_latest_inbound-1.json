@@ -3,7 +3,7 @@
   "id": "intake-intake_skips_hydrated_reply_on_latest_inbound-1",
   "source_test": "test_mailbox_triage.TriageTests.test_intake_skips_hydrated_reply_on_latest_inbound",
   "stage": "intake",
-  "now": 2000000000.0,
+  "now": 1999999900.0,
   "workflow": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
   "installation": {
     "repositories": {
@@ -47,7 +47,10 @@
       "enabled": false,
       "max_new_tasks_per_tick": 4,
       "backfill_result_ids": [],
-      "daily": false
+      "daily": false,
+      "auto_backfill": false,
+      "backfill_per_tick": 1,
+      "backfill_pending_limit": 16
     },
     "kinds": {
       "firstcontact": false,
@@ -207,6 +210,21 @@
     "cma": {
       "token_base_url": "https://worker.example.invalid",
       "proxy_base_url": "https://auth.example.invalid/api/v1/proxy/s/cma"
+    },
+    "independent_review": {
+      "enabled": false,
+      "max_active": 2,
+      "github": {
+        "service": "github-review-read",
+        "user_service_id": "dedicated-read-only-input-connection",
+        "read_only": true
+      },
+      "profile": {
+        "model": "gpt-6.2-sol",
+        "reasoning_effort": "high"
+      },
+      "register_author_contacts": true,
+      "max_active_per_group": 1
     }
   },
   "config": {
@@ -395,6 +413,10 @@
   },
   "revision": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
   "datetime": "2026-11-18T10:00:00+00:00",
+  "options": {
+    "previous": []
+  },
+  "admissions": [],
   "script": [
     {
       "adapter": "mailbox",
@@ -484,7 +506,11 @@
       "method": "save",
       "args": [],
       "kwargs": {},
-      "result": true
+      "result": true,
+      "saved_snapshot": {
+        "generation": 1,
+        "digest": "03054a362ba511cccc862ebfe0c3ba556a68ee5de6cca7ad0c33b255b7cc3052"
+      }
     }
   ],
   "expected_final_rows": {

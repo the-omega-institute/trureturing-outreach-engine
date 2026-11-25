@@ -3,7 +3,7 @@
   "id": "mathesis-wrong_post_or_get_receipt_cannot_finish-4",
   "source_test": "test_mathesis_delivery.DeliveryTests.test_wrong_post_or_get_receipt_cannot_finish",
   "stage": "mathesis",
-  "now": 2000000000.0,
+  "now": 1999999900.0,
   "workflow": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
   "installation": {
     "repositories": {
@@ -47,7 +47,10 @@
       "enabled": false,
       "max_new_tasks_per_tick": 4,
       "backfill_result_ids": [],
-      "daily": false
+      "daily": false,
+      "auto_backfill": false,
+      "backfill_per_tick": 1,
+      "backfill_pending_limit": 16
     },
     "kinds": {
       "firstcontact": false,
@@ -207,6 +210,21 @@
     "cma": {
       "token_base_url": "https://worker.example.invalid",
       "proxy_base_url": "https://auth.example.invalid/api/v1/proxy/s/cma"
+    },
+    "independent_review": {
+      "enabled": false,
+      "max_active": 2,
+      "github": {
+        "service": "github-review-read",
+        "user_service_id": "dedicated-read-only-input-connection",
+        "read_only": true
+      },
+      "profile": {
+        "model": "gpt-6.2-sol",
+        "reasoning_effort": "high"
+      },
+      "register_author_contacts": true,
+      "max_active_per_group": 1
     }
   },
   "config": {
@@ -342,27 +360,6 @@
           }
         },
         {
-          "key": "mathesis:6744236635824cb78a4885bee746dbdc18698a4bd6931132bf21fc964887ba20",
-          "payload": {
-            "receipt": {
-              "producer": "trureturing-outreach",
-              "publication": null,
-              "review": {
-                "status": "interrupted"
-              },
-              "schema": "mathesis.manuscript-receipt.v1",
-              "source_sha256": "1a07d345c39df2081ca4796666afb1f2a5628388c3e3e675bffce6d4813c17c2",
-              "status": "in_review",
-              "submission": "original-submission",
-              "upstream_version": "1",
-              "version": 1,
-              "work_id": "wrong-3290ef73"
-            },
-            "request_hash": "39d333a852989689ce3e93a20e7c7e8500bb8080e8293170b78d0487b2ee4f78",
-            "task_id": "wrong-3290ef73"
-          }
-        },
-        {
           "key": "mathesis:a8166bfce9e2906e6f8e737b4c8472d6f7dc285176b857e600615222799afb2e",
           "payload": {
             "receipt": {
@@ -402,6 +399,27 @@
             },
             "request_hash": "dfeabf5b779d4db9705bebe7531618ab037c0ea36ee82f1e31bb811c3a0a1df0",
             "task_id": "wrong-a85f2c48"
+          }
+        },
+        {
+          "key": "mathesis:6744236635824cb78a4885bee746dbdc18698a4bd6931132bf21fc964887ba20",
+          "payload": {
+            "receipt": {
+              "producer": "trureturing-outreach",
+              "publication": null,
+              "review": {
+                "status": "interrupted"
+              },
+              "schema": "mathesis.manuscript-receipt.v1",
+              "source_sha256": "1a07d345c39df2081ca4796666afb1f2a5628388c3e3e675bffce6d4813c17c2",
+              "status": "in_review",
+              "submission": "original-submission",
+              "upstream_version": "1",
+              "version": 1,
+              "work_id": "wrong-3290ef73"
+            },
+            "request_hash": "39d333a852989689ce3e93a20e7c7e8500bb8080e8293170b78d0487b2ee4f78",
+            "task_id": "wrong-3290ef73"
           }
         },
         {
@@ -497,7 +515,7 @@
           "id": "wrong-a09957ee",
           "state": "handoff-ready",
           "revision": 6,
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           }
@@ -507,7 +525,7 @@
           "id": "wrong-a09957ee",
           "state": "handoff-ready",
           "revision": 7,
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           }
@@ -560,20 +578,20 @@
         },
         {
           "seq": 13,
-          "id": "wrong-a85f2c48",
+          "id": "wrong-a09957ee",
           "state": "handoff-ready",
-          "revision": 6,
-          "at": 2000000000.0,
+          "revision": 8,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           }
         },
         {
           "seq": 14,
-          "id": "wrong-a85f2c48",
+          "id": "wrong-a09957ee",
           "state": "handoff-ready",
-          "revision": 7,
-          "at": 2000000000.0,
+          "revision": 9,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           }
@@ -582,28 +600,28 @@
           "seq": 15,
           "id": "wrong-a85f2c48",
           "state": "handoff-ready",
-          "revision": 8,
-          "at": 2000000000.0,
+          "revision": 6,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           }
         },
         {
           "seq": 16,
-          "id": "wrong-a09957ee",
+          "id": "wrong-a85f2c48",
           "state": "handoff-ready",
-          "revision": 8,
-          "at": 2000000000.0,
+          "revision": 7,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           }
         },
         {
           "seq": 17,
-          "id": "wrong-a09957ee",
+          "id": "wrong-a85f2c48",
           "state": "handoff-ready",
-          "revision": 9,
-          "at": 2000000000.0,
+          "revision": 8,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           }
@@ -659,7 +677,7 @@
           "id": "wrong-a09957ee",
           "state": "handoff-ready",
           "revision": 10,
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           }
@@ -669,77 +687,77 @@
           "id": "wrong-a85f2c48",
           "state": "handoff-ready",
           "revision": 9,
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           }
         },
         {
           "seq": 25,
-          "id": "wrong-3290ef73",
+          "id": "wrong-a09957ee",
           "state": "handoff-ready",
-          "revision": 6,
-          "at": 2000000000.0,
+          "revision": 11,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           }
         },
         {
           "seq": 26,
-          "id": "wrong-3290ef73",
+          "id": "wrong-a09957ee",
           "state": "handoff-ready",
-          "revision": 7,
-          "at": 2000000000.0,
+          "revision": 12,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           }
         },
         {
           "seq": 27,
-          "id": "wrong-3290ef73",
+          "id": "wrong-a85f2c48",
           "state": "handoff-ready",
-          "revision": 8,
-          "at": 2000000000.0,
+          "revision": 10,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           }
         },
         {
           "seq": 28,
-          "id": "wrong-a09957ee",
+          "id": "wrong-a85f2c48",
           "state": "handoff-ready",
           "revision": 11,
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           }
         },
         {
           "seq": 29,
-          "id": "wrong-a09957ee",
+          "id": "wrong-3290ef73",
           "state": "handoff-ready",
-          "revision": 12,
-          "at": 2000000000.0,
+          "revision": 6,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           }
         },
         {
           "seq": 30,
-          "id": "wrong-a85f2c48",
+          "id": "wrong-3290ef73",
           "state": "handoff-ready",
-          "revision": 10,
-          "at": 2000000000.0,
+          "revision": 7,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           }
         },
         {
           "seq": 31,
-          "id": "wrong-a85f2c48",
+          "id": "wrong-3290ef73",
           "state": "handoff-ready",
-          "revision": 11,
-          "at": 2000000000.0,
+          "revision": 8,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           }
@@ -946,7 +964,7 @@
               "verdict": "PASS"
             }
           },
-          "updated": 2000000000.0
+          "updated": 1999999900.0
         },
         {
           "id": "wrong-a85f2c48",
@@ -1071,7 +1089,7 @@
               "verdict": "PASS"
             }
           },
-          "updated": 2000000000.0
+          "updated": 1999999900.0
         },
         {
           "id": "wrong-3290ef73",
@@ -1192,7 +1210,7 @@
               "verdict": "PASS"
             }
           },
-          "updated": 2000000000.0
+          "updated": 1999999900.0
         },
         {
           "id": "wrong-3ee4cc3c",
@@ -1306,6 +1324,10 @@
       "tag": "outreach-control"
     }
   },
+  "options": {
+    "previous": []
+  },
+  "admissions": [],
   "script": [
     {
       "adapter": "mathesis",
@@ -1346,7 +1368,11 @@
       "kwargs": {
         "force": true
       },
-      "result": true
+      "result": true,
+      "saved_snapshot": {
+        "generation": 20,
+        "digest": "39c5249f32172de0763154bfb5840014dc52d891edd2b8aced43fa01e6ae40d5"
+      }
     },
     {
       "adapter": "ledger",
@@ -1355,7 +1381,158 @@
       "kwargs": {
         "force": true
       },
-      "result": true
+      "result": true,
+      "saved_snapshot": {
+        "generation": 21,
+        "digest": "17305b805ef448c0ce90259edfd28295c20ef81e45aa79f0dc7c61444c2aa775"
+      }
+    },
+    {
+      "adapter": "ledger",
+      "method": "save",
+      "args": [],
+      "kwargs": {
+        "force": true
+      },
+      "result": true,
+      "saved_snapshot": {
+        "generation": 22,
+        "digest": "1021a2dea1e5b9a292967675dd0257a274b0b4e36041c92b9f1e0b72eb838e16"
+      }
+    },
+    {
+      "adapter": "mathesis",
+      "method": "status",
+      "args": [
+        "original-submission",
+        1
+      ],
+      "kwargs": {},
+      "result": {
+        "schema": "mathesis.manuscript-receipt.v1",
+        "submission": "original-submission",
+        "version": 1,
+        "producer": "trureturing-outreach",
+        "work_id": "wrong-a09957ee",
+        "upstream_version": "1",
+        "source_sha256": "1a07d345c39df2081ca4796666afb1f2a5628388c3e3e675bffce6d4813c17c2",
+        "publication": {
+          "record": "unexpected-publication"
+        },
+        "status": "in_review",
+        "review": {
+          "status": "interrupted"
+        }
+      }
+    },
+    {
+      "adapter": "ledger",
+      "method": "save",
+      "args": [],
+      "kwargs": {},
+      "result": false,
+      "saved_snapshot": {
+        "generation": 22,
+        "digest": "1021a2dea1e5b9a292967675dd0257a274b0b4e36041c92b9f1e0b72eb838e16"
+      }
+    },
+    {
+      "adapter": "ledger",
+      "method": "save",
+      "args": [],
+      "kwargs": {
+        "force": true
+      },
+      "result": true,
+      "saved_snapshot": {
+        "generation": 23,
+        "digest": "3ee5d319190f69b210b957fec35163c5af403425b0026cdcc99bf42f0ff1dac9"
+      }
+    },
+    {
+      "adapter": "mathesis",
+      "method": "status",
+      "args": [
+        "original-submission",
+        1
+      ],
+      "kwargs": {},
+      "result": {
+        "schema": "mathesis.manuscript-receipt.v1",
+        "submission": "original-submission",
+        "version": 1,
+        "producer": "trureturing-outreach",
+        "work_id": "wrong-a09957ee",
+        "upstream_version": "1",
+        "source_sha256": "1a07d345c39df2081ca4796666afb1f2a5628388c3e3e675bffce6d4813c17c2",
+        "publication": {
+          "record": "unexpected-publication"
+        },
+        "status": "in_review",
+        "review": {
+          "status": "interrupted"
+        }
+      }
+    },
+    {
+      "adapter": "ledger",
+      "method": "save",
+      "args": [],
+      "kwargs": {},
+      "result": false,
+      "saved_snapshot": {
+        "generation": 23,
+        "digest": "3ee5d319190f69b210b957fec35163c5af403425b0026cdcc99bf42f0ff1dac9"
+      }
+    },
+    {
+      "adapter": "ledger",
+      "method": "save",
+      "args": [],
+      "kwargs": {
+        "force": true
+      },
+      "result": true,
+      "saved_snapshot": {
+        "generation": 24,
+        "digest": "be6f1f90192ebc57007c934c6eb7ab48c112dee35b99eebc409fba46c3576f99"
+      }
+    },
+    {
+      "adapter": "mathesis",
+      "method": "status",
+      "args": [
+        "original-submission",
+        1
+      ],
+      "kwargs": {},
+      "result": {
+        "schema": "mathesis.manuscript-receipt.v1",
+        "submission": "original-submission",
+        "version": 1,
+        "producer": "trureturing-outreach",
+        "work_id": "wrong-a09957ee",
+        "upstream_version": "1",
+        "source_sha256": "1a07d345c39df2081ca4796666afb1f2a5628388c3e3e675bffce6d4813c17c2",
+        "publication": {
+          "record": "unexpected-publication"
+        },
+        "status": "in_review",
+        "review": {
+          "status": "interrupted"
+        }
+      }
+    },
+    {
+      "adapter": "ledger",
+      "method": "save",
+      "args": [],
+      "kwargs": {},
+      "result": false,
+      "saved_snapshot": {
+        "generation": 24,
+        "digest": "be6f1f90192ebc57007c934c6eb7ab48c112dee35b99eebc409fba46c3576f99"
+      }
     },
     {
       "adapter": "releases",
@@ -1387,7 +1564,11 @@
       "kwargs": {
         "force": true
       },
-      "result": true
+      "result": true,
+      "saved_snapshot": {
+        "generation": 25,
+        "digest": "823c4bd7806700f01c97e57af8805c6545e2fc004c352bfa0a1923057a509cdc"
+      }
     },
     {
       "adapter": "mathesis",
@@ -1455,7 +1636,11 @@
       "kwargs": {
         "force": true
       },
-      "result": true
+      "result": true,
+      "saved_snapshot": {
+        "generation": 26,
+        "digest": "8b52dd10e29c990f9309ab3a88b010ea11fe04beebe96b7e1504e25f1d2cd93c"
+      }
     },
     {
       "adapter": "mathesis",
@@ -1487,130 +1672,11 @@
       "method": "save",
       "args": [],
       "kwargs": {},
-      "result": false
-    },
-    {
-      "adapter": "ledger",
-      "method": "save",
-      "args": [],
-      "kwargs": {
-        "force": true
-      },
-      "result": true
-    },
-    {
-      "adapter": "mathesis",
-      "method": "status",
-      "args": [
-        "original-submission",
-        1
-      ],
-      "kwargs": {},
-      "result": {
-        "schema": "mathesis.manuscript-receipt.v1",
-        "submission": "original-submission",
-        "version": 1,
-        "producer": "trureturing-outreach",
-        "work_id": "wrong-a09957ee",
-        "upstream_version": "1",
-        "source_sha256": "1a07d345c39df2081ca4796666afb1f2a5628388c3e3e675bffce6d4813c17c2",
-        "publication": {
-          "record": "unexpected-publication"
-        },
-        "status": "in_review",
-        "review": {
-          "status": "interrupted"
-        }
+      "result": false,
+      "saved_snapshot": {
+        "generation": 26,
+        "digest": "8b52dd10e29c990f9309ab3a88b010ea11fe04beebe96b7e1504e25f1d2cd93c"
       }
-    },
-    {
-      "adapter": "ledger",
-      "method": "save",
-      "args": [],
-      "kwargs": {},
-      "result": false
-    },
-    {
-      "adapter": "ledger",
-      "method": "save",
-      "args": [],
-      "kwargs": {
-        "force": true
-      },
-      "result": true
-    },
-    {
-      "adapter": "mathesis",
-      "method": "status",
-      "args": [
-        "original-submission",
-        1
-      ],
-      "kwargs": {},
-      "result": {
-        "schema": "mathesis.manuscript-receipt.v1",
-        "submission": "original-submission",
-        "version": 1,
-        "producer": "trureturing-outreach",
-        "work_id": "wrong-a09957ee",
-        "upstream_version": "1",
-        "source_sha256": "1a07d345c39df2081ca4796666afb1f2a5628388c3e3e675bffce6d4813c17c2",
-        "publication": {
-          "record": "unexpected-publication"
-        },
-        "status": "in_review",
-        "review": {
-          "status": "interrupted"
-        }
-      }
-    },
-    {
-      "adapter": "ledger",
-      "method": "save",
-      "args": [],
-      "kwargs": {},
-      "result": false
-    },
-    {
-      "adapter": "ledger",
-      "method": "save",
-      "args": [],
-      "kwargs": {
-        "force": true
-      },
-      "result": true
-    },
-    {
-      "adapter": "mathesis",
-      "method": "status",
-      "args": [
-        "original-submission",
-        1
-      ],
-      "kwargs": {},
-      "result": {
-        "schema": "mathesis.manuscript-receipt.v1",
-        "submission": "original-submission",
-        "version": 1,
-        "producer": "trureturing-outreach",
-        "work_id": "wrong-a09957ee",
-        "upstream_version": "1",
-        "source_sha256": "1a07d345c39df2081ca4796666afb1f2a5628388c3e3e675bffce6d4813c17c2",
-        "publication": {
-          "record": "unexpected-publication"
-        },
-        "status": "in_review",
-        "review": {
-          "status": "interrupted"
-        }
-      }
-    },
-    {
-      "adapter": "ledger",
-      "method": "save",
-      "args": [],
-      "kwargs": {},
-      "result": false
     }
   ],
   "expected_final_rows": {
@@ -1907,7 +1973,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -1917,7 +1983,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -1973,52 +2039,52 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
-          "data": {
-            "verdict": "PASS"
-          },
-          "id": "wrong-a85f2c48",
-          "revision": 6,
-          "seq": 13,
-          "state": "handoff-ready"
-        },
-        {
-          "at": 2000000000.0,
-          "data": {
-            "verdict": "PASS"
-          },
-          "id": "wrong-a85f2c48",
-          "revision": 7,
-          "seq": 14,
-          "state": "handoff-ready"
-        },
-        {
-          "at": 2000000000.0,
-          "data": {
-            "verdict": "PASS"
-          },
-          "id": "wrong-a85f2c48",
-          "revision": 8,
-          "seq": 15,
-          "state": "handoff-ready"
-        },
-        {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
           "id": "wrong-a09957ee",
           "revision": 8,
-          "seq": 16,
+          "seq": 13,
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
           "id": "wrong-a09957ee",
           "revision": 9,
+          "seq": 14,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "wrong-a85f2c48",
+          "revision": 6,
+          "seq": 15,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "wrong-a85f2c48",
+          "revision": 7,
+          "seq": 16,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "wrong-a85f2c48",
+          "revision": 8,
           "seq": 17,
           "state": "handoff-ready"
         },
@@ -2069,7 +2135,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -2079,7 +2145,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -2089,72 +2155,72 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
-          "data": {
-            "verdict": "PASS"
-          },
-          "id": "wrong-3290ef73",
-          "revision": 6,
-          "seq": 25,
-          "state": "handoff-ready"
-        },
-        {
-          "at": 2000000000.0,
-          "data": {
-            "verdict": "PASS"
-          },
-          "id": "wrong-3290ef73",
-          "revision": 7,
-          "seq": 26,
-          "state": "handoff-ready"
-        },
-        {
-          "at": 2000000000.0,
-          "data": {
-            "verdict": "PASS"
-          },
-          "id": "wrong-3290ef73",
-          "revision": 8,
-          "seq": 27,
-          "state": "handoff-ready"
-        },
-        {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
           "id": "wrong-a09957ee",
           "revision": 11,
-          "seq": 28,
+          "seq": 25,
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
           "id": "wrong-a09957ee",
           "revision": 12,
-          "seq": 29,
+          "seq": 26,
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
           "id": "wrong-a85f2c48",
           "revision": 10,
-          "seq": 30,
+          "seq": 27,
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
           "id": "wrong-a85f2c48",
           "revision": 11,
+          "seq": 28,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "wrong-3290ef73",
+          "revision": 6,
+          "seq": 29,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "wrong-3290ef73",
+          "revision": 7,
+          "seq": 30,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "wrong-3290ef73",
+          "revision": 8,
           "seq": 31,
           "state": "handoff-ready"
         },
@@ -2205,7 +2271,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -2215,92 +2281,92 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
-          "data": {
-            "verdict": "PASS"
-          },
-          "id": "wrong-3ee4cc3c",
-          "revision": 6,
-          "seq": 38,
-          "state": "handoff-ready"
-        },
-        {
-          "at": 2000000000.0,
-          "data": {
-            "verdict": "PASS"
-          },
-          "id": "wrong-3ee4cc3c",
-          "revision": 7,
-          "seq": 39,
-          "state": "handoff-ready"
-        },
-        {
-          "at": 2000000000.0,
-          "data": {
-            "verdict": "PASS"
-          },
-          "id": "wrong-3ee4cc3c",
-          "revision": 8,
-          "seq": 40,
-          "state": "handoff-ready"
-        },
-        {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
           "id": "wrong-a09957ee",
           "revision": 13,
-          "seq": 41,
+          "seq": 38,
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
           "id": "wrong-a09957ee",
           "revision": 14,
-          "seq": 42,
+          "seq": 39,
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
           "id": "wrong-a85f2c48",
           "revision": 12,
-          "seq": 43,
+          "seq": 40,
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
           "id": "wrong-a85f2c48",
           "revision": 13,
-          "seq": 44,
+          "seq": 41,
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
           "id": "wrong-3290ef73",
           "revision": 10,
-          "seq": 45,
+          "seq": 42,
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
           "id": "wrong-3290ef73",
           "revision": 11,
+          "seq": 43,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "wrong-3ee4cc3c",
+          "revision": 6,
+          "seq": 44,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "wrong-3ee4cc3c",
+          "revision": 7,
+          "seq": 45,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "wrong-3ee4cc3c",
+          "revision": 8,
           "seq": 46,
           "state": "handoff-ready"
         }
@@ -2460,7 +2526,7 @@
           "request_hash": "cbb60aa7efbf8a822a4a9f5cd4a6d55c833647a9a947afcf79cc44e6d8c54dcd",
           "revision": 11,
           "state": "handoff-ready",
-          "updated": 2000000000.0
+          "updated": 1999999900.0
         },
         {
           "data": {
@@ -2581,7 +2647,7 @@
           "request_hash": "6b1460ccd4629102a0b2c39e271477433fe3537e03effc9e083e30e8188ecf1c",
           "revision": 8,
           "state": "handoff-ready",
-          "updated": 2000000000.0
+          "updated": 1999999900.0
         },
         {
           "data": {
@@ -2706,7 +2772,7 @@
           "request_hash": "8c078bbb153183908f5d1066a959a564a8fe545f4420c6f145ab8be2b3fa3141",
           "revision": 14,
           "state": "handoff-ready",
-          "updated": 2000000000.0
+          "updated": 1999999900.0
         },
         {
           "data": {
@@ -2831,7 +2897,7 @@
           "request_hash": "7725dd6ca3dc89f3b6070019d673ae4eccfff9cd6d6cb7095c1a871ecd3ce5b3",
           "revision": 13,
           "state": "handoff-ready",
-          "updated": 2000000000.0
+          "updated": 1999999900.0
         }
       ]
     }

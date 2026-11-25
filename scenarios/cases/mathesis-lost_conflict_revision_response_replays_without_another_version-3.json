@@ -3,7 +3,7 @@
   "id": "mathesis-lost_conflict_revision_response_replays_without_another_version-3",
   "source_test": "test_mathesis_delivery.DeliveryTests.test_lost_conflict_revision_response_replays_without_another_version",
   "stage": "mathesis",
-  "now": 2000000000.0,
+  "now": 1999999900.0,
   "workflow": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
   "installation": {
     "repositories": {
@@ -47,7 +47,10 @@
       "enabled": false,
       "max_new_tasks_per_tick": 4,
       "backfill_result_ids": [],
-      "daily": false
+      "daily": false,
+      "auto_backfill": false,
+      "backfill_per_tick": 1,
+      "backfill_pending_limit": 16
     },
     "kinds": {
       "firstcontact": false,
@@ -207,6 +210,21 @@
     "cma": {
       "token_base_url": "https://worker.example.invalid",
       "proxy_base_url": "https://auth.example.invalid/api/v1/proxy/s/cma"
+    },
+    "independent_review": {
+      "enabled": false,
+      "max_active": 2,
+      "github": {
+        "service": "github-review-read",
+        "user_service_id": "dedicated-read-only-input-connection",
+        "read_only": true
+      },
+      "profile": {
+        "model": "gpt-6.2-sol",
+        "reasoning_effort": "high"
+      },
+      "register_author_contacts": true,
+      "max_active_per_group": 1
     }
   },
   "config": {
@@ -384,7 +402,7 @@
           "id": "mathesis-1",
           "state": "handoff-ready",
           "revision": 6,
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           }
@@ -394,7 +412,7 @@
           "id": "mathesis-1",
           "state": "handoff-ready",
           "revision": 7,
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           }
@@ -404,7 +422,7 @@
           "id": "mathesis-1",
           "state": "handoff-ready",
           "revision": 8,
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           }
@@ -414,7 +432,7 @@
           "id": "mathesis-1",
           "state": "handoff-ready",
           "revision": 9,
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           }
@@ -560,7 +578,7 @@
               "verdict": "PASS"
             }
           },
-          "updated": 2000000000.0
+          "updated": 1999999900.0
         }
       ]
     }
@@ -572,6 +590,10 @@
       "tag": "outreach-control"
     }
   },
+  "options": {
+    "previous": []
+  },
+  "admissions": [],
   "script": [
     {
       "adapter": "mathesis",
@@ -640,7 +662,11 @@
       "kwargs": {
         "force": true
       },
-      "result": true
+      "result": true,
+      "saved_snapshot": {
+        "generation": 7,
+        "digest": "2de451d93268c99e2e989225f69e22b089981285167b52e9e0a8ad4f418f252c"
+      }
     },
     {
       "adapter": "mathesis",
@@ -668,7 +694,11 @@
       "method": "save",
       "args": [],
       "kwargs": {},
-      "result": false
+      "result": false,
+      "saved_snapshot": {
+        "generation": 7,
+        "digest": "2de451d93268c99e2e989225f69e22b089981285167b52e9e0a8ad4f418f252c"
+      }
     }
   ],
   "expected_final_rows": {
@@ -843,7 +873,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -853,7 +883,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -863,7 +893,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -873,7 +903,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -883,7 +913,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -893,7 +923,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -1052,7 +1082,7 @@
           "request_hash": "3ac17e5772b4cb79cd45b520af5a4040969e08d75f7345978b829b8bb8c7e6d4",
           "revision": 11,
           "state": "verified",
-          "updated": 2000000000.0
+          "updated": 1999999900.0
         }
       ]
     }

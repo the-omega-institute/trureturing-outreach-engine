@@ -1,12 +1,13 @@
 """Serialized, metadata-only Sent Items intake for the maintained contact map."""
 from datetime import datetime, timezone
+import hashlib
 import json
 import os
 from pathlib import Path
 import re
 import sys
 
-from . import registry
+from . import registry, recording
 from .mailbox import address, instant, _machine_sender
 from .queue import canonical, require
 from .tasks import review_current
@@ -148,6 +149,7 @@ def commit_tables(root):
     push(root)
 
 
+@recording.stage_frame('sent')
 def reconcile(ledger, config, root, mailbox, now=None, *, observe=None):
     """At most two pages per tick. Checkpoint only after table push succeeds.
 
@@ -164,7 +166,10 @@ def reconcile(ledger, config, root, mailbox, now=None, *, observe=None):
     db = ledger.tasks.db
     saved = db.execute('SELECT payload FROM pipeline_state WHERE key=?', (CURSOR,)).fetchone()
     cursor = json.loads(saved[0]) if saved else {}
-    if cursor.get('since') != since or not cursor.get('next_link'):
+    pending = db.execute('SELECT payload FROM pipeline_state WHERE key=?', ('sent-events-pending',)).fetchone()
+    if pending and json.loads(pending[0])['cursor'].get('since') == since:
+        cursor = json.loads(pending[0])['cursor']
+    elif cursor.get('since') != since or not cursor.get('next_link'):
         cursor = {'since': since, 'until': until}
     require(instant(cursor['until']) <= instant(until), 'Sent cursor is in the future')
     ignored = {str(a).strip().casefold() for a in config.get('mailbox', {}).get('team_addresses', [])}
@@ -182,8 +187,13 @@ def reconcile(ledger, config, root, mailbox, now=None, *, observe=None):
             report['events'] += record_page(root, messages, rows, ignored, instant(since), instant(cursor['until']), account)
             # Always repair views and retry persistence, including after a prior
             # partial failure when all events are now present in the working tree.
-            registry.render(root, paths=FILES[1:])
-            commit_tables(root)
+            recording.contact_render(root, lambda: registry.render(root, paths=FILES[1:]))
+            intent = {'cursor': cursor.copy(), 'contacts_digest': hashlib.sha256(
+                canonical(registry.read(root, 'contacts')).encode()).hexdigest()}
+            db.execute('INSERT OR REPLACE INTO pipeline_state VALUES(?,?)', ('sent-events-pending', canonical(intent)))
+            ledger.save(force=True)
+            recording.contact_commit(lambda: commit_tables(root))
+            db.execute('DELETE FROM pipeline_state WHERE key=?', ('sent-events-pending',))
             cursor['next_link'] = link
             db.execute('INSERT OR REPLACE INTO pipeline_state VALUES(?,?)', (CURSOR, canonical(cursor)))
             ledger.save()

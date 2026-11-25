@@ -3,7 +3,7 @@
   "id": "mathesis-wrong_post_or_get_receipt_cannot_finish-3",
   "source_test": "test_mathesis_delivery.DeliveryTests.test_wrong_post_or_get_receipt_cannot_finish",
   "stage": "mathesis",
-  "now": 2000000000.0,
+  "now": 1999999900.0,
   "workflow": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
   "installation": {
     "repositories": {
@@ -47,7 +47,10 @@
       "enabled": false,
       "max_new_tasks_per_tick": 4,
       "backfill_result_ids": [],
-      "daily": false
+      "daily": false,
+      "auto_backfill": false,
+      "backfill_per_tick": 1,
+      "backfill_pending_limit": 16
     },
     "kinds": {
       "firstcontact": false,
@@ -207,6 +210,21 @@
     "cma": {
       "token_base_url": "https://worker.example.invalid",
       "proxy_base_url": "https://auth.example.invalid/api/v1/proxy/s/cma"
+    },
+    "independent_review": {
+      "enabled": false,
+      "max_active": 2,
+      "github": {
+        "service": "github-review-read",
+        "user_service_id": "dedicated-read-only-input-connection",
+        "read_only": true
+      },
+      "profile": {
+        "model": "gpt-6.2-sol",
+        "reasoning_effort": "high"
+      },
+      "register_author_contacts": true,
+      "max_active_per_group": 1
     }
   },
   "config": {
@@ -313,27 +331,6 @@
       ],
       "rows": [
         {
-          "key": "mathesis:15f7acc071f4ab0818c2cf8a14cda04f255115daa325cf19e1d23121ee309975",
-          "payload": {
-            "receipt": {
-              "producer": "trureturing-outreach",
-              "publication": null,
-              "review": {
-                "status": "interrupted"
-              },
-              "schema": "mathesis.manuscript-receipt.v1",
-              "source_sha256": "1a07d345c39df2081ca4796666afb1f2a5628388c3e3e675bffce6d4813c17c2",
-              "status": "in_review",
-              "submission": "original-submission",
-              "upstream_version": "1",
-              "version": 1,
-              "work_id": "wrong-a85f2c48"
-            },
-            "request_hash": "dfeabf5b779d4db9705bebe7531618ab037c0ea36ee82f1e31bb811c3a0a1df0",
-            "task_id": "wrong-a85f2c48"
-          }
-        },
-        {
           "key": "mathesis:a8166bfce9e2906e6f8e737b4c8472d6f7dc285176b857e600615222799afb2e",
           "payload": {
             "receipt": {
@@ -352,6 +349,27 @@
             },
             "request_hash": "4611181f214d55acd0ddb4a4b5930ff898e376b2ca1413cbbf0a6524ffdb5e1c",
             "task_id": "wrong-a09957ee"
+          }
+        },
+        {
+          "key": "mathesis:15f7acc071f4ab0818c2cf8a14cda04f255115daa325cf19e1d23121ee309975",
+          "payload": {
+            "receipt": {
+              "producer": "trureturing-outreach",
+              "publication": null,
+              "review": {
+                "status": "interrupted"
+              },
+              "schema": "mathesis.manuscript-receipt.v1",
+              "source_sha256": "1a07d345c39df2081ca4796666afb1f2a5628388c3e3e675bffce6d4813c17c2",
+              "status": "in_review",
+              "submission": "original-submission",
+              "upstream_version": "1",
+              "version": 1,
+              "work_id": "wrong-a85f2c48"
+            },
+            "request_hash": "dfeabf5b779d4db9705bebe7531618ab037c0ea36ee82f1e31bb811c3a0a1df0",
+            "task_id": "wrong-a85f2c48"
           }
         },
         {
@@ -447,7 +465,7 @@
           "id": "wrong-a09957ee",
           "state": "handoff-ready",
           "revision": 6,
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           }
@@ -457,7 +475,7 @@
           "id": "wrong-a09957ee",
           "state": "handoff-ready",
           "revision": 7,
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           }
@@ -510,20 +528,20 @@
         },
         {
           "seq": 13,
-          "id": "wrong-a85f2c48",
+          "id": "wrong-a09957ee",
           "state": "handoff-ready",
-          "revision": 6,
-          "at": 2000000000.0,
+          "revision": 8,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           }
         },
         {
           "seq": 14,
-          "id": "wrong-a85f2c48",
+          "id": "wrong-a09957ee",
           "state": "handoff-ready",
-          "revision": 7,
-          "at": 2000000000.0,
+          "revision": 9,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           }
@@ -532,28 +550,28 @@
           "seq": 15,
           "id": "wrong-a85f2c48",
           "state": "handoff-ready",
-          "revision": 8,
-          "at": 2000000000.0,
+          "revision": 6,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           }
         },
         {
           "seq": 16,
-          "id": "wrong-a09957ee",
+          "id": "wrong-a85f2c48",
           "state": "handoff-ready",
-          "revision": 8,
-          "at": 2000000000.0,
+          "revision": 7,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           }
         },
         {
           "seq": 17,
-          "id": "wrong-a09957ee",
+          "id": "wrong-a85f2c48",
           "state": "handoff-ready",
-          "revision": 9,
-          "at": 2000000000.0,
+          "revision": 8,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           }
@@ -756,7 +774,7 @@
               "verdict": "PASS"
             }
           },
-          "updated": 2000000000.0
+          "updated": 1999999900.0
         },
         {
           "id": "wrong-a85f2c48",
@@ -877,7 +895,7 @@
               "verdict": "PASS"
             }
           },
-          "updated": 2000000000.0
+          "updated": 1999999900.0
         },
         {
           "id": "wrong-3290ef73",
@@ -991,6 +1009,10 @@
       "tag": "outreach-control"
     }
   },
+  "options": {
+    "previous": []
+  },
+  "admissions": [],
   "script": [
     {
       "adapter": "mathesis",
@@ -1029,7 +1051,11 @@
       "kwargs": {
         "force": true
       },
-      "result": true
+      "result": true,
+      "saved_snapshot": {
+        "generation": 11,
+        "digest": "ba5027494f1cc493fb0e77ab555ec572532096d38a67a4768aa7b6f57554258d"
+      }
     },
     {
       "adapter": "mathesis",
@@ -1061,7 +1087,11 @@
       "kwargs": {
         "force": true
       },
-      "result": true
+      "result": true,
+      "saved_snapshot": {
+        "generation": 12,
+        "digest": "bacea9b2a4a697e938ee146c0e8bf71edf08943731ea4956735856be75d91f1e"
+      }
     },
     {
       "adapter": "ledger",
@@ -1070,7 +1100,105 @@
       "kwargs": {
         "force": true
       },
-      "result": true
+      "result": true,
+      "saved_snapshot": {
+        "generation": 13,
+        "digest": "1b80f9a1ca0c1d450e61f37923dc57c2a048ed1836f3050614e1a8ec7928c576"
+      }
+    },
+    {
+      "adapter": "ledger",
+      "method": "save",
+      "args": [],
+      "kwargs": {
+        "force": true
+      },
+      "result": true,
+      "saved_snapshot": {
+        "generation": 14,
+        "digest": "4f12a155530830bc70aad0bfba0b625c5c8d03c48799dd9fcec840bed243d872"
+      }
+    },
+    {
+      "adapter": "mathesis",
+      "method": "status",
+      "args": [
+        "original-submission",
+        1
+      ],
+      "kwargs": {},
+      "result": {
+        "schema": "mathesis.manuscript-receipt.v1",
+        "submission": "other-submission",
+        "version": 1,
+        "producer": "trureturing-outreach",
+        "work_id": "wrong-a09957ee",
+        "upstream_version": "1",
+        "source_sha256": "1a07d345c39df2081ca4796666afb1f2a5628388c3e3e675bffce6d4813c17c2",
+        "publication": null,
+        "status": "in_review",
+        "review": {
+          "status": "interrupted"
+        }
+      }
+    },
+    {
+      "adapter": "ledger",
+      "method": "save",
+      "args": [],
+      "kwargs": {},
+      "result": false,
+      "saved_snapshot": {
+        "generation": 14,
+        "digest": "4f12a155530830bc70aad0bfba0b625c5c8d03c48799dd9fcec840bed243d872"
+      }
+    },
+    {
+      "adapter": "ledger",
+      "method": "save",
+      "args": [],
+      "kwargs": {
+        "force": true
+      },
+      "result": true,
+      "saved_snapshot": {
+        "generation": 15,
+        "digest": "174f12905cc35f69413a4fea5aa5285561011064ca1188aec6c85e97936ccaab"
+      }
+    },
+    {
+      "adapter": "mathesis",
+      "method": "status",
+      "args": [
+        "original-submission",
+        1
+      ],
+      "kwargs": {},
+      "result": {
+        "schema": "mathesis.manuscript-receipt.v1",
+        "submission": "other-submission",
+        "version": 1,
+        "producer": "trureturing-outreach",
+        "work_id": "wrong-a09957ee",
+        "upstream_version": "1",
+        "source_sha256": "1a07d345c39df2081ca4796666afb1f2a5628388c3e3e675bffce6d4813c17c2",
+        "publication": null,
+        "status": "in_review",
+        "review": {
+          "status": "interrupted"
+        }
+      }
+    },
+    {
+      "adapter": "ledger",
+      "method": "save",
+      "args": [],
+      "kwargs": {},
+      "result": false,
+      "saved_snapshot": {
+        "generation": 15,
+        "digest": "174f12905cc35f69413a4fea5aa5285561011064ca1188aec6c85e97936ccaab"
+      }
     },
     {
       "adapter": "releases",
@@ -1102,7 +1230,11 @@
       "kwargs": {
         "force": true
       },
-      "result": true
+      "result": true,
+      "saved_snapshot": {
+        "generation": 16,
+        "digest": "39447f908b9213d948e401d603b6a8eadd45cfddf836b1d7e3fa87e5324ef7a5"
+      }
     },
     {
       "adapter": "mathesis",
@@ -1170,7 +1302,11 @@
       "kwargs": {
         "force": true
       },
-      "result": true
+      "result": true,
+      "saved_snapshot": {
+        "generation": 17,
+        "digest": "469de24fbd151792c390de4ef9b9f786c8651d7e1af2a4c04cfa3e1784af17b3"
+      }
     },
     {
       "adapter": "mathesis",
@@ -1200,85 +1336,11 @@
       "method": "save",
       "args": [],
       "kwargs": {},
-      "result": false
-    },
-    {
-      "adapter": "ledger",
-      "method": "save",
-      "args": [],
-      "kwargs": {
-        "force": true
-      },
-      "result": true
-    },
-    {
-      "adapter": "mathesis",
-      "method": "status",
-      "args": [
-        "original-submission",
-        1
-      ],
-      "kwargs": {},
-      "result": {
-        "schema": "mathesis.manuscript-receipt.v1",
-        "submission": "other-submission",
-        "version": 1,
-        "producer": "trureturing-outreach",
-        "work_id": "wrong-a09957ee",
-        "upstream_version": "1",
-        "source_sha256": "1a07d345c39df2081ca4796666afb1f2a5628388c3e3e675bffce6d4813c17c2",
-        "publication": null,
-        "status": "in_review",
-        "review": {
-          "status": "interrupted"
-        }
+      "result": false,
+      "saved_snapshot": {
+        "generation": 17,
+        "digest": "469de24fbd151792c390de4ef9b9f786c8651d7e1af2a4c04cfa3e1784af17b3"
       }
-    },
-    {
-      "adapter": "ledger",
-      "method": "save",
-      "args": [],
-      "kwargs": {},
-      "result": false
-    },
-    {
-      "adapter": "ledger",
-      "method": "save",
-      "args": [],
-      "kwargs": {
-        "force": true
-      },
-      "result": true
-    },
-    {
-      "adapter": "mathesis",
-      "method": "status",
-      "args": [
-        "original-submission",
-        1
-      ],
-      "kwargs": {},
-      "result": {
-        "schema": "mathesis.manuscript-receipt.v1",
-        "submission": "other-submission",
-        "version": 1,
-        "producer": "trureturing-outreach",
-        "work_id": "wrong-a09957ee",
-        "upstream_version": "1",
-        "source_sha256": "1a07d345c39df2081ca4796666afb1f2a5628388c3e3e675bffce6d4813c17c2",
-        "publication": null,
-        "status": "in_review",
-        "review": {
-          "status": "interrupted"
-        }
-      }
-    },
-    {
-      "adapter": "ledger",
-      "method": "save",
-      "args": [],
-      "kwargs": {},
-      "result": false
     }
   ],
   "expected_final_rows": {
@@ -1538,7 +1600,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -1548,7 +1610,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -1604,52 +1666,52 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
-          "data": {
-            "verdict": "PASS"
-          },
-          "id": "wrong-a85f2c48",
-          "revision": 6,
-          "seq": 13,
-          "state": "handoff-ready"
-        },
-        {
-          "at": 2000000000.0,
-          "data": {
-            "verdict": "PASS"
-          },
-          "id": "wrong-a85f2c48",
-          "revision": 7,
-          "seq": 14,
-          "state": "handoff-ready"
-        },
-        {
-          "at": 2000000000.0,
-          "data": {
-            "verdict": "PASS"
-          },
-          "id": "wrong-a85f2c48",
-          "revision": 8,
-          "seq": 15,
-          "state": "handoff-ready"
-        },
-        {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
           "id": "wrong-a09957ee",
           "revision": 8,
-          "seq": 16,
+          "seq": 13,
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
           "id": "wrong-a09957ee",
           "revision": 9,
+          "seq": 14,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "wrong-a85f2c48",
+          "revision": 6,
+          "seq": 15,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "wrong-a85f2c48",
+          "revision": 7,
+          "seq": 16,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "wrong-a85f2c48",
+          "revision": 8,
           "seq": 17,
           "state": "handoff-ready"
         },
@@ -1700,7 +1762,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -1710,7 +1772,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -1720,72 +1782,72 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
-          "data": {
-            "verdict": "PASS"
-          },
-          "id": "wrong-3290ef73",
-          "revision": 6,
-          "seq": 25,
-          "state": "handoff-ready"
-        },
-        {
-          "at": 2000000000.0,
-          "data": {
-            "verdict": "PASS"
-          },
-          "id": "wrong-3290ef73",
-          "revision": 7,
-          "seq": 26,
-          "state": "handoff-ready"
-        },
-        {
-          "at": 2000000000.0,
-          "data": {
-            "verdict": "PASS"
-          },
-          "id": "wrong-3290ef73",
-          "revision": 8,
-          "seq": 27,
-          "state": "handoff-ready"
-        },
-        {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
           "id": "wrong-a09957ee",
           "revision": 11,
-          "seq": 28,
+          "seq": 25,
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
           "id": "wrong-a09957ee",
           "revision": 12,
-          "seq": 29,
+          "seq": 26,
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
           "id": "wrong-a85f2c48",
           "revision": 10,
-          "seq": 30,
+          "seq": 27,
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
           "id": "wrong-a85f2c48",
           "revision": 11,
+          "seq": 28,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "wrong-3290ef73",
+          "revision": 6,
+          "seq": 29,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "wrong-3290ef73",
+          "revision": 7,
+          "seq": 30,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "wrong-3290ef73",
+          "revision": 8,
           "seq": 31,
           "state": "handoff-ready"
         }
@@ -1941,7 +2003,7 @@
           "request_hash": "cbb60aa7efbf8a822a4a9f5cd4a6d55c833647a9a947afcf79cc44e6d8c54dcd",
           "revision": 8,
           "state": "handoff-ready",
-          "updated": 2000000000.0
+          "updated": 1999999900.0
         },
         {
           "data": {
@@ -2066,7 +2128,7 @@
           "request_hash": "8c078bbb153183908f5d1066a959a564a8fe545f4420c6f145ab8be2b3fa3141",
           "revision": 12,
           "state": "handoff-ready",
-          "updated": 2000000000.0
+          "updated": 1999999900.0
         },
         {
           "data": {
@@ -2191,7 +2253,7 @@
           "request_hash": "7725dd6ca3dc89f3b6070019d673ae4eccfff9cd6d6cb7095c1a871ecd3ce5b3",
           "revision": 11,
           "state": "handoff-ready",
-          "updated": 2000000000.0
+          "updated": 1999999900.0
         }
       ]
     }

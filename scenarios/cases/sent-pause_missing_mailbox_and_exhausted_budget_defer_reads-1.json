@@ -1,0 +1,470 @@
+{
+  "schema_version": 1,
+  "id": "sent-pause_missing_mailbox_and_exhausted_budget_defer_reads-1",
+  "source_test": "test_sent_events.SentEventsTests.test_pause_missing_mailbox_and_exhausted_budget_defer_reads",
+  "stage": "sent",
+  "now": 1999999900.0,
+  "workflow": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+  "installation": {
+    "repositories": {
+      "data": "example/outreach"
+    },
+    "schema_version": 1,
+    "paused": true,
+    "max_active": 24,
+    "prompt_max_characters": 120000,
+    "kind_quota": "equal",
+    "followup_lane": true,
+    "sandbox_pool": {
+      "max_sandboxes": 4,
+      "agents_per_sandbox": 6,
+      "rotate_after_agents": 24,
+      "quota_blocked_max_agents_placed": 192,
+      "prioritize_correspondence_notes": true,
+      "groups": [
+        {
+          "name": "notes",
+          "kinds": [
+            "shortnote",
+            "mathesis",
+            "firstcontact"
+          ],
+          "max_sandboxes": 1
+        },
+        {
+          "name": "mail",
+          "kinds": [
+            "reply",
+            "research",
+            "submission",
+            "daily"
+          ],
+          "max_sandboxes": 1
+        }
+      ]
+    },
+    "pipeline": {
+      "enabled": false,
+      "max_new_tasks_per_tick": 4,
+      "backfill_result_ids": [],
+      "daily": false,
+      "auto_backfill": false,
+      "backfill_per_tick": 1,
+      "backfill_pending_limit": 16
+    },
+    "kinds": {
+      "firstcontact": false,
+      "reply": false,
+      "research": false,
+      "shortnote": false,
+      "daily": false,
+      "mathesis": false,
+      "submission": false
+    },
+    "automation": {
+      "enabled": false,
+      "automatic_mail": false,
+      "max_new_tasks_per_tick": 6,
+      "max_revisions": 3,
+      "shortnote_extra_uplift_rounds": 2,
+      "routine_academic_mail": "automatic after exact independent review and fresh mailbox checks",
+      "user_decision_mail": "ask, then preserve as user-owned draft for manual sending"
+    },
+    "agent_template": {
+      "profile": {
+        "model": "gpt-6.1-sol",
+        "reasoning_effort": "high",
+        "permissions": {
+          "services": [
+            "api-github-pat",
+            "oracle"
+          ]
+        }
+      }
+    },
+    "mailbox_adapter": "unconfigured",
+    "home_domains": [
+      "campus.example.invalid",
+      "alumni.example.invalid"
+    ],
+    "mailbox": {
+      "account": "owner@example.invalid",
+      "live_since": "2000-01-01T00:00:00Z",
+      "cross_conversation_guard": true,
+      "max_total_attachment_bytes": 26214400,
+      "service_attention_domains": [
+        "overleaf.com"
+      ],
+      "editorial_domains": [
+        "editorialmanager.com",
+        "manuscriptcentral.com",
+        "aps.org",
+        "msp.org",
+        "arxiv.org",
+        "springernature.com",
+        "iop.org",
+        "ams.org",
+        "elsevier.com",
+        "wiley.com"
+      ],
+      "team_addresses": [
+        "coauthor@example.invalid"
+      ],
+      "team_addresses_note": "Configured coauthors",
+      "acceptance_recipients": [
+        "contributor@example.invalid"
+      ]
+    },
+    "claude_loop": "local, started by the user later",
+    "publication_selection": "explicit per note; review alone never publishes",
+    "mathesis": {
+      "mode": "disabled",
+      "submission_credentials": "configured session",
+      "author_confirmation": "required by the existing Mathesis contract",
+      "base_url": "https://mathesis.example.invalid",
+      "completion": "verified durable receipt; downstream review and presentation are Mathesis responsibilities",
+      "legacy_migration_per_tick": 3,
+      "acceptance_submission": "00000000-0000-0000-0000-000000000000"
+    },
+    "github": {
+      "service": "api-github-pat",
+      "user_service_id": "00000000-0000-0000-0000-000000000000"
+    },
+    "identity": {
+      "team_authors": [
+        "Blaire Mercer",
+        "Avery Reed"
+      ],
+      "owner_labels": [
+        "owner",
+        "Avery Reed"
+      ],
+      "first_names": [
+        "Avery",
+        "Blaire"
+      ],
+      "firstcontact_signature": "Best regards,\nAvery and Blaire\nExample University; Example Research Group",
+      "firstcontact_opening_terms": [
+        "avery reed",
+        "blaire mercer",
+        "example university",
+        "example research group"
+      ],
+      "reply_affiliation_markers": [
+        "example university",
+        "example research group",
+        "omega institute"
+      ],
+      "affiliation_patterns": [
+        "example university",
+        "example research group",
+        "omega institute"
+      ],
+      "affiliation_prefixes": [
+        "EU"
+      ],
+      "author_facts": {
+        "Avery Reed": {
+          "affiliation": "Example University",
+          "email": "owner@example.invalid",
+          "orcid": "0000-0000-0000-0000",
+          "country": "Example country",
+          "google_scholar": "https://scholar.example.invalid/profile"
+        },
+        "Blaire Mercer": {
+          "affiliation": "Example Research Group",
+          "email": "coauthor@example.invalid",
+          "orcid": "0000-0000-0000-0000",
+          "country": "Example country"
+        },
+        "ai_statement": "Configured in the private data repository.",
+        "funding": "Configured in the private data repository.",
+        "competing_interests": "Configured in the private data repository.",
+        "originality": "Configured in the private data repository.",
+        "unknown_ask_once": "Configured in the private data repository.",
+        "defaults": "Configured in the private data repository.",
+        "who_are_you_answer": "Configured in the private data repository.",
+        "affiliation_note": "Configured in the private data repository.",
+        "coauthor_background_answer": "Configured in the private data repository."
+      },
+      "direct_display_decision_ref": "example-direct-display",
+      "shortnote_creators": [
+        {
+          "name": "Blaire Mercer",
+          "affiliation": "Example Research Group"
+        },
+        {
+          "name": "Avery Reed",
+          "affiliation": "Example University"
+        }
+      ],
+      "submission_scope": "independent-team"
+    },
+    "credentials": {
+      "nyx_base_url": "https://auth.example.invalid",
+      "nyx_legacy_issuer": "https://legacy-auth.example.invalid",
+      "nyx_owner": "example-owner",
+      "graph_tenant": "example-tenant",
+      "graph_client": "example-client"
+    },
+    "cma": {
+      "token_base_url": "https://worker.example.invalid",
+      "proxy_base_url": "https://auth.example.invalid/api/v1/proxy/s/cma"
+    },
+    "independent_review": {
+      "enabled": false,
+      "max_active": 2,
+      "github": {
+        "service": "github-review-read",
+        "user_service_id": "dedicated-read-only-input-connection",
+        "read_only": true
+      },
+      "profile": {
+        "model": "gpt-6.2-sol",
+        "reasoning_effort": "high"
+      },
+      "register_author_contacts": true,
+      "max_active_per_group": 1
+    }
+  },
+  "config": {
+    "paused": true,
+    "mailbox": {
+      "team_addresses": [
+        "team@example.invalid"
+      ]
+    }
+  },
+  "initial_rows": {
+    "control_events": {
+      "columns": [
+        "id",
+        "payload"
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "rows": []
+    },
+    "input_asset_receipts": {
+      "columns": [
+        "identity",
+        "generation"
+      ],
+      "primary_key": [
+        "identity"
+      ],
+      "rows": []
+    },
+    "pipeline_sources": {
+      "columns": [
+        "result_id",
+        "identity",
+        "payload",
+        "baseline",
+        "task_id"
+      ],
+      "primary_key": [
+        "result_id"
+      ],
+      "rows": []
+    },
+    "pipeline_state": {
+      "columns": [
+        "key",
+        "payload"
+      ],
+      "primary_key": [
+        "key"
+      ],
+      "rows": []
+    },
+    "sqlite_sequence": {
+      "columns": [
+        "name",
+        "seq"
+      ],
+      "primary_key": [
+        "name"
+      ],
+      "rows": []
+    },
+    "task_events": {
+      "columns": [
+        "seq",
+        "id",
+        "state",
+        "revision",
+        "at",
+        "data"
+      ],
+      "primary_key": [
+        "seq"
+      ],
+      "rows": []
+    },
+    "task_migrations": {
+      "columns": [
+        "name",
+        "phase"
+      ],
+      "primary_key": [
+        "name"
+      ],
+      "rows": [
+        {
+          "name": "compact-task-events-v1",
+          "phase": "done"
+        }
+      ]
+    },
+    "tasks": {
+      "columns": [
+        "id",
+        "request",
+        "request_hash",
+        "owner",
+        "kind",
+        "state",
+        "revision",
+        "data",
+        "updated"
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "rows": []
+    }
+  },
+  "initial_files": {
+    "tables/contacts.json": "ewogICJjb250YWN0cyI6IFsKICAgIHsKICAgICAgImlkIjogImNvbnRhY3QtMzRmNjJkYmJjMWE5YmFlNyIsCiAgICAgICJuYW1lIjogIlByb2Zlc3NvciBTY2hvbGFyIiwKICAgICAgImVtYWlsIjogInNjaG9sYXJAZXhhbXBsZS5pbnZhbGlkIiwKICAgICAgInByb2JsZW1faWRzIjogW10sCiAgICAgICJwb2xpY3lfZnJlc2giOiBmYWxzZSwKICAgICAgImh1YiI6IHsKICAgICAgICAidGhyZWFkcyI6IFtdLAogICAgICAgICJldmVudHMiOiBbXSwKICAgICAgICAid29ya3NwYWNlX3BhdGhzIjogW10KICAgICAgfQogICAgfQogIF0KfQo=",
+    "tables/positive.json": "ewogICJlbnRyaWVzIjogW10KfQo=",
+    "tables/refusals.json": "ewogICJyZWZ1c2FscyI6IFtdCn0K"
+  },
+  "adapter_attributes": {
+    "releases": {},
+    "mailbox": {
+      "settings": {
+        "account": "owner@example.invalid",
+        "reconciled": true,
+        "live_since": "2026-11-01T00:00:00Z"
+      }
+    }
+  },
+  "datetime": "2026-11-05T00:00:00+00:00",
+  "options": {
+    "max_pages": 2,
+    "mailbox": true,
+    "advance": false,
+    "previous": []
+  },
+  "admissions": [],
+  "script": [],
+  "expected_final_rows": {
+    "control_events": {
+      "columns": [
+        "id",
+        "payload"
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "rows": []
+    },
+    "input_asset_receipts": {
+      "columns": [
+        "identity",
+        "generation"
+      ],
+      "primary_key": [
+        "identity"
+      ],
+      "rows": []
+    },
+    "pipeline_sources": {
+      "columns": [
+        "result_id",
+        "identity",
+        "payload",
+        "baseline",
+        "task_id"
+      ],
+      "primary_key": [
+        "result_id"
+      ],
+      "rows": []
+    },
+    "pipeline_state": {
+      "columns": [
+        "key",
+        "payload"
+      ],
+      "primary_key": [
+        "key"
+      ],
+      "rows": []
+    },
+    "sqlite_sequence": {
+      "columns": [
+        "name",
+        "seq"
+      ],
+      "primary_key": [
+        "name"
+      ],
+      "rows": []
+    },
+    "task_events": {
+      "columns": [
+        "seq",
+        "id",
+        "state",
+        "revision",
+        "at",
+        "data"
+      ],
+      "primary_key": [
+        "seq"
+      ],
+      "rows": []
+    },
+    "task_migrations": {
+      "columns": [
+        "name",
+        "phase"
+      ],
+      "primary_key": [
+        "name"
+      ],
+      "rows": [
+        {
+          "name": "compact-task-events-v1",
+          "phase": "done"
+        }
+      ]
+    },
+    "tasks": {
+      "columns": [
+        "id",
+        "request",
+        "request_hash",
+        "owner",
+        "kind",
+        "state",
+        "revision",
+        "data",
+        "updated"
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "rows": []
+    }
+  },
+  "expected_final_files": {
+    "tables/contacts.json": "ewogICJjb250YWN0cyI6IFsKICAgIHsKICAgICAgImlkIjogImNvbnRhY3QtMzRmNjJkYmJjMWE5YmFlNyIsCiAgICAgICJuYW1lIjogIlByb2Zlc3NvciBTY2hvbGFyIiwKICAgICAgImVtYWlsIjogInNjaG9sYXJAZXhhbXBsZS5pbnZhbGlkIiwKICAgICAgInByb2JsZW1faWRzIjogW10sCiAgICAgICJwb2xpY3lfZnJlc2giOiBmYWxzZSwKICAgICAgImh1YiI6IHsKICAgICAgICAidGhyZWFkcyI6IFtdLAogICAgICAgICJldmVudHMiOiBbXSwKICAgICAgICAid29ya3NwYWNlX3BhdGhzIjogW10KICAgICAgfQogICAgfQogIF0KfQo=",
+    "tables/positive.json": "ewogICJlbnRyaWVzIjogW10KfQo=",
+    "tables/refusals.json": "ewogICJyZWZ1c2FscyI6IFtdCn0K"
+  },
+  "expected_writes": []
+}

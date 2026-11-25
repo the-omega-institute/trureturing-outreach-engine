@@ -3,7 +3,7 @@
   "id": "mathesis-same_work_in_two_tasks_reuses_persisted_receipt-1",
   "source_test": "test_mathesis_delivery.DeliveryTests.test_same_work_in_two_tasks_reuses_persisted_receipt",
   "stage": "mathesis",
-  "now": 2000000000.0,
+  "now": 1999999900.0,
   "workflow": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
   "installation": {
     "repositories": {
@@ -47,7 +47,10 @@
       "enabled": false,
       "max_new_tasks_per_tick": 4,
       "backfill_result_ids": [],
-      "daily": false
+      "daily": false,
+      "auto_backfill": false,
+      "backfill_per_tick": 1,
+      "backfill_pending_limit": 16
     },
     "kinds": {
       "firstcontact": false,
@@ -207,6 +210,21 @@
     "cma": {
       "token_base_url": "https://worker.example.invalid",
       "proxy_base_url": "https://auth.example.invalid/api/v1/proxy/s/cma"
+    },
+    "independent_review": {
+      "enabled": false,
+      "max_active": 2,
+      "github": {
+        "service": "github-review-read",
+        "user_service_id": "dedicated-read-only-input-connection",
+        "read_only": true
+      },
+      "profile": {
+        "model": "gpt-6.2-sol",
+        "reasoning_effort": "high"
+      },
+      "register_author_contacts": true,
+      "max_active_per_group": 1
     }
   },
   "config": {
@@ -677,6 +695,10 @@
       "tag": "outreach-control"
     }
   },
+  "options": {
+    "previous": []
+  },
+  "admissions": [],
   "script": [
     {
       "adapter": "mathesis",
@@ -715,7 +737,11 @@
       "kwargs": {
         "force": true
       },
-      "result": true
+      "result": true,
+      "saved_snapshot": {
+        "generation": 4,
+        "digest": "9bd758eb06e12c0a9e48188afa3c2c196283f28c447fbc40738bf600bc56eff2"
+      }
     },
     {
       "adapter": "mathesis",
@@ -783,7 +809,11 @@
       "kwargs": {
         "force": true
       },
-      "result": true
+      "result": true,
+      "saved_snapshot": {
+        "generation": 5,
+        "digest": "049ef8d080648c4b5e05246074769475779d107ce4dadc292dbc2ea8cb15baa4"
+      }
     },
     {
       "adapter": "mathesis",
@@ -813,7 +843,11 @@
       "method": "save",
       "args": [],
       "kwargs": {},
-      "result": false
+      "result": false,
+      "saved_snapshot": {
+        "generation": 5,
+        "digest": "049ef8d080648c4b5e05246074769475779d107ce4dadc292dbc2ea8cb15baa4"
+      }
     },
     {
       "adapter": "ledger",
@@ -822,7 +856,11 @@
       "kwargs": {
         "force": true
       },
-      "result": true
+      "result": true,
+      "saved_snapshot": {
+        "generation": 6,
+        "digest": "e54663b17a877e6e42f70f60dc3cfd303b5e3c2f2073833ea70e811e43764ba7"
+      }
     },
     {
       "adapter": "mathesis",
@@ -852,7 +890,11 @@
       "method": "save",
       "args": [],
       "kwargs": {},
-      "result": false
+      "result": false,
+      "saved_snapshot": {
+        "generation": 6,
+        "digest": "e54663b17a877e6e42f70f60dc3cfd303b5e3c2f2073833ea70e811e43764ba7"
+      }
     }
   ],
   "expected_final_rows": {
@@ -1087,7 +1129,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -1097,7 +1139,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -1107,7 +1149,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -1117,7 +1159,7 @@
           "state": "verified"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -1127,7 +1169,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -1284,7 +1326,7 @@
           "request_hash": "ad7346ed7ec70b52bbb859d099018b2005ef3b9870b78222f43ca66dfc102844",
           "revision": 8,
           "state": "verified",
-          "updated": 2000000000.0
+          "updated": 1999999900.0
         },
         {
           "data": {
@@ -1400,7 +1442,7 @@
           "request_hash": "033f11910b791996bf860da7faacee32d02b34b0991d12a3ada807416f0104e0",
           "revision": 7,
           "state": "verified",
-          "updated": 2000000000.0
+          "updated": 1999999900.0
         }
       ]
     }

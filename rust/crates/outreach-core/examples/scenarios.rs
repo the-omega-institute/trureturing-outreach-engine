@@ -1,4 +1,5 @@
 //! Local scenario adapters; no network, SQLite writer or child process.
+mod stages;
 use outreach_canon::{Result, Value, canonical, parse};
 use outreach_core::{Environment, array, ingest::Replay, mathesis_delivery::*, object, s, string};
 use std::{cell::RefCell, io::Read, rc::Rc};
@@ -39,8 +40,29 @@ struct Script {
     index: usize,
     failure: bool,
     generation: u64,
+    observed: Vec<Value>,
+    saved_digest: String,
+    dependencies: Vec<Value>,
 }
 impl Script {
+    fn depend<I>(&mut self, permit: &Persisted<I>) {
+        if permit.snapshot_digest() != self.saved_digest || permit.generation() != self.generation {
+            self.failure = true;
+        }
+        if self
+            .entries
+            .get(self.index)
+            .and_then(|e| e.get("saved_snapshot_digest"))
+            .is_some_and(|d| !d.is_null() && d != permit.snapshot_digest())
+        {
+            self.failure = true;
+        }
+        self.dependencies.push(object([
+            ("generation", permit.generation().into()),
+            ("snapshot_digest", string(permit.snapshot_digest())),
+        ]));
+    }
+
     fn call(
         &mut self,
         adapter: &str,
@@ -54,6 +76,7 @@ impl Script {
             ("args", Value::Array(args)),
             ("kwargs", kwargs),
         ]);
+        self.observed.push(actual.clone());
         let entry = self.entries.get(self.index).cloned().unwrap_or(Value::Null);
         self.index += 1;
         if let Some(digest) = entry.get("args_digest")
@@ -75,6 +98,13 @@ impl Script {
             ("kwargs", entry["kwargs"].clone()),
         ]);
         if canonical(&actual).ok() != canonical(&expected).ok() {
+            if std::env::var_os("OUTREACH_SCENARIO_DEBUG").is_some() {
+                eprintln!(
+                    "actual={} expected={}",
+                    canonical(&actual)?,
+                    canonical(&expected)?
+                );
+            }
             self.failure = true;
             return Err(StageError {
                 summary: object([("type", string("ScriptMismatch"))]),
@@ -109,6 +139,9 @@ impl Script {
             {
                 summary["reason"] = error["message"].clone();
             }
+            if let Some(diagnostic) = error.get("diagnostic") {
+                summary["diagnostic"] = diagnostic.clone();
+            }
             return Err(StageError { summary });
         }
         Ok(entry)
@@ -136,14 +169,16 @@ impl MathesisClient for Fake {
             object([]),
         )
     }
-    fn deliver(&mut self, i: &Persisted<ManuscriptIntent>) -> StageResult<Value> {
+    fn deliver(&mut self, i: Persisted<ManuscriptIntent>) -> StageResult<Value> {
+        self.0.borrow_mut().depend(&i);
         self.call(
             "deliver",
             vec![i.intent().metadata.clone(), file(&i.intent().source)],
             object([]),
         )
     }
-    fn deliver_pre_reviewed(&mut self, i: &Persisted<CollectionIntent>) -> StageResult<Value> {
+    fn deliver_pre_reviewed(&mut self, i: Persisted<CollectionIntent>) -> StageResult<Value> {
+        self.0.borrow_mut().depend(&i);
         self.call(
             "deliver_pre_reviewed",
             vec![
@@ -154,7 +189,8 @@ impl MathesisClient for Fake {
             object([]),
         )
     }
-    fn withdraw(&mut self, i: &Persisted<WithdrawIntent>) -> StageResult<Value> {
+    fn withdraw(&mut self, i: Persisted<WithdrawIntent>) -> StageResult<Value> {
+        self.0.borrow_mut().depend(&i);
         self.call("withdraw", vec![string(&i.intent().submission)], object([]))
     }
     fn collected(&mut self, work: &str, version: &Value) -> StageResult<Value> {
@@ -176,21 +212,32 @@ struct Ports {
     tag: String,
     admissions: Vec<Value>,
     admitted: usize,
+    source_cache: std::collections::BTreeMap<String, SourceFile>,
+    cache_sources: bool,
 }
-impl DeliveryPorts for Ports {
+impl DeliveryServices for Ports {
     fn ledger_tag(&self) -> &str {
         &self.tag
     }
-    fn save_forced(&mut self, _: &Value) -> StageResult<u64> {
-        self.script.borrow_mut().call(
+    fn save_forced(&mut self, tables: &Value) -> StageResult<SavedSnapshot> {
+        let entry = self.script.borrow_mut().call(
             "ledger",
             "save",
             vec![],
             object([("force", true.into())]),
         )?;
         let mut script = self.script.borrow_mut();
-        script.generation += 1;
-        Ok(script.generation)
+        script.generation = entry["saved_snapshot"]["generation"]
+            .as_u64()
+            .unwrap_or(script.generation + 1);
+        script.saved_digest = entry["saved_snapshot"]["digest"]
+            .as_str()
+            .map(str::to_owned)
+            .unwrap_or(outreach_canon::digest(tables)?);
+        Ok(SavedSnapshot {
+            generation: script.generation,
+            digest: script.saved_digest.clone(),
+        })
     }
     fn save(&mut self, _: &Value) -> StageResult<()> {
         self.script
@@ -198,7 +245,26 @@ impl DeliveryPorts for Ports {
             .call("ledger", "save", vec![], object([]))?;
         Ok(())
     }
+    fn save_with_force(&mut self, _: &Value, force: bool) -> StageResult<()> {
+        self.script.borrow_mut().call(
+            "ledger",
+            "save",
+            vec![],
+            object([("force", force.into())]),
+        )?;
+        Ok(())
+    }
     fn source(&mut self, d: &Value) -> StageResult<SourceFile> {
+        let key = outreach_canon::digest(d)?;
+        if self.cache_sources
+            && let Some(file) = self.source_cache.get(&key)
+        {
+            return Ok(SourceFile {
+                name: file.name.clone(),
+                bytes: file.bytes.clone(),
+            });
+        }
+
         let entry = self.script.borrow_mut().call(
             "releases",
             "run",
@@ -215,10 +281,20 @@ impl DeliveryPorts for Ports {
             ],
             object([]),
         )?;
-        Ok(SourceFile {
+        let source = SourceFile {
             name: s(&d["name"]).into(),
             bytes: bytes(&entry["download"]["base64"]),
-        })
+        };
+        if self.cache_sources {
+            self.source_cache.insert(
+                key,
+                SourceFile {
+                    name: source.name.clone(),
+                    bytes: source.bytes.clone(),
+                },
+            );
+        }
+        Ok(source)
     }
     fn allow(&mut self, lane: &str, key: &str) -> bool {
         if self.admissions.is_empty() {
@@ -235,7 +311,8 @@ impl DeliveryPorts for Ports {
         }
         expected["allowed"] == true
     }
-    fn queue_public_link(&mut self, intent: &Persisted<LinkIntent>) -> StageResult<Value> {
+    fn queue_public_link(&mut self, intent: Persisted<LinkIntent>) -> StageResult<Value> {
+        self.script.borrow_mut().depend(&intent);
         let envelope = &intent.intent().envelope;
         let receipt = &intent.intent().receipt;
         let revision = s(&envelope["source"]["name"])
@@ -331,7 +408,7 @@ impl DeliveryPorts for Ports {
         ]))
     }
 }
-fn run(case: &Value) -> Result<bool> {
+fn run(case: &Value, previous: &mut Option<Value>) -> Result<bool> {
     let mut tables = object([]);
     if let Some(files) = case["initial_files"].as_object() {
         for (path, data) in files {
@@ -340,6 +417,9 @@ fn run(case: &Value) -> Result<bool> {
                 .and_then(|p| p.strip_suffix(".json"))
             {
                 tables[name] = parse(&String::from_utf8_lossy(&bytes(data)))?;
+            }
+            if path.ends_with("/author-policy.json") {
+                tables["author_policy"] = parse(&String::from_utf8_lossy(&bytes(data)))?;
             }
         }
     }
@@ -354,13 +434,30 @@ fn run(case: &Value) -> Result<bool> {
         workflow: &workflow,
     };
     let resource = |_: &Value| Ok(vec![]);
+    let initial_rows = case
+        .get("initial_rows")
+        .cloned()
+        .or_else(|| previous.clone())
+        .unwrap_or(Value::Null);
+    if let Some(expected) = case.get("initial_digests") {
+        let mut actual = object([]);
+        let mut logical = initial_rows.clone();
+        sort_tables(&mut logical);
+        for (name, table) in logical.as_object().into_iter().flatten() {
+            actual[name] = string(outreach_canon::digest(table)?);
+        }
+        if actual != *expected {
+            return Ok(false);
+        }
+    }
     let mut replay = Replay::new(
-        case["initial_rows"].clone(),
+        initial_rows,
         0,
         case["now"].as_f64().unwrap_or(0.0),
         &env,
         &resource,
     );
+    replay.clock_value = case["now"].clone();
     replay.stage_update_times = array(&case["update_times"])
         .iter()
         .map(|v| (v[0].as_f64().unwrap_or(0.0), v[1].as_f64().unwrap_or(0.0)))
@@ -370,15 +467,20 @@ fn run(case: &Value) -> Result<bool> {
         index: 0,
         failure: false,
         generation: 0,
+        observed: vec![],
+        saved_digest: String::new(),
+        dependencies: vec![],
     }));
     let mut client = Fake(script.clone(), "mathesis".into());
-    let mut ports = Ports {
+    let mut ports = Ledger::new(Ports {
         script: script.clone(),
         repo: case["adapter_attributes"]["releases"]["repo"].clone(),
         tag: s(&case["adapter_attributes"]["releases"]["tag"]).into(),
         admissions: array(&case["admissions"]).to_vec(),
         admitted: 0,
-    };
+        source_cache: Default::default(),
+        cache_sources: case["stage"] == "publication",
+    });
     let mut options = StageOptions {
         attempted: case["options"]
             .get("attempted")
@@ -390,18 +492,125 @@ fn run(case: &Value) -> Result<bool> {
             .map(|v| s(v).to_owned())
             .collect(),
     };
-    let error_equal = match advance_with_options(
-        &mut replay,
-        &mut client,
-        &mut ports,
-        case["review_key"].as_str().unwrap_or("secret").as_bytes(),
-        &mut options,
-    ) {
+    let mut files = case["initial_files"].clone();
+    let outcome = if case["stage"] == "mathesis" {
+        advance_with_options(
+            &mut replay,
+            &mut client,
+            &mut ports,
+            case["review_key"].as_str().unwrap_or("secret").as_bytes(),
+            &mut options,
+        )
+    } else if case["stage"] == "publication" {
+        outreach_core::publication::advance(
+            &mut replay,
+            &mut Fake(script.clone(), "publication".into()),
+            &mut stages::Notes {
+                fake: Fake(script.clone(), "shortnote".into()),
+            },
+            &mut ports,
+            case["review_key"].as_str().unwrap_or("secret").as_bytes(),
+            &outreach_core::publication::Options {
+                previous: options.previous.clone(),
+            },
+        )
+    } else {
+        let mut contacts = env.tables["contacts"].clone();
+        let mut store = stages::Store {
+            fake: Fake(script.clone(), "registry".into()),
+            files: files.clone(),
+        };
+        let stage = if case["options"]["advance"] == true {
+            outreach_core::sent_events::advance
+        } else {
+            outreach_core::sent_events::reconcile
+        };
+        let result = stage(
+            &mut replay,
+            &mut contacts,
+            &mut stages::Mailbox {
+                fake: Fake(script.clone(), "mailbox".into()),
+                settings: case["adapter_attributes"]["mailbox"]["settings"].clone(),
+            },
+            &mut store,
+            &mut ports,
+            &s(&case["datetime"]).replace("+00:00", "Z"),
+            &outreach_core::sent_events::Options {
+                max_pages: case["options"]["max_pages"].as_u64().map(|n| n as usize),
+                absent: case["options"]["mailbox"] == false,
+            },
+        );
+        files = store.files;
+        result.map(|_| ())
+    };
+    let error_equal = match outcome {
         Ok(()) => case["error"].is_null(),
         Err(e) => e.summary["type"] == case["error"]["type"],
     };
     let script = script.borrow();
     let mut final_tables = replay.tables.clone();
+    sort_tables(&mut final_tables);
+    let rows_equal = if case.get("expected_final_rows").is_some() {
+        canonical(&final_tables)? == canonical(&case["expected_final_rows"])?
+    } else {
+        let mut digests = object([]);
+        for (name, table) in final_tables.as_object().into_iter().flatten() {
+            digests[name] = string(outreach_canon::digest(table)?);
+        }
+        digests == case["expected_final_digests"]
+    };
+    let files_equal = case.get("expected_final_rows").is_none()
+        || canonical(&files)? == canonical(&case["expected_final_files"])?;
+    let write_methods = [
+        "deliver",
+        "deliver_pre_reviewed",
+        "withdraw",
+        "upload",
+        "create",
+        "register_note",
+        "save_state",
+        "delete_asset",
+        "commit_tables",
+    ];
+    let writes: Vec<_> = script
+        .observed
+        .iter()
+        .filter(|e| write_methods.contains(&s(&e["method"])))
+        .map(|e| {
+            object([
+                ("adapter", e["adapter"].clone()),
+                ("method", e["method"].clone()),
+                ("args", e["args"].clone()),
+                ("kwargs", e["kwargs"].clone()),
+            ])
+        })
+        .collect();
+    let writes_equal = case.get("expected_writes").is_none()
+        || canonical(&Value::Array(writes))? == canonical(&case["expected_writes"])?;
+    let equal = error_equal
+        && writes_equal
+        && !script.failure
+        && script.index == script.entries.len()
+        && rows_equal
+        && files_equal
+        && replay.stage_update_times.is_empty()
+        && ports.services().admitted == ports.services().admissions.len();
+    if !equal {
+        eprintln!(
+            "scenario-failed {} script={}/{} mismatch={} rows={}",
+            s(&case["id"]),
+            script.index,
+            script.entries.len(),
+            script.failure,
+            rows_equal
+        );
+    }
+    if equal {
+        *previous = Some(replay.tables);
+    }
+    Ok(equal)
+}
+fn sort_tables(final_tables: &mut Value) {
     if let Some(tables) = final_tables.as_object_mut() {
         for table in tables.values_mut() {
             let keys = array(&table["primary_key"]).to_vec();
@@ -423,51 +632,6 @@ fn run(case: &Value) -> Result<bool> {
             }
         }
     }
-    let rows_equal = canonical(&final_tables)? == canonical(&case["expected_final_rows"])?;
-    let write_methods = [
-        "deliver",
-        "deliver_pre_reviewed",
-        "withdraw",
-        "upload",
-        "create",
-        "register_note",
-        "save_state",
-        "delete_asset",
-        "commit_tables",
-    ];
-    let writes: Vec<_> = script
-        .entries
-        .iter()
-        .filter(|e| write_methods.contains(&s(&e["method"])))
-        .map(|e| {
-            object([
-                ("adapter", e["adapter"].clone()),
-                ("method", e["method"].clone()),
-                ("args", e["args"].clone()),
-                ("kwargs", e["kwargs"].clone()),
-            ])
-        })
-        .collect();
-    let writes_equal = case.get("expected_writes").is_none()
-        || canonical(&Value::Array(writes))? == canonical(&case["expected_writes"])?;
-    let equal = error_equal
-        && writes_equal
-        && !script.failure
-        && script.index == script.entries.len()
-        && rows_equal
-        && replay.stage_update_times.is_empty()
-        && ports.admitted == ports.admissions.len();
-    if !equal {
-        eprintln!(
-            "scenario-failed {} script={}/{} mismatch={} rows={}",
-            s(&case["id"]),
-            script.index,
-            script.entries.len(),
-            script.failure,
-            rows_equal
-        );
-    }
-    Ok(equal)
 }
 fn main() -> Result<()> {
     let mut input = Vec::new();
@@ -476,10 +640,11 @@ fn main() -> Result<()> {
         .map_err(|e| outreach_canon::Error::new(e.to_string()))?;
     let cases = parse(&String::from_utf8_lossy(&input))?;
     let (mut equal, mut different, mut skipped) = (0, 0, 0);
+    let mut previous = None;
     for case in array(&cases) {
-        if case["stage"] != "mathesis" {
+        if !["mathesis", "publication", "sent"].contains(&s(&case["stage"])) {
             skipped += 1;
-        } else if run(case)? {
+        } else if run(case, &mut previous)? {
             equal += 1;
         } else {
             different += 1;

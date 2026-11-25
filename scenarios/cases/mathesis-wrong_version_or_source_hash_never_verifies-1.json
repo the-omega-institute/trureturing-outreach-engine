@@ -3,7 +3,7 @@
   "id": "mathesis-wrong_version_or_source_hash_never_verifies-1",
   "source_test": "test_pre_reviewed.PreReviewedTests.test_wrong_version_or_source_hash_never_verifies",
   "stage": "mathesis",
-  "now": 2000000000.0,
+  "now": 1999999900.0,
   "workflow": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
   "installation": {
     "repositories": {
@@ -47,7 +47,10 @@
       "enabled": false,
       "max_new_tasks_per_tick": 4,
       "backfill_result_ids": [],
-      "daily": false
+      "daily": false,
+      "auto_backfill": false,
+      "backfill_per_tick": 1,
+      "backfill_pending_limit": 16
     },
     "kinds": {
       "firstcontact": false,
@@ -207,6 +210,21 @@
     "cma": {
       "token_base_url": "https://worker.example.invalid",
       "proxy_base_url": "https://auth.example.invalid/api/v1/proxy/s/cma"
+    },
+    "independent_review": {
+      "enabled": false,
+      "max_active": 2,
+      "github": {
+        "service": "github-review-read",
+        "user_service_id": "dedicated-read-only-input-connection",
+        "read_only": true
+      },
+      "profile": {
+        "model": "gpt-6.2-sol",
+        "reasoning_effort": "high"
+      },
+      "register_author_contacts": true,
+      "max_active_per_group": 1
     }
   },
   "config": {
@@ -651,6 +669,10 @@
       "tag": "outreach-control"
     }
   },
+  "options": {
+    "previous": []
+  },
+  "admissions": [],
   "script": [
     {
       "adapter": "mathesis",
@@ -712,7 +734,11 @@
       "kwargs": {
         "force": true
       },
-      "result": true
+      "result": true,
+      "saved_snapshot": {
+        "generation": 5,
+        "digest": "fe168d3d6122d6e63adf32b9c94a8e030176087ad0fb5303e45612f7b4826826"
+      }
     },
     {
       "adapter": "mathesis",
@@ -809,7 +835,11 @@
       "kwargs": {
         "force": true
       },
-      "result": true
+      "result": true,
+      "saved_snapshot": {
+        "generation": 6,
+        "digest": "32dae43be6ad392f98a229be3ab6d5ceee5d80587e1084934fdd74fbbfc70839"
+      }
     },
     {
       "adapter": "mathesis",
@@ -873,7 +903,11 @@
       "method": "save",
       "args": [],
       "kwargs": {},
-      "result": false
+      "result": false,
+      "saved_snapshot": {
+        "generation": 6,
+        "digest": "32dae43be6ad392f98a229be3ab6d5ceee5d80587e1084934fdd74fbbfc70839"
+      }
     }
   ],
   "expected_final_rows": {
@@ -1077,7 +1111,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -1087,7 +1121,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -1097,7 +1131,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -1349,7 +1383,7 @@
           "request_hash": "3ac17e5772b4cb79cd45b520af5a4040969e08d75f7345978b829b8bb8c7e6d4",
           "revision": 11,
           "state": "handoff-ready",
-          "updated": 2000000000.0
+          "updated": 1999999900.0
         }
       ]
     }

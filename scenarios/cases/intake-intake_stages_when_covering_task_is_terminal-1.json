@@ -3,7 +3,7 @@
   "id": "intake-intake_stages_when_covering_task_is_terminal-1",
   "source_test": "test_mailbox_triage.TriageTests.test_intake_stages_when_covering_task_is_terminal",
   "stage": "intake",
-  "now": 2000000000.0,
+  "now": 1999999900.0,
   "workflow": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
   "installation": {
     "repositories": {
@@ -47,7 +47,10 @@
       "enabled": false,
       "max_new_tasks_per_tick": 4,
       "backfill_result_ids": [],
-      "daily": false
+      "daily": false,
+      "auto_backfill": false,
+      "backfill_per_tick": 1,
+      "backfill_pending_limit": 16
     },
     "kinds": {
       "firstcontact": false,
@@ -207,6 +210,21 @@
     "cma": {
       "token_base_url": "https://worker.example.invalid",
       "proxy_base_url": "https://auth.example.invalid/api/v1/proxy/s/cma"
+    },
+    "independent_review": {
+      "enabled": false,
+      "max_active": 2,
+      "github": {
+        "service": "github-review-read",
+        "user_service_id": "dedicated-read-only-input-connection",
+        "read_only": true
+      },
+      "profile": {
+        "model": "gpt-6.2-sol",
+        "reasoning_effort": "high"
+      },
+      "register_author_contacts": true,
+      "max_active_per_group": 1
     }
   },
   "config": {
@@ -493,6 +511,10 @@
   },
   "revision": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
   "datetime": "2026-11-18T10:00:00+00:00",
+  "options": {
+    "previous": []
+  },
+  "admissions": [],
   "script": [
     {
       "adapter": "mailbox",
@@ -721,7 +743,11 @@
       "method": "save",
       "args": [],
       "kwargs": {},
-      "result": true
+      "result": true,
+      "saved_snapshot": {
+        "generation": 1,
+        "digest": "5c38ccbed879ce14a4a178d23ce044f684b26162bb6a33e4a8a67e7136823da2"
+      }
     }
   ],
   "expected_final_rows": {
@@ -861,7 +887,7 @@
           "state": "failed"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {},
           "id": "reply-c567a65eeb1916f7d884d02f2f193807",
           "revision": 1,
@@ -869,7 +895,7 @@
           "state": "queued"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {},
           "id": "reply-588d37830c1a2053afdf35b9099afdf9",
           "revision": 1,
@@ -877,7 +903,7 @@
           "state": "queued"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {},
           "id": "reply-7bdc377db934a1b77867fc121d8c2c80",
           "revision": 1,
@@ -1008,7 +1034,7 @@
           "request_hash": "a5006b6742c8a6877830c253760a737ba5ba007432ec8560a92a27ec42b06b4e",
           "revision": 1,
           "state": "queued",
-          "updated": 2000000000.0
+          "updated": 1999999900.0
         },
         {
           "data": {},
@@ -1069,7 +1095,7 @@
           "request_hash": "3da1354e980f6589c6ef83e3f48e2ea8a73fb8f15d7b2f9de1040be417ffccef",
           "revision": 1,
           "state": "queued",
-          "updated": 2000000000.0
+          "updated": 1999999900.0
         },
         {
           "data": {},
@@ -1162,7 +1188,7 @@
           "request_hash": "4b99be646d2b443ea950859226437f0a7e3c2a2a9fc0ab3cfdc89f5abeb02b67",
           "revision": 1,
           "state": "queued",
-          "updated": 2000000000.0
+          "updated": 1999999900.0
         },
         {
           "data": {},

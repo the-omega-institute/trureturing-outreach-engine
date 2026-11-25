@@ -3,7 +3,7 @@
   "id": "publication-old_workflow_pass_still_enqueues_exact_reviewed_bytes-1",
   "source_test": "test_publication.PublicationTests.test_old_workflow_pass_still_enqueues_exact_reviewed_bytes",
   "stage": "publication",
-  "now": 2000000000.0,
+  "now": 1999999900.0,
   "workflow": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
   "installation": {
     "repositories": {
@@ -47,7 +47,10 @@
       "enabled": false,
       "max_new_tasks_per_tick": 4,
       "backfill_result_ids": [],
-      "daily": false
+      "daily": false,
+      "auto_backfill": false,
+      "backfill_per_tick": 1,
+      "backfill_pending_limit": 16
     },
     "kinds": {
       "firstcontact": false,
@@ -207,6 +210,21 @@
     "cma": {
       "token_base_url": "https://worker.example.invalid",
       "proxy_base_url": "https://auth.example.invalid/api/v1/proxy/s/cma"
+    },
+    "independent_review": {
+      "enabled": false,
+      "max_active": 2,
+      "github": {
+        "service": "github-review-read",
+        "user_service_id": "dedicated-read-only-input-connection",
+        "read_only": true
+      },
+      "profile": {
+        "model": "gpt-6.2-sol",
+        "reasoning_effort": "high"
+      },
+      "register_author_contacts": true,
+      "max_active_per_group": 1
     }
   },
   "config": {
@@ -587,75 +605,76 @@
       "tag": "outreach-control"
     }
   },
+  "options": {
+    "previous": []
+  },
+  "admissions": [],
   "script": [
     {
-      "adapter": "releases",
-      "method": "run",
+      "adapter": "boundary",
+      "method": "source_gate",
       "args": [
-        "release",
-        "download",
-        "outreach-task-mathesis",
-        "--repo",
-        "fixture/repo",
-        "--pattern",
-        "handoff.json",
-        "--dir",
-        {
-          "$directory": true
-        }
+        "mathesis"
       ],
       "kwargs": {},
-      "result": null,
-      "download": {
-        "name": "handoff.json",
-        "base64": "ewogICJmaWxlcyI6IHsKICAgICJub3RlLXYxLnBkZiI6ICJiYWViOTNlMjUyNGIzM2I0YjY3MzU3NDQ0MjY4NGQxMTE2Mzc5ZDBmNTI1YzIxZjI3NjY2NWYwYjZiZWE4MDVlIiwKICAgICJzb3VyY2UtdjEuemlwIjogIjBmY2Q2OTFhYWE5NWNjYzFhMDQ5MTYyMzY4MzExZDk4ZjNjNjZlNWRmNzk2MmE5ZTcwZTMyNjgzMTM0ZWQ1OGUiCiAgfSwKICAicHJpdmF0ZV9jb3JyZXNwb25kZW5jZV9pbmNsdWRlZCI6IGZhbHNlLAogICJzY2hlbWFfdmVyc2lvbiI6ICJvdXRyZWFjaC1tYXRoZXNpcy1oYW5kb2ZmLnYxIiwKICAic291cmNlX25vdGUiOiB7CiAgICAiYWJzdHJhY3QiOiAiVGhlIHByZWNpc2UgcmVzdWx0LiIsCiAgICAiY3JlYXRvcnMiOiBbCiAgICAgIHsKICAgICAgICAibmFtZSI6ICJBdmVyeSBSZWVkIgogICAgICB9LAogICAgICB7CiAgICAgICAgIm5hbWUiOiAiQmxhaXJlIE1lcmNlciIKICAgICAgfQogICAgXSwKICAgICJldmlkZW5jZV91cmwiOiAiaHR0cHM6Ly9zYW1wbGUuZXhhbXBsZS5pbnZhbGlkL2NvbW1pdC9wcm9vZi5sZWFuIiwKICAgICJpZCI6ICJtYXRoZXNpcyIsCiAgICAibGljZW5zZSI6ICJjYy1ieS00LjAiLAogICAgInByb2JsZW1faWRzIjogWwogICAgICAicHJvYmxlbS1tYXRoZXNpcyIKICAgIF0sCiAgICAicmV2aXNpb24iOiAxLAogICAgInN1bW1hcnkiOiAiVGhlIG9yaWdpbmFsIGNvbmplY3R1cmUgaXMgcHJvdmVkLiIsCiAgICAidGl0bGUiOiAiUHJvb2Ygb2YgdGhlIGNvbmplY3R1cmUiLAogICAgInRvcGljIjogIk9yaWdpbmFsIGNvbmplY3R1cmUiCiAgfQp9Cg=="
+      "result": null
+    },
+    {
+      "adapter": "shortnote",
+      "method": "package",
+      "args": [
+        "mathesis",
+        "062cafb521020d2c652329cad0f16574e5d7303b53335613c6f24479dd20a99e"
+      ],
+      "kwargs": {},
+      "result": {
+        "metadata": {
+          "abstract": "The precise result.",
+          "creators": [
+            {
+              "name": "Avery Reed"
+            },
+            {
+              "name": "Blaire Mercer"
+            }
+          ],
+          "evidence_url": "https://sample.example.invalid/commit/proof.lean",
+          "id": "mathesis",
+          "license": "cc-by-4.0",
+          "problem_ids": [
+            "problem-mathesis"
+          ],
+          "revision": 1,
+          "summary": "The original conjecture is proved.",
+          "title": "Proof of the conjecture",
+          "topic": "Original conjecture"
+        },
+        "source": "source-v1.zip",
+        "files": {
+          "note-v1.json": {
+            "$file": "note-v1.json",
+            "base64": "ewogICJmaWxlcyI6IHsKICAgICJub3RlLXYxLnBkZiI6ICJiYWViOTNlMjUyNGIzM2I0YjY3MzU3NDQ0MjY4NGQxMTE2Mzc5ZDBmNTI1YzIxZjI3NjY2NWYwYjZiZWE4MDVlIiwKICAgICJzb3VyY2UtdjEuemlwIjogIjBmY2Q2OTFhYWE5NWNjYzFhMDQ5MTYyMzY4MzExZDk4ZjNjNjZlNWRmNzk2MmE5ZTcwZTMyNjgzMTM0ZWQ1OGUiCiAgfSwKICAibWV0YWRhdGEiOiB7CiAgICAiYWJzdHJhY3QiOiAiVGhlIHByZWNpc2UgcmVzdWx0LiIsCiAgICAiY3JlYXRvcnMiOiBbCiAgICAgIHsKICAgICAgICAibmFtZSI6ICJBdmVyeSBSZWVkIgogICAgICB9LAogICAgICB7CiAgICAgICAgIm5hbWUiOiAiQmxhaXJlIE1lcmNlciIKICAgICAgfQogICAgXSwKICAgICJldmlkZW5jZV91cmwiOiAiaHR0cHM6Ly9zYW1wbGUuZXhhbXBsZS5pbnZhbGlkL2NvbW1pdC9wcm9vZi5sZWFuIiwKICAgICJpZCI6ICJtYXRoZXNpcyIsCiAgICAibGljZW5zZSI6ICJjYy1ieS00LjAiLAogICAgInByb2JsZW1faWRzIjogWwogICAgICAicHJvYmxlbS1tYXRoZXNpcyIKICAgIF0sCiAgICAicmV2aXNpb24iOiAxLAogICAgInN1bW1hcnkiOiAiVGhlIG9yaWdpbmFsIGNvbmplY3R1cmUgaXMgcHJvdmVkLiIsCiAgICAidGl0bGUiOiAiUHJvb2Ygb2YgdGhlIGNvbmplY3R1cmUiLAogICAgInRvcGljIjogIk9yaWdpbmFsIGNvbmplY3R1cmUiCiAgfSwKICAic2NoZW1hX3ZlcnNpb24iOiAic2hvcnQtbm90ZS52MSIKfQo="
+          },
+          "note-v1.pdf": {
+            "$file": "note-v1.pdf",
+            "base64": "JVBERi0xLjQKU3ludGhldGljIGNoZWNrZWQgbm90ZQ=="
+          },
+          "source-v1.zip": {
+            "$file": "source-v1.zip",
+            "base64": "UEsDBBQAAAAAAAAAIQDnKJGaOwAAADsAAAAIAAAAbm90ZS50ZXhcZG9jdW1lbnRjbGFzc3thcnRpY2xlfVxiZWdpbntkb2N1bWVudH1Qcm9vZi5cZW5ke2RvY3VtZW50fVBLAQIUAxQAAAAAAAAAIQDnKJGaOwAAADsAAAAIAAAAAAAAAAAAAACAAQAAAABub3RlLnRleFBLBQYAAAAAAQABADYAAABhAAAAAAA="
+          }
+        }
       }
     },
     {
-      "adapter": "releases",
-      "method": "run",
+      "adapter": "boundary",
+      "method": "record",
       "args": [
-        "release",
-        "download",
-        "outreach-task-mathesis",
-        "--repo",
-        "fixture/repo",
-        "--pattern",
-        "note-v1.pdf",
-        "--dir",
-        {
-          "$directory": true
-        }
+        "mathesis",
+        "preparing"
       ],
       "kwargs": {},
-      "result": null,
-      "download": {
-        "name": "note-v1.pdf",
-        "base64": "JVBERi0xLjQKU3ludGhldGljIGNoZWNrZWQgbm90ZQ=="
-      }
-    },
-    {
-      "adapter": "releases",
-      "method": "run",
-      "args": [
-        "release",
-        "download",
-        "outreach-task-mathesis",
-        "--repo",
-        "fixture/repo",
-        "--pattern",
-        "source-v1.zip",
-        "--dir",
-        {
-          "$directory": true
-        }
-      ],
-      "kwargs": {},
-      "result": null,
-      "download": {
-        "name": "source-v1.zip",
-        "base64": "UEsDBBQAAAAAAAAAIQDnKJGaOwAAADsAAAAIAAAAbm90ZS50ZXhcZG9jdW1lbnRjbGFzc3thcnRpY2xlfVxiZWdpbntkb2N1bWVudH1Qcm9vZi5cZW5ke2RvY3VtZW50fVBLAQIUAxQAAAAAAAAAIQDnKJGaOwAAADsAAAAIAAAAAAAAAAAAAACAAQAAAABub3RlLnRleFBLBQYAAAAAAQABADYAAABhAAAAAAA="
-      }
+      "result": null
     },
     {
       "adapter": "ledger",
@@ -664,7 +683,11 @@
       "kwargs": {
         "force": true
       },
-      "result": true
+      "result": true,
+      "saved_snapshot": {
+        "generation": 1,
+        "digest": "e5d2e24756fab8763f25e1f9bb5599cfc59a0ff0b2e46d58e77d54a42831d730"
+      }
     },
     {
       "adapter": "publication",
@@ -830,6 +853,13 @@
       "result": null
     },
     {
+      "adapter": "boundary",
+      "method": "enqueue",
+      "args": [],
+      "kwargs": {},
+      "result": null
+    },
+    {
       "adapter": "publication",
       "method": "download",
       "args": [
@@ -873,7 +903,11 @@
       "method": "save",
       "args": [],
       "kwargs": {},
-      "result": false
+      "result": false,
+      "saved_snapshot": {
+        "generation": 1,
+        "digest": "e5d2e24756fab8763f25e1f9bb5599cfc59a0ff0b2e46d58e77d54a42831d730"
+      }
     },
     {
       "adapter": "publication",
@@ -907,7 +941,29 @@
       "kwargs": {
         "force": true
       },
-      "result": true
+      "result": true,
+      "saved_snapshot": {
+        "generation": 2,
+        "digest": "7e1934c9a35b54ee0ce3828d205509cbf63b12ada4cf2f3bcc0e152888aa617d"
+      }
+    },
+    {
+      "adapter": "boundary",
+      "method": "select",
+      "args": [
+        "mathesis"
+      ],
+      "kwargs": {},
+      "result": null
+    },
+    {
+      "adapter": "boundary",
+      "method": "ingest",
+      "args": [
+        "mathesis"
+      ],
+      "kwargs": {},
+      "result": null
     },
     {
       "adapter": "ledger",
@@ -916,7 +972,21 @@
       "kwargs": {
         "force": true
       },
-      "result": true
+      "result": true,
+      "saved_snapshot": {
+        "generation": 3,
+        "digest": "161190642e4fd689811dea1753df0927a0260cbcae6977ff40d88942bff70f73"
+      }
+    },
+    {
+      "adapter": "boundary",
+      "method": "record",
+      "args": [
+        "mathesis",
+        "queued"
+      ],
+      "kwargs": {},
+      "result": null
     },
     {
       "adapter": "ledger",
@@ -925,76 +995,77 @@
       "kwargs": {
         "force": true
       },
-      "result": true
-    },
-    {
-      "adapter": "releases",
-      "method": "run",
-      "args": [
-        "release",
-        "download",
-        "outreach-task-shortnote",
-        "--repo",
-        "fixture/repo",
-        "--pattern",
-        "note-v1.json",
-        "--dir",
-        {
-          "$directory": true
-        }
-      ],
-      "kwargs": {},
-      "result": null,
-      "download": {
-        "name": "note-v1.json",
-        "base64": "ewogICJmaWxlcyI6IHsKICAgICJub3RlLXYxLnBkZiI6ICJiYWViOTNlMjUyNGIzM2I0YjY3MzU3NDQ0MjY4NGQxMTE2Mzc5ZDBmNTI1YzIxZjI3NjY2NWYwYjZiZWE4MDVlIiwKICAgICJzb3VyY2UtdjEuemlwIjogIjBmY2Q2OTFhYWE5NWNjYzFhMDQ5MTYyMzY4MzExZDk4ZjNjNjZlNWRmNzk2MmE5ZTcwZTMyNjgzMTM0ZWQ1OGUiCiAgfSwKICAibWV0YWRhdGEiOiB7CiAgICAiYWJzdHJhY3QiOiAiVGhlIHByZWNpc2UgcmVzdWx0LiIsCiAgICAiY3JlYXRvcnMiOiBbCiAgICAgIHsKICAgICAgICAibmFtZSI6ICJBdmVyeSBSZWVkIgogICAgICB9LAogICAgICB7CiAgICAgICAgIm5hbWUiOiAiQmxhaXJlIE1lcmNlciIKICAgICAgfQogICAgXSwKICAgICJldmlkZW5jZV91cmwiOiAiaHR0cHM6Ly9zYW1wbGUuZXhhbXBsZS5pbnZhbGlkL2NvbW1pdC9wcm9vZi5sZWFuIiwKICAgICJpZCI6ICJzaG9ydG5vdGUiLAogICAgImxpY2Vuc2UiOiAiY2MtYnktNC4wIiwKICAgICJwcm9ibGVtX2lkcyI6IFsKICAgICAgInByb2JsZW0tc2hvcnRub3RlIgogICAgXSwKICAgICJyZXZpc2lvbiI6IDEsCiAgICAic3VtbWFyeSI6ICJUaGUgb3JpZ2luYWwgY29uamVjdHVyZSBpcyBwcm92ZWQuIiwKICAgICJ0aXRsZSI6ICJQcm9vZiBvZiB0aGUgY29uamVjdHVyZSIsCiAgICAidG9waWMiOiAiT3JpZ2luYWwgY29uamVjdHVyZSIKICB9LAogICJzY2hlbWFfdmVyc2lvbiI6ICJzaG9ydC1ub3RlLnYxIgp9Cg=="
+      "result": true,
+      "saved_snapshot": {
+        "generation": 4,
+        "digest": "6a276af98820498eedfa3de0e3eebb1955d940919773bc1003fc1af0df58cbed"
       }
     },
     {
-      "adapter": "releases",
-      "method": "run",
+      "adapter": "boundary",
+      "method": "source_gate",
       "args": [
-        "release",
-        "download",
-        "outreach-task-shortnote",
-        "--repo",
-        "fixture/repo",
-        "--pattern",
-        "note-v1.pdf",
-        "--dir",
-        {
-          "$directory": true
-        }
+        "shortnote"
       ],
       "kwargs": {},
-      "result": null,
-      "download": {
-        "name": "note-v1.pdf",
-        "base64": "JVBERi0xLjQKU3ludGhldGljIGNoZWNrZWQgbm90ZQ=="
+      "result": null
+    },
+    {
+      "adapter": "shortnote",
+      "method": "package",
+      "args": [
+        "shortnote",
+        "3f816fa24719146d60b669d66862b55640706e88f4cb8a234744aa456817c54b"
+      ],
+      "kwargs": {},
+      "result": {
+        "metadata": {
+          "abstract": "The precise result.",
+          "creators": [
+            {
+              "name": "Avery Reed"
+            },
+            {
+              "name": "Blaire Mercer"
+            }
+          ],
+          "evidence_url": "https://sample.example.invalid/commit/proof.lean",
+          "id": "shortnote",
+          "license": "cc-by-4.0",
+          "problem_ids": [
+            "problem-shortnote"
+          ],
+          "revision": 1,
+          "summary": "The original conjecture is proved.",
+          "title": "Proof of the conjecture",
+          "topic": "Original conjecture"
+        },
+        "source": "source-v1.zip",
+        "files": {
+          "note-v1.json": {
+            "$file": "note-v1.json",
+            "base64": "ewogICJmaWxlcyI6IHsKICAgICJub3RlLXYxLnBkZiI6ICJiYWViOTNlMjUyNGIzM2I0YjY3MzU3NDQ0MjY4NGQxMTE2Mzc5ZDBmNTI1YzIxZjI3NjY2NWYwYjZiZWE4MDVlIiwKICAgICJzb3VyY2UtdjEuemlwIjogIjBmY2Q2OTFhYWE5NWNjYzFhMDQ5MTYyMzY4MzExZDk4ZjNjNjZlNWRmNzk2MmE5ZTcwZTMyNjgzMTM0ZWQ1OGUiCiAgfSwKICAibWV0YWRhdGEiOiB7CiAgICAiYWJzdHJhY3QiOiAiVGhlIHByZWNpc2UgcmVzdWx0LiIsCiAgICAiY3JlYXRvcnMiOiBbCiAgICAgIHsKICAgICAgICAibmFtZSI6ICJBdmVyeSBSZWVkIgogICAgICB9LAogICAgICB7CiAgICAgICAgIm5hbWUiOiAiQmxhaXJlIE1lcmNlciIKICAgICAgfQogICAgXSwKICAgICJldmlkZW5jZV91cmwiOiAiaHR0cHM6Ly9zYW1wbGUuZXhhbXBsZS5pbnZhbGlkL2NvbW1pdC9wcm9vZi5sZWFuIiwKICAgICJpZCI6ICJzaG9ydG5vdGUiLAogICAgImxpY2Vuc2UiOiAiY2MtYnktNC4wIiwKICAgICJwcm9ibGVtX2lkcyI6IFsKICAgICAgInByb2JsZW0tc2hvcnRub3RlIgogICAgXSwKICAgICJyZXZpc2lvbiI6IDEsCiAgICAic3VtbWFyeSI6ICJUaGUgb3JpZ2luYWwgY29uamVjdHVyZSBpcyBwcm92ZWQuIiwKICAgICJ0aXRsZSI6ICJQcm9vZiBvZiB0aGUgY29uamVjdHVyZSIsCiAgICAidG9waWMiOiAiT3JpZ2luYWwgY29uamVjdHVyZSIKICB9LAogICJzY2hlbWFfdmVyc2lvbiI6ICJzaG9ydC1ub3RlLnYxIgp9Cg=="
+          },
+          "note-v1.pdf": {
+            "$file": "note-v1.pdf",
+            "base64": "JVBERi0xLjQKU3ludGhldGljIGNoZWNrZWQgbm90ZQ=="
+          },
+          "source-v1.zip": {
+            "$file": "source-v1.zip",
+            "base64": "UEsDBBQAAAAAAAAAIQDnKJGaOwAAADsAAAAIAAAAbm90ZS50ZXhcZG9jdW1lbnRjbGFzc3thcnRpY2xlfVxiZWdpbntkb2N1bWVudH1Qcm9vZi5cZW5ke2RvY3VtZW50fVBLAQIUAxQAAAAAAAAAIQDnKJGaOwAAADsAAAAIAAAAAAAAAAAAAACAAQAAAABub3RlLnRleFBLBQYAAAAAAQABADYAAABhAAAAAAA="
+          }
+        }
       }
     },
     {
-      "adapter": "releases",
-      "method": "run",
+      "adapter": "boundary",
+      "method": "record",
       "args": [
-        "release",
-        "download",
-        "outreach-task-shortnote",
-        "--repo",
-        "fixture/repo",
-        "--pattern",
-        "source-v1.zip",
-        "--dir",
-        {
-          "$directory": true
-        }
+        "shortnote",
+        "preparing"
       ],
       "kwargs": {},
-      "result": null,
-      "download": {
-        "name": "source-v1.zip",
-        "base64": "UEsDBBQAAAAAAAAAIQDnKJGaOwAAADsAAAAIAAAAbm90ZS50ZXhcZG9jdW1lbnRjbGFzc3thcnRpY2xlfVxiZWdpbntkb2N1bWVudH1Qcm9vZi5cZW5ke2RvY3VtZW50fVBLAQIUAxQAAAAAAAAAIQDnKJGaOwAAADsAAAAIAAAAAAAAAAAAAACAAQAAAABub3RlLnRleFBLBQYAAAAAAQABADYAAABhAAAAAAA="
-      }
+      "result": null
     },
     {
       "adapter": "ledger",
@@ -1003,7 +1074,11 @@
       "kwargs": {
         "force": true
       },
-      "result": true
+      "result": true,
+      "saved_snapshot": {
+        "generation": 5,
+        "digest": "e07359d630f68b2908e364892c86ca5cc8db38a02a9e741a31579b42e3cc37c3"
+      }
     },
     {
       "adapter": "publication",
@@ -1176,6 +1251,13 @@
       "result": null
     },
     {
+      "adapter": "boundary",
+      "method": "enqueue",
+      "args": [],
+      "kwargs": {},
+      "result": null
+    },
+    {
       "adapter": "publication",
       "method": "download",
       "args": [
@@ -1192,13 +1274,27 @@
       }
     },
     {
+      "adapter": "boundary",
+      "method": "record",
+      "args": [
+        "shortnote",
+        "queued"
+      ],
+      "kwargs": {},
+      "result": null
+    },
+    {
       "adapter": "ledger",
       "method": "save",
       "args": [],
       "kwargs": {
         "force": true
       },
-      "result": true
+      "result": true,
+      "saved_snapshot": {
+        "generation": 6,
+        "digest": "ba4627110dae1e2bd947c215fce4555a723fe0e7a2a4187d9a4779f4d89bcf5a"
+      }
     }
   ],
   "expected_final_rows": {
@@ -1398,7 +1494,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -1408,7 +1504,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -1418,7 +1514,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -1428,7 +1524,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -1438,7 +1534,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -1448,7 +1544,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -1686,7 +1782,7 @@
           "request_hash": "a7c1245abe6f26cc908010af1b52054480172ec63e95f601887d4251466e84d0",
           "revision": 8,
           "state": "handoff-ready",
-          "updated": 2000000000.0
+          "updated": 1999999900.0
         },
         {
           "data": {
@@ -1781,7 +1877,7 @@
           "request_hash": "c7954d85adb681e92ac1fadd1476f700fa8d77ab3a0f7bfa17346ac53dac7e31",
           "revision": 6,
           "state": "handoff-ready",
-          "updated": 2000000000.0
+          "updated": 1999999900.0
         }
       ]
     }

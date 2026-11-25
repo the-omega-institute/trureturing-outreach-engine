@@ -193,8 +193,8 @@ class HostedReviewTests(unittest.TestCase):
         self.assertTrue(completed['cleanup_complete'])
         self.assertNotIn('foreign_agents', completed['cleanup'])
         self.assertNotIn('sandbox_retired', completed['cleanup'])
+        # Engine #22: an idle (ready) Agent is deleted directly after a fresh read.
         self.assertEqual([(path, method, key) for path, method, key in calls if method != 'GET'], [
-            ('/api/v1/agents/agt_review/stop', 'POST', run['create_key'] + '-cleanup-stop'),
             ('/api/v1/agents/agt_review', 'DELETE', run['create_key'] + '-cleanup-delete'),
         ])
         self.assertEqual(agents['agt_other']['status'], 'working')
@@ -358,7 +358,7 @@ class HostedReviewTests(unittest.TestCase):
         self.assertTrue(self.row()['data']['hosted_review']['cleanup_complete'])
         self.assertEqual(json.loads(self.tasks.db.execute(
             "SELECT payload FROM pipeline_state WHERE key='sandbox_pool'").fetchone()[0]), [self.entry])
-        self.assertEqual([method for _, method in calls if method != 'GET'], ['POST', 'DELETE'])
+        self.assertEqual([method for _, method in calls if method != 'GET'], ['DELETE'])
 
     def test_delivered_and_immutable_intent_rows_keep_their_signed_review(self):
         self.advance(); self.advance()

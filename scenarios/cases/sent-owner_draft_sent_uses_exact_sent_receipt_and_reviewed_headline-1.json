@@ -3,7 +3,7 @@
   "id": "sent-owner_draft_sent_uses_exact_sent_receipt_and_reviewed_headline-1",
   "source_test": "test_sent_events.SentEventsTests.test_owner_draft_sent_uses_exact_sent_receipt_and_reviewed_headline",
   "stage": "sent",
-  "now": 2000000000.0,
+  "now": 1999999900.0,
   "workflow": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
   "installation": {
     "repositories": {
@@ -47,7 +47,10 @@
       "enabled": false,
       "max_new_tasks_per_tick": 4,
       "backfill_result_ids": [],
-      "daily": false
+      "daily": false,
+      "auto_backfill": false,
+      "backfill_per_tick": 1,
+      "backfill_pending_limit": 16
     },
     "kinds": {
       "firstcontact": false,
@@ -207,6 +210,21 @@
     "cma": {
       "token_base_url": "https://worker.example.invalid",
       "proxy_base_url": "https://auth.example.invalid/api/v1/proxy/s/cma"
+    },
+    "independent_review": {
+      "enabled": false,
+      "max_active": 2,
+      "github": {
+        "service": "github-review-read",
+        "user_service_id": "dedicated-read-only-input-connection",
+        "read_only": true
+      },
+      "profile": {
+        "model": "gpt-6.2-sol",
+        "reasoning_effort": "high"
+      },
+      "register_author_contacts": true,
+      "max_active_per_group": 1
     }
   },
   "config": {
@@ -398,6 +416,13 @@
     }
   },
   "datetime": "2026-11-05T00:00:00+00:00",
+  "options": {
+    "max_pages": 2,
+    "mailbox": true,
+    "advance": false,
+    "previous": []
+  },
+  "admissions": [],
   "script": [
     {
       "adapter": "mailbox",
@@ -439,17 +464,72 @@
     },
     {
       "adapter": "registry",
+      "method": "render",
+      "args": [
+        {
+          "contacts": [
+            {
+              "id": "contact-34f62dbbc1a9bae7",
+              "name": "Professor Scholar",
+              "email": "scholar@example.invalid",
+              "problem_ids": [],
+              "policy_fresh": false,
+              "hub": {
+                "threads": [],
+                "events": [
+                  {
+                    "kind": "sent",
+                    "at": "2026-11-04T01:00:00Z",
+                    "summary": "A checked answer — Answers the finite-rank question.",
+                    "evidence": "{\"account\": \"owner@example.invalid\", \"from\": \"\", \"id\": \"graph-one\", \"internetMessageId\": \"<one@example.invalid>\", \"recipient\": \"scholar@example.invalid\", \"source\": \"sent-events\", \"task_id\": \"reply-1\"}",
+                    "id": "event-98b5b5684da79bcd"
+                  }
+                ],
+                "workspace_paths": []
+              }
+            }
+          ]
+        }
+      ],
+      "kwargs": {},
+      "result": {
+        "tables/CONTACTS.md": "IyAxIMK3IOWujOaVtOiBlOe7nOihqAoK5Y6G5Y+y6K6w5b2V5b+r54Wn77yb5pys6L2u5bey5qC45a+56YKu566x5aSE55CG6L6555WM77yM5bCa5pyq5pu05paw5paw5p2l5L+h44CC5LiL6Z2i55qE5b6A5p2l5pel5pyf5ZKM5b6F5Yqe5LiN5Luj6KGo5Yia5LuO5pyN5Yqh5Zmo6K+75Y+W44CCCgrlnKjlhowgKioxIOS9jeiBlOezu+S6uiAvIDEg5p2h6YKu566x6K6w5b2VKirvvJvmnInljoblj7Llj5Hkv6Hor4Hmja4gKioxIOS9jSoq77yb5pyJ5p2l5L+h6K+B5o2uICoqMCDkvY0qKuOAguS7heWQiOW5tuadpea6kOaYjuehrueahOmCrueuseWIq+WQjeOAggoK54q25oCB44CB5Zue5bqU44CB5ZCI5L2c5pa55ZCR5ZKM5pys5Zyw5YWl5Y+j57uf5LiA5Zyo6L+Z6YeM57u05oqk44CC5YCZ6YCJ5oiW6K+B5o2u5b6F5qC45a+555qE6K6w5b2V5LiN6K6h5YWl5bey6IGU57O75Lq65qyh44CC54K55Ye75aeT5ZCN5p+l55yL5py65Zmo6K6w5b2V77yb4oCc5pys5Zyw4oCd6Lev5b6E5L6b5pys5py66K6/6Zeu77yMR2l0SHViIOS4jeaJv+i9veebruW9leWGheWuueOAggoKfCDogZTns7vkurogfCDpgq7nrrHvvIjlkKvlt7LmoLjlrp7liKvlkI3vvIkgfCDliqjmgIEgfCDmnIDov5Hlj5Hkv6EgfCDmnIDov5HmnaXkv6EgfCDkuLvpopjvvI/kuIvkuIDmraUgfCDmnKzlnLDlt6XkvZzljLogfAp8IC0tLSB8IC0tLSB8IC0tLSB8IC0tLSB8IC0tLSB8IC0tLSB8IC0tLSB8CnwgW1Byb2Zlc3NvciBTY2hvbGFyXShjb250YWN0cy5qc29uI0w0KSB8IHNjaG9sYXJAZXhhbXBsZS5pbnZhbGlkIHwg5bey6IGU57O7wrfnrYnlvoXlm57lupQgfCAyMDI2LTExLTA0IHwg4oCUIHwg4oCUPGJyPkEgY2hlY2tlZCBhbnN3ZXIg4oCUIEFuc3dlcnMgdGhlIGZpbml0ZS1yYW5rIHF1ZXN0aW9uLiB8IOWwmuaXoOW3suaguOWunui3r+W+hCB8Cg==",
+        "tables/POSITIVE.md": "IyAyIMK3IOato+mdouWPmeS6i+S4juWPjemmiAoKKirlkIjkvZzkuI7noJTnqbbkuqTmtYEgMCDkvY0gwrcg6IKv5a6a5oiR5Lus5bel5L2c55qE5a2m6ICFIDAg5L2NIMK3IOW8leeUqO+8j+iHtOiwou+8j+WQiOiRl+mCgOivtyAwIOS9jSoq44CC5ZCE5qCP5oyJ5piO56Gu6YKu566x5Yir5ZCN5Y676YeN77yM5ZCM5LiA5Lq65Y+v5Lul5Ye6546w5Zyo5aSa5qCP44CCCgrkv53nlZkgKiowIOadoeWPjemmiOWOn+ivneOAgTAg5p2h5byV55So77yP6Ie06LCi562J6K6w5b2V44CBMCDpobnlhazlvIDmiJDmnpwqKuOAgueglOeptuS6pOa1geOAgeWQiOiRl+WuieaOkuOAgeWQiOiRl+mCgOivt+S4juW3suWPkeihqOaIkOaenOS/neeVmeWQhOiHqueKtuaAgeOAguengeS6uuWOn+ivneeUqOS6juWGhemDqOWPmeS6i+e0oOadkO+8jOeZu+iusOS4jeinpuWPkeWPkeW4g++8m+aLkue7nei+ueeVjOWcqFvooaggM10oUkVGVVNBTFMubWQp57un57ut55Sf5pWI44CCCgojIyDlkIjkvZzkuI7noJTnqbbkuqTmtYEKCioqMCDkvY0qKu+8m+S/neeVmeavj+mhueiusOW9leeahOWFt+S9k+WGheWuueS4juWHuuWkhOOAggoKfCDogZTns7vkurrvvI/og4zmma8gfCDov5vlsZUgfCDnoJTnqbbkuLvpopjkuI7lkIjkvZzlhoXlrrkgfCDlh7rlpIQgfAp8IC0tLSB8IC0tLSB8IC0tLSB8IC0tLSB8CgojIyDogq/lrprmiJHku6zlt6XkvZznmoTlrabogIUKCioqMCDkvY0qKu+8m+S/neeVmeavj+mhueiusOW9leeahOWFt+S9k+WGheWuueS4juWHuuWkhOOAggoKfCDogZTns7vkurrvvI/og4zmma8gfCDnoJTnqbbkuLvpopjkuI7or4Tku7cgfCDlr7nmlrnljp/or50gfCDlh7rlpIQgfAp8IC0tLSB8IC0tLSB8IC0tLSB8IC0tLSB8CgojIyDlvJXnlKjjgIHoh7TosKLkuI7lkIjokZfpgoDor7cKCioqMCDkvY0qKu+8m+S/neeVmeavj+mhueiusOW9leeahOWFt+S9k+WGheWuueS4juWHuuWkhOOAggoKfCDogZTns7vkurrvvI/og4zmma8gfCDnsbvlnovkuI7mtonlj4rlt6XkvZwgfCDlr7nmlrnljp/or53kuI7lhbfkvZPorrDlvZUgfCDlh7rlpIQgfAp8IC0tLSB8IC0tLSB8IC0tLSB8IC0tLSB8CgojIyDlt7LmnInlhazlvIDmiJDmnpwKCnwg5oiQ5p6cIHwg5pel5pyfIHwg5bey5qC45a6e5LqL5a6eIHwg5YWs5byA5p2l5rqQIHwKfCAtLS0gfCAtLS0gfCAtLS0gfCAtLS0gfAo=",
+        "tables/contacts.json": "ewogICJjb250YWN0cyI6IFsKICAgIHsKICAgICAgImlkIjogImNvbnRhY3QtMzRmNjJkYmJjMWE5YmFlNyIsCiAgICAgICJuYW1lIjogIlByb2Zlc3NvciBTY2hvbGFyIiwKICAgICAgImVtYWlsIjogInNjaG9sYXJAZXhhbXBsZS5pbnZhbGlkIiwKICAgICAgInByb2JsZW1faWRzIjogW10sCiAgICAgICJwb2xpY3lfZnJlc2giOiBmYWxzZSwKICAgICAgImh1YiI6IHsKICAgICAgICAidGhyZWFkcyI6IFtdLAogICAgICAgICJldmVudHMiOiBbCiAgICAgICAgICB7CiAgICAgICAgICAgICJraW5kIjogInNlbnQiLAogICAgICAgICAgICAiYXQiOiAiMjAyNi0xMS0wNFQwMTowMDowMFoiLAogICAgICAgICAgICAic3VtbWFyeSI6ICJBIGNoZWNrZWQgYW5zd2VyIOKAlCBBbnN3ZXJzIHRoZSBmaW5pdGUtcmFuayBxdWVzdGlvbi4iLAogICAgICAgICAgICAiZXZpZGVuY2UiOiAie1wiYWNjb3VudFwiOiBcIm93bmVyQGV4YW1wbGUuaW52YWxpZFwiLCBcImZyb21cIjogXCJcIiwgXCJpZFwiOiBcImdyYXBoLW9uZVwiLCBcImludGVybmV0TWVzc2FnZUlkXCI6IFwiPG9uZUBleGFtcGxlLmludmFsaWQ+XCIsIFwicmVjaXBpZW50XCI6IFwic2Nob2xhckBleGFtcGxlLmludmFsaWRcIiwgXCJzb3VyY2VcIjogXCJzZW50LWV2ZW50c1wiLCBcInRhc2tfaWRcIjogXCJyZXBseS0xXCJ9IiwKICAgICAgICAgICAgImlkIjogImV2ZW50LTk4YjViNTY4NGRhNzliY2QiCiAgICAgICAgICB9CiAgICAgICAgXSwKICAgICAgICAid29ya3NwYWNlX3BhdGhzIjogW10KICAgICAgfQogICAgfQogIF0KfQo="
+      }
+    },
+    {
+      "adapter": "ledger",
+      "method": "save",
+      "args": [],
+      "kwargs": {
+        "force": true
+      },
+      "result": true,
+      "saved_snapshot": {
+        "generation": 1,
+        "digest": "af5e733230249e81bba18fb2de13e70c45e692570131064c9b7c35515be51240"
+      }
+    },
+    {
+      "adapter": "registry",
       "method": "commit_tables",
       "args": [],
       "kwargs": {},
-      "result": null
+      "result": {
+        "$callback": true
+      }
     },
     {
       "adapter": "ledger",
       "method": "save",
       "args": [],
       "kwargs": {},
-      "result": true
+      "result": false,
+      "saved_snapshot": {
+        "generation": 1,
+        "digest": "af5e733230249e81bba18fb2de13e70c45e692570131064c9b7c35515be51240"
+      }
     }
   ],
   "expected_final_rows": {

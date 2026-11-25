@@ -1,0 +1,2460 @@
+{
+  "schema_version": 1,
+  "id": "publication-new_rows_precede_due_failed_retries_oldest_first-3",
+  "source_test": "test_publication.PublicationTests.test_new_rows_precede_due_failed_retries_oldest_first",
+  "stage": "publication",
+  "now": 2802,
+  "workflow": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+  "installation": {
+    "repositories": {
+      "data": "example/outreach"
+    },
+    "schema_version": 1,
+    "paused": true,
+    "max_active": 24,
+    "prompt_max_characters": 120000,
+    "kind_quota": "equal",
+    "followup_lane": true,
+    "sandbox_pool": {
+      "max_sandboxes": 4,
+      "agents_per_sandbox": 6,
+      "rotate_after_agents": 24,
+      "quota_blocked_max_agents_placed": 192,
+      "prioritize_correspondence_notes": true,
+      "groups": [
+        {
+          "name": "notes",
+          "kinds": [
+            "shortnote",
+            "mathesis",
+            "firstcontact"
+          ],
+          "max_sandboxes": 1
+        },
+        {
+          "name": "mail",
+          "kinds": [
+            "reply",
+            "research",
+            "submission",
+            "daily"
+          ],
+          "max_sandboxes": 1
+        }
+      ]
+    },
+    "pipeline": {
+      "enabled": false,
+      "max_new_tasks_per_tick": 4,
+      "backfill_result_ids": [],
+      "daily": false,
+      "auto_backfill": false,
+      "backfill_per_tick": 1,
+      "backfill_pending_limit": 16
+    },
+    "kinds": {
+      "firstcontact": false,
+      "reply": false,
+      "research": false,
+      "shortnote": false,
+      "daily": false,
+      "mathesis": false,
+      "submission": false
+    },
+    "automation": {
+      "enabled": false,
+      "automatic_mail": false,
+      "max_new_tasks_per_tick": 6,
+      "max_revisions": 3,
+      "shortnote_extra_uplift_rounds": 2,
+      "routine_academic_mail": "automatic after exact independent review and fresh mailbox checks",
+      "user_decision_mail": "ask, then preserve as user-owned draft for manual sending"
+    },
+    "agent_template": {
+      "profile": {
+        "model": "gpt-6.1-sol",
+        "reasoning_effort": "high",
+        "permissions": {
+          "services": [
+            "api-github-pat",
+            "oracle"
+          ]
+        }
+      }
+    },
+    "mailbox_adapter": "unconfigured",
+    "home_domains": [
+      "campus.example.invalid",
+      "alumni.example.invalid"
+    ],
+    "mailbox": {
+      "account": "owner@example.invalid",
+      "live_since": "2000-01-01T00:00:00Z",
+      "cross_conversation_guard": true,
+      "max_total_attachment_bytes": 26214400,
+      "service_attention_domains": [
+        "overleaf.com"
+      ],
+      "editorial_domains": [
+        "editorialmanager.com",
+        "manuscriptcentral.com",
+        "aps.org",
+        "msp.org",
+        "arxiv.org",
+        "springernature.com",
+        "iop.org",
+        "ams.org",
+        "elsevier.com",
+        "wiley.com"
+      ],
+      "team_addresses": [
+        "coauthor@example.invalid"
+      ],
+      "team_addresses_note": "Configured coauthors",
+      "acceptance_recipients": [
+        "contributor@example.invalid"
+      ]
+    },
+    "claude_loop": "local, started by the user later",
+    "publication_selection": "explicit per note; review alone never publishes",
+    "mathesis": {
+      "mode": "disabled",
+      "submission_credentials": "configured session",
+      "author_confirmation": "required by the existing Mathesis contract",
+      "base_url": "https://mathesis.example.invalid",
+      "completion": "verified durable receipt; downstream review and presentation are Mathesis responsibilities",
+      "legacy_migration_per_tick": 3,
+      "acceptance_submission": "00000000-0000-0000-0000-000000000000"
+    },
+    "github": {
+      "service": "api-github-pat",
+      "user_service_id": "00000000-0000-0000-0000-000000000000"
+    },
+    "identity": {
+      "team_authors": [
+        "Blaire Mercer",
+        "Avery Reed"
+      ],
+      "owner_labels": [
+        "owner",
+        "Avery Reed"
+      ],
+      "first_names": [
+        "Avery",
+        "Blaire"
+      ],
+      "firstcontact_signature": "Best regards,\nAvery and Blaire\nExample University; Example Research Group",
+      "firstcontact_opening_terms": [
+        "avery reed",
+        "blaire mercer",
+        "example university",
+        "example research group"
+      ],
+      "reply_affiliation_markers": [
+        "example university",
+        "example research group",
+        "omega institute"
+      ],
+      "affiliation_patterns": [
+        "example university",
+        "example research group",
+        "omega institute"
+      ],
+      "affiliation_prefixes": [
+        "EU"
+      ],
+      "author_facts": {
+        "Avery Reed": {
+          "affiliation": "Example University",
+          "email": "owner@example.invalid",
+          "orcid": "0000-0000-0000-0000",
+          "country": "Example country",
+          "google_scholar": "https://scholar.example.invalid/profile"
+        },
+        "Blaire Mercer": {
+          "affiliation": "Example Research Group",
+          "email": "coauthor@example.invalid",
+          "orcid": "0000-0000-0000-0000",
+          "country": "Example country"
+        },
+        "ai_statement": "Configured in the private data repository.",
+        "funding": "Configured in the private data repository.",
+        "competing_interests": "Configured in the private data repository.",
+        "originality": "Configured in the private data repository.",
+        "unknown_ask_once": "Configured in the private data repository.",
+        "defaults": "Configured in the private data repository.",
+        "who_are_you_answer": "Configured in the private data repository.",
+        "affiliation_note": "Configured in the private data repository.",
+        "coauthor_background_answer": "Configured in the private data repository."
+      },
+      "direct_display_decision_ref": "example-direct-display",
+      "shortnote_creators": [
+        {
+          "name": "Blaire Mercer",
+          "affiliation": "Example Research Group"
+        },
+        {
+          "name": "Avery Reed",
+          "affiliation": "Example University"
+        }
+      ],
+      "submission_scope": "independent-team"
+    },
+    "credentials": {
+      "nyx_base_url": "https://auth.example.invalid",
+      "nyx_legacy_issuer": "https://legacy-auth.example.invalid",
+      "nyx_owner": "example-owner",
+      "graph_tenant": "example-tenant",
+      "graph_client": "example-client"
+    },
+    "cma": {
+      "token_base_url": "https://worker.example.invalid",
+      "proxy_base_url": "https://auth.example.invalid/api/v1/proxy/s/cma"
+    },
+    "independent_review": {
+      "enabled": false,
+      "max_active": 2,
+      "github": {
+        "service": "github-review-read",
+        "user_service_id": "dedicated-read-only-input-connection",
+        "read_only": true
+      },
+      "profile": {
+        "model": "gpt-6.2-sol",
+        "reasoning_effort": "high"
+      },
+      "register_author_contacts": true,
+      "max_active_per_group": 1
+    }
+  },
+  "config": {
+    "paused": false,
+    "kinds": {
+      "mathesis": true,
+      "shortnote": true
+    },
+    "mathesis": {
+      "mode": "deliver"
+    }
+  },
+  "initial_rows": {
+    "control_events": {
+      "columns": [
+        "id",
+        "payload"
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "rows": [
+        {
+          "id": "9f06be34542b1d5ab585d1c85ef9f0165f9bfbc1a443b88b163cda5c926d1ad8",
+          "payload": {
+            "binding": {
+              "result_hash": "9fc69aea76cda9fb79f5ac1fc93e7e08f82efe82ad41b543f69b682cbe38bd42",
+              "task_id": "earlier",
+              "task_revision": 2,
+              "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+            },
+            "evidence_ref": "test:review",
+            "reason": "Independent exact review",
+            "reviewer": "local-claude-loop",
+            "signature": "6cc5bfe58843b094c90cdd5f62ad8276b4764d367f5a3e7d2962f2794a9c948f",
+            "verdict": "PASS"
+          }
+        },
+        {
+          "id": "939c71137a89904b5d55e29ca438eed5ad7a5718a208d050a3e52a50bd7d1870",
+          "payload": {
+            "binding": {
+              "result_hash": "22af797f5fefd6e4b112180a165e6776dac2d8fb23a956bcffd10a38d073c544",
+              "task_id": "later",
+              "task_revision": 2,
+              "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+            },
+            "evidence_ref": "test:review",
+            "reason": "Independent exact review",
+            "reviewer": "local-claude-loop",
+            "signature": "fec5f20ce1186490844d299d9ea704931d0e1ba5f5334da6203f8848a964c435",
+            "verdict": "PASS"
+          }
+        },
+        {
+          "id": "e769f592805f43df3ea4492f1bd2e1816cad5a28be114be679e11772574d6b05",
+          "payload": {
+            "binding": {
+              "result_hash": "47ef0fb875aa431533ce9c1209c5a7fd476e7f96ff2e5f6f7d14d5bc39544e8c",
+              "task_id": "untouched",
+              "task_revision": 2,
+              "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+            },
+            "evidence_ref": "test:review",
+            "reason": "Independent exact review",
+            "reviewer": "local-claude-loop",
+            "signature": "ade99c862c83a0e8d7f0936ef64576a58f8a4b266c2164e881b509e2ec5549c1",
+            "verdict": "PASS"
+          }
+        }
+      ]
+    },
+    "input_asset_receipts": {
+      "columns": [
+        "identity",
+        "generation"
+      ],
+      "primary_key": [
+        "identity"
+      ],
+      "rows": []
+    },
+    "pipeline_sources": {
+      "columns": [
+        "result_id",
+        "identity",
+        "payload",
+        "baseline",
+        "task_id"
+      ],
+      "primary_key": [
+        "result_id"
+      ],
+      "rows": []
+    },
+    "pipeline_state": {
+      "columns": [
+        "key",
+        "payload"
+      ],
+      "primary_key": [
+        "key"
+      ],
+      "rows": [
+        {
+          "key": "recheck:publication:earlier",
+          "payload": {
+            "binding": "edc9bbe8479ad07fd901b21d0b9f532a61d0edc3ff6aaced02012f141bef8d2c",
+            "checked_at": 1000,
+            "next_at": 2800
+          }
+        },
+        {
+          "key": "recheck:publication:later",
+          "payload": {
+            "binding": "13c6d21abf90a1af591da5272c35f7dad117af8cf0d65327083ca2684c329eaa",
+            "checked_at": 1001,
+            "next_at": 2801
+          }
+        }
+      ]
+    },
+    "sqlite_sequence": {
+      "columns": [
+        "name",
+        "seq"
+      ],
+      "primary_key": [
+        "name"
+      ],
+      "rows": [
+        {
+          "name": "task_events",
+          "seq": 16
+        }
+      ]
+    },
+    "task_events": {
+      "columns": [
+        "seq",
+        "id",
+        "state",
+        "revision",
+        "at",
+        "data"
+      ],
+      "primary_key": [
+        "seq"
+      ],
+      "rows": [
+        {
+          "seq": 1,
+          "id": "earlier",
+          "state": "queued",
+          "revision": 1,
+          "at": 1000.0,
+          "data": {}
+        },
+        {
+          "seq": 2,
+          "id": "earlier",
+          "state": "awaiting-review",
+          "revision": 2,
+          "at": 1000.0,
+          "data": {}
+        },
+        {
+          "seq": 3,
+          "id": "earlier",
+          "state": "approved",
+          "revision": 3,
+          "at": 1000.0,
+          "data": {
+            "review": "9f06be34542b1d5ab585d1c85ef9f0165f9bfbc1a443b88b163cda5c926d1ad8"
+          }
+        },
+        {
+          "seq": 4,
+          "id": "earlier",
+          "state": "handoff-ready",
+          "revision": 4,
+          "at": 1000.0,
+          "data": {
+            "verdict": "PASS"
+          }
+        },
+        {
+          "seq": 5,
+          "id": "earlier",
+          "state": "handoff-ready",
+          "revision": 5,
+          "at": 1000.0,
+          "data": {
+            "verdict": "PASS"
+          }
+        },
+        {
+          "seq": 6,
+          "id": "earlier",
+          "state": "handoff-ready",
+          "revision": 6,
+          "at": 1000.0,
+          "data": {
+            "verdict": "PASS"
+          }
+        },
+        {
+          "seq": 7,
+          "id": "later",
+          "state": "queued",
+          "revision": 1,
+          "at": 1001.0,
+          "data": {}
+        },
+        {
+          "seq": 8,
+          "id": "later",
+          "state": "awaiting-review",
+          "revision": 2,
+          "at": 1001.0,
+          "data": {}
+        },
+        {
+          "seq": 9,
+          "id": "later",
+          "state": "approved",
+          "revision": 3,
+          "at": 1001.0,
+          "data": {
+            "review": "939c71137a89904b5d55e29ca438eed5ad7a5718a208d050a3e52a50bd7d1870"
+          }
+        },
+        {
+          "seq": 10,
+          "id": "later",
+          "state": "handoff-ready",
+          "revision": 4,
+          "at": 1001.0,
+          "data": {
+            "verdict": "PASS"
+          }
+        },
+        {
+          "seq": 11,
+          "id": "later",
+          "state": "handoff-ready",
+          "revision": 5,
+          "at": 1001.0,
+          "data": {
+            "verdict": "PASS"
+          }
+        },
+        {
+          "seq": 12,
+          "id": "later",
+          "state": "handoff-ready",
+          "revision": 6,
+          "at": 1001.0,
+          "data": {
+            "verdict": "PASS"
+          }
+        },
+        {
+          "seq": 13,
+          "id": "untouched",
+          "state": "queued",
+          "revision": 1,
+          "at": 1002.0,
+          "data": {}
+        },
+        {
+          "seq": 14,
+          "id": "untouched",
+          "state": "awaiting-review",
+          "revision": 2,
+          "at": 1002.0,
+          "data": {}
+        },
+        {
+          "seq": 15,
+          "id": "untouched",
+          "state": "approved",
+          "revision": 3,
+          "at": 1002.0,
+          "data": {
+            "review": "e769f592805f43df3ea4492f1bd2e1816cad5a28be114be679e11772574d6b05"
+          }
+        },
+        {
+          "seq": 16,
+          "id": "untouched",
+          "state": "handoff-ready",
+          "revision": 4,
+          "at": 1002.0,
+          "data": {
+            "verdict": "PASS"
+          }
+        }
+      ]
+    },
+    "task_migrations": {
+      "columns": [
+        "name",
+        "phase"
+      ],
+      "primary_key": [
+        "name"
+      ],
+      "rows": [
+        {
+          "name": "compact-task-events-v1",
+          "phase": "done"
+        }
+      ]
+    },
+    "tasks": {
+      "columns": [
+        "id",
+        "request",
+        "request_hash",
+        "owner",
+        "kind",
+        "state",
+        "revision",
+        "data",
+        "updated"
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "rows": [
+        {
+          "id": "earlier",
+          "request": {
+            "id": "earlier",
+            "inputs": {},
+            "kind": "mathesis",
+            "owner": "scholar-a",
+            "schema_version": 1,
+            "source_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          },
+          "request_hash": "3591adbad2eb958400a9b8ced58ee4fb6d4b0bec2a1a0bcbe36bfc479a0a5071",
+          "owner": "scholar-a",
+          "kind": "mathesis",
+          "state": "handoff-ready",
+          "revision": 6,
+          "data": {
+            "publication_loop": {
+              "consecutive_failures": 1,
+              "creators": [
+                {
+                  "name": "Avery Reed"
+                },
+                {
+                  "name": "Blaire Mercer"
+                }
+              ],
+              "decision_hash": "cb011f88b37c60aec8694a54cf9e71dcc542a804efac8e0fde4421dbddee5a4d",
+              "decision_ref": "test:standing-decision",
+              "diagnostic": "GitHub already_exists",
+              "last_error": "RuntimeError",
+              "next_retry_at": 2800,
+              "note_id": "earlier",
+              "phase": "pending",
+              "problem_ids": [
+                "earlier"
+              ],
+              "result_hash": "9fc69aea76cda9fb79f5ac1fc93e7e08f82efe82ad41b543f69b682cbe38bd42",
+              "revision": 1,
+              "step": "register"
+            },
+            "result": {
+              "artifacts": [
+                {
+                  "bytes": 31,
+                  "name": "note-v1.pdf",
+                  "release_tag": "outreach-task-earlier",
+                  "role": "note-pdf",
+                  "sha256": "baeb93e2524b33b4b673574442684d1116379d0f525c21f276665f0b6bea805e"
+                },
+                {
+                  "bytes": 173,
+                  "name": "source-v1.zip",
+                  "release_tag": "outreach-task-earlier",
+                  "role": "source-archive",
+                  "sha256": "0fcd691aaa95ccc1a049162368311d98f3c66e5df7962a9e70e32683134ed58e"
+                },
+                {
+                  "bytes": 786,
+                  "name": "handoff.json",
+                  "release_tag": "outreach-task-earlier",
+                  "role": "handoff",
+                  "sha256": "565e3d3f430aeb87b870c38cf7c9867944f3d2403ce50e12a6660a3dc75c335d"
+                },
+                {
+                  "bytes": 88,
+                  "name": "evidence.md",
+                  "release_tag": "outreach-task-earlier",
+                  "role": "evidence",
+                  "sha256": "c3cabfef9edfef1bb719cdf6d265313f2939917a310426fcacc842e90d740aa1"
+                }
+              ],
+              "outcome": "completed",
+              "packet": null,
+              "report": "Checked result",
+              "schema_version": 1,
+              "task_id": "earlier"
+            },
+            "review": {
+              "binding": {
+                "result_hash": "9fc69aea76cda9fb79f5ac1fc93e7e08f82efe82ad41b543f69b682cbe38bd42",
+                "task_id": "earlier",
+                "task_revision": 2,
+                "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              },
+              "evidence_ref": "test:review",
+              "reason": "Independent exact review",
+              "reviewer": "local-claude-loop",
+              "signature": "6cc5bfe58843b094c90cdd5f62ad8276b4764d367f5a3e7d2962f2794a9c948f",
+              "verdict": "PASS"
+            }
+          },
+          "updated": 1000.0
+        },
+        {
+          "id": "later",
+          "request": {
+            "id": "later",
+            "inputs": {
+              "owner_ids": [
+                "contact-1"
+              ]
+            },
+            "kind": "mathesis",
+            "owner": "scholar-a",
+            "schema_version": 1,
+            "source_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          },
+          "request_hash": "86d75fd211594b6e508740d157a2bd8966721cef280c82cd3e9ae4ff7aab53a6",
+          "owner": "scholar-a",
+          "kind": "mathesis",
+          "state": "handoff-ready",
+          "revision": 6,
+          "data": {
+            "publication_loop": {
+              "consecutive_failures": 1,
+              "creators": [
+                {
+                  "name": "Avery Reed"
+                },
+                {
+                  "name": "Blaire Mercer"
+                }
+              ],
+              "decision_hash": "cb011f88b37c60aec8694a54cf9e71dcc542a804efac8e0fde4421dbddee5a4d",
+              "decision_ref": "test:standing-decision",
+              "diagnostic": "GitHub already_exists",
+              "last_error": "RuntimeError",
+              "next_retry_at": 2801,
+              "note_id": "later",
+              "phase": "pending",
+              "problem_ids": [
+                "later"
+              ],
+              "result_hash": "22af797f5fefd6e4b112180a165e6776dac2d8fb23a956bcffd10a38d073c544",
+              "revision": 1,
+              "step": "register"
+            },
+            "result": {
+              "artifacts": [
+                {
+                  "bytes": 31,
+                  "name": "note-v1.pdf",
+                  "release_tag": "outreach-task-later",
+                  "role": "note-pdf",
+                  "sha256": "baeb93e2524b33b4b673574442684d1116379d0f525c21f276665f0b6bea805e"
+                },
+                {
+                  "bytes": 173,
+                  "name": "source-v1.zip",
+                  "release_tag": "outreach-task-later",
+                  "role": "source-archive",
+                  "sha256": "0fcd691aaa95ccc1a049162368311d98f3c66e5df7962a9e70e32683134ed58e"
+                },
+                {
+                  "bytes": 782,
+                  "name": "handoff.json",
+                  "release_tag": "outreach-task-later",
+                  "role": "handoff",
+                  "sha256": "7a47546303025052862808ba4a61289ce038f08372582656a849ed20c8de93a6"
+                },
+                {
+                  "bytes": 88,
+                  "name": "evidence.md",
+                  "release_tag": "outreach-task-later",
+                  "role": "evidence",
+                  "sha256": "c3cabfef9edfef1bb719cdf6d265313f2939917a310426fcacc842e90d740aa1"
+                }
+              ],
+              "outcome": "completed",
+              "packet": null,
+              "report": "Checked result",
+              "schema_version": 1,
+              "task_id": "later"
+            },
+            "review": {
+              "binding": {
+                "result_hash": "22af797f5fefd6e4b112180a165e6776dac2d8fb23a956bcffd10a38d073c544",
+                "task_id": "later",
+                "task_revision": 2,
+                "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              },
+              "evidence_ref": "test:review",
+              "reason": "Independent exact review",
+              "reviewer": "local-claude-loop",
+              "signature": "fec5f20ce1186490844d299d9ea704931d0e1ba5f5334da6203f8848a964c435",
+              "verdict": "PASS"
+            }
+          },
+          "updated": 1001.0
+        },
+        {
+          "id": "untouched",
+          "request": {
+            "id": "untouched",
+            "inputs": {},
+            "kind": "mathesis",
+            "owner": "scholar-a",
+            "schema_version": 1,
+            "source_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          },
+          "request_hash": "156f6a5c9076672ce02c090023e8af6b7ab8935ff0297976ac9fa2217060e51b",
+          "owner": "scholar-a",
+          "kind": "mathesis",
+          "state": "handoff-ready",
+          "revision": 4,
+          "data": {
+            "result": {
+              "artifacts": [
+                {
+                  "bytes": 31,
+                  "name": "note-v1.pdf",
+                  "release_tag": "outreach-task-untouched",
+                  "role": "note-pdf",
+                  "sha256": "baeb93e2524b33b4b673574442684d1116379d0f525c21f276665f0b6bea805e"
+                },
+                {
+                  "bytes": 173,
+                  "name": "source-v1.zip",
+                  "release_tag": "outreach-task-untouched",
+                  "role": "source-archive",
+                  "sha256": "0fcd691aaa95ccc1a049162368311d98f3c66e5df7962a9e70e32683134ed58e"
+                },
+                {
+                  "bytes": 790,
+                  "name": "handoff.json",
+                  "release_tag": "outreach-task-untouched",
+                  "role": "handoff",
+                  "sha256": "554f9f97dca7b3ef9f2b146575363ab61ba889d312a8298d71ece57fa90841d6"
+                },
+                {
+                  "bytes": 88,
+                  "name": "evidence.md",
+                  "release_tag": "outreach-task-untouched",
+                  "role": "evidence",
+                  "sha256": "c3cabfef9edfef1bb719cdf6d265313f2939917a310426fcacc842e90d740aa1"
+                }
+              ],
+              "outcome": "completed",
+              "packet": null,
+              "report": "Checked result",
+              "schema_version": 1,
+              "task_id": "untouched"
+            },
+            "review": {
+              "binding": {
+                "result_hash": "47ef0fb875aa431533ce9c1209c5a7fd476e7f96ff2e5f6f7d14d5bc39544e8c",
+                "task_id": "untouched",
+                "task_revision": 2,
+                "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              },
+              "evidence_ref": "test:review",
+              "reason": "Independent exact review",
+              "reviewer": "local-claude-loop",
+              "signature": "ade99c862c83a0e8d7f0936ef64576a58f8a4b266c2164e881b509e2ec5549c1",
+              "verdict": "PASS"
+            }
+          },
+          "updated": 1002.0
+        }
+      ]
+    }
+  },
+  "initial_files": {
+    "tables/decisions.json": "eyJob2xkcyI6IFt7InRhc2tfaWQiOiAic2hvcnRub3RlLTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExIiwgImRlY2lzaW9uIjogIkhPTEQifV0sICJzaG9ydF9ub3RlX3B1YmxpY2F0aW9uIjogeyJlbmFibGVkIjogdHJ1ZSwgImRlY2lzaW9uX3JlZiI6ICJ0ZXN0OnN0YW5kaW5nLWRlY2lzaW9uIiwgInB1cnBvc2UiOiAicHVibGljYXRpb24iLCAicHJvY2Vzc2luZ19jb25zZW50IjogInRlc3Q6Y29uc2VudCIsICJtYWtlX3B1YmxpY19hZnRlcl9hY2NlcHRhbmNlIjogdHJ1ZSwgImluZGVwZW5kZW50X2F1dGhvcnMiOiBbIkF2ZXJ5IFJlZWQiLCAiQmxhaXJlIE1lcmNlciJdLCAiYWlfZGlzY2xvc3VyZSI6IHsibGV2ZWwiOiAiYXNzaXN0ZWQiLCAic3RhdGVtZW50X3dpdGhfbGVhbiI6ICJJbiBwcmVwYXJpbmcgdGhpcyBtYW51c2NyaXB0LCB0aGUgYXV0aG9ycyB1c2VkIEFJIHRvb2xzIChDaGF0R1BUIFBybywgQ29kZXggYW5kIENsYXVkZSkgZm9yIGxpdGVyYXR1cmUgc2VhcmNoLCBjb21wdXRhdGlvbiwgY2hlY2tpbmcgYW5kIGZvcm1hbCB2ZXJpZmljYXRpb24gaW4gTGVhbi4gQWxsIHByb29mcyBjYW4gYmUgY2hlY2tlZCBieSBoYW5kLCBhbmQgdGhlIGNvbXB1dGF0aW9ucyBjYW4gYmUgcmVwcm9kdWNlZCBmcm9tIHRoZSBhY2NvbXBhbnlpbmcgdmVyaWZpY2F0aW9uIHBhY2thZ2UuIFRoZSBhdXRob3JzIHRha2UgZnVsbCByZXNwb25zaWJpbGl0eSBmb3IgdGhlIGNvbnRlbnQuIiwgInN0YXRlbWVudF93aXRob3V0X2xlYW4iOiAiSW4gcHJlcGFyaW5nIHRoaXMgbWFudXNjcmlwdCwgdGhlIGF1dGhvcnMgdXNlZCBBSSB0b29scyAoQ2hhdEdQVCBQcm8sIENvZGV4IGFuZCBDbGF1ZGUpIGZvciBsaXRlcmF0dXJlIHNlYXJjaCwgY29tcHV0YXRpb24gYW5kIGNoZWNraW5nLiBBbGwgcHJvb2ZzIGNhbiBiZSBjaGVja2VkIGJ5IGhhbmQsIGFuZCB0aGUgY29tcHV0YXRpb25zIGNhbiBiZSByZXByb2R1Y2VkIGZyb20gdGhlIGFjY29tcGFueWluZyB2ZXJpZmljYXRpb24gcGFja2FnZS4gVGhlIGF1dGhvcnMgdGFrZSBmdWxsIHJlc3BvbnNpYmlsaXR5IGZvciB0aGUgY29udGVudC4ifX19",
+    "tables/publications.json": "eyJzY2hlbWFfdmVyc2lvbiI6ICJyZXNlYXJjaC1wdWJsaWNhdGlvbi52MSIsICJwdWJsaWNhdGlvbnMiOiBbXSwgImNvbGxhYm9yYXRpb25zIjogW10sICJub3RlcyI6IFtdfQ==",
+    "managed/submission/author-policy.json": "ewogICJzY2hlbWFfdmVyc2lvbiI6IDEsCiAgInNvdXJjZV9yZXZpc2lvbiI6ICJhYzczNDA2MWM0MzA3NjgwMGFkMjEwYWY2MWI4MWQyNGFlNTE4MWJiIiwKICAic291cmNlX3BhdGgiOiAic2NyaXB0cy9tYWlsZmxvdy9yZWYvQUktU1RBVEVNRU5ULVRFTVBMQVRFLm1kIiwKICAiYXV0aG9yX2ZhY3RzIjogIlJlYWQgUDU2LWluZGVwZW5kZW50LWJvYXJkLmF1dGhvcl9mYWN0cyBpbiBtYW5hZ2VkL3JlcGxpZXMvd29ya2Zsb3cuanNvbi4gUHJlc2VydmUgYWN0dWFsIGF1dGhvciBhZ3JlZW1lbnRzIGFuZCBjb250cmlidXRpb25zOyBtaXNzaW5nIHBlcnNvbmFsIGZhY3RzIGFyZSBub3QgaW5mZXJyZWQgZnJvbSBhIGJ5bGluZS4iLAogICJsb2NrZWRfc3RhdGVtZW50X3dpdGhfbGVhbiI6ICJJbiBwcmVwYXJpbmcgdGhpcyBtYW51c2NyaXB0LCB0aGUgYXV0aG9ycyB1c2VkIEFJIHRvb2xzIChDaGF0R1BUIFBybywgQ29kZXggYW5kIENsYXVkZSkgZm9yIGxpdGVyYXR1cmUgc2VhcmNoLCBjb21wdXRhdGlvbiwgY2hlY2tpbmcgYW5kIGZvcm1hbCB2ZXJpZmljYXRpb24gaW4gTGVhbi4gQWxsIHByb29mcyBjYW4gYmUgY2hlY2tlZCBieSBoYW5kLCBhbmQgdGhlIGNvbXB1dGF0aW9ucyBjYW4gYmUgcmVwcm9kdWNlZCBmcm9tIHRoZSBhY2NvbXBhbnlpbmcgdmVyaWZpY2F0aW9uIHBhY2thZ2UuIFRoZSBhdXRob3JzIHRha2UgZnVsbCByZXNwb25zaWJpbGl0eSBmb3IgdGhlIGNvbnRlbnQuIiwKICAibG9ja2VkX3N0YXRlbWVudF93aXRob3V0X2xlYW4iOiAiSW4gcHJlcGFyaW5nIHRoaXMgbWFudXNjcmlwdCwgdGhlIGF1dGhvcnMgdXNlZCBBSSB0b29scyAoQ2hhdEdQVCBQcm8sIENvZGV4IGFuZCBDbGF1ZGUpIGZvciBsaXRlcmF0dXJlIHNlYXJjaCwgY29tcHV0YXRpb24gYW5kIGNoZWNraW5nLiBBbGwgcHJvb2ZzIGNhbiBiZSBjaGVja2VkIGJ5IGhhbmQsIGFuZCB0aGUgY29tcHV0YXRpb25zIGNhbiBiZSByZXByb2R1Y2VkIGZyb20gdGhlIGFjY29tcGFueWluZyB2ZXJpZmljYXRpb24gcGFja2FnZS4gVGhlIGF1dGhvcnMgdGFrZSBmdWxsIHJlc3BvbnNpYmlsaXR5IGZvciB0aGUgY29udGVudC4iLAogICJhcHBsaWNhdGlvbiI6ICJQcmVzZXJ2ZSB0aGUgMjAyNi0xMC0yOCB1c2VyLWFwcHJvdmVkIHdvcmRpbmcgZm9yIG91ciBhY3R1YWwgY29udHJpYnV0aW9uIGFuZCB2ZXJpZmljYXRpb24gc2NvcGUuIFVzZSB0aGUgTGVhbiB2YXJpYW50IG9ubHkgd2hlbiBhcHBsaWNhYmxlLiBQcmVzZXJ2ZSBjb2F1dGhvcnMnIHN1cHBsaWVkIGRlY2xhcmF0aW9ucy4gVmVyaWZ5IGN1cnJlbnQgdmVudWUgcmVxdWlyZW1lbnRzIGFuZCBhY3R1YWwgdG9vbCB1c2U7IGZsYWcgYW55IHJlcXVpcmVkIHRydXRoZnVsIGFkZGl0aW9uYWwgZGlzY2xvc3VyZSBvciBpbmNvbXBhdGlibGUgdmVudWUgcnVsZSByYXRoZXIgdGhhbiBjbGFpbWluZyBub25leGlzdGVudCBodW1hbi1vbmx5IGF1dGhvcnNoaXAuIERvIG5vdCBpbnNlcnQgbWFudXNjcmlwdCBkaXNjbG9zdXJlIGJvaWxlcnBsYXRlIGluIG9yZGluYXJ5IGFjYWRlbWljIGVtYWlscy4iCn0K"
+  },
+  "adapter_attributes": {
+    "releases": {
+      "repo": "fixture/repo",
+      "tag": "outreach-control"
+    }
+  },
+  "options": {
+    "previous": []
+  },
+  "admissions": [],
+  "script": [
+    {
+      "adapter": "boundary",
+      "method": "source_gate",
+      "args": [
+        "untouched"
+      ],
+      "kwargs": {},
+      "result": null
+    },
+    {
+      "adapter": "shortnote",
+      "method": "package",
+      "args": [
+        "untouched",
+        "47ef0fb875aa431533ce9c1209c5a7fd476e7f96ff2e5f6f7d14d5bc39544e8c"
+      ],
+      "kwargs": {},
+      "result": {
+        "metadata": {
+          "abstract": "The precise result.",
+          "creators": [
+            {
+              "name": "Avery Reed"
+            },
+            {
+              "name": "Blaire Mercer"
+            }
+          ],
+          "evidence_url": "https://sample.example.invalid/commit/proof.lean",
+          "id": "untouched",
+          "license": "cc-by-4.0",
+          "problem_ids": [
+            "untouched"
+          ],
+          "revision": 1,
+          "summary": "The original conjecture is proved.",
+          "title": "Proof of the conjecture",
+          "topic": "Original conjecture"
+        },
+        "source": "source-v1.zip",
+        "files": {
+          "note-v1.json": {
+            "$file": "note-v1.json",
+            "base64": "ewogICJmaWxlcyI6IHsKICAgICJub3RlLXYxLnBkZiI6ICJiYWViOTNlMjUyNGIzM2I0YjY3MzU3NDQ0MjY4NGQxMTE2Mzc5ZDBmNTI1YzIxZjI3NjY2NWYwYjZiZWE4MDVlIiwKICAgICJzb3VyY2UtdjEuemlwIjogIjBmY2Q2OTFhYWE5NWNjYzFhMDQ5MTYyMzY4MzExZDk4ZjNjNjZlNWRmNzk2MmE5ZTcwZTMyNjgzMTM0ZWQ1OGUiCiAgfSwKICAibWV0YWRhdGEiOiB7CiAgICAiYWJzdHJhY3QiOiAiVGhlIHByZWNpc2UgcmVzdWx0LiIsCiAgICAiY3JlYXRvcnMiOiBbCiAgICAgIHsKICAgICAgICAibmFtZSI6ICJBdmVyeSBSZWVkIgogICAgICB9LAogICAgICB7CiAgICAgICAgIm5hbWUiOiAiQmxhaXJlIE1lcmNlciIKICAgICAgfQogICAgXSwKICAgICJldmlkZW5jZV91cmwiOiAiaHR0cHM6Ly9zYW1wbGUuZXhhbXBsZS5pbnZhbGlkL2NvbW1pdC9wcm9vZi5sZWFuIiwKICAgICJpZCI6ICJ1bnRvdWNoZWQiLAogICAgImxpY2Vuc2UiOiAiY2MtYnktNC4wIiwKICAgICJwcm9ibGVtX2lkcyI6IFsKICAgICAgInVudG91Y2hlZCIKICAgIF0sCiAgICAicmV2aXNpb24iOiAxLAogICAgInN1bW1hcnkiOiAiVGhlIG9yaWdpbmFsIGNvbmplY3R1cmUgaXMgcHJvdmVkLiIsCiAgICAidGl0bGUiOiAiUHJvb2Ygb2YgdGhlIGNvbmplY3R1cmUiLAogICAgInRvcGljIjogIk9yaWdpbmFsIGNvbmplY3R1cmUiCiAgfSwKICAic2NoZW1hX3ZlcnNpb24iOiAic2hvcnQtbm90ZS52MSIKfQo="
+          },
+          "note-v1.pdf": {
+            "$file": "note-v1.pdf",
+            "base64": "JVBERi0xLjQKU3ludGhldGljIGNoZWNrZWQgbm90ZQ=="
+          },
+          "source-v1.zip": {
+            "$file": "source-v1.zip",
+            "base64": "UEsDBBQAAAAAAAAAIQDnKJGaOwAAADsAAAAIAAAAbm90ZS50ZXhcZG9jdW1lbnRjbGFzc3thcnRpY2xlfVxiZWdpbntkb2N1bWVudH1Qcm9vZi5cZW5ke2RvY3VtZW50fVBLAQIUAxQAAAAAAAAAIQDnKJGaOwAAADsAAAAIAAAAAAAAAAAAAACAAQAAAABub3RlLnRleFBLBQYAAAAAAQABADYAAABhAAAAAAA="
+          }
+        }
+      }
+    },
+    {
+      "adapter": "boundary",
+      "method": "record",
+      "args": [
+        "untouched",
+        "preparing"
+      ],
+      "kwargs": {},
+      "result": null
+    },
+    {
+      "adapter": "ledger",
+      "method": "save",
+      "args": [],
+      "kwargs": {
+        "force": true
+      },
+      "result": true,
+      "saved_snapshot": {
+        "generation": 3,
+        "digest": "5e7d522a79c693ff357fbeb5092783c2d12213907e200a64e0159d7dcf6b6621"
+      }
+    },
+    {
+      "adapter": "publication",
+      "method": "register_note",
+      "args": [
+        {
+          "abstract": "The precise result.",
+          "creators": [
+            {
+              "name": "Avery Reed"
+            },
+            {
+              "name": "Blaire Mercer"
+            }
+          ],
+          "evidence_url": "https://sample.example.invalid/commit/proof.lean",
+          "id": "untouched",
+          "license": "cc-by-4.0",
+          "problem_ids": [
+            "untouched"
+          ],
+          "revision": 1,
+          "summary": "The original conjecture is proved.",
+          "title": "Proof of the conjecture",
+          "topic": "Original conjecture"
+        }
+      ],
+      "kwargs": {},
+      "result": {
+        "schema_version": "research-publication.v1",
+        "publications": [],
+        "collaborations": [],
+        "notes": [
+          {
+            "id": "untouched",
+            "problem_ids": [
+              "untouched"
+            ],
+            "paused": false
+          }
+        ]
+      }
+    },
+    {
+      "adapter": "publication",
+      "method": "release",
+      "args": [
+        "short-note-untouched"
+      ],
+      "kwargs": {},
+      "result": null
+    },
+    {
+      "adapter": "publication",
+      "method": "create",
+      "args": [
+        "short-note-untouched",
+        "Proof of the conjecture"
+      ],
+      "kwargs": {},
+      "result": null
+    },
+    {
+      "adapter": "publication",
+      "method": "release",
+      "args": [
+        "short-note-untouched"
+      ],
+      "kwargs": {},
+      "result": {
+        "assets": [],
+        "body": "Versioned short-note artifacts and publication receipts."
+      }
+    },
+    {
+      "adapter": "publication",
+      "method": "upload",
+      "args": [
+        "short-note-untouched",
+        {
+          "$file": "note-v1.pdf",
+          "base64": "JVBERi0xLjQKU3ludGhldGljIGNoZWNrZWQgbm90ZQ=="
+        }
+      ],
+      "kwargs": {},
+      "result": null
+    },
+    {
+      "adapter": "publication",
+      "method": "upload",
+      "args": [
+        "short-note-untouched",
+        {
+          "$file": "source-v1.zip",
+          "base64": "UEsDBBQAAAAAAAAAIQDnKJGaOwAAADsAAAAIAAAAbm90ZS50ZXhcZG9jdW1lbnRjbGFzc3thcnRpY2xlfVxiZWdpbntkb2N1bWVudH1Qcm9vZi5cZW5ke2RvY3VtZW50fVBLAQIUAxQAAAAAAAAAIQDnKJGaOwAAADsAAAAIAAAAAAAAAAAAAACAAQAAAABub3RlLnRleFBLBQYAAAAAAQABADYAAABhAAAAAAA="
+        }
+      ],
+      "kwargs": {},
+      "result": null
+    },
+    {
+      "adapter": "publication",
+      "method": "upload",
+      "args": [
+        "short-note-untouched",
+        {
+          "$file": "note-v1.json",
+          "base64": "ewogICJmaWxlcyI6IHsKICAgICJub3RlLXYxLnBkZiI6ICJiYWViOTNlMjUyNGIzM2I0YjY3MzU3NDQ0MjY4NGQxMTE2Mzc5ZDBmNTI1YzIxZjI3NjY2NWYwYjZiZWE4MDVlIiwKICAgICJzb3VyY2UtdjEuemlwIjogIjBmY2Q2OTFhYWE5NWNjYzFhMDQ5MTYyMzY4MzExZDk4ZjNjNjZlNWRmNzk2MmE5ZTcwZTMyNjgzMTM0ZWQ1OGUiCiAgfSwKICAibWV0YWRhdGEiOiB7CiAgICAiYWJzdHJhY3QiOiAiVGhlIHByZWNpc2UgcmVzdWx0LiIsCiAgICAiY3JlYXRvcnMiOiBbCiAgICAgIHsKICAgICAgICAibmFtZSI6ICJBdmVyeSBSZWVkIgogICAgICB9LAogICAgICB7CiAgICAgICAgIm5hbWUiOiAiQmxhaXJlIE1lcmNlciIKICAgICAgfQogICAgXSwKICAgICJldmlkZW5jZV91cmwiOiAiaHR0cHM6Ly9zYW1wbGUuZXhhbXBsZS5pbnZhbGlkL2NvbW1pdC9wcm9vZi5sZWFuIiwKICAgICJpZCI6ICJ1bnRvdWNoZWQiLAogICAgImxpY2Vuc2UiOiAiY2MtYnktNC4wIiwKICAgICJwcm9ibGVtX2lkcyI6IFsKICAgICAgInVudG91Y2hlZCIKICAgIF0sCiAgICAicmV2aXNpb24iOiAxLAogICAgInN1bW1hcnkiOiAiVGhlIG9yaWdpbmFsIGNvbmplY3R1cmUgaXMgcHJvdmVkLiIsCiAgICAidGl0bGUiOiAiUHJvb2Ygb2YgdGhlIGNvbmplY3R1cmUiLAogICAgInRvcGljIjogIk9yaWdpbmFsIGNvbmplY3R1cmUiCiAgfSwKICAic2NoZW1hX3ZlcnNpb24iOiAic2hvcnQtbm90ZS52MSIKfQo="
+        }
+      ],
+      "kwargs": {},
+      "result": null
+    },
+    {
+      "adapter": "publication",
+      "method": "release",
+      "args": [
+        "short-note-untouched"
+      ],
+      "kwargs": {},
+      "result": {
+        "assets": [
+          {
+            "name": "note-v1.pdf"
+          },
+          {
+            "name": "source-v1.zip"
+          },
+          {
+            "name": "note-v1.json"
+          }
+        ],
+        "body": "Versioned short-note artifacts and publication receipts."
+      }
+    },
+    {
+      "adapter": "publication",
+      "method": "download",
+      "args": [
+        "short-note-untouched",
+        "note-v1.json",
+        {
+          "$directory": true
+        }
+      ],
+      "kwargs": {},
+      "result": {
+        "$file": "note-v1.json",
+        "base64": "ewogICJmaWxlcyI6IHsKICAgICJub3RlLXYxLnBkZiI6ICJiYWViOTNlMjUyNGIzM2I0YjY3MzU3NDQ0MjY4NGQxMTE2Mzc5ZDBmNTI1YzIxZjI3NjY2NWYwYjZiZWE4MDVlIiwKICAgICJzb3VyY2UtdjEuemlwIjogIjBmY2Q2OTFhYWE5NWNjYzFhMDQ5MTYyMzY4MzExZDk4ZjNjNjZlNWRmNzk2MmE5ZTcwZTMyNjgzMTM0ZWQ1OGUiCiAgfSwKICAibWV0YWRhdGEiOiB7CiAgICAiYWJzdHJhY3QiOiAiVGhlIHByZWNpc2UgcmVzdWx0LiIsCiAgICAiY3JlYXRvcnMiOiBbCiAgICAgIHsKICAgICAgICAibmFtZSI6ICJBdmVyeSBSZWVkIgogICAgICB9LAogICAgICB7CiAgICAgICAgIm5hbWUiOiAiQmxhaXJlIE1lcmNlciIKICAgICAgfQogICAgXSwKICAgICJldmlkZW5jZV91cmwiOiAiaHR0cHM6Ly9zYW1wbGUuZXhhbXBsZS5pbnZhbGlkL2NvbW1pdC9wcm9vZi5sZWFuIiwKICAgICJpZCI6ICJ1bnRvdWNoZWQiLAogICAgImxpY2Vuc2UiOiAiY2MtYnktNC4wIiwKICAgICJwcm9ibGVtX2lkcyI6IFsKICAgICAgInVudG91Y2hlZCIKICAgIF0sCiAgICAicmV2aXNpb24iOiAxLAogICAgInN1bW1hcnkiOiAiVGhlIG9yaWdpbmFsIGNvbmplY3R1cmUgaXMgcHJvdmVkLiIsCiAgICAidGl0bGUiOiAiUHJvb2Ygb2YgdGhlIGNvbmplY3R1cmUiLAogICAgInRvcGljIjogIk9yaWdpbmFsIGNvbmplY3R1cmUiCiAgfSwKICAic2NoZW1hX3ZlcnNpb24iOiAic2hvcnQtbm90ZS52MSIKfQo="
+      }
+    },
+    {
+      "adapter": "publication",
+      "method": "upload",
+      "args": [
+        "short-note-untouched",
+        {
+          "$file": "request-0f79107c2d3e54d41463bfa9.json",
+          "base64": "ewogICJhY3Rpb24iOiAicHVibGlzaCIsCiAgImlkIjogInVudG91Y2hlZCIsCiAgInJldmlzaW9uIjogMSwKICAic2NoZW1hX3ZlcnNpb24iOiAic2hvcnQtbm90ZS1yZXF1ZXN0LnYxIgp9Cg=="
+        }
+      ],
+      "kwargs": {},
+      "result": null
+    },
+    {
+      "adapter": "boundary",
+      "method": "enqueue",
+      "args": [],
+      "kwargs": {},
+      "result": null
+    },
+    {
+      "adapter": "publication",
+      "method": "download",
+      "args": [
+        "short-note-untouched",
+        "request-0f79107c2d3e54d41463bfa9.json",
+        {
+          "$directory": true
+        }
+      ],
+      "kwargs": {},
+      "result": {
+        "$file": "request-0f79107c2d3e54d41463bfa9.json",
+        "base64": "ewogICJhY3Rpb24iOiAicHVibGlzaCIsCiAgImlkIjogInVudG91Y2hlZCIsCiAgInJldmlzaW9uIjogMSwKICAic2NoZW1hX3ZlcnNpb24iOiAic2hvcnQtbm90ZS1yZXF1ZXN0LnYxIgp9Cg=="
+      }
+    },
+    {
+      "adapter": "releases",
+      "method": "run",
+      "args": [
+        "release",
+        "download",
+        "outreach-task-untouched",
+        "--repo",
+        "fixture/repo",
+        "--pattern",
+        "evidence.md",
+        "--dir",
+        {
+          "$directory": true
+        }
+      ],
+      "kwargs": {},
+      "result": null,
+      "download": {
+        "name": "evidence.md",
+        "base64": "IyMgUHJpb3Itd29yayBjaGVjawpWZXJkaWN0OiBmaXJzdC1rbm93bgpPcmFjbGUgR1BUIFBybyByZXNwb25zZSByZWZlcmVuY2U6IHRlc3Q6b3JhY2xlCg=="
+      }
+    },
+    {
+      "adapter": "ledger",
+      "method": "save",
+      "args": [],
+      "kwargs": {},
+      "result": false,
+      "saved_snapshot": {
+        "generation": 3,
+        "digest": "5e7d522a79c693ff357fbeb5092783c2d12213907e200a64e0159d7dcf6b6621"
+      }
+    },
+    {
+      "adapter": "publication",
+      "method": "release",
+      "args": [
+        "short-note-untouched"
+      ],
+      "kwargs": {},
+      "result": {
+        "assets": [
+          {
+            "name": "note-v1.pdf"
+          },
+          {
+            "name": "source-v1.zip"
+          },
+          {
+            "name": "note-v1.json"
+          },
+          {
+            "name": "request-0f79107c2d3e54d41463bfa9.json"
+          }
+        ],
+        "body": "Versioned short-note artifacts and publication receipts."
+      }
+    },
+    {
+      "adapter": "ledger",
+      "method": "save",
+      "args": [],
+      "kwargs": {
+        "force": true
+      },
+      "result": true,
+      "saved_snapshot": {
+        "generation": 4,
+        "digest": "c329afd89de9b7dfe919bdb0ef41a0738f7590c527936bd3aacbdb10e44962d9"
+      }
+    },
+    {
+      "adapter": "boundary",
+      "method": "select",
+      "args": [
+        "untouched"
+      ],
+      "kwargs": {},
+      "result": null
+    },
+    {
+      "adapter": "boundary",
+      "method": "ingest",
+      "args": [
+        "untouched"
+      ],
+      "kwargs": {},
+      "result": null
+    },
+    {
+      "adapter": "ledger",
+      "method": "save",
+      "args": [],
+      "kwargs": {
+        "force": true
+      },
+      "result": true,
+      "saved_snapshot": {
+        "generation": 5,
+        "digest": "b082cde2db9faa323909677638d9be805e6d227092e2da90e88e135b4e23927a"
+      }
+    },
+    {
+      "adapter": "boundary",
+      "method": "record",
+      "args": [
+        "untouched",
+        "queued"
+      ],
+      "kwargs": {},
+      "result": null
+    },
+    {
+      "adapter": "ledger",
+      "method": "save",
+      "args": [],
+      "kwargs": {
+        "force": true
+      },
+      "result": true,
+      "saved_snapshot": {
+        "generation": 6,
+        "digest": "81f4a480f1f617a092b3444c1f4940bfe42db2f644793c724650535c3f1273c0"
+      }
+    },
+    {
+      "adapter": "boundary",
+      "method": "source_gate",
+      "args": [
+        "earlier"
+      ],
+      "kwargs": {},
+      "result": null
+    },
+    {
+      "adapter": "shortnote",
+      "method": "package",
+      "args": [
+        "earlier",
+        "9fc69aea76cda9fb79f5ac1fc93e7e08f82efe82ad41b543f69b682cbe38bd42"
+      ],
+      "kwargs": {},
+      "result": {
+        "metadata": {
+          "abstract": "The precise result.",
+          "creators": [
+            {
+              "name": "Avery Reed"
+            },
+            {
+              "name": "Blaire Mercer"
+            }
+          ],
+          "evidence_url": "https://sample.example.invalid/commit/proof.lean",
+          "id": "earlier",
+          "license": "cc-by-4.0",
+          "problem_ids": [
+            "earlier"
+          ],
+          "revision": 1,
+          "summary": "The original conjecture is proved.",
+          "title": "Proof of the conjecture",
+          "topic": "Original conjecture"
+        },
+        "source": "source-v1.zip",
+        "files": {
+          "note-v1.json": {
+            "$file": "note-v1.json",
+            "base64": "ewogICJmaWxlcyI6IHsKICAgICJub3RlLXYxLnBkZiI6ICJiYWViOTNlMjUyNGIzM2I0YjY3MzU3NDQ0MjY4NGQxMTE2Mzc5ZDBmNTI1YzIxZjI3NjY2NWYwYjZiZWE4MDVlIiwKICAgICJzb3VyY2UtdjEuemlwIjogIjBmY2Q2OTFhYWE5NWNjYzFhMDQ5MTYyMzY4MzExZDk4ZjNjNjZlNWRmNzk2MmE5ZTcwZTMyNjgzMTM0ZWQ1OGUiCiAgfSwKICAibWV0YWRhdGEiOiB7CiAgICAiYWJzdHJhY3QiOiAiVGhlIHByZWNpc2UgcmVzdWx0LiIsCiAgICAiY3JlYXRvcnMiOiBbCiAgICAgIHsKICAgICAgICAibmFtZSI6ICJBdmVyeSBSZWVkIgogICAgICB9LAogICAgICB7CiAgICAgICAgIm5hbWUiOiAiQmxhaXJlIE1lcmNlciIKICAgICAgfQogICAgXSwKICAgICJldmlkZW5jZV91cmwiOiAiaHR0cHM6Ly9zYW1wbGUuZXhhbXBsZS5pbnZhbGlkL2NvbW1pdC9wcm9vZi5sZWFuIiwKICAgICJpZCI6ICJlYXJsaWVyIiwKICAgICJsaWNlbnNlIjogImNjLWJ5LTQuMCIsCiAgICAicHJvYmxlbV9pZHMiOiBbCiAgICAgICJlYXJsaWVyIgogICAgXSwKICAgICJyZXZpc2lvbiI6IDEsCiAgICAic3VtbWFyeSI6ICJUaGUgb3JpZ2luYWwgY29uamVjdHVyZSBpcyBwcm92ZWQuIiwKICAgICJ0aXRsZSI6ICJQcm9vZiBvZiB0aGUgY29uamVjdHVyZSIsCiAgICAidG9waWMiOiAiT3JpZ2luYWwgY29uamVjdHVyZSIKICB9LAogICJzY2hlbWFfdmVyc2lvbiI6ICJzaG9ydC1ub3RlLnYxIgp9Cg=="
+          },
+          "note-v1.pdf": {
+            "$file": "note-v1.pdf",
+            "base64": "JVBERi0xLjQKU3ludGhldGljIGNoZWNrZWQgbm90ZQ=="
+          },
+          "source-v1.zip": {
+            "$file": "source-v1.zip",
+            "base64": "UEsDBBQAAAAAAAAAIQDnKJGaOwAAADsAAAAIAAAAbm90ZS50ZXhcZG9jdW1lbnRjbGFzc3thcnRpY2xlfVxiZWdpbntkb2N1bWVudH1Qcm9vZi5cZW5ke2RvY3VtZW50fVBLAQIUAxQAAAAAAAAAIQDnKJGaOwAAADsAAAAIAAAAAAAAAAAAAACAAQAAAABub3RlLnRleFBLBQYAAAAAAQABADYAAABhAAAAAAA="
+          }
+        }
+      }
+    },
+    {
+      "adapter": "boundary",
+      "method": "record",
+      "args": [
+        "earlier",
+        "pending"
+      ],
+      "kwargs": {},
+      "result": null
+    },
+    {
+      "adapter": "ledger",
+      "method": "save",
+      "args": [],
+      "kwargs": {
+        "force": true
+      },
+      "result": true,
+      "saved_snapshot": {
+        "generation": 7,
+        "digest": "bfbba8412810149dea00df3f3362f242e38ec616245d3da74dd666e3da8cd420"
+      }
+    },
+    {
+      "adapter": "publication",
+      "method": "register_note",
+      "args": [
+        {
+          "abstract": "The precise result.",
+          "creators": [
+            {
+              "name": "Avery Reed"
+            },
+            {
+              "name": "Blaire Mercer"
+            }
+          ],
+          "evidence_url": "https://sample.example.invalid/commit/proof.lean",
+          "id": "earlier",
+          "license": "cc-by-4.0",
+          "problem_ids": [
+            "earlier"
+          ],
+          "revision": 1,
+          "summary": "The original conjecture is proved.",
+          "title": "Proof of the conjecture",
+          "topic": "Original conjecture"
+        }
+      ],
+      "kwargs": {},
+      "error": {
+        "type": "RuntimeError",
+        "message": "GitHub operation failed: already_exists",
+        "diagnostic": "GitHub already_exists"
+      }
+    },
+    {
+      "adapter": "boundary",
+      "method": "record",
+      "args": [
+        "earlier",
+        "pending"
+      ],
+      "kwargs": {},
+      "result": null
+    },
+    {
+      "adapter": "ledger",
+      "method": "save",
+      "args": [],
+      "kwargs": {
+        "force": false
+      },
+      "result": false,
+      "saved_snapshot": {
+        "generation": 7,
+        "digest": "bfbba8412810149dea00df3f3362f242e38ec616245d3da74dd666e3da8cd420"
+      }
+    },
+    {
+      "adapter": "boundary",
+      "method": "source_gate",
+      "args": [
+        "later"
+      ],
+      "kwargs": {},
+      "result": null
+    },
+    {
+      "adapter": "shortnote",
+      "method": "package",
+      "args": [
+        "later",
+        "22af797f5fefd6e4b112180a165e6776dac2d8fb23a956bcffd10a38d073c544"
+      ],
+      "kwargs": {},
+      "result": {
+        "metadata": {
+          "abstract": "The precise result.",
+          "creators": [
+            {
+              "name": "Avery Reed"
+            },
+            {
+              "name": "Blaire Mercer"
+            }
+          ],
+          "evidence_url": "https://sample.example.invalid/commit/proof.lean",
+          "id": "later",
+          "license": "cc-by-4.0",
+          "problem_ids": [
+            "later"
+          ],
+          "revision": 1,
+          "summary": "The original conjecture is proved.",
+          "title": "Proof of the conjecture",
+          "topic": "Original conjecture"
+        },
+        "source": "source-v1.zip",
+        "files": {
+          "note-v1.json": {
+            "$file": "note-v1.json",
+            "base64": "ewogICJmaWxlcyI6IHsKICAgICJub3RlLXYxLnBkZiI6ICJiYWViOTNlMjUyNGIzM2I0YjY3MzU3NDQ0MjY4NGQxMTE2Mzc5ZDBmNTI1YzIxZjI3NjY2NWYwYjZiZWE4MDVlIiwKICAgICJzb3VyY2UtdjEuemlwIjogIjBmY2Q2OTFhYWE5NWNjYzFhMDQ5MTYyMzY4MzExZDk4ZjNjNjZlNWRmNzk2MmE5ZTcwZTMyNjgzMTM0ZWQ1OGUiCiAgfSwKICAibWV0YWRhdGEiOiB7CiAgICAiYWJzdHJhY3QiOiAiVGhlIHByZWNpc2UgcmVzdWx0LiIsCiAgICAiY3JlYXRvcnMiOiBbCiAgICAgIHsKICAgICAgICAibmFtZSI6ICJBdmVyeSBSZWVkIgogICAgICB9LAogICAgICB7CiAgICAgICAgIm5hbWUiOiAiQmxhaXJlIE1lcmNlciIKICAgICAgfQogICAgXSwKICAgICJldmlkZW5jZV91cmwiOiAiaHR0cHM6Ly9zYW1wbGUuZXhhbXBsZS5pbnZhbGlkL2NvbW1pdC9wcm9vZi5sZWFuIiwKICAgICJpZCI6ICJsYXRlciIsCiAgICAibGljZW5zZSI6ICJjYy1ieS00LjAiLAogICAgInByb2JsZW1faWRzIjogWwogICAgICAibGF0ZXIiCiAgICBdLAogICAgInJldmlzaW9uIjogMSwKICAgICJzdW1tYXJ5IjogIlRoZSBvcmlnaW5hbCBjb25qZWN0dXJlIGlzIHByb3ZlZC4iLAogICAgInRpdGxlIjogIlByb29mIG9mIHRoZSBjb25qZWN0dXJlIiwKICAgICJ0b3BpYyI6ICJPcmlnaW5hbCBjb25qZWN0dXJlIgogIH0sCiAgInNjaGVtYV92ZXJzaW9uIjogInNob3J0LW5vdGUudjEiCn0K"
+          },
+          "note-v1.pdf": {
+            "$file": "note-v1.pdf",
+            "base64": "JVBERi0xLjQKU3ludGhldGljIGNoZWNrZWQgbm90ZQ=="
+          },
+          "source-v1.zip": {
+            "$file": "source-v1.zip",
+            "base64": "UEsDBBQAAAAAAAAAIQDnKJGaOwAAADsAAAAIAAAAbm90ZS50ZXhcZG9jdW1lbnRjbGFzc3thcnRpY2xlfVxiZWdpbntkb2N1bWVudH1Qcm9vZi5cZW5ke2RvY3VtZW50fVBLAQIUAxQAAAAAAAAAIQDnKJGaOwAAADsAAAAIAAAAAAAAAAAAAACAAQAAAABub3RlLnRleFBLBQYAAAAAAQABADYAAABhAAAAAAA="
+          }
+        }
+      }
+    },
+    {
+      "adapter": "boundary",
+      "method": "record",
+      "args": [
+        "later",
+        "pending"
+      ],
+      "kwargs": {},
+      "result": null
+    },
+    {
+      "adapter": "ledger",
+      "method": "save",
+      "args": [],
+      "kwargs": {
+        "force": true
+      },
+      "result": true,
+      "saved_snapshot": {
+        "generation": 8,
+        "digest": "0055c4668089294dd99373f1570a1a725d7fc545f8944d6dd9eb5ea88182d0ea"
+      }
+    },
+    {
+      "adapter": "publication",
+      "method": "register_note",
+      "args": [
+        {
+          "abstract": "The precise result.",
+          "creators": [
+            {
+              "name": "Avery Reed"
+            },
+            {
+              "name": "Blaire Mercer"
+            }
+          ],
+          "evidence_url": "https://sample.example.invalid/commit/proof.lean",
+          "id": "later",
+          "license": "cc-by-4.0",
+          "problem_ids": [
+            "later"
+          ],
+          "revision": 1,
+          "summary": "The original conjecture is proved.",
+          "title": "Proof of the conjecture",
+          "topic": "Original conjecture"
+        }
+      ],
+      "kwargs": {},
+      "error": {
+        "type": "RuntimeError",
+        "message": "GitHub operation failed: already_exists",
+        "diagnostic": "GitHub already_exists"
+      }
+    },
+    {
+      "adapter": "boundary",
+      "method": "record",
+      "args": [
+        "later",
+        "pending"
+      ],
+      "kwargs": {},
+      "result": null
+    },
+    {
+      "adapter": "ledger",
+      "method": "save",
+      "args": [],
+      "kwargs": {
+        "force": false
+      },
+      "result": false,
+      "saved_snapshot": {
+        "generation": 8,
+        "digest": "0055c4668089294dd99373f1570a1a725d7fc545f8944d6dd9eb5ea88182d0ea"
+      }
+    }
+  ],
+  "expected_final_rows": {
+    "control_events": {
+      "columns": [
+        "id",
+        "payload"
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "rows": [
+        {
+          "id": "939c71137a89904b5d55e29ca438eed5ad7a5718a208d050a3e52a50bd7d1870",
+          "payload": {
+            "binding": {
+              "result_hash": "22af797f5fefd6e4b112180a165e6776dac2d8fb23a956bcffd10a38d073c544",
+              "task_id": "later",
+              "task_revision": 2,
+              "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+            },
+            "evidence_ref": "test:review",
+            "reason": "Independent exact review",
+            "reviewer": "local-claude-loop",
+            "signature": "fec5f20ce1186490844d299d9ea704931d0e1ba5f5334da6203f8848a964c435",
+            "verdict": "PASS"
+          }
+        },
+        {
+          "id": "9f06be34542b1d5ab585d1c85ef9f0165f9bfbc1a443b88b163cda5c926d1ad8",
+          "payload": {
+            "binding": {
+              "result_hash": "9fc69aea76cda9fb79f5ac1fc93e7e08f82efe82ad41b543f69b682cbe38bd42",
+              "task_id": "earlier",
+              "task_revision": 2,
+              "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+            },
+            "evidence_ref": "test:review",
+            "reason": "Independent exact review",
+            "reviewer": "local-claude-loop",
+            "signature": "6cc5bfe58843b094c90cdd5f62ad8276b4764d367f5a3e7d2962f2794a9c948f",
+            "verdict": "PASS"
+          }
+        },
+        {
+          "id": "e769f592805f43df3ea4492f1bd2e1816cad5a28be114be679e11772574d6b05",
+          "payload": {
+            "binding": {
+              "result_hash": "47ef0fb875aa431533ce9c1209c5a7fd476e7f96ff2e5f6f7d14d5bc39544e8c",
+              "task_id": "untouched",
+              "task_revision": 2,
+              "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+            },
+            "evidence_ref": "test:review",
+            "reason": "Independent exact review",
+            "reviewer": "local-claude-loop",
+            "signature": "ade99c862c83a0e8d7f0936ef64576a58f8a4b266c2164e881b509e2ec5549c1",
+            "verdict": "PASS"
+          }
+        }
+      ]
+    },
+    "input_asset_receipts": {
+      "columns": [
+        "identity",
+        "generation"
+      ],
+      "primary_key": [
+        "identity"
+      ],
+      "rows": []
+    },
+    "pipeline_sources": {
+      "columns": [
+        "result_id",
+        "identity",
+        "payload",
+        "baseline",
+        "task_id"
+      ],
+      "primary_key": [
+        "result_id"
+      ],
+      "rows": []
+    },
+    "pipeline_state": {
+      "columns": [
+        "key",
+        "payload"
+      ],
+      "primary_key": [
+        "key"
+      ],
+      "rows": [
+        {
+          "key": "publication-selection:3d751e6a38c723af5dbeaea05a5fc3d88cb9e9e5da28bb9798405f57b3d60afa",
+          "payload": {
+            "decision_hash": "cb011f88b37c60aec8694a54cf9e71dcc542a804efac8e0fde4421dbddee5a4d",
+            "decisions": {
+              "ai_disclosure": {
+                "level": "assisted",
+                "statement": "In preparing this manuscript, the authors used AI tools (ChatGPT Pro, Codex and Claude) for literature search, computation, checking and formal verification in Lean. All proofs can be checked by hand, and the computations can be reproduced from the accompanying verification package. The authors take full responsibility for the content."
+              },
+              "decision_ref": "test:standing-decision",
+              "make_public_after_acceptance": true,
+              "processing_consent": "test:consent",
+              "purpose": "publication",
+              "source_file": "source-v1.zip"
+            },
+            "package_id": "d1082131900a24a9435bdaab3b6fc4329d6a2f65402310418a3c9fc332c868ed"
+          }
+        },
+        {
+          "key": "recheck:publication:earlier",
+          "payload": {
+            "binding": "edc9bbe8479ad07fd901b21d0b9f532a61d0edc3ff6aaced02012f141bef8d2c",
+            "checked_at": 2802,
+            "next_at": 10002
+          }
+        },
+        {
+          "key": "recheck:publication:later",
+          "payload": {
+            "binding": "13c6d21abf90a1af591da5272c35f7dad117af8cf0d65327083ca2684c329eaa",
+            "checked_at": 2802,
+            "next_at": 10002
+          }
+        }
+      ]
+    },
+    "sqlite_sequence": {
+      "columns": [
+        "name",
+        "seq"
+      ],
+      "primary_key": [
+        "name"
+      ],
+      "rows": [
+        {
+          "name": "task_events",
+          "seq": 24
+        }
+      ]
+    },
+    "task_events": {
+      "columns": [
+        "seq",
+        "id",
+        "state",
+        "revision",
+        "at",
+        "data"
+      ],
+      "primary_key": [
+        "seq"
+      ],
+      "rows": [
+        {
+          "at": 1000.0,
+          "data": {},
+          "id": "earlier",
+          "revision": 1,
+          "seq": 1,
+          "state": "queued"
+        },
+        {
+          "at": 1000.0,
+          "data": {},
+          "id": "earlier",
+          "revision": 2,
+          "seq": 2,
+          "state": "awaiting-review"
+        },
+        {
+          "at": 1000.0,
+          "data": {
+            "review": "9f06be34542b1d5ab585d1c85ef9f0165f9bfbc1a443b88b163cda5c926d1ad8"
+          },
+          "id": "earlier",
+          "revision": 3,
+          "seq": 3,
+          "state": "approved"
+        },
+        {
+          "at": 1000.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "earlier",
+          "revision": 4,
+          "seq": 4,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 1000.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "earlier",
+          "revision": 5,
+          "seq": 5,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 1000.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "earlier",
+          "revision": 6,
+          "seq": 6,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 1001.0,
+          "data": {},
+          "id": "later",
+          "revision": 1,
+          "seq": 7,
+          "state": "queued"
+        },
+        {
+          "at": 1001.0,
+          "data": {},
+          "id": "later",
+          "revision": 2,
+          "seq": 8,
+          "state": "awaiting-review"
+        },
+        {
+          "at": 1001.0,
+          "data": {
+            "review": "939c71137a89904b5d55e29ca438eed5ad7a5718a208d050a3e52a50bd7d1870"
+          },
+          "id": "later",
+          "revision": 3,
+          "seq": 9,
+          "state": "approved"
+        },
+        {
+          "at": 1001.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "later",
+          "revision": 4,
+          "seq": 10,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 1001.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "later",
+          "revision": 5,
+          "seq": 11,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 1001.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "later",
+          "revision": 6,
+          "seq": 12,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 1002.0,
+          "data": {},
+          "id": "untouched",
+          "revision": 1,
+          "seq": 13,
+          "state": "queued"
+        },
+        {
+          "at": 1002.0,
+          "data": {},
+          "id": "untouched",
+          "revision": 2,
+          "seq": 14,
+          "state": "awaiting-review"
+        },
+        {
+          "at": 1002.0,
+          "data": {
+            "review": "e769f592805f43df3ea4492f1bd2e1816cad5a28be114be679e11772574d6b05"
+          },
+          "id": "untouched",
+          "revision": 3,
+          "seq": 15,
+          "state": "approved"
+        },
+        {
+          "at": 1002.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "untouched",
+          "revision": 4,
+          "seq": 16,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 2802.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "untouched",
+          "revision": 5,
+          "seq": 17,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 2802.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "untouched",
+          "revision": 6,
+          "seq": 18,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 2802.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "untouched",
+          "revision": 7,
+          "seq": 19,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 2802.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "untouched",
+          "revision": 8,
+          "seq": 20,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 2802.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "earlier",
+          "revision": 7,
+          "seq": 21,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 2802.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "earlier",
+          "revision": 8,
+          "seq": 22,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 2802.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "later",
+          "revision": 7,
+          "seq": 23,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 2802.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "later",
+          "revision": 8,
+          "seq": 24,
+          "state": "handoff-ready"
+        }
+      ]
+    },
+    "task_migrations": {
+      "columns": [
+        "name",
+        "phase"
+      ],
+      "primary_key": [
+        "name"
+      ],
+      "rows": [
+        {
+          "name": "compact-task-events-v1",
+          "phase": "done"
+        }
+      ]
+    },
+    "tasks": {
+      "columns": [
+        "id",
+        "request",
+        "request_hash",
+        "owner",
+        "kind",
+        "state",
+        "revision",
+        "data",
+        "updated"
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "rows": [
+        {
+          "data": {
+            "publication_loop": {
+              "consecutive_failures": 2,
+              "creators": [
+                {
+                  "name": "Avery Reed"
+                },
+                {
+                  "name": "Blaire Mercer"
+                }
+              ],
+              "decision_hash": "cb011f88b37c60aec8694a54cf9e71dcc542a804efac8e0fde4421dbddee5a4d",
+              "decision_ref": "test:standing-decision",
+              "diagnostic": "GitHub already_exists",
+              "last_error": "RuntimeError",
+              "next_retry_at": 10002,
+              "note_id": "earlier",
+              "phase": "pending",
+              "problem_ids": [
+                "earlier"
+              ],
+              "result_hash": "9fc69aea76cda9fb79f5ac1fc93e7e08f82efe82ad41b543f69b682cbe38bd42",
+              "revision": 1,
+              "step": "register"
+            },
+            "result": {
+              "artifacts": [
+                {
+                  "bytes": 31,
+                  "name": "note-v1.pdf",
+                  "release_tag": "outreach-task-earlier",
+                  "role": "note-pdf",
+                  "sha256": "baeb93e2524b33b4b673574442684d1116379d0f525c21f276665f0b6bea805e"
+                },
+                {
+                  "bytes": 173,
+                  "name": "source-v1.zip",
+                  "release_tag": "outreach-task-earlier",
+                  "role": "source-archive",
+                  "sha256": "0fcd691aaa95ccc1a049162368311d98f3c66e5df7962a9e70e32683134ed58e"
+                },
+                {
+                  "bytes": 786,
+                  "name": "handoff.json",
+                  "release_tag": "outreach-task-earlier",
+                  "role": "handoff",
+                  "sha256": "565e3d3f430aeb87b870c38cf7c9867944f3d2403ce50e12a6660a3dc75c335d"
+                },
+                {
+                  "bytes": 88,
+                  "name": "evidence.md",
+                  "release_tag": "outreach-task-earlier",
+                  "role": "evidence",
+                  "sha256": "c3cabfef9edfef1bb719cdf6d265313f2939917a310426fcacc842e90d740aa1"
+                }
+              ],
+              "outcome": "completed",
+              "packet": null,
+              "report": "Checked result",
+              "schema_version": 1,
+              "task_id": "earlier"
+            },
+            "review": {
+              "binding": {
+                "result_hash": "9fc69aea76cda9fb79f5ac1fc93e7e08f82efe82ad41b543f69b682cbe38bd42",
+                "task_id": "earlier",
+                "task_revision": 2,
+                "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              },
+              "evidence_ref": "test:review",
+              "reason": "Independent exact review",
+              "reviewer": "local-claude-loop",
+              "signature": "6cc5bfe58843b094c90cdd5f62ad8276b4764d367f5a3e7d2962f2794a9c948f",
+              "verdict": "PASS"
+            }
+          },
+          "id": "earlier",
+          "kind": "mathesis",
+          "owner": "scholar-a",
+          "request": {
+            "id": "earlier",
+            "inputs": {},
+            "kind": "mathesis",
+            "owner": "scholar-a",
+            "schema_version": 1,
+            "source_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          },
+          "request_hash": "3591adbad2eb958400a9b8ced58ee4fb6d4b0bec2a1a0bcbe36bfc479a0a5071",
+          "revision": 8,
+          "state": "handoff-ready",
+          "updated": 2802.0
+        },
+        {
+          "data": {
+            "publication_loop": {
+              "consecutive_failures": 2,
+              "creators": [
+                {
+                  "name": "Avery Reed"
+                },
+                {
+                  "name": "Blaire Mercer"
+                }
+              ],
+              "decision_hash": "cb011f88b37c60aec8694a54cf9e71dcc542a804efac8e0fde4421dbddee5a4d",
+              "decision_ref": "test:standing-decision",
+              "diagnostic": "GitHub already_exists",
+              "last_error": "RuntimeError",
+              "next_retry_at": 10002,
+              "note_id": "later",
+              "phase": "pending",
+              "problem_ids": [
+                "later"
+              ],
+              "result_hash": "22af797f5fefd6e4b112180a165e6776dac2d8fb23a956bcffd10a38d073c544",
+              "revision": 1,
+              "step": "register"
+            },
+            "result": {
+              "artifacts": [
+                {
+                  "bytes": 31,
+                  "name": "note-v1.pdf",
+                  "release_tag": "outreach-task-later",
+                  "role": "note-pdf",
+                  "sha256": "baeb93e2524b33b4b673574442684d1116379d0f525c21f276665f0b6bea805e"
+                },
+                {
+                  "bytes": 173,
+                  "name": "source-v1.zip",
+                  "release_tag": "outreach-task-later",
+                  "role": "source-archive",
+                  "sha256": "0fcd691aaa95ccc1a049162368311d98f3c66e5df7962a9e70e32683134ed58e"
+                },
+                {
+                  "bytes": 782,
+                  "name": "handoff.json",
+                  "release_tag": "outreach-task-later",
+                  "role": "handoff",
+                  "sha256": "7a47546303025052862808ba4a61289ce038f08372582656a849ed20c8de93a6"
+                },
+                {
+                  "bytes": 88,
+                  "name": "evidence.md",
+                  "release_tag": "outreach-task-later",
+                  "role": "evidence",
+                  "sha256": "c3cabfef9edfef1bb719cdf6d265313f2939917a310426fcacc842e90d740aa1"
+                }
+              ],
+              "outcome": "completed",
+              "packet": null,
+              "report": "Checked result",
+              "schema_version": 1,
+              "task_id": "later"
+            },
+            "review": {
+              "binding": {
+                "result_hash": "22af797f5fefd6e4b112180a165e6776dac2d8fb23a956bcffd10a38d073c544",
+                "task_id": "later",
+                "task_revision": 2,
+                "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              },
+              "evidence_ref": "test:review",
+              "reason": "Independent exact review",
+              "reviewer": "local-claude-loop",
+              "signature": "fec5f20ce1186490844d299d9ea704931d0e1ba5f5334da6203f8848a964c435",
+              "verdict": "PASS"
+            }
+          },
+          "id": "later",
+          "kind": "mathesis",
+          "owner": "scholar-a",
+          "request": {
+            "id": "later",
+            "inputs": {
+              "owner_ids": [
+                "contact-1"
+              ]
+            },
+            "kind": "mathesis",
+            "owner": "scholar-a",
+            "schema_version": 1,
+            "source_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          },
+          "request_hash": "86d75fd211594b6e508740d157a2bd8966721cef280c82cd3e9ae4ff7aab53a6",
+          "revision": 8,
+          "state": "handoff-ready",
+          "updated": 2802.0
+        },
+        {
+          "data": {
+            "mathesis_delivery": {
+              "envelope": {
+                "decision_ref": "test:standing-decision",
+                "metadata": {
+                  "authorize_publication": true,
+                  "paper": {
+                    "abstract": "The precise result.",
+                    "authors": [
+                      {
+                        "name": "Avery Reed"
+                      },
+                      {
+                        "name": "Blaire Mercer"
+                      }
+                    ],
+                    "license": "CC-BY-4.0",
+                    "title": "Proof of the conjecture"
+                  },
+                  "previous_version": null,
+                  "producer": "trureturing-outreach",
+                  "review": {
+                    "pdf_sha256": "baeb93e2524b33b4b673574442684d1116379d0f525c21f276665f0b6bea805e",
+                    "record": {
+                      "prior_work_check": {
+                        "evidence": {
+                          "bytes": 88,
+                          "name": "evidence.md",
+                          "release_tag": "outreach-task-untouched",
+                          "role": "evidence",
+                          "sha256": "c3cabfef9edfef1bb719cdf6d265313f2939917a310426fcacc842e90d740aa1"
+                        },
+                        "oracle_pro_check": true,
+                        "oracle_response_ref": "test:oracle",
+                        "result_hash": "47ef0fb875aa431533ce9c1209c5a7fd476e7f96ff2e5f6f7d14d5bc39544e8c",
+                        "task_id": "untouched",
+                        "verdict": "first-known"
+                      },
+                      "problem_ids": [
+                        "untouched"
+                      ],
+                      "publication_authorization": {
+                        "decision_ref": "test:standing-decision",
+                        "direct_display_decision_ref": "example-direct-display"
+                      },
+                      "result_hash": "47ef0fb875aa431533ce9c1209c5a7fd476e7f96ff2e5f6f7d14d5bc39544e8c",
+                      "signed_pass": {
+                        "binding": {
+                          "result_hash": "47ef0fb875aa431533ce9c1209c5a7fd476e7f96ff2e5f6f7d14d5bc39544e8c",
+                          "task_id": "untouched",
+                          "task_revision": 2,
+                          "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+                        },
+                        "evidence_ref": "test:review",
+                        "reason": "Independent exact review",
+                        "reviewer": "local-claude-loop",
+                        "signature": "ade99c862c83a0e8d7f0936ef64576a58f8a4b266c2164e881b509e2ec5549c1",
+                        "verdict": "PASS"
+                      },
+                      "task_id": "untouched"
+                    },
+                    "source_sha256": "0fcd691aaa95ccc1a049162368311d98f3c66e5df7962a9e70e32683134ed58e",
+                    "verdict": "PASS"
+                  },
+                  "schema": "mathesis.pre-reviewed-delivery.v1",
+                  "version": 1,
+                  "work_id": "untouched"
+                },
+                "pdf": {
+                  "bytes": 31,
+                  "name": "note-v1.pdf",
+                  "release_tag": "outreach-task-untouched",
+                  "role": "note-pdf",
+                  "sha256": "baeb93e2524b33b4b673574442684d1116379d0f525c21f276665f0b6bea805e"
+                },
+                "result_hash": "47ef0fb875aa431533ce9c1209c5a7fd476e7f96ff2e5f6f7d14d5bc39544e8c",
+                "reviewer": "local-claude-loop",
+                "schema_version": 1,
+                "signature": "a5925cd118b26b17735f42377efa7d64a11363d7f0347b6a877793917ec38a69",
+                "source": {
+                  "bytes": 173,
+                  "name": "source-v1.zip",
+                  "release_tag": "outreach-task-untouched",
+                  "role": "source-archive",
+                  "sha256": "0fcd691aaa95ccc1a049162368311d98f3c66e5df7962a9e70e32683134ed58e"
+                },
+                "task_id": "untouched",
+                "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              },
+              "phase": "ready"
+            },
+            "mathesis_prior_work": {
+              "check": {
+                "evidence": {
+                  "bytes": 88,
+                  "name": "evidence.md",
+                  "release_tag": "outreach-task-untouched",
+                  "role": "evidence",
+                  "sha256": "c3cabfef9edfef1bb719cdf6d265313f2939917a310426fcacc842e90d740aa1"
+                },
+                "oracle_pro_check": true,
+                "oracle_response_ref": "test:oracle",
+                "result_hash": "47ef0fb875aa431533ce9c1209c5a7fd476e7f96ff2e5f6f7d14d5bc39544e8c",
+                "task_id": "untouched",
+                "verdict": "first-known"
+              },
+              "phase": "ready",
+              "result_hash": "47ef0fb875aa431533ce9c1209c5a7fd476e7f96ff2e5f6f7d14d5bc39544e8c"
+            },
+            "publication_loop": {
+              "creators": [
+                {
+                  "name": "Avery Reed"
+                },
+                {
+                  "name": "Blaire Mercer"
+                }
+              ],
+              "decision_hash": "cb011f88b37c60aec8694a54cf9e71dcc542a804efac8e0fde4421dbddee5a4d",
+              "decision_ref": "test:standing-decision",
+              "note_id": "untouched",
+              "phase": "queued",
+              "problem_ids": [
+                "untouched"
+              ],
+              "request": "request-0f79107c2d3e54d41463bfa9.json",
+              "result_hash": "47ef0fb875aa431533ce9c1209c5a7fd476e7f96ff2e5f6f7d14d5bc39544e8c",
+              "revision": 1
+            },
+            "result": {
+              "artifacts": [
+                {
+                  "bytes": 31,
+                  "name": "note-v1.pdf",
+                  "release_tag": "outreach-task-untouched",
+                  "role": "note-pdf",
+                  "sha256": "baeb93e2524b33b4b673574442684d1116379d0f525c21f276665f0b6bea805e"
+                },
+                {
+                  "bytes": 173,
+                  "name": "source-v1.zip",
+                  "release_tag": "outreach-task-untouched",
+                  "role": "source-archive",
+                  "sha256": "0fcd691aaa95ccc1a049162368311d98f3c66e5df7962a9e70e32683134ed58e"
+                },
+                {
+                  "bytes": 790,
+                  "name": "handoff.json",
+                  "release_tag": "outreach-task-untouched",
+                  "role": "handoff",
+                  "sha256": "554f9f97dca7b3ef9f2b146575363ab61ba889d312a8298d71ece57fa90841d6"
+                },
+                {
+                  "bytes": 88,
+                  "name": "evidence.md",
+                  "release_tag": "outreach-task-untouched",
+                  "role": "evidence",
+                  "sha256": "c3cabfef9edfef1bb719cdf6d265313f2939917a310426fcacc842e90d740aa1"
+                }
+              ],
+              "outcome": "completed",
+              "packet": null,
+              "report": "Checked result",
+              "schema_version": 1,
+              "task_id": "untouched"
+            },
+            "review": {
+              "binding": {
+                "result_hash": "47ef0fb875aa431533ce9c1209c5a7fd476e7f96ff2e5f6f7d14d5bc39544e8c",
+                "task_id": "untouched",
+                "task_revision": 2,
+                "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              },
+              "evidence_ref": "test:review",
+              "reason": "Independent exact review",
+              "reviewer": "local-claude-loop",
+              "signature": "ade99c862c83a0e8d7f0936ef64576a58f8a4b266c2164e881b509e2ec5549c1",
+              "verdict": "PASS"
+            }
+          },
+          "id": "untouched",
+          "kind": "mathesis",
+          "owner": "scholar-a",
+          "request": {
+            "id": "untouched",
+            "inputs": {},
+            "kind": "mathesis",
+            "owner": "scholar-a",
+            "schema_version": 1,
+            "source_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          },
+          "request_hash": "156f6a5c9076672ce02c090023e8af6b7ab8935ff0297976ac9fa2217060e51b",
+          "revision": 8,
+          "state": "handoff-ready",
+          "updated": 2802.0
+        }
+      ]
+    }
+  },
+  "expected_final_files": {
+    "tables/decisions.json": "eyJob2xkcyI6IFt7InRhc2tfaWQiOiAic2hvcnRub3RlLTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExIiwgImRlY2lzaW9uIjogIkhPTEQifV0sICJzaG9ydF9ub3RlX3B1YmxpY2F0aW9uIjogeyJlbmFibGVkIjogdHJ1ZSwgImRlY2lzaW9uX3JlZiI6ICJ0ZXN0OnN0YW5kaW5nLWRlY2lzaW9uIiwgInB1cnBvc2UiOiAicHVibGljYXRpb24iLCAicHJvY2Vzc2luZ19jb25zZW50IjogInRlc3Q6Y29uc2VudCIsICJtYWtlX3B1YmxpY19hZnRlcl9hY2NlcHRhbmNlIjogdHJ1ZSwgImluZGVwZW5kZW50X2F1dGhvcnMiOiBbIkF2ZXJ5IFJlZWQiLCAiQmxhaXJlIE1lcmNlciJdLCAiYWlfZGlzY2xvc3VyZSI6IHsibGV2ZWwiOiAiYXNzaXN0ZWQiLCAic3RhdGVtZW50X3dpdGhfbGVhbiI6ICJJbiBwcmVwYXJpbmcgdGhpcyBtYW51c2NyaXB0LCB0aGUgYXV0aG9ycyB1c2VkIEFJIHRvb2xzIChDaGF0R1BUIFBybywgQ29kZXggYW5kIENsYXVkZSkgZm9yIGxpdGVyYXR1cmUgc2VhcmNoLCBjb21wdXRhdGlvbiwgY2hlY2tpbmcgYW5kIGZvcm1hbCB2ZXJpZmljYXRpb24gaW4gTGVhbi4gQWxsIHByb29mcyBjYW4gYmUgY2hlY2tlZCBieSBoYW5kLCBhbmQgdGhlIGNvbXB1dGF0aW9ucyBjYW4gYmUgcmVwcm9kdWNlZCBmcm9tIHRoZSBhY2NvbXBhbnlpbmcgdmVyaWZpY2F0aW9uIHBhY2thZ2UuIFRoZSBhdXRob3JzIHRha2UgZnVsbCByZXNwb25zaWJpbGl0eSBmb3IgdGhlIGNvbnRlbnQuIiwgInN0YXRlbWVudF93aXRob3V0X2xlYW4iOiAiSW4gcHJlcGFyaW5nIHRoaXMgbWFudXNjcmlwdCwgdGhlIGF1dGhvcnMgdXNlZCBBSSB0b29scyAoQ2hhdEdQVCBQcm8sIENvZGV4IGFuZCBDbGF1ZGUpIGZvciBsaXRlcmF0dXJlIHNlYXJjaCwgY29tcHV0YXRpb24gYW5kIGNoZWNraW5nLiBBbGwgcHJvb2ZzIGNhbiBiZSBjaGVja2VkIGJ5IGhhbmQsIGFuZCB0aGUgY29tcHV0YXRpb25zIGNhbiBiZSByZXByb2R1Y2VkIGZyb20gdGhlIGFjY29tcGFueWluZyB2ZXJpZmljYXRpb24gcGFja2FnZS4gVGhlIGF1dGhvcnMgdGFrZSBmdWxsIHJlc3BvbnNpYmlsaXR5IGZvciB0aGUgY29udGVudC4ifX19",
+    "tables/publications.json": "eyJzY2hlbWFfdmVyc2lvbiI6ICJyZXNlYXJjaC1wdWJsaWNhdGlvbi52MSIsICJwdWJsaWNhdGlvbnMiOiBbXSwgImNvbGxhYm9yYXRpb25zIjogW10sICJub3RlcyI6IFtdfQ==",
+    "managed/submission/author-policy.json": "ewogICJzY2hlbWFfdmVyc2lvbiI6IDEsCiAgInNvdXJjZV9yZXZpc2lvbiI6ICJhYzczNDA2MWM0MzA3NjgwMGFkMjEwYWY2MWI4MWQyNGFlNTE4MWJiIiwKICAic291cmNlX3BhdGgiOiAic2NyaXB0cy9tYWlsZmxvdy9yZWYvQUktU1RBVEVNRU5ULVRFTVBMQVRFLm1kIiwKICAiYXV0aG9yX2ZhY3RzIjogIlJlYWQgUDU2LWluZGVwZW5kZW50LWJvYXJkLmF1dGhvcl9mYWN0cyBpbiBtYW5hZ2VkL3JlcGxpZXMvd29ya2Zsb3cuanNvbi4gUHJlc2VydmUgYWN0dWFsIGF1dGhvciBhZ3JlZW1lbnRzIGFuZCBjb250cmlidXRpb25zOyBtaXNzaW5nIHBlcnNvbmFsIGZhY3RzIGFyZSBub3QgaW5mZXJyZWQgZnJvbSBhIGJ5bGluZS4iLAogICJsb2NrZWRfc3RhdGVtZW50X3dpdGhfbGVhbiI6ICJJbiBwcmVwYXJpbmcgdGhpcyBtYW51c2NyaXB0LCB0aGUgYXV0aG9ycyB1c2VkIEFJIHRvb2xzIChDaGF0R1BUIFBybywgQ29kZXggYW5kIENsYXVkZSkgZm9yIGxpdGVyYXR1cmUgc2VhcmNoLCBjb21wdXRhdGlvbiwgY2hlY2tpbmcgYW5kIGZvcm1hbCB2ZXJpZmljYXRpb24gaW4gTGVhbi4gQWxsIHByb29mcyBjYW4gYmUgY2hlY2tlZCBieSBoYW5kLCBhbmQgdGhlIGNvbXB1dGF0aW9ucyBjYW4gYmUgcmVwcm9kdWNlZCBmcm9tIHRoZSBhY2NvbXBhbnlpbmcgdmVyaWZpY2F0aW9uIHBhY2thZ2UuIFRoZSBhdXRob3JzIHRha2UgZnVsbCByZXNwb25zaWJpbGl0eSBmb3IgdGhlIGNvbnRlbnQuIiwKICAibG9ja2VkX3N0YXRlbWVudF93aXRob3V0X2xlYW4iOiAiSW4gcHJlcGFyaW5nIHRoaXMgbWFudXNjcmlwdCwgdGhlIGF1dGhvcnMgdXNlZCBBSSB0b29scyAoQ2hhdEdQVCBQcm8sIENvZGV4IGFuZCBDbGF1ZGUpIGZvciBsaXRlcmF0dXJlIHNlYXJjaCwgY29tcHV0YXRpb24gYW5kIGNoZWNraW5nLiBBbGwgcHJvb2ZzIGNhbiBiZSBjaGVja2VkIGJ5IGhhbmQsIGFuZCB0aGUgY29tcHV0YXRpb25zIGNhbiBiZSByZXByb2R1Y2VkIGZyb20gdGhlIGFjY29tcGFueWluZyB2ZXJpZmljYXRpb24gcGFja2FnZS4gVGhlIGF1dGhvcnMgdGFrZSBmdWxsIHJlc3BvbnNpYmlsaXR5IGZvciB0aGUgY29udGVudC4iLAogICJhcHBsaWNhdGlvbiI6ICJQcmVzZXJ2ZSB0aGUgMjAyNi0xMC0yOCB1c2VyLWFwcHJvdmVkIHdvcmRpbmcgZm9yIG91ciBhY3R1YWwgY29udHJpYnV0aW9uIGFuZCB2ZXJpZmljYXRpb24gc2NvcGUuIFVzZSB0aGUgTGVhbiB2YXJpYW50IG9ubHkgd2hlbiBhcHBsaWNhYmxlLiBQcmVzZXJ2ZSBjb2F1dGhvcnMnIHN1cHBsaWVkIGRlY2xhcmF0aW9ucy4gVmVyaWZ5IGN1cnJlbnQgdmVudWUgcmVxdWlyZW1lbnRzIGFuZCBhY3R1YWwgdG9vbCB1c2U7IGZsYWcgYW55IHJlcXVpcmVkIHRydXRoZnVsIGFkZGl0aW9uYWwgZGlzY2xvc3VyZSBvciBpbmNvbXBhdGlibGUgdmVudWUgcnVsZSByYXRoZXIgdGhhbiBjbGFpbWluZyBub25leGlzdGVudCBodW1hbi1vbmx5IGF1dGhvcnNoaXAuIERvIG5vdCBpbnNlcnQgbWFudXNjcmlwdCBkaXNjbG9zdXJlIGJvaWxlcnBsYXRlIGluIG9yZGluYXJ5IGFjYWRlbWljIGVtYWlscy4iCn0K"
+  },
+  "expected_writes": [
+    {
+      "adapter": "publication",
+      "method": "register_note",
+      "args": [
+        {
+          "abstract": "The precise result.",
+          "creators": [
+            {
+              "name": "Avery Reed"
+            },
+            {
+              "name": "Blaire Mercer"
+            }
+          ],
+          "evidence_url": "https://sample.example.invalid/commit/proof.lean",
+          "id": "untouched",
+          "license": "cc-by-4.0",
+          "problem_ids": [
+            "untouched"
+          ],
+          "revision": 1,
+          "summary": "The original conjecture is proved.",
+          "title": "Proof of the conjecture",
+          "topic": "Original conjecture"
+        }
+      ],
+      "kwargs": {}
+    },
+    {
+      "adapter": "publication",
+      "method": "create",
+      "args": [
+        "short-note-untouched",
+        "Proof of the conjecture"
+      ],
+      "kwargs": {}
+    },
+    {
+      "adapter": "publication",
+      "method": "upload",
+      "args": [
+        "short-note-untouched",
+        {
+          "$file": "note-v1.pdf",
+          "base64": "JVBERi0xLjQKU3ludGhldGljIGNoZWNrZWQgbm90ZQ=="
+        }
+      ],
+      "kwargs": {}
+    },
+    {
+      "adapter": "publication",
+      "method": "upload",
+      "args": [
+        "short-note-untouched",
+        {
+          "$file": "source-v1.zip",
+          "base64": "UEsDBBQAAAAAAAAAIQDnKJGaOwAAADsAAAAIAAAAbm90ZS50ZXhcZG9jdW1lbnRjbGFzc3thcnRpY2xlfVxiZWdpbntkb2N1bWVudH1Qcm9vZi5cZW5ke2RvY3VtZW50fVBLAQIUAxQAAAAAAAAAIQDnKJGaOwAAADsAAAAIAAAAAAAAAAAAAACAAQAAAABub3RlLnRleFBLBQYAAAAAAQABADYAAABhAAAAAAA="
+        }
+      ],
+      "kwargs": {}
+    },
+    {
+      "adapter": "publication",
+      "method": "upload",
+      "args": [
+        "short-note-untouched",
+        {
+          "$file": "note-v1.json",
+          "base64": "ewogICJmaWxlcyI6IHsKICAgICJub3RlLXYxLnBkZiI6ICJiYWViOTNlMjUyNGIzM2I0YjY3MzU3NDQ0MjY4NGQxMTE2Mzc5ZDBmNTI1YzIxZjI3NjY2NWYwYjZiZWE4MDVlIiwKICAgICJzb3VyY2UtdjEuemlwIjogIjBmY2Q2OTFhYWE5NWNjYzFhMDQ5MTYyMzY4MzExZDk4ZjNjNjZlNWRmNzk2MmE5ZTcwZTMyNjgzMTM0ZWQ1OGUiCiAgfSwKICAibWV0YWRhdGEiOiB7CiAgICAiYWJzdHJhY3QiOiAiVGhlIHByZWNpc2UgcmVzdWx0LiIsCiAgICAiY3JlYXRvcnMiOiBbCiAgICAgIHsKICAgICAgICAibmFtZSI6ICJBdmVyeSBSZWVkIgogICAgICB9LAogICAgICB7CiAgICAgICAgIm5hbWUiOiAiQmxhaXJlIE1lcmNlciIKICAgICAgfQogICAgXSwKICAgICJldmlkZW5jZV91cmwiOiAiaHR0cHM6Ly9zYW1wbGUuZXhhbXBsZS5pbnZhbGlkL2NvbW1pdC9wcm9vZi5sZWFuIiwKICAgICJpZCI6ICJ1bnRvdWNoZWQiLAogICAgImxpY2Vuc2UiOiAiY2MtYnktNC4wIiwKICAgICJwcm9ibGVtX2lkcyI6IFsKICAgICAgInVudG91Y2hlZCIKICAgIF0sCiAgICAicmV2aXNpb24iOiAxLAogICAgInN1bW1hcnkiOiAiVGhlIG9yaWdpbmFsIGNvbmplY3R1cmUgaXMgcHJvdmVkLiIsCiAgICAidGl0bGUiOiAiUHJvb2Ygb2YgdGhlIGNvbmplY3R1cmUiLAogICAgInRvcGljIjogIk9yaWdpbmFsIGNvbmplY3R1cmUiCiAgfSwKICAic2NoZW1hX3ZlcnNpb24iOiAic2hvcnQtbm90ZS52MSIKfQo="
+        }
+      ],
+      "kwargs": {}
+    },
+    {
+      "adapter": "publication",
+      "method": "upload",
+      "args": [
+        "short-note-untouched",
+        {
+          "$file": "request-0f79107c2d3e54d41463bfa9.json",
+          "base64": "ewogICJhY3Rpb24iOiAicHVibGlzaCIsCiAgImlkIjogInVudG91Y2hlZCIsCiAgInJldmlzaW9uIjogMSwKICAic2NoZW1hX3ZlcnNpb24iOiAic2hvcnQtbm90ZS1yZXF1ZXN0LnYxIgp9Cg=="
+        }
+      ],
+      "kwargs": {}
+    },
+    {
+      "adapter": "publication",
+      "method": "register_note",
+      "args": [
+        {
+          "abstract": "The precise result.",
+          "creators": [
+            {
+              "name": "Avery Reed"
+            },
+            {
+              "name": "Blaire Mercer"
+            }
+          ],
+          "evidence_url": "https://sample.example.invalid/commit/proof.lean",
+          "id": "earlier",
+          "license": "cc-by-4.0",
+          "problem_ids": [
+            "earlier"
+          ],
+          "revision": 1,
+          "summary": "The original conjecture is proved.",
+          "title": "Proof of the conjecture",
+          "topic": "Original conjecture"
+        }
+      ],
+      "kwargs": {}
+    },
+    {
+      "adapter": "publication",
+      "method": "register_note",
+      "args": [
+        {
+          "abstract": "The precise result.",
+          "creators": [
+            {
+              "name": "Avery Reed"
+            },
+            {
+              "name": "Blaire Mercer"
+            }
+          ],
+          "evidence_url": "https://sample.example.invalid/commit/proof.lean",
+          "id": "later",
+          "license": "cc-by-4.0",
+          "problem_ids": [
+            "later"
+          ],
+          "revision": 1,
+          "summary": "The original conjecture is proved.",
+          "title": "Proof of the conjecture",
+          "topic": "Original conjecture"
+        }
+      ],
+      "kwargs": {}
+    }
+  ]
+}

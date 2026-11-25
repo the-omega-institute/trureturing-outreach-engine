@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the Rust Mathesis stage on the same committed Python-first scenarios."""
+"""Run the Rust stages on the same committed Python-first scenarios."""
 import json
 from pathlib import Path
 import subprocess
@@ -18,7 +18,7 @@ def main():
     sys.stdout.write(result.stdout)
     assert result.returncode == 0
     counts = json.loads(result.stdout)
-    assert counts['equal'] == sum(c['stage'] == 'mathesis' for c in cases) and counts['different'] == 0
+    assert counts['equal'] == sum(c['stage'] in {'mathesis','publication','sent'} for c in cases) and counts['different'] == 0
 
 
 if __name__ == '__main__': main()

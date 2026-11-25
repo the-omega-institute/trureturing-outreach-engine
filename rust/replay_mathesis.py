@@ -2,7 +2,7 @@
 """Replay private recording frames locally. stdout/stderr contain counts only.
 
 The supplied closed snapshot must match the recorded start Release pointer, or
-(for a fixture without a Release pointer) the first Mathesis frame. Earlier
+(for a fixture without a Release pointer) the first stage frame. Earlier
 unported stages are observations at the stage boundary, not Rust executions.
 No output file, network client, production writer or private upload is used.
 """
@@ -31,27 +31,33 @@ def replay(directory, snapshot, binary, key=None):
             raise ValueError('open snapshot')
         before = hashlib.sha256(snapshot.read_bytes()).hexdigest()
         connection = sqlite3.connect('file:' + quote(str(snapshot)) + '?mode=ro&immutable=1', uri=True)
-        try: initial = logical(dump(SimpleNamespace(db=connection)))
+        try: initial = dump(SimpleNamespace(db=connection))
         finally: connection.close()
+        logical_initial = logical(initial)
         events = []
         for path in sorted(directory.glob('calls-*.jsonl')):
             for line in path.read_text().splitlines(): events.append(json.loads(line))
         starts = [e['pointer'] for e in events if e.get('event') == 'release_pointer' and e.get('boundary') == 'start' and (e.get('pointer') or {}).get('snapshot')]
-        cases = [e['case'] for e in events if e.get('event') == 'mathesis_stage']
-        counts['skipped'] += sum(e.get('event') == 'mathesis_stage_unavailable' for e in events)
+        stages = {'mathesis', 'publication', 'sent'}
+        cases = [e['case'] for e in events if e.get('event') in {s + '_stage' for s in stages}]
+        counts['skipped'] += sum(e.get('event') in {s + '_stage_unavailable' for s in stages} for e in events)
         if starts:
             if not any(p['snapshot']['sha256'] == before for p in starts): raise ValueError('start snapshot mismatch')
-        elif cases and canonical(initial) != canonical(logical(cases[0]['initial_rows'])):
-            raise ValueError('fixture start mismatch')
+        elif cases:
+            if 'initial_rows' in cases[0]:
+                if canonical(logical_initial) != canonical(logical(cases[0]['initial_rows'])): raise ValueError('fixture start mismatch')
+            elif {k: hashlib.sha256(canonical(v).encode()).hexdigest() for k,v in logical_initial.items()} != cases[0].get('base_digests', cases[0]['initial_digests']):
+                raise ValueError('fixture start mismatch')
         eligible = []
         for case in cases:
-            if not key or case.get('redacted'):
+            if (not key and case['stage'] != 'sent') or case.get('redacted') or case.get('incomplete'):
                 counts['skipped'] += 1; continue
             # Ordering and window checks are independent of the Rust replay.
             times = [t for pair in case.get('update_times', []) for t in pair]
             if any(t < case['now'] or t > case['now_end'] for t in times) or times != sorted(times):
                 counts['different'] += 1; continue
-            case['review_key'] = key
+            case['review_key'] = key or ''
+            if not eligible and 'initial_rows' not in case: case['initial_rows'] = initial
             eligible.append(case)
         if eligible:
             result = subprocess.run([str(binary)], input=json.dumps(eligible), text=True, capture_output=True)

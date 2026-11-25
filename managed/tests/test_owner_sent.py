@@ -137,6 +137,7 @@ class OwnerSentTests(unittest.TestCase):
         self.box.settings['live_since'] = OBSERVED
         observed = []
         with patch.object(self.box, 'sent_events_page', return_value=(sent, None)) as sent_page, \
+                patch.object(sent_events, 'tables_need_push', return_value=False), \
                 patch.object(sent_events, 'commit_tables'), \
                 patch.object(self.box, 'reply_drafts', wraps=self.box.reply_drafts) as listing:
             sent_events.reconcile(self.ledger, self.config, self.root, self.box, now=checked, observe=observed.extend)
@@ -580,6 +581,7 @@ class OwnerSentTests(unittest.TestCase):
         self.tick()
         self.box.settings['live_since'] = OBSERVED
         with patch.object(self.box, 'sent_events_page', return_value=([message], None)), \
+                patch.object(sent_events, 'tables_need_push', return_value=False), \
                 patch.object(sent_events, 'commit_tables'):
             first = sent_events.reconcile(self.ledger, self.config, self.root, self.box)
             second = sent_events.reconcile(self.ledger, self.config, self.root, self.box)

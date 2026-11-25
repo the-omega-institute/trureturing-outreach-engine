@@ -3,7 +3,7 @@
   "id": "publication-passed_note_after_guard_stopped_continuation_is_published-1",
   "source_test": "test_publication.PublicationTests.test_passed_note_after_guard_stopped_continuation_is_published",
   "stage": "publication",
-  "now": 2000000000.0,
+  "now": 1999999900.0,
   "workflow": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
   "installation": {
     "repositories": {
@@ -47,7 +47,10 @@
       "enabled": false,
       "max_new_tasks_per_tick": 4,
       "backfill_result_ids": [],
-      "daily": false
+      "daily": false,
+      "auto_backfill": false,
+      "backfill_per_tick": 1,
+      "backfill_pending_limit": 16
     },
     "kinds": {
       "firstcontact": false,
@@ -207,6 +210,21 @@
     "cma": {
       "token_base_url": "https://worker.example.invalid",
       "proxy_base_url": "https://auth.example.invalid/api/v1/proxy/s/cma"
+    },
+    "independent_review": {
+      "enabled": false,
+      "max_active": 2,
+      "github": {
+        "service": "github-review-read",
+        "user_service_id": "dedicated-read-only-input-connection",
+        "read_only": true
+      },
+      "profile": {
+        "model": "gpt-6.2-sol",
+        "reasoning_effort": "high"
+      },
+      "register_author_contacts": true,
+      "max_active_per_group": 1
     }
   },
   "config": {
@@ -514,75 +532,76 @@
       "tag": "outreach-control"
     }
   },
+  "options": {
+    "previous": []
+  },
+  "admissions": [],
   "script": [
     {
-      "adapter": "releases",
-      "method": "run",
+      "adapter": "boundary",
+      "method": "source_gate",
       "args": [
-        "release",
-        "download",
-        "outreach-task-note-1",
-        "--repo",
-        "fixture/repo",
-        "--pattern",
-        "note-v1.json",
-        "--dir",
-        {
-          "$directory": true
-        }
+        "note-1"
       ],
       "kwargs": {},
-      "result": null,
-      "download": {
-        "name": "note-v1.json",
-        "base64": "ewogICJmaWxlcyI6IHsKICAgICJub3RlLXYxLnBkZiI6ICJiYWViOTNlMjUyNGIzM2I0YjY3MzU3NDQ0MjY4NGQxMTE2Mzc5ZDBmNTI1YzIxZjI3NjY2NWYwYjZiZWE4MDVlIiwKICAgICJzb3VyY2UtdjEuemlwIjogIjBmY2Q2OTFhYWE5NWNjYzFhMDQ5MTYyMzY4MzExZDk4ZjNjNjZlNWRmNzk2MmE5ZTcwZTMyNjgzMTM0ZWQ1OGUiCiAgfSwKICAibWV0YWRhdGEiOiB7CiAgICAiYWJzdHJhY3QiOiAiVGhlIHByZWNpc2UgcmVzdWx0LiIsCiAgICAiY3JlYXRvcnMiOiBbCiAgICAgIHsKICAgICAgICAibmFtZSI6ICJBdmVyeSBSZWVkIgogICAgICB9LAogICAgICB7CiAgICAgICAgIm5hbWUiOiAiQmxhaXJlIE1lcmNlciIKICAgICAgfQogICAgXSwKICAgICJldmlkZW5jZV91cmwiOiAiaHR0cHM6Ly9zYW1wbGUuZXhhbXBsZS5pbnZhbGlkL2NvbW1pdC9wcm9vZi5sZWFuIiwKICAgICJpZCI6ICJndWFyZGVkIiwKICAgICJsaWNlbnNlIjogImNjLWJ5LTQuMCIsCiAgICAicHJvYmxlbV9pZHMiOiBbCiAgICAgICJwcm9ibGVtLWd1YXJkZWQiCiAgICBdLAogICAgInJldmlzaW9uIjogMSwKICAgICJzdW1tYXJ5IjogIlRoZSBvcmlnaW5hbCBjb25qZWN0dXJlIGlzIHByb3ZlZC4iLAogICAgInRpdGxlIjogIlByb29mIG9mIHRoZSBjb25qZWN0dXJlIiwKICAgICJ0b3BpYyI6ICJPcmlnaW5hbCBjb25qZWN0dXJlIgogIH0sCiAgInNjaGVtYV92ZXJzaW9uIjogInNob3J0LW5vdGUudjEiCn0K"
+      "result": null
+    },
+    {
+      "adapter": "shortnote",
+      "method": "package",
+      "args": [
+        "note-1",
+        "80dab60f0d4eaa60430e3e9720017c741597ef7f4ec3a48f6eda66508dbb17de"
+      ],
+      "kwargs": {},
+      "result": {
+        "metadata": {
+          "abstract": "The precise result.",
+          "creators": [
+            {
+              "name": "Avery Reed"
+            },
+            {
+              "name": "Blaire Mercer"
+            }
+          ],
+          "evidence_url": "https://sample.example.invalid/commit/proof.lean",
+          "id": "guarded",
+          "license": "cc-by-4.0",
+          "problem_ids": [
+            "problem-guarded"
+          ],
+          "revision": 1,
+          "summary": "The original conjecture is proved.",
+          "title": "Proof of the conjecture",
+          "topic": "Original conjecture"
+        },
+        "source": "source-v1.zip",
+        "files": {
+          "note-v1.json": {
+            "$file": "note-v1.json",
+            "base64": "ewogICJmaWxlcyI6IHsKICAgICJub3RlLXYxLnBkZiI6ICJiYWViOTNlMjUyNGIzM2I0YjY3MzU3NDQ0MjY4NGQxMTE2Mzc5ZDBmNTI1YzIxZjI3NjY2NWYwYjZiZWE4MDVlIiwKICAgICJzb3VyY2UtdjEuemlwIjogIjBmY2Q2OTFhYWE5NWNjYzFhMDQ5MTYyMzY4MzExZDk4ZjNjNjZlNWRmNzk2MmE5ZTcwZTMyNjgzMTM0ZWQ1OGUiCiAgfSwKICAibWV0YWRhdGEiOiB7CiAgICAiYWJzdHJhY3QiOiAiVGhlIHByZWNpc2UgcmVzdWx0LiIsCiAgICAiY3JlYXRvcnMiOiBbCiAgICAgIHsKICAgICAgICAibmFtZSI6ICJBdmVyeSBSZWVkIgogICAgICB9LAogICAgICB7CiAgICAgICAgIm5hbWUiOiAiQmxhaXJlIE1lcmNlciIKICAgICAgfQogICAgXSwKICAgICJldmlkZW5jZV91cmwiOiAiaHR0cHM6Ly9zYW1wbGUuZXhhbXBsZS5pbnZhbGlkL2NvbW1pdC9wcm9vZi5sZWFuIiwKICAgICJpZCI6ICJndWFyZGVkIiwKICAgICJsaWNlbnNlIjogImNjLWJ5LTQuMCIsCiAgICAicHJvYmxlbV9pZHMiOiBbCiAgICAgICJwcm9ibGVtLWd1YXJkZWQiCiAgICBdLAogICAgInJldmlzaW9uIjogMSwKICAgICJzdW1tYXJ5IjogIlRoZSBvcmlnaW5hbCBjb25qZWN0dXJlIGlzIHByb3ZlZC4iLAogICAgInRpdGxlIjogIlByb29mIG9mIHRoZSBjb25qZWN0dXJlIiwKICAgICJ0b3BpYyI6ICJPcmlnaW5hbCBjb25qZWN0dXJlIgogIH0sCiAgInNjaGVtYV92ZXJzaW9uIjogInNob3J0LW5vdGUudjEiCn0K"
+          },
+          "note-v1.pdf": {
+            "$file": "note-v1.pdf",
+            "base64": "JVBERi0xLjQKU3ludGhldGljIGNoZWNrZWQgbm90ZQ=="
+          },
+          "source-v1.zip": {
+            "$file": "source-v1.zip",
+            "base64": "UEsDBBQAAAAAAAAAIQDnKJGaOwAAADsAAAAIAAAAbm90ZS50ZXhcZG9jdW1lbnRjbGFzc3thcnRpY2xlfVxiZWdpbntkb2N1bWVudH1Qcm9vZi5cZW5ke2RvY3VtZW50fVBLAQIUAxQAAAAAAAAAIQDnKJGaOwAAADsAAAAIAAAAAAAAAAAAAACAAQAAAABub3RlLnRleFBLBQYAAAAAAQABADYAAABhAAAAAAA="
+          }
+        }
       }
     },
     {
-      "adapter": "releases",
-      "method": "run",
+      "adapter": "boundary",
+      "method": "record",
       "args": [
-        "release",
-        "download",
-        "outreach-task-note-1",
-        "--repo",
-        "fixture/repo",
-        "--pattern",
-        "note-v1.pdf",
-        "--dir",
-        {
-          "$directory": true
-        }
+        "note-1",
+        "preparing"
       ],
       "kwargs": {},
-      "result": null,
-      "download": {
-        "name": "note-v1.pdf",
-        "base64": "JVBERi0xLjQKU3ludGhldGljIGNoZWNrZWQgbm90ZQ=="
-      }
-    },
-    {
-      "adapter": "releases",
-      "method": "run",
-      "args": [
-        "release",
-        "download",
-        "outreach-task-note-1",
-        "--repo",
-        "fixture/repo",
-        "--pattern",
-        "source-v1.zip",
-        "--dir",
-        {
-          "$directory": true
-        }
-      ],
-      "kwargs": {},
-      "result": null,
-      "download": {
-        "name": "source-v1.zip",
-        "base64": "UEsDBBQAAAAAAAAAIQDnKJGaOwAAADsAAAAIAAAAbm90ZS50ZXhcZG9jdW1lbnRjbGFzc3thcnRpY2xlfVxiZWdpbntkb2N1bWVudH1Qcm9vZi5cZW5ke2RvY3VtZW50fVBLAQIUAxQAAAAAAAAAIQDnKJGaOwAAADsAAAAIAAAAAAAAAAAAAACAAQAAAABub3RlLnRleFBLBQYAAAAAAQABADYAAABhAAAAAAA="
-      }
+      "result": null
     },
     {
       "adapter": "ledger",
@@ -591,7 +610,11 @@
       "kwargs": {
         "force": true
       },
-      "result": true
+      "result": true,
+      "saved_snapshot": {
+        "generation": 1,
+        "digest": "6e374aaaad19e9131f239af0b2c678f9319796d078256d675348995b55831116"
+      }
     },
     {
       "adapter": "publication",
@@ -757,6 +780,13 @@
       "result": null
     },
     {
+      "adapter": "boundary",
+      "method": "enqueue",
+      "args": [],
+      "kwargs": {},
+      "result": null
+    },
+    {
       "adapter": "publication",
       "method": "download",
       "args": [
@@ -773,13 +803,27 @@
       }
     },
     {
+      "adapter": "boundary",
+      "method": "record",
+      "args": [
+        "note-1",
+        "queued"
+      ],
+      "kwargs": {},
+      "result": null
+    },
+    {
       "adapter": "ledger",
       "method": "save",
       "args": [],
       "kwargs": {
         "force": true
       },
-      "result": true
+      "result": true,
+      "saved_snapshot": {
+        "generation": 2,
+        "digest": "780c22e985b785bcf01e51baa6661e406e26f9788fb904892c73f0bde75dd308"
+      }
     }
   ],
   "expected_final_rows": {
@@ -926,7 +970,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -936,7 +980,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -1102,7 +1146,7 @@
           "request_hash": "fe92dd4875a92784c38af304a49ef65b4e539ec4d4e9d88abb59975f01fd4309",
           "revision": 6,
           "state": "handoff-ready",
-          "updated": 2000000000.0
+          "updated": 1999999900.0
         }
       ]
     }

@@ -153,6 +153,15 @@ class PublicationTests(unittest.TestCase):
             self.assertEqual(self.row(kind)['data']['publication_loop']['phase'], 'queued')
         self.assertIn('mathesis_delivery', self.row('mathesis')['data'])
 
+    def test_equal_priority_notes_preserve_arrival_order(self):
+        for name in ('z-note', 'a-note'):
+            self.prepared(name, kind='shortnote', handoff=False,
+                          metadata={**self.metadata, 'id': name, 'problem_ids': [name]})
+        self.config['mathesis']['max_publications_per_tick'] = 1
+        self.run_publication()
+        self.assertEqual(self.row('z-note')['data']['publication_loop']['phase'], 'queued')
+        self.assertNotIn('publication_loop', self.row('a-note')['data'])
+
     def test_correspondent_note_is_published_before_backlog(self):
         for name in ('mathesis-a', 'mathesis-b'):
             meta = {**self.metadata, 'id': name, 'problem_ids': ['problem-' + name]}

@@ -1,11 +1,12 @@
 """Sent-folder facts, privacy, bounded recovery and serialized table writes."""
 from contextlib import redirect_stderr
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import io
 import json
 import os
 from pathlib import Path
 import subprocess
+import sqlite3
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -45,10 +46,10 @@ class Graph:
         self.calls.append(path)
         if path.startswith('/me?$select='):
             return {'mail': ACCOUNT}
-        return self.responses[1 if '$skiptoken=next' in path else 0]
+        return self.responses[1 if '$skiptoken=next' in path or '$skip=100' in path else 0]
 
 
-class SentEventsTests(unittest.TestCase):
+class SentEventsFixture(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
@@ -63,6 +64,7 @@ class SentEventsTests(unittest.TestCase):
         registry.register(CONTACT, 'Professor Scholar', root=self.root)
         self.config = {'paused': False, 'mailbox': {'team_addresses': ['team@example.invalid']}}
         self.commit = self.enterContext(patch.object(sent_events, 'commit_tables'))
+        self.needs_push = self.enterContext(patch.object(sent_events, 'tables_need_push', return_value=True))
         self.set_messages([message()])
 
     def set_messages(self, messages, pages=None):
@@ -91,6 +93,8 @@ class SentEventsTests(unittest.TestCase):
                               'workflow_hash': req['workflow_hash'], 'result_hash': digest(result)}}
         return self.ledger.tasks.update(row['id'], row['revision'], 'verified', data)
 
+
+class SentEventsTests(SentEventsFixture):
     def test_owner_draft_sent_uses_exact_sent_receipt_and_reviewed_headline(self):
         self.task()
         self.assertEqual(self.tick()['events'], 1)
@@ -171,6 +175,29 @@ class SentEventsTests(unittest.TestCase):
         self.assertEqual(self.tick()['events'], 1)
         self.assertEqual(self.tick()['events'], 0)
         self.assertEqual(len(self.events()), 1)
+
+    def test_two_clean_pages_skip_commit_and_forced_save(self):
+        self.needs_push.return_value = False
+        # A non-token query also exercises recording/replay without redacting
+        # the pagination handle under the credential-token masking rules.
+        link = NEXT.replace('$skiptoken=next', '$skip=100')
+        self.set_messages([], pages=[{'value': [], '@odata.nextLink': link}, {'value': []}])
+        with patch.object(self.ledger, 'save', wraps=self.ledger.save) as save:
+            self.assertEqual(self.tick(), {'status': 'idle', 'events': 0, 'pages': 2})
+        self.assertEqual(save.call_args_list, [unittest.mock.call(), unittest.mock.call()])
+        self.commit.assert_not_called()
+
+    def test_changed_since_discards_pending_before_deferred_page(self):
+        stale = {'cursor': {'since': '2026-10-01T00:00:00Z',
+                            'until': '2026-11-04T00:00:00Z', 'next_link': NEXT}}
+        self.ledger.tasks.db.execute('INSERT INTO pipeline_state VALUES(?,?)',
+                                     ('sent-events-pending', json.dumps(stale)))
+        Tick(seconds=0).bind(self.ledger)
+        self.assertEqual(self.tick()['status'], 'deferred')
+        self.assertIsNone(self.ledger.tasks.db.execute(
+            "SELECT payload FROM pipeline_state WHERE key='sent-events-pending'").fetchone())
+        self.assertFalse(any('sentitems' in path for path in self.graph.calls))
+        self.commit.assert_not_called()
 
     def test_operator_registry_reconcile_also_recognizes_automatic_events(self):
         self.tick()
@@ -298,7 +325,183 @@ class SentEventsTests(unittest.TestCase):
         self.assertIn('sent-events', log.getvalue())
 
 
+class Crash(BaseException):
+    """Runner termination after the synthetic commit completed."""
+
+
+class SentEventsRecoveryTests(SentEventsFixture):
+    def state(self, key):
+        row = self.ledger.tasks.db.execute('SELECT payload FROM pipeline_state WHERE key=?', (key,)).fetchone()
+        return json.loads(row[0]) if row else None
+
+    def restore(self):
+        folder = Path(tempfile.mkdtemp(dir=self.root))
+        self.ledger = control.Ledger(self.ledger.releases, folder)
+        self.addCleanup(self.ledger.tasks.close)
+
+    def test_two_pages_without_new_events_upload_no_forced_snapshots(self):
+        # Seed a committed event, then replay it across two clean pages. Pin the
+        # clock inside the normal debounce interval and count actual uploads.
+        self.tick()
+        self.ledger.clock = lambda: self.ledger.last_saved_at
+        self.needs_push.return_value = False
+        self.set_messages([], pages=[{'value': [message()], '@odata.nextLink': NEXT},
+                                    {'value': [message()]}])
+        self.commit.reset_mock()
+        with patch.object(self.ledger, 'save', wraps=self.ledger.save) as save, \
+                patch.object(self.ledger.releases, 'upload', wraps=self.ledger.releases.upload) as upload:
+            self.assertEqual(self.tick(), {'status': 'idle', 'events': 0, 'pages': 2})
+        self.assertEqual(save.call_args_list, [unittest.mock.call(), unittest.mock.call()])
+        upload.assert_not_called()
+        self.commit.assert_not_called()
+
+    def test_new_events_force_saved_intent_before_commit(self):
+        self.needs_push.return_value = False
+        seen = []
+        def commit(root):
+            snapshot = self.ledger.releases.body['snapshot']['name']
+            path = self.root / 'commit-intent.sqlite3'
+            path.write_bytes(self.ledger.releases.assets[snapshot])
+            with sqlite3.connect(path) as db:
+                row = db.execute("SELECT payload FROM pipeline_state WHERE key='sent-events-pending'").fetchone()
+                seen.append(json.loads(row[0]))
+        self.commit.side_effect = commit
+        self.assertEqual(self.tick()['events'], 1)
+        self.assertEqual(seen[0]['cursor'], {'since': SINCE, 'until': '2026-11-05T00:00:00Z'})
+        self.assertEqual(seen[0]['contacts_digest'], digest(registry.read(self.root, 'contacts')))
+        self.assertIsNone(self.state('sent-events-pending'))
+
+    def test_dirty_tables_or_unpushed_commits_force_intent_without_new_events(self):
+        self.set_messages([])
+        def commit(root):
+            self.assertIsNotNone(self.state('sent-events-pending'))
+            restored = control.Ledger(self.ledger.releases, Path(tempfile.mkdtemp(dir=self.root)))
+            self.addCleanup(restored.tasks.close)
+            self.assertIsNotNone(restored.tasks.db.execute(
+                "SELECT payload FROM pipeline_state WHERE key='sent-events-pending'").fetchone())
+        self.commit.side_effect = commit
+        self.assertEqual(self.tick()['events'], 0)
+        self.commit.assert_called_once()
+
+    def test_crash_after_commit_recovers_without_duplicates_and_freezes_until(self):
+        self.commit.side_effect = Crash()
+        with self.assertRaises(Crash): self.tick()
+        self.assertEqual(len(self.events()), 1)
+        first_page = self.graph.calls[-1]
+        self.restore()
+        self.assertIsNotNone(self.state('sent-events-pending'))
+        self.assertIsNone(self.state(sent_events.CURSOR))
+        self.commit.side_effect = None
+        self.needs_push.return_value = False  # the synthetic push already succeeded
+        report = sent_events.reconcile(self.ledger, self.config, self.root, self.box, NOW + timedelta(hours=2))
+        self.assertEqual(report, {'status': 'idle', 'events': 0, 'pages': 1})
+        self.assertEqual(self.graph.calls[-1], first_page)
+        self.assertEqual(len(self.events()), 1)
+        self.assertEqual(self.state(sent_events.CURSOR),
+                         {'since': SINCE, 'until': '2026-11-05T00:00:00Z', 'next_link': None})
+        self.assertIsNone(self.state('sent-events-pending'))
+        self.ledger.save(force=True)
+        self.restore()
+        self.assertIsNone(self.state('sent-events-pending'))
+        self.assertIn('next_link', self.state(sent_events.CURSOR))
+
+    def test_crash_after_second_commit_resumes_saved_page_handle(self):
+        self.set_messages([], pages=[{'value': [message()], '@odata.nextLink': NEXT},
+                                    {'value': [message('two')]}])
+        self.commit.side_effect = [None, Crash()]
+        with self.assertRaises(Crash): self.tick()
+        self.restore()
+        self.assertEqual(self.state('sent-events-pending')['cursor']['next_link'], NEXT)
+        self.assertEqual(self.state(sent_events.CURSOR)['next_link'], NEXT)
+        start = len(self.graph.calls)
+        self.commit.side_effect = None
+        self.needs_push.return_value = False
+        report = sent_events.reconcile(self.ledger, self.config, self.root, self.box, NOW + timedelta(minutes=5))
+        self.assertEqual(report['events'], 0)
+        self.assertEqual([path for path in self.graph.calls[start:] if not path.startswith('/me?$select=')],
+                         [NEXT.removeprefix(mailbox.Graph.BASE)])
+        self.assertEqual(len(self.events()), 2)
+        self.assertIsNone(self.state('sent-events-pending'))
+        self.assertIsNone(self.state(sent_events.CURSOR)['next_link'])
+
+    def test_since_change_deletes_stale_intent_before_failed_or_deferred_page(self):
+        self.commit.side_effect = RuntimeError('synthetic push failure')
+        with self.assertRaises(RuntimeError): self.tick()
+        new_since = '2026-11-02T00:00:00Z'
+        for deferred in (False, True):
+            with self.subTest(deferred=deferred):
+                self.restore()
+                self.box.settings['live_since'] = new_since
+                self.assertIsNotNone(self.state('sent-events-pending'))
+                if deferred:
+                    Tick(seconds=0).bind(self.ledger)
+                    self.assertEqual(self.tick()['status'], 'deferred')
+                else:
+                    def fail(since, until, link):
+                        self.assertEqual(since, new_since)
+                        self.assertEqual(until, '2026-11-05T00:00:00Z')
+                        self.assertIsNone(link)
+                        self.assertIsNone(self.state('sent-events-pending'))
+                        raise RuntimeError('synthetic page failure')
+                    with patch.object(self.box, 'sent_events_page', side_effect=fail), self.assertRaises(RuntimeError):
+                        self.tick()
+                self.assertIsNone(self.state('sent-events-pending'))
+
+        del self.ledger.tick
+        self.commit.side_effect = None
+        self.needs_push.return_value = False
+        self.assertEqual(self.tick()['pages'], 1)
+        self.assertEqual(self.state(sent_events.CURSOR)['since'], new_since)
+        self.assertIsNone(self.state('sent-events-pending'))
+
+    def test_forced_save_failure_prevents_commit_and_isolates_stage(self):
+        self.ledger.releases.fail_pointer = True
+        log = io.StringIO()
+        with redirect_stderr(log):
+            report = sent_events.advance(self.ledger, self.config, self.root, self.box)
+        self.assertEqual(report, {'status': 'error', 'error': 'TimeoutError'})
+        self.commit.assert_not_called()
+        self.assertEqual(self.state('sent-events-status'), report)
+        self.assertIsNotNone(self.state('sent-events-pending'))
+        self.assertIsNone(self.state(sent_events.CURSOR))
+        # A later tick stage can still read/write the same ledger connection.
+        self.ledger.tasks.db.execute('INSERT INTO pipeline_state VALUES(?,?)', ('later-stage', '{}'))
+        self.assertEqual(self.state('later-stage'), {})
+        self.assertNotIn('Lost pointer write', log.getvalue())
+
+
 class CommitTablesTests(unittest.TestCase):
+    def test_tables_need_push_checks_scoped_status_and_unpushed_local_commits(self):
+        from managed.location import DATA_BRANCH
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            def git(*args):
+                return subprocess.check_output(['git', *args], cwd=root, stderr=subprocess.PIPE)
+            git('init', '-b', DATA_BRANCH)
+            git('config', 'user.name', 'Fixture')
+            git('config', 'user.email', 'fixture@example.invalid')
+            (root / 'tables').mkdir()
+            for name in (*sent_events.FILES, 'unrelated.txt'): (root / name).write_text('before\n')
+            git('add', '.'); git('commit', '-m', 'initial')
+            remote = f'refs/remotes/origin/{DATA_BRANCH}'
+            git('update-ref', remote, 'HEAD')
+            (root / 'unrelated.txt').write_text('unrelated\n')
+            git('add', 'unrelated.txt')
+            self.assertFalse(sent_events.tables_need_push(root))
+            (root / sent_events.FILES[0]).write_text('changed\n')
+            self.assertTrue(sent_events.tables_need_push(root))
+            git('add', sent_events.FILES[0])
+            self.assertTrue(sent_events.tables_need_push(root))
+            git('commit', '-m', 'local commit awaiting push')
+            self.assertEqual(git('status', '--porcelain'), b'')
+            self.assertTrue(sent_events.tables_need_push(root))
+            git('update-ref', remote, 'HEAD')
+            self.assertFalse(sent_events.tables_need_push(root))
+            git('rm', sent_events.FILES[0]); git('commit', '-m', 'remove table fixture')
+            git('update-ref', remote, 'HEAD')
+            (root / sent_events.FILES[0]).write_text('untracked\n')
+            self.assertTrue(sent_events.tables_need_push(root))
+
     def test_commit_and_push_only_scoped_files_preserves_unrelated_staged_change(self):
         with tempfile.TemporaryDirectory() as folder, patch.dict('os.environ', {'GITHUB_ACTIONS': 'true'}):
             root = Path(folder) / 'repo'

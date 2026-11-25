@@ -18,7 +18,7 @@ from .queue import canonical, digest, require
 from .correspondence import linked_contacts
 from .github_diagnostics import failure as github_failure
 from .tick import units
-from . import recheck
+from . import recheck, recording
 from .tasks import INDEPENDENT_REVIEWERS
 
 # Reuse the existing delivery service, including its validators and file contract.
@@ -269,6 +269,7 @@ def download(row, name, directory, releases):
     return path
 
 
+@recording.package_read
 def package(row, directory, releases):
     """Materialize only the reviewed scientific package; never repack its ZIP."""
     names = {a['name'] for a in row['data']['result']['artifacts']}
@@ -387,6 +388,7 @@ def delivers(row, key):
             and envelope.get('result_hash') == digest(row['data']['result']))
 
 
+@recording.stage_frame('publication')
 def advance(ledger, config, root, folder, gh=None, secret=None):
     from .note_revisions import Revisions
     if config['paused'] or not config['kinds'].get('mathesis') or config.get('mathesis', {}).get('test_only'):
@@ -400,7 +402,7 @@ def advance(ledger, config, root, folder, gh=None, secret=None):
     secret = secret or os.environ.get('OUTREACH_REVIEW_KEY')
     if not secret:
         return
-    gh = gh or Publications(ledger.releases.repo)
+    gh = recording.adapter('publication', gh or Publications(ledger.releases.repo))
     all_rows = ledger.tasks.all()
     revisions = Revisions(ledger.tasks, all_rows)
     # Live Mathesis descendants own publication of their source note, including
@@ -554,6 +556,8 @@ def advance(ledger, config, root, folder, gh=None, secret=None):
             retry_at = recheck.defer(ledger.tasks, 'publication', row['id'], binding, delay)
             error_class = type(error).__name__
             diagnostic = getattr(error, 'github_diagnostic', None) or github_failure(error) or error_class
+            recording.observed_error(error, {'type': error_class, 'diagnostic': diagnostic,
+                **({'reason': str(error)} if isinstance(error, ValueError) else {})})
             state.update(phase='pending', last_error=error_class, step=step, diagnostic=diagnostic,
                          consecutive_failures=failures, next_retry_at=retry_at)
             if isinstance(error, ValueError):

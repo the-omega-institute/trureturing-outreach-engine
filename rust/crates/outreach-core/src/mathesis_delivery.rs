@@ -1,36 +1,12 @@
 //! Offline Mathesis delivery state machine. Ports supply all observations.
 //! Python retains exclusive production ledger ownership.
 mod legacy;
-mod upgrade;
+pub(crate) mod upgrade;
 
 use crate::{envelopes, gates, ingest::Replay, object, s, string, truth, validation::require};
 use outreach_canon::{Result, Value, digest, python_eq, sha256};
 
-/// A capability issued only after the forced-save port returns successfully.
-/// Its fields are private and it cannot be cloned or deserialized.
-///
-/// ```compile_fail
-/// use outreach_core::mathesis_delivery::{Persisted, ManuscriptIntent};
-/// fn bypass(intent: ManuscriptIntent) -> Persisted<ManuscriptIntent> {
-///     Persisted { intent, generation: 1 }
-/// }
-/// ```
-pub struct Persisted<I> {
-    intent: I,
-    generation: u64,
-}
-impl<I> Persisted<I> {
-    pub fn intent(&self) -> &I {
-        &self.intent
-    }
-    pub fn generation(&self) -> u64 {
-        self.generation
-    }
-    pub fn save(intent: I, port: &mut impl DeliveryPorts, tables: &Value) -> StageResult<Self> {
-        let generation = port.save_forced(tables)?;
-        Ok(Self { intent, generation })
-    }
-}
+pub use crate::persistence::{Ledger, Persisted, SavedSnapshot};
 
 pub struct SourceFile {
     pub name: String,
@@ -62,28 +38,51 @@ pub struct ReceiptHandle {
 /// ```compile_fail
 /// use outreach_core::mathesis_delivery::{MathesisClient, ManuscriptIntent};
 /// fn bypass(client: &mut impl MathesisClient, intent: ManuscriptIntent) {
-///     client.deliver(&intent);
+///     client.deliver(intent);
 /// }
 /// ```
 pub trait MathesisClient {
     fn verify_owner(&mut self) -> StageResult<()>;
     fn find(&mut self, metadata: &Value) -> StageResult<Value>;
     fn status(&mut self, handle: &ReceiptHandle) -> StageResult<Value>;
-    fn deliver(&mut self, intent: &Persisted<ManuscriptIntent>) -> StageResult<Value>;
-    fn deliver_pre_reviewed(&mut self, intent: &Persisted<CollectionIntent>) -> StageResult<Value>;
-    fn withdraw(&mut self, intent: &Persisted<WithdrawIntent>) -> StageResult<Value>;
+    fn deliver(&mut self, intent: Persisted<ManuscriptIntent>) -> StageResult<Value>;
+    fn deliver_pre_reviewed(&mut self, intent: Persisted<CollectionIntent>) -> StageResult<Value>;
+    fn withdraw(&mut self, intent: Persisted<WithdrawIntent>) -> StageResult<Value>;
     fn collected(&mut self, work: &str, version: &Value) -> StageResult<Value>;
     fn collected_file(&mut self, work: &str, version: &Value, kind: &str) -> StageResult<Vec<u8>>;
 }
-pub trait DeliveryPorts {
+pub trait DeliveryServices {
     fn ledger_tag(&self) -> &str;
     /// Success means the intent and reservation are durable, including when the
     /// saver confirms an already committed identical generation.
-    fn save_forced(&mut self, tables: &Value) -> StageResult<u64>;
+    fn save_forced(&mut self, tables: &Value) -> StageResult<SavedSnapshot>;
     fn save(&mut self, tables: &Value) -> StageResult<()>;
+    fn save_with_force(&mut self, tables: &Value, force: bool) -> StageResult<()> {
+        if force {
+            self.save_forced(tables)?;
+        } else {
+            self.save(tables)?;
+        }
+        Ok(())
+    }
     fn source(&mut self, descriptor: &Value) -> StageResult<SourceFile>;
     fn allow(&mut self, lane: &str, key: &str) -> bool;
-    fn queue_public_link(&mut self, intent: &Persisted<LinkIntent>) -> StageResult<Value>;
+    fn queue_public_link(&mut self, intent: Persisted<LinkIntent>) -> StageResult<Value>;
+}
+
+/// Sealed persistence port. Only the ledger wrapper can acknowledge a save.
+/// ```compile_fail
+/// use outreach_core::mathesis_delivery::DeliveryPorts;
+/// struct Bypass;
+/// impl DeliveryPorts for Bypass {}
+/// ```
+pub trait DeliveryPorts: DeliveryServices + crate::persistence::sealed::Sealed {
+    fn saved_snapshot(&self) -> Option<(&SavedSnapshot, &str)>;
+}
+impl<S: DeliveryServices> DeliveryPorts for Ledger<S> {
+    fn saved_snapshot(&self) -> Option<(&SavedSnapshot, &str)> {
+        self.saved_snapshot()
+    }
 }
 
 #[derive(Debug)]
@@ -518,7 +517,7 @@ fn advance_row(
         update(replay, id, delivery.clone(), None)?;
         replay.set_state(&coordinate, reservation.clone())?;
         let intent = Persisted::save(ManuscriptIntent { metadata, source }, port, &replay.tables)?;
-        observed = receipt_matches(&client.deliver(&intent)?, &expected)?;
+        observed = receipt_matches(&client.deliver(intent)?, &expected)?;
     }
     delivery["phase"] = string("pending");
     delivery["receipt"] = receipt_matches(&observed, &expected)?;
@@ -657,7 +656,7 @@ fn collection(
             port,
             &replay.tables,
         )?;
-        receipt = client.deliver_pre_reviewed(&intent)?;
+        receipt = client.deliver_pre_reviewed(intent)?;
     }
     collection_receipt(&receipt, metadata)?;
     delivery["phase"] = string("pending");
@@ -682,7 +681,7 @@ fn collection(
     let paper = readback(client, metadata)?;
     let sent_revision_hold = revision_hold(replay, row);
     if active && sent_revision_hold.is_none() && delivery["public_link"]["phase"] != "queued" {
-        delivery["public_link"] = port.queue_public_link(&link)?;
+        delivery["public_link"] = port.queue_public_link(link)?;
     } else if delivery["public_link"]["phase"] != "queued" {
         delivery["public_link"] = object([
             ("phase", string("pending")),

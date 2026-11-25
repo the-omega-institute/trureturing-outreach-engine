@@ -3,7 +3,7 @@
   "id": "mathesis-missing_prior_work_is_recorded_without_blocking_collection-1",
   "source_test": "test_pre_reviewed.PreReviewedTests.test_missing_prior_work_is_recorded_without_blocking_collection",
   "stage": "mathesis",
-  "now": 2000000000.0,
+  "now": 1999999900.0,
   "workflow": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
   "installation": {
     "repositories": {
@@ -47,7 +47,10 @@
       "enabled": false,
       "max_new_tasks_per_tick": 4,
       "backfill_result_ids": [],
-      "daily": false
+      "daily": false,
+      "auto_backfill": false,
+      "backfill_per_tick": 1,
+      "backfill_pending_limit": 16
     },
     "kinds": {
       "firstcontact": false,
@@ -207,6 +210,21 @@
     "cma": {
       "token_base_url": "https://worker.example.invalid",
       "proxy_base_url": "https://auth.example.invalid/api/v1/proxy/s/cma"
+    },
+    "independent_review": {
+      "enabled": false,
+      "max_active": 2,
+      "github": {
+        "service": "github-review-read",
+        "user_service_id": "dedicated-read-only-input-connection",
+        "read_only": true
+      },
+      "profile": {
+        "model": "gpt-6.2-sol",
+        "reasoning_effort": "high"
+      },
+      "register_author_contacts": true,
+      "max_active_per_group": 1
     }
   },
   "config": {
@@ -1150,6 +1168,10 @@
       "tag": "outreach-control"
     }
   },
+  "options": {
+    "previous": []
+  },
+  "admissions": [],
   "script": [
     {
       "adapter": "mathesis",
@@ -1211,7 +1233,11 @@
       "kwargs": {
         "force": true
       },
-      "result": true
+      "result": true,
+      "saved_snapshot": {
+        "generation": 9,
+        "digest": "2d97a7c8a3a0e08cc87665f3b4e75311d714186f5f4256ea19971ab3958948b4"
+      }
     },
     {
       "adapter": "mathesis",
@@ -1298,7 +1324,11 @@
       "kwargs": {
         "force": true
       },
-      "result": true
+      "result": true,
+      "saved_snapshot": {
+        "generation": 10,
+        "digest": "ee78427532229f1794c00304a95aa12de5cd8883f3d7a1a28e9f5d38bdd9839c"
+      }
     },
     {
       "adapter": "mathesis",
@@ -1432,7 +1462,11 @@
       "method": "save",
       "args": [],
       "kwargs": {},
-      "result": false
+      "result": false,
+      "saved_snapshot": {
+        "generation": 10,
+        "digest": "ee78427532229f1794c00304a95aa12de5cd8883f3d7a1a28e9f5d38bdd9839c"
+      }
     },
     {
       "adapter": "releases",
@@ -1487,7 +1521,11 @@
       "kwargs": {
         "force": true
       },
-      "result": true
+      "result": true,
+      "saved_snapshot": {
+        "generation": 11,
+        "digest": "8d27bf1e861efb0f7f02812f835ac353c7579f3b446401dc143bd1f889d7013f"
+      }
     },
     {
       "adapter": "mathesis",
@@ -1574,7 +1612,11 @@
       "kwargs": {
         "force": true
       },
-      "result": true
+      "result": true,
+      "saved_snapshot": {
+        "generation": 12,
+        "digest": "c78a7c03cb220da4b5bb0c47847ff5ab947af206dff6ffca9568c8ae861ac5f3"
+      }
     },
     {
       "adapter": "mathesis",
@@ -1708,7 +1750,11 @@
       "method": "save",
       "args": [],
       "kwargs": {},
-      "result": false
+      "result": false,
+      "saved_snapshot": {
+        "generation": 12,
+        "digest": "c78a7c03cb220da4b5bb0c47847ff5ab947af206dff6ffca9568c8ae861ac5f3"
+      }
     }
   ],
   "expected_final_rows": {
@@ -2142,7 +2188,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -2152,7 +2198,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -2162,7 +2208,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -2172,7 +2218,7 @@
           "state": "verified"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -2182,7 +2228,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -2192,7 +2238,7 @@
           "state": "handoff-ready"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {
             "verdict": "PASS"
           },
@@ -2437,7 +2483,7 @@
           "request_hash": "349c420a54ba2d187e01e6709360c574e6f04ea14b85f14abf840fbabfee0574",
           "revision": 11,
           "state": "verified",
-          "updated": 2000000000.0
+          "updated": 1999999900.0
         },
         {
           "data": {
@@ -2789,7 +2835,7 @@
           "request_hash": "7fb678a8949fc1cb96e07919265cf35f34673e559c9c16c9b8fe10714e7bef7f",
           "revision": 11,
           "state": "verified",
-          "updated": 2000000000.0
+          "updated": 1999999900.0
         }
       ]
     }

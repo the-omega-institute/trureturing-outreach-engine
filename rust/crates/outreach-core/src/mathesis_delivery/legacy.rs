@@ -422,7 +422,7 @@ fn step(
             port,
             &replay.tables,
         )?;
-        receipt = match client.deliver_pre_reviewed(&intent) {
+        receipt = match client.deliver_pre_reviewed(intent) {
             Ok(r) => collection_receipt(&r, metadata)?,
             Err(error) if error.status() == Some(409) => {
                 collected = readback(client, metadata)?;
@@ -452,7 +452,7 @@ fn step(
             port,
             &replay.tables,
         )?;
-        let result = client.withdraw(&intent).and_then(|response| {
+        let result = client.withdraw(intent).and_then(|response| {
             migration["withdrawal_response"] = response;
             client.status(&handle)
         });

@@ -37,6 +37,7 @@ def committed_text(root, revision, path):
     return result.stdout.decode('utf-8')
 
 
+@recording.policy_read
 def policy_text(path, *, data_root=DATA_ROOT, engine_root=ENGINE_ROOT,
                 source_revision=None, policy_revision=None, required=True, engine_path=None,
                 read_commit=committed_text):

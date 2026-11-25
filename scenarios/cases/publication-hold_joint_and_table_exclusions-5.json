@@ -1,0 +1,1995 @@
+{
+  "schema_version": 1,
+  "id": "publication-hold_joint_and_table_exclusions-5",
+  "source_test": "test_publication.PublicationTests.test_hold_joint_and_table_exclusions",
+  "stage": "publication",
+  "now": 1999999900.0,
+  "workflow": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+  "installation": {
+    "repositories": {
+      "data": "example/outreach"
+    },
+    "schema_version": 1,
+    "paused": true,
+    "max_active": 24,
+    "prompt_max_characters": 120000,
+    "kind_quota": "equal",
+    "followup_lane": true,
+    "sandbox_pool": {
+      "max_sandboxes": 4,
+      "agents_per_sandbox": 6,
+      "rotate_after_agents": 24,
+      "quota_blocked_max_agents_placed": 192,
+      "prioritize_correspondence_notes": true,
+      "groups": [
+        {
+          "name": "notes",
+          "kinds": [
+            "shortnote",
+            "mathesis",
+            "firstcontact"
+          ],
+          "max_sandboxes": 1
+        },
+        {
+          "name": "mail",
+          "kinds": [
+            "reply",
+            "research",
+            "submission",
+            "daily"
+          ],
+          "max_sandboxes": 1
+        }
+      ]
+    },
+    "pipeline": {
+      "enabled": false,
+      "max_new_tasks_per_tick": 4,
+      "backfill_result_ids": [],
+      "daily": false,
+      "auto_backfill": false,
+      "backfill_per_tick": 1,
+      "backfill_pending_limit": 16
+    },
+    "kinds": {
+      "firstcontact": false,
+      "reply": false,
+      "research": false,
+      "shortnote": false,
+      "daily": false,
+      "mathesis": false,
+      "submission": false
+    },
+    "automation": {
+      "enabled": false,
+      "automatic_mail": false,
+      "max_new_tasks_per_tick": 6,
+      "max_revisions": 3,
+      "shortnote_extra_uplift_rounds": 2,
+      "routine_academic_mail": "automatic after exact independent review and fresh mailbox checks",
+      "user_decision_mail": "ask, then preserve as user-owned draft for manual sending"
+    },
+    "agent_template": {
+      "profile": {
+        "model": "gpt-6.1-sol",
+        "reasoning_effort": "high",
+        "permissions": {
+          "services": [
+            "api-github-pat",
+            "oracle"
+          ]
+        }
+      }
+    },
+    "mailbox_adapter": "unconfigured",
+    "home_domains": [
+      "campus.example.invalid",
+      "alumni.example.invalid"
+    ],
+    "mailbox": {
+      "account": "owner@example.invalid",
+      "live_since": "2000-01-01T00:00:00Z",
+      "cross_conversation_guard": true,
+      "max_total_attachment_bytes": 26214400,
+      "service_attention_domains": [
+        "overleaf.com"
+      ],
+      "editorial_domains": [
+        "editorialmanager.com",
+        "manuscriptcentral.com",
+        "aps.org",
+        "msp.org",
+        "arxiv.org",
+        "springernature.com",
+        "iop.org",
+        "ams.org",
+        "elsevier.com",
+        "wiley.com"
+      ],
+      "team_addresses": [
+        "coauthor@example.invalid"
+      ],
+      "team_addresses_note": "Configured coauthors",
+      "acceptance_recipients": [
+        "contributor@example.invalid"
+      ]
+    },
+    "claude_loop": "local, started by the user later",
+    "publication_selection": "explicit per note; review alone never publishes",
+    "mathesis": {
+      "mode": "disabled",
+      "submission_credentials": "configured session",
+      "author_confirmation": "required by the existing Mathesis contract",
+      "base_url": "https://mathesis.example.invalid",
+      "completion": "verified durable receipt; downstream review and presentation are Mathesis responsibilities",
+      "legacy_migration_per_tick": 3,
+      "acceptance_submission": "00000000-0000-0000-0000-000000000000"
+    },
+    "github": {
+      "service": "api-github-pat",
+      "user_service_id": "00000000-0000-0000-0000-000000000000"
+    },
+    "identity": {
+      "team_authors": [
+        "Blaire Mercer",
+        "Avery Reed"
+      ],
+      "owner_labels": [
+        "owner",
+        "Avery Reed"
+      ],
+      "first_names": [
+        "Avery",
+        "Blaire"
+      ],
+      "firstcontact_signature": "Best regards,\nAvery and Blaire\nExample University; Example Research Group",
+      "firstcontact_opening_terms": [
+        "avery reed",
+        "blaire mercer",
+        "example university",
+        "example research group"
+      ],
+      "reply_affiliation_markers": [
+        "example university",
+        "example research group",
+        "omega institute"
+      ],
+      "affiliation_patterns": [
+        "example university",
+        "example research group",
+        "omega institute"
+      ],
+      "affiliation_prefixes": [
+        "EU"
+      ],
+      "author_facts": {
+        "Avery Reed": {
+          "affiliation": "Example University",
+          "email": "owner@example.invalid",
+          "orcid": "0000-0000-0000-0000",
+          "country": "Example country",
+          "google_scholar": "https://scholar.example.invalid/profile"
+        },
+        "Blaire Mercer": {
+          "affiliation": "Example Research Group",
+          "email": "coauthor@example.invalid",
+          "orcid": "0000-0000-0000-0000",
+          "country": "Example country"
+        },
+        "ai_statement": "Configured in the private data repository.",
+        "funding": "Configured in the private data repository.",
+        "competing_interests": "Configured in the private data repository.",
+        "originality": "Configured in the private data repository.",
+        "unknown_ask_once": "Configured in the private data repository.",
+        "defaults": "Configured in the private data repository.",
+        "who_are_you_answer": "Configured in the private data repository.",
+        "affiliation_note": "Configured in the private data repository.",
+        "coauthor_background_answer": "Configured in the private data repository."
+      },
+      "direct_display_decision_ref": "example-direct-display",
+      "shortnote_creators": [
+        {
+          "name": "Blaire Mercer",
+          "affiliation": "Example Research Group"
+        },
+        {
+          "name": "Avery Reed",
+          "affiliation": "Example University"
+        }
+      ],
+      "submission_scope": "independent-team"
+    },
+    "credentials": {
+      "nyx_base_url": "https://auth.example.invalid",
+      "nyx_legacy_issuer": "https://legacy-auth.example.invalid",
+      "nyx_owner": "example-owner",
+      "graph_tenant": "example-tenant",
+      "graph_client": "example-client"
+    },
+    "cma": {
+      "token_base_url": "https://worker.example.invalid",
+      "proxy_base_url": "https://auth.example.invalid/api/v1/proxy/s/cma"
+    },
+    "independent_review": {
+      "enabled": false,
+      "max_active": 2,
+      "github": {
+        "service": "github-review-read",
+        "user_service_id": "dedicated-read-only-input-connection",
+        "read_only": true
+      },
+      "profile": {
+        "model": "gpt-6.2-sol",
+        "reasoning_effort": "high"
+      },
+      "register_author_contacts": true,
+      "max_active_per_group": 1
+    }
+  },
+  "config": {
+    "paused": false,
+    "kinds": {
+      "mathesis": true,
+      "shortnote": true
+    },
+    "mathesis": {
+      "mode": "deliver"
+    }
+  },
+  "initial_rows": {
+    "control_events": {
+      "columns": [
+        "id",
+        "payload"
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "rows": [
+        {
+          "id": "31b3bc58c460644fa5b265430e3022c0b2daaabd12dc1bde623f69d28c55c296",
+          "payload": {
+            "binding": {
+              "result_hash": "1d83401cd85b63400db763282e00e7a08685768369de4ca579b366b6ed21418d",
+              "task_id": "exclude-state",
+              "task_revision": 2,
+              "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+            },
+            "evidence_ref": "test:review",
+            "reason": "Independent exact review",
+            "reviewer": "local-claude-loop",
+            "signature": "006ae45529993addae090f01e966ef1cebc130996d78a8cadfb2222a6294c66d",
+            "verdict": "PASS"
+          }
+        },
+        {
+          "id": "c0a604f8ed647a0d53517f8932125057c278e93103459bc7cb74c67e79691d2c",
+          "payload": {
+            "binding": {
+              "result_hash": "fd278d8d7baa287856ed938ef809466bcef441f93c0d8d57f81a42a3ae893640",
+              "task_id": "exclude-review",
+              "task_revision": 2,
+              "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+            },
+            "evidence_ref": "test:review",
+            "reason": "Independent exact review",
+            "reviewer": "local-claude-loop",
+            "signature": "8127550b5ac430b0dc3d976d150981e562bd4d58193ee1b10947a73f69bd069a",
+            "verdict": "PASS"
+          }
+        },
+        {
+          "id": "e66d798a641deb381e67d95ee9e292557ffe0284c5fbc18b67549abc6a295be6",
+          "payload": {
+            "binding": {
+              "result_hash": "d5cd57251fc37e635f7beb1f4dbd69fb743bfb8c67d61a96f7df063fa8ba2d34",
+              "task_id": "exclude-joint",
+              "task_revision": 2,
+              "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+            },
+            "evidence_ref": "test:review",
+            "reason": "Independent exact review",
+            "reviewer": "local-claude-loop",
+            "signature": "0150398a59c9f97773c3d0e174f9293f34fb9baf49a1b02d7f8318e4088fae30",
+            "verdict": "PASS"
+          }
+        },
+        {
+          "id": "408d6e80890e3c5ba8c43f0b88af6f8975c8588abc2a066293dddee0fca2a158",
+          "payload": {
+            "binding": {
+              "result_hash": "71887c03800080fbbe7b237c4680cb34db5f61d10c18a806eca369386ef04433",
+              "task_id": "exclude-coauthor",
+              "task_revision": 2,
+              "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+            },
+            "evidence_ref": "test:review",
+            "reason": "Independent exact review",
+            "reviewer": "local-claude-loop",
+            "signature": "e641d77dde6ba18c356f7c04aaa88a093468f8bd30435ed549c29884d409b936",
+            "verdict": "PASS"
+          }
+        },
+        {
+          "id": "6bdb20645b5d9f8c6e8f4def5660281bba122d72a470c5e65a2d8cd24159c756",
+          "payload": {
+            "binding": {
+              "result_hash": "4ba0cd279492af186bee439ec45ecfc172521e91c0037488bf26945d3444a0fd",
+              "task_id": "exclude-note-table",
+              "task_revision": 2,
+              "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+            },
+            "evidence_ref": "test:review",
+            "reason": "Independent exact review",
+            "reviewer": "local-claude-loop",
+            "signature": "53b57b99f8667ba20326af9fa3e571596bbffc5941d5bf0aa2690aa86f54940f",
+            "verdict": "PASS"
+          }
+        }
+      ]
+    },
+    "input_asset_receipts": {
+      "columns": [
+        "identity",
+        "generation"
+      ],
+      "primary_key": [
+        "identity"
+      ],
+      "rows": []
+    },
+    "pipeline_sources": {
+      "columns": [
+        "result_id",
+        "identity",
+        "payload",
+        "baseline",
+        "task_id"
+      ],
+      "primary_key": [
+        "result_id"
+      ],
+      "rows": []
+    },
+    "pipeline_state": {
+      "columns": [
+        "key",
+        "payload"
+      ],
+      "primary_key": [
+        "key"
+      ],
+      "rows": []
+    },
+    "sqlite_sequence": {
+      "columns": [
+        "name",
+        "seq"
+      ],
+      "primary_key": [
+        "name"
+      ],
+      "rows": [
+        {
+          "name": "task_events",
+          "seq": 24
+        }
+      ]
+    },
+    "task_events": {
+      "columns": [
+        "seq",
+        "id",
+        "state",
+        "revision",
+        "at",
+        "data"
+      ],
+      "primary_key": [
+        "seq"
+      ],
+      "rows": [
+        {
+          "seq": 1,
+          "id": "exclude-state",
+          "state": "queued",
+          "revision": 1,
+          "at": 1999999900.0,
+          "data": {}
+        },
+        {
+          "seq": 2,
+          "id": "exclude-state",
+          "state": "awaiting-review",
+          "revision": 2,
+          "at": 1999999900.0,
+          "data": {}
+        },
+        {
+          "seq": 3,
+          "id": "exclude-state",
+          "state": "approved",
+          "revision": 3,
+          "at": 1999999900.0,
+          "data": {
+            "review": "31b3bc58c460644fa5b265430e3022c0b2daaabd12dc1bde623f69d28c55c296"
+          }
+        },
+        {
+          "seq": 4,
+          "id": "exclude-state",
+          "state": "handoff-ready",
+          "revision": 4,
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          }
+        },
+        {
+          "seq": 5,
+          "id": "exclude-state",
+          "state": "held",
+          "revision": 5,
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          }
+        },
+        {
+          "seq": 6,
+          "id": "exclude-review",
+          "state": "queued",
+          "revision": 1,
+          "at": 1999999900.0,
+          "data": {}
+        },
+        {
+          "seq": 7,
+          "id": "exclude-review",
+          "state": "awaiting-review",
+          "revision": 2,
+          "at": 1999999900.0,
+          "data": {}
+        },
+        {
+          "seq": 8,
+          "id": "exclude-review",
+          "state": "approved",
+          "revision": 3,
+          "at": 1999999900.0,
+          "data": {
+            "review": "c0a604f8ed647a0d53517f8932125057c278e93103459bc7cb74c67e79691d2c"
+          }
+        },
+        {
+          "seq": 9,
+          "id": "exclude-review",
+          "state": "handoff-ready",
+          "revision": 4,
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          }
+        },
+        {
+          "seq": 10,
+          "id": "exclude-review",
+          "state": "handoff-ready",
+          "revision": 5,
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "HOLD"
+          }
+        },
+        {
+          "seq": 11,
+          "id": "exclude-joint",
+          "state": "queued",
+          "revision": 1,
+          "at": 1999999900.0,
+          "data": {}
+        },
+        {
+          "seq": 12,
+          "id": "exclude-joint",
+          "state": "awaiting-review",
+          "revision": 2,
+          "at": 1999999900.0,
+          "data": {}
+        },
+        {
+          "seq": 13,
+          "id": "exclude-joint",
+          "state": "approved",
+          "revision": 3,
+          "at": 1999999900.0,
+          "data": {
+            "review": "e66d798a641deb381e67d95ee9e292557ffe0284c5fbc18b67549abc6a295be6"
+          }
+        },
+        {
+          "seq": 14,
+          "id": "exclude-joint",
+          "state": "handoff-ready",
+          "revision": 4,
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          }
+        },
+        {
+          "seq": 15,
+          "id": "exclude-joint",
+          "state": "handoff-ready",
+          "revision": 5,
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          }
+        },
+        {
+          "seq": 16,
+          "id": "exclude-coauthor",
+          "state": "queued",
+          "revision": 1,
+          "at": 1999999900.0,
+          "data": {}
+        },
+        {
+          "seq": 17,
+          "id": "exclude-coauthor",
+          "state": "awaiting-review",
+          "revision": 2,
+          "at": 1999999900.0,
+          "data": {}
+        },
+        {
+          "seq": 18,
+          "id": "exclude-coauthor",
+          "state": "approved",
+          "revision": 3,
+          "at": 1999999900.0,
+          "data": {
+            "review": "408d6e80890e3c5ba8c43f0b88af6f8975c8588abc2a066293dddee0fca2a158"
+          }
+        },
+        {
+          "seq": 19,
+          "id": "exclude-coauthor",
+          "state": "handoff-ready",
+          "revision": 4,
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          }
+        },
+        {
+          "seq": 20,
+          "id": "exclude-coauthor",
+          "state": "handoff-ready",
+          "revision": 5,
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          }
+        },
+        {
+          "seq": 21,
+          "id": "exclude-note-table",
+          "state": "queued",
+          "revision": 1,
+          "at": 1999999900.0,
+          "data": {}
+        },
+        {
+          "seq": 22,
+          "id": "exclude-note-table",
+          "state": "awaiting-review",
+          "revision": 2,
+          "at": 1999999900.0,
+          "data": {}
+        },
+        {
+          "seq": 23,
+          "id": "exclude-note-table",
+          "state": "approved",
+          "revision": 3,
+          "at": 1999999900.0,
+          "data": {
+            "review": "6bdb20645b5d9f8c6e8f4def5660281bba122d72a470c5e65a2d8cd24159c756"
+          }
+        },
+        {
+          "seq": 24,
+          "id": "exclude-note-table",
+          "state": "handoff-ready",
+          "revision": 4,
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          }
+        }
+      ]
+    },
+    "task_migrations": {
+      "columns": [
+        "name",
+        "phase"
+      ],
+      "primary_key": [
+        "name"
+      ],
+      "rows": [
+        {
+          "name": "compact-task-events-v1",
+          "phase": "done"
+        }
+      ]
+    },
+    "tasks": {
+      "columns": [
+        "id",
+        "request",
+        "request_hash",
+        "owner",
+        "kind",
+        "state",
+        "revision",
+        "data",
+        "updated"
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "rows": [
+        {
+          "id": "exclude-state",
+          "request": {
+            "id": "exclude-state",
+            "inputs": {},
+            "kind": "mathesis",
+            "owner": "scholar-a",
+            "schema_version": 1,
+            "source_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          },
+          "request_hash": "19e77ca56c15d860495f557cfaa7e5856cd60256f40341f795124c2886bea26d",
+          "owner": "scholar-a",
+          "kind": "mathesis",
+          "state": "held",
+          "revision": 5,
+          "data": {
+            "result": {
+              "artifacts": [
+                {
+                  "bytes": 31,
+                  "name": "note-v1.pdf",
+                  "release_tag": "outreach-task-exclude-state",
+                  "role": "note-pdf",
+                  "sha256": "baeb93e2524b33b4b673574442684d1116379d0f525c21f276665f0b6bea805e"
+                },
+                {
+                  "bytes": 173,
+                  "name": "source-v1.zip",
+                  "release_tag": "outreach-task-exclude-state",
+                  "role": "source-archive",
+                  "sha256": "0fcd691aaa95ccc1a049162368311d98f3c66e5df7962a9e70e32683134ed58e"
+                },
+                {
+                  "bytes": 806,
+                  "name": "handoff.json",
+                  "release_tag": "outreach-task-exclude-state",
+                  "role": "handoff",
+                  "sha256": "8d8fb2ea2eb18e7e745de7a9ab991f7fe5984be4d54435f6cd07f1e10ba87776"
+                },
+                {
+                  "bytes": 88,
+                  "name": "evidence.md",
+                  "release_tag": "outreach-task-exclude-state",
+                  "role": "evidence",
+                  "sha256": "c3cabfef9edfef1bb719cdf6d265313f2939917a310426fcacc842e90d740aa1"
+                }
+              ],
+              "outcome": "completed",
+              "packet": null,
+              "report": "Checked result",
+              "schema_version": 1,
+              "task_id": "exclude-state"
+            },
+            "review": {
+              "binding": {
+                "result_hash": "1d83401cd85b63400db763282e00e7a08685768369de4ca579b366b6ed21418d",
+                "task_id": "exclude-state",
+                "task_revision": 2,
+                "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              },
+              "evidence_ref": "test:review",
+              "reason": "Independent exact review",
+              "reviewer": "local-claude-loop",
+              "signature": "006ae45529993addae090f01e966ef1cebc130996d78a8cadfb2222a6294c66d",
+              "verdict": "PASS"
+            }
+          },
+          "updated": 1999999900.0
+        },
+        {
+          "id": "exclude-review",
+          "request": {
+            "id": "exclude-review",
+            "inputs": {},
+            "kind": "mathesis",
+            "owner": "scholar-a",
+            "schema_version": 1,
+            "source_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          },
+          "request_hash": "5cc94986312c52ad2ade69b3c29995f77e2f56a1c2198f88eef525f536e6a2a4",
+          "owner": "scholar-a",
+          "kind": "mathesis",
+          "state": "handoff-ready",
+          "revision": 5,
+          "data": {
+            "result": {
+              "artifacts": [
+                {
+                  "bytes": 31,
+                  "name": "note-v1.pdf",
+                  "release_tag": "outreach-task-exclude-review",
+                  "role": "note-pdf",
+                  "sha256": "baeb93e2524b33b4b673574442684d1116379d0f525c21f276665f0b6bea805e"
+                },
+                {
+                  "bytes": 173,
+                  "name": "source-v1.zip",
+                  "release_tag": "outreach-task-exclude-review",
+                  "role": "source-archive",
+                  "sha256": "0fcd691aaa95ccc1a049162368311d98f3c66e5df7962a9e70e32683134ed58e"
+                },
+                {
+                  "bytes": 808,
+                  "name": "handoff.json",
+                  "release_tag": "outreach-task-exclude-review",
+                  "role": "handoff",
+                  "sha256": "588cb31bc556c4eb4b16ad840a9420b742110f793f5f16de57c4ee77faebae69"
+                },
+                {
+                  "bytes": 88,
+                  "name": "evidence.md",
+                  "release_tag": "outreach-task-exclude-review",
+                  "role": "evidence",
+                  "sha256": "c3cabfef9edfef1bb719cdf6d265313f2939917a310426fcacc842e90d740aa1"
+                }
+              ],
+              "outcome": "completed",
+              "packet": null,
+              "report": "Checked result",
+              "schema_version": 1,
+              "task_id": "exclude-review"
+            },
+            "review": {
+              "binding": {
+                "result_hash": "fd278d8d7baa287856ed938ef809466bcef441f93c0d8d57f81a42a3ae893640",
+                "task_id": "exclude-review",
+                "task_revision": 2,
+                "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              },
+              "evidence_ref": "test:review",
+              "reason": "Independent exact review",
+              "reviewer": "local-claude-loop",
+              "signature": "8127550b5ac430b0dc3d976d150981e562bd4d58193ee1b10947a73f69bd069a",
+              "verdict": "HOLD"
+            }
+          },
+          "updated": 1999999900.0
+        },
+        {
+          "id": "exclude-joint",
+          "request": {
+            "id": "exclude-joint",
+            "inputs": {
+              "joint_work": true
+            },
+            "kind": "mathesis",
+            "owner": "scholar-a",
+            "schema_version": 1,
+            "source_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          },
+          "request_hash": "fa87125b7d5929aca08f6f168cb73bc723320abff17a74b78048f6dce8c5aa40",
+          "owner": "scholar-a",
+          "kind": "mathesis",
+          "state": "handoff-ready",
+          "revision": 5,
+          "data": {
+            "publication_loop": {
+              "decision_hash": "cb011f88b37c60aec8694a54cf9e71dcc542a804efac8e0fde4421dbddee5a4d",
+              "decision_ref": "test:standing-decision",
+              "exclusion_inputs": "c99ac6a8bd40d4ee24b4a7e1a306417e40ff28bdbf8fd19f9960c619039eaefb",
+              "phase": "excluded",
+              "reason": "joint work needs its own publication decision",
+              "result_hash": "d5cd57251fc37e635f7beb1f4dbd69fb743bfb8c67d61a96f7df063fa8ba2d34"
+            },
+            "result": {
+              "artifacts": [
+                {
+                  "bytes": 31,
+                  "name": "note-v1.pdf",
+                  "release_tag": "outreach-task-exclude-joint",
+                  "role": "note-pdf",
+                  "sha256": "baeb93e2524b33b4b673574442684d1116379d0f525c21f276665f0b6bea805e"
+                },
+                {
+                  "bytes": 173,
+                  "name": "source-v1.zip",
+                  "release_tag": "outreach-task-exclude-joint",
+                  "role": "source-archive",
+                  "sha256": "0fcd691aaa95ccc1a049162368311d98f3c66e5df7962a9e70e32683134ed58e"
+                },
+                {
+                  "bytes": 806,
+                  "name": "handoff.json",
+                  "release_tag": "outreach-task-exclude-joint",
+                  "role": "handoff",
+                  "sha256": "79cd0d44ebbdd02583b2ce9a06b82afe1fba97b3b8e2b25f68606fb13894d6be"
+                },
+                {
+                  "bytes": 88,
+                  "name": "evidence.md",
+                  "release_tag": "outreach-task-exclude-joint",
+                  "role": "evidence",
+                  "sha256": "c3cabfef9edfef1bb719cdf6d265313f2939917a310426fcacc842e90d740aa1"
+                }
+              ],
+              "outcome": "completed",
+              "packet": null,
+              "report": "Checked result",
+              "schema_version": 1,
+              "task_id": "exclude-joint"
+            },
+            "review": {
+              "binding": {
+                "result_hash": "d5cd57251fc37e635f7beb1f4dbd69fb743bfb8c67d61a96f7df063fa8ba2d34",
+                "task_id": "exclude-joint",
+                "task_revision": 2,
+                "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              },
+              "evidence_ref": "test:review",
+              "reason": "Independent exact review",
+              "reviewer": "local-claude-loop",
+              "signature": "0150398a59c9f97773c3d0e174f9293f34fb9baf49a1b02d7f8318e4088fae30",
+              "verdict": "PASS"
+            }
+          },
+          "updated": 1999999900.0
+        },
+        {
+          "id": "exclude-coauthor",
+          "request": {
+            "id": "exclude-coauthor",
+            "inputs": {},
+            "kind": "mathesis",
+            "owner": "scholar-a",
+            "schema_version": 1,
+            "source_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          },
+          "request_hash": "712d871966e93d15aad344fcbebbe739c92c0a3dddc9abad9dbc041ccd4b8d89",
+          "owner": "scholar-a",
+          "kind": "mathesis",
+          "state": "handoff-ready",
+          "revision": 5,
+          "data": {
+            "publication_loop": {
+              "decision_hash": "cb011f88b37c60aec8694a54cf9e71dcc542a804efac8e0fde4421dbddee5a4d",
+              "decision_ref": "test:standing-decision",
+              "exclusion_inputs": "942e8be2293bc4ecc596cb3f3a1573751491ebbcd249c12e933acd3238b61da4",
+              "exclusion_note": {
+                "id": "exclude-coauthor",
+                "problem_ids": [
+                  "problem-exclude-coauthor"
+                ]
+              },
+              "phase": "excluded",
+              "reason": "joint work needs its own publication decision",
+              "result_hash": "71887c03800080fbbe7b237c4680cb34db5f61d10c18a806eca369386ef04433"
+            },
+            "result": {
+              "artifacts": [
+                {
+                  "bytes": 31,
+                  "name": "note-v1.pdf",
+                  "release_tag": "outreach-task-exclude-coauthor",
+                  "role": "note-pdf",
+                  "sha256": "baeb93e2524b33b4b673574442684d1116379d0f525c21f276665f0b6bea805e"
+                },
+                {
+                  "bytes": 173,
+                  "name": "source-v1.zip",
+                  "release_tag": "outreach-task-exclude-coauthor",
+                  "role": "source-archive",
+                  "sha256": "0fcd691aaa95ccc1a049162368311d98f3c66e5df7962a9e70e32683134ed58e"
+                },
+                {
+                  "bytes": 860,
+                  "name": "handoff.json",
+                  "release_tag": "outreach-task-exclude-coauthor",
+                  "role": "handoff",
+                  "sha256": "59b7a1efa23c677b7068ddde2fd20810e11c83b62d96f98574dcd203f79452be"
+                },
+                {
+                  "bytes": 88,
+                  "name": "evidence.md",
+                  "release_tag": "outreach-task-exclude-coauthor",
+                  "role": "evidence",
+                  "sha256": "c3cabfef9edfef1bb719cdf6d265313f2939917a310426fcacc842e90d740aa1"
+                }
+              ],
+              "outcome": "completed",
+              "packet": null,
+              "report": "Checked result",
+              "schema_version": 1,
+              "task_id": "exclude-coauthor"
+            },
+            "review": {
+              "binding": {
+                "result_hash": "71887c03800080fbbe7b237c4680cb34db5f61d10c18a806eca369386ef04433",
+                "task_id": "exclude-coauthor",
+                "task_revision": 2,
+                "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              },
+              "evidence_ref": "test:review",
+              "reason": "Independent exact review",
+              "reviewer": "local-claude-loop",
+              "signature": "e641d77dde6ba18c356f7c04aaa88a093468f8bd30435ed549c29884d409b936",
+              "verdict": "PASS"
+            }
+          },
+          "updated": 1999999900.0
+        },
+        {
+          "id": "exclude-note-table",
+          "request": {
+            "id": "exclude-note-table",
+            "inputs": {},
+            "kind": "mathesis",
+            "owner": "scholar-a",
+            "schema_version": 1,
+            "source_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          },
+          "request_hash": "9b294e410e5e6fa580129f061a65963bb9392e068a9c93fd50e10e0255f0387f",
+          "owner": "scholar-a",
+          "kind": "mathesis",
+          "state": "handoff-ready",
+          "revision": 4,
+          "data": {
+            "result": {
+              "artifacts": [
+                {
+                  "bytes": 31,
+                  "name": "note-v1.pdf",
+                  "release_tag": "outreach-task-exclude-note-table",
+                  "role": "note-pdf",
+                  "sha256": "baeb93e2524b33b4b673574442684d1116379d0f525c21f276665f0b6bea805e"
+                },
+                {
+                  "bytes": 173,
+                  "name": "source-v1.zip",
+                  "release_tag": "outreach-task-exclude-note-table",
+                  "role": "source-archive",
+                  "sha256": "0fcd691aaa95ccc1a049162368311d98f3c66e5df7962a9e70e32683134ed58e"
+                },
+                {
+                  "bytes": 816,
+                  "name": "handoff.json",
+                  "release_tag": "outreach-task-exclude-note-table",
+                  "role": "handoff",
+                  "sha256": "c89539efdf8a4d86774a6e2fbd46634d9babb521e56610fb53d2f84d35b005fa"
+                },
+                {
+                  "bytes": 88,
+                  "name": "evidence.md",
+                  "release_tag": "outreach-task-exclude-note-table",
+                  "role": "evidence",
+                  "sha256": "c3cabfef9edfef1bb719cdf6d265313f2939917a310426fcacc842e90d740aa1"
+                }
+              ],
+              "outcome": "completed",
+              "packet": null,
+              "report": "Checked result",
+              "schema_version": 1,
+              "task_id": "exclude-note-table"
+            },
+            "review": {
+              "binding": {
+                "result_hash": "4ba0cd279492af186bee439ec45ecfc172521e91c0037488bf26945d3444a0fd",
+                "task_id": "exclude-note-table",
+                "task_revision": 2,
+                "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              },
+              "evidence_ref": "test:review",
+              "reason": "Independent exact review",
+              "reviewer": "local-claude-loop",
+              "signature": "53b57b99f8667ba20326af9fa3e571596bbffc5941d5bf0aa2690aa86f54940f",
+              "verdict": "PASS"
+            }
+          },
+          "updated": 1999999900.0
+        }
+      ]
+    }
+  },
+  "initial_files": {
+    "tables/decisions.json": "eyJob2xkcyI6IFt7InRhc2tfaWQiOiAic2hvcnRub3RlLTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExIiwgImRlY2lzaW9uIjogIkhPTEQifSwgeyJub3RlX2lkIjogImV4Y2x1ZGUtbm90ZS10YWJsZSIsICJkZWNpc2lvbiI6ICJIT0xEIn1dLCAic2hvcnRfbm90ZV9wdWJsaWNhdGlvbiI6IHsiZW5hYmxlZCI6IHRydWUsICJkZWNpc2lvbl9yZWYiOiAidGVzdDpzdGFuZGluZy1kZWNpc2lvbiIsICJwdXJwb3NlIjogInB1YmxpY2F0aW9uIiwgInByb2Nlc3NpbmdfY29uc2VudCI6ICJ0ZXN0OmNvbnNlbnQiLCAibWFrZV9wdWJsaWNfYWZ0ZXJfYWNjZXB0YW5jZSI6IHRydWUsICJpbmRlcGVuZGVudF9hdXRob3JzIjogWyJBdmVyeSBSZWVkIiwgIkJsYWlyZSBNZXJjZXIiXSwgImFpX2Rpc2Nsb3N1cmUiOiB7ImxldmVsIjogImFzc2lzdGVkIiwgInN0YXRlbWVudF93aXRoX2xlYW4iOiAiSW4gcHJlcGFyaW5nIHRoaXMgbWFudXNjcmlwdCwgdGhlIGF1dGhvcnMgdXNlZCBBSSB0b29scyAoQ2hhdEdQVCBQcm8sIENvZGV4IGFuZCBDbGF1ZGUpIGZvciBsaXRlcmF0dXJlIHNlYXJjaCwgY29tcHV0YXRpb24sIGNoZWNraW5nIGFuZCBmb3JtYWwgdmVyaWZpY2F0aW9uIGluIExlYW4uIEFsbCBwcm9vZnMgY2FuIGJlIGNoZWNrZWQgYnkgaGFuZCwgYW5kIHRoZSBjb21wdXRhdGlvbnMgY2FuIGJlIHJlcHJvZHVjZWQgZnJvbSB0aGUgYWNjb21wYW55aW5nIHZlcmlmaWNhdGlvbiBwYWNrYWdlLiBUaGUgYXV0aG9ycyB0YWtlIGZ1bGwgcmVzcG9uc2liaWxpdHkgZm9yIHRoZSBjb250ZW50LiIsICJzdGF0ZW1lbnRfd2l0aG91dF9sZWFuIjogIkluIHByZXBhcmluZyB0aGlzIG1hbnVzY3JpcHQsIHRoZSBhdXRob3JzIHVzZWQgQUkgdG9vbHMgKENoYXRHUFQgUHJvLCBDb2RleCBhbmQgQ2xhdWRlKSBmb3IgbGl0ZXJhdHVyZSBzZWFyY2gsIGNvbXB1dGF0aW9uIGFuZCBjaGVja2luZy4gQWxsIHByb29mcyBjYW4gYmUgY2hlY2tlZCBieSBoYW5kLCBhbmQgdGhlIGNvbXB1dGF0aW9ucyBjYW4gYmUgcmVwcm9kdWNlZCBmcm9tIHRoZSBhY2NvbXBhbnlpbmcgdmVyaWZpY2F0aW9uIHBhY2thZ2UuIFRoZSBhdXRob3JzIHRha2UgZnVsbCByZXNwb25zaWJpbGl0eSBmb3IgdGhlIGNvbnRlbnQuIn19fQ==",
+    "tables/publications.json": "eyJzY2hlbWFfdmVyc2lvbiI6ICJyZXNlYXJjaC1wdWJsaWNhdGlvbi52MSIsICJwdWJsaWNhdGlvbnMiOiBbXSwgImNvbGxhYm9yYXRpb25zIjogW10sICJub3RlcyI6IFtdfQ==",
+    "managed/submission/author-policy.json": "ewogICJzY2hlbWFfdmVyc2lvbiI6IDEsCiAgInNvdXJjZV9yZXZpc2lvbiI6ICJhYzczNDA2MWM0MzA3NjgwMGFkMjEwYWY2MWI4MWQyNGFlNTE4MWJiIiwKICAic291cmNlX3BhdGgiOiAic2NyaXB0cy9tYWlsZmxvdy9yZWYvQUktU1RBVEVNRU5ULVRFTVBMQVRFLm1kIiwKICAiYXV0aG9yX2ZhY3RzIjogIlJlYWQgUDU2LWluZGVwZW5kZW50LWJvYXJkLmF1dGhvcl9mYWN0cyBpbiBtYW5hZ2VkL3JlcGxpZXMvd29ya2Zsb3cuanNvbi4gUHJlc2VydmUgYWN0dWFsIGF1dGhvciBhZ3JlZW1lbnRzIGFuZCBjb250cmlidXRpb25zOyBtaXNzaW5nIHBlcnNvbmFsIGZhY3RzIGFyZSBub3QgaW5mZXJyZWQgZnJvbSBhIGJ5bGluZS4iLAogICJsb2NrZWRfc3RhdGVtZW50X3dpdGhfbGVhbiI6ICJJbiBwcmVwYXJpbmcgdGhpcyBtYW51c2NyaXB0LCB0aGUgYXV0aG9ycyB1c2VkIEFJIHRvb2xzIChDaGF0R1BUIFBybywgQ29kZXggYW5kIENsYXVkZSkgZm9yIGxpdGVyYXR1cmUgc2VhcmNoLCBjb21wdXRhdGlvbiwgY2hlY2tpbmcgYW5kIGZvcm1hbCB2ZXJpZmljYXRpb24gaW4gTGVhbi4gQWxsIHByb29mcyBjYW4gYmUgY2hlY2tlZCBieSBoYW5kLCBhbmQgdGhlIGNvbXB1dGF0aW9ucyBjYW4gYmUgcmVwcm9kdWNlZCBmcm9tIHRoZSBhY2NvbXBhbnlpbmcgdmVyaWZpY2F0aW9uIHBhY2thZ2UuIFRoZSBhdXRob3JzIHRha2UgZnVsbCByZXNwb25zaWJpbGl0eSBmb3IgdGhlIGNvbnRlbnQuIiwKICAibG9ja2VkX3N0YXRlbWVudF93aXRob3V0X2xlYW4iOiAiSW4gcHJlcGFyaW5nIHRoaXMgbWFudXNjcmlwdCwgdGhlIGF1dGhvcnMgdXNlZCBBSSB0b29scyAoQ2hhdEdQVCBQcm8sIENvZGV4IGFuZCBDbGF1ZGUpIGZvciBsaXRlcmF0dXJlIHNlYXJjaCwgY29tcHV0YXRpb24gYW5kIGNoZWNraW5nLiBBbGwgcHJvb2ZzIGNhbiBiZSBjaGVja2VkIGJ5IGhhbmQsIGFuZCB0aGUgY29tcHV0YXRpb25zIGNhbiBiZSByZXByb2R1Y2VkIGZyb20gdGhlIGFjY29tcGFueWluZyB2ZXJpZmljYXRpb24gcGFja2FnZS4gVGhlIGF1dGhvcnMgdGFrZSBmdWxsIHJlc3BvbnNpYmlsaXR5IGZvciB0aGUgY29udGVudC4iLAogICJhcHBsaWNhdGlvbiI6ICJQcmVzZXJ2ZSB0aGUgMjAyNi0xMC0yOCB1c2VyLWFwcHJvdmVkIHdvcmRpbmcgZm9yIG91ciBhY3R1YWwgY29udHJpYnV0aW9uIGFuZCB2ZXJpZmljYXRpb24gc2NvcGUuIFVzZSB0aGUgTGVhbiB2YXJpYW50IG9ubHkgd2hlbiBhcHBsaWNhYmxlLiBQcmVzZXJ2ZSBjb2F1dGhvcnMnIHN1cHBsaWVkIGRlY2xhcmF0aW9ucy4gVmVyaWZ5IGN1cnJlbnQgdmVudWUgcmVxdWlyZW1lbnRzIGFuZCBhY3R1YWwgdG9vbCB1c2U7IGZsYWcgYW55IHJlcXVpcmVkIHRydXRoZnVsIGFkZGl0aW9uYWwgZGlzY2xvc3VyZSBvciBpbmNvbXBhdGlibGUgdmVudWUgcnVsZSByYXRoZXIgdGhhbiBjbGFpbWluZyBub25leGlzdGVudCBodW1hbi1vbmx5IGF1dGhvcnNoaXAuIERvIG5vdCBpbnNlcnQgbWFudXNjcmlwdCBkaXNjbG9zdXJlIGJvaWxlcnBsYXRlIGluIG9yZGluYXJ5IGFjYWRlbWljIGVtYWlscy4iCn0K"
+  },
+  "adapter_attributes": {
+    "releases": {
+      "repo": "fixture/repo",
+      "tag": "outreach-control"
+    }
+  },
+  "options": {
+    "previous": []
+  },
+  "admissions": [],
+  "script": [
+    {
+      "adapter": "boundary",
+      "method": "record",
+      "args": [
+        "exclude-joint",
+        "excluded"
+      ],
+      "kwargs": {},
+      "result": null
+    },
+    {
+      "adapter": "ledger",
+      "method": "save",
+      "args": [],
+      "kwargs": {
+        "force": false
+      },
+      "result": false,
+      "saved_snapshot": {
+        "generation": 1,
+        "digest": "b7f8916b0553fdc90abe5e4a762f527bf3381f88d73c45a14039e1a61f779b5d"
+      }
+    },
+    {
+      "adapter": "boundary",
+      "method": "source_gate",
+      "args": [
+        "exclude-coauthor"
+      ],
+      "kwargs": {},
+      "result": null
+    },
+    {
+      "adapter": "shortnote",
+      "method": "package",
+      "args": [
+        "exclude-coauthor",
+        "71887c03800080fbbe7b237c4680cb34db5f61d10c18a806eca369386ef04433"
+      ],
+      "kwargs": {},
+      "result": {
+        "metadata": {
+          "abstract": "The precise result.",
+          "creators": [
+            {
+              "name": "Avery Reed"
+            },
+            {
+              "name": "Blaire Mercer"
+            },
+            {
+              "name": "Joint Author"
+            }
+          ],
+          "evidence_url": "https://sample.example.invalid/commit/proof.lean",
+          "id": "exclude-coauthor",
+          "license": "cc-by-4.0",
+          "problem_ids": [
+            "problem-exclude-coauthor"
+          ],
+          "revision": 1,
+          "summary": "The original conjecture is proved.",
+          "title": "Proof of the conjecture",
+          "topic": "Original conjecture"
+        },
+        "source": "source-v1.zip",
+        "files": {
+          "note-v1.json": {
+            "$file": "note-v1.json",
+            "base64": "ewogICJmaWxlcyI6IHsKICAgICJub3RlLXYxLnBkZiI6ICJiYWViOTNlMjUyNGIzM2I0YjY3MzU3NDQ0MjY4NGQxMTE2Mzc5ZDBmNTI1YzIxZjI3NjY2NWYwYjZiZWE4MDVlIiwKICAgICJzb3VyY2UtdjEuemlwIjogIjBmY2Q2OTFhYWE5NWNjYzFhMDQ5MTYyMzY4MzExZDk4ZjNjNjZlNWRmNzk2MmE5ZTcwZTMyNjgzMTM0ZWQ1OGUiCiAgfSwKICAibWV0YWRhdGEiOiB7CiAgICAiYWJzdHJhY3QiOiAiVGhlIHByZWNpc2UgcmVzdWx0LiIsCiAgICAiY3JlYXRvcnMiOiBbCiAgICAgIHsKICAgICAgICAibmFtZSI6ICJBdmVyeSBSZWVkIgogICAgICB9LAogICAgICB7CiAgICAgICAgIm5hbWUiOiAiQmxhaXJlIE1lcmNlciIKICAgICAgfSwKICAgICAgewogICAgICAgICJuYW1lIjogIkpvaW50IEF1dGhvciIKICAgICAgfQogICAgXSwKICAgICJldmlkZW5jZV91cmwiOiAiaHR0cHM6Ly9zYW1wbGUuZXhhbXBsZS5pbnZhbGlkL2NvbW1pdC9wcm9vZi5sZWFuIiwKICAgICJpZCI6ICJleGNsdWRlLWNvYXV0aG9yIiwKICAgICJsaWNlbnNlIjogImNjLWJ5LTQuMCIsCiAgICAicHJvYmxlbV9pZHMiOiBbCiAgICAgICJwcm9ibGVtLWV4Y2x1ZGUtY29hdXRob3IiCiAgICBdLAogICAgInJldmlzaW9uIjogMSwKICAgICJzdW1tYXJ5IjogIlRoZSBvcmlnaW5hbCBjb25qZWN0dXJlIGlzIHByb3ZlZC4iLAogICAgInRpdGxlIjogIlByb29mIG9mIHRoZSBjb25qZWN0dXJlIiwKICAgICJ0b3BpYyI6ICJPcmlnaW5hbCBjb25qZWN0dXJlIgogIH0sCiAgInNjaGVtYV92ZXJzaW9uIjogInNob3J0LW5vdGUudjEiCn0K"
+          },
+          "note-v1.pdf": {
+            "$file": "note-v1.pdf",
+            "base64": "JVBERi0xLjQKU3ludGhldGljIGNoZWNrZWQgbm90ZQ=="
+          },
+          "source-v1.zip": {
+            "$file": "source-v1.zip",
+            "base64": "UEsDBBQAAAAAAAAAIQDnKJGaOwAAADsAAAAIAAAAbm90ZS50ZXhcZG9jdW1lbnRjbGFzc3thcnRpY2xlfVxiZWdpbntkb2N1bWVudH1Qcm9vZi5cZW5ke2RvY3VtZW50fVBLAQIUAxQAAAAAAAAAIQDnKJGaOwAAADsAAAAIAAAAAAAAAAAAAACAAQAAAABub3RlLnRleFBLBQYAAAAAAQABADYAAABhAAAAAAA="
+          }
+        }
+      }
+    },
+    {
+      "adapter": "boundary",
+      "method": "record",
+      "args": [
+        "exclude-coauthor",
+        "excluded"
+      ],
+      "kwargs": {},
+      "result": null
+    },
+    {
+      "adapter": "ledger",
+      "method": "save",
+      "args": [],
+      "kwargs": {
+        "force": false
+      },
+      "result": false,
+      "saved_snapshot": {
+        "generation": 1,
+        "digest": "b7f8916b0553fdc90abe5e4a762f527bf3381f88d73c45a14039e1a61f779b5d"
+      }
+    },
+    {
+      "adapter": "boundary",
+      "method": "record",
+      "args": [
+        "exclude-note-table",
+        "excluded"
+      ],
+      "kwargs": {},
+      "result": null
+    },
+    {
+      "adapter": "ledger",
+      "method": "save",
+      "args": [],
+      "kwargs": {
+        "force": false
+      },
+      "result": false,
+      "saved_snapshot": {
+        "generation": 1,
+        "digest": "b7f8916b0553fdc90abe5e4a762f527bf3381f88d73c45a14039e1a61f779b5d"
+      }
+    }
+  ],
+  "expected_final_rows": {
+    "control_events": {
+      "columns": [
+        "id",
+        "payload"
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "rows": [
+        {
+          "id": "31b3bc58c460644fa5b265430e3022c0b2daaabd12dc1bde623f69d28c55c296",
+          "payload": {
+            "binding": {
+              "result_hash": "1d83401cd85b63400db763282e00e7a08685768369de4ca579b366b6ed21418d",
+              "task_id": "exclude-state",
+              "task_revision": 2,
+              "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+            },
+            "evidence_ref": "test:review",
+            "reason": "Independent exact review",
+            "reviewer": "local-claude-loop",
+            "signature": "006ae45529993addae090f01e966ef1cebc130996d78a8cadfb2222a6294c66d",
+            "verdict": "PASS"
+          }
+        },
+        {
+          "id": "408d6e80890e3c5ba8c43f0b88af6f8975c8588abc2a066293dddee0fca2a158",
+          "payload": {
+            "binding": {
+              "result_hash": "71887c03800080fbbe7b237c4680cb34db5f61d10c18a806eca369386ef04433",
+              "task_id": "exclude-coauthor",
+              "task_revision": 2,
+              "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+            },
+            "evidence_ref": "test:review",
+            "reason": "Independent exact review",
+            "reviewer": "local-claude-loop",
+            "signature": "e641d77dde6ba18c356f7c04aaa88a093468f8bd30435ed549c29884d409b936",
+            "verdict": "PASS"
+          }
+        },
+        {
+          "id": "6bdb20645b5d9f8c6e8f4def5660281bba122d72a470c5e65a2d8cd24159c756",
+          "payload": {
+            "binding": {
+              "result_hash": "4ba0cd279492af186bee439ec45ecfc172521e91c0037488bf26945d3444a0fd",
+              "task_id": "exclude-note-table",
+              "task_revision": 2,
+              "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+            },
+            "evidence_ref": "test:review",
+            "reason": "Independent exact review",
+            "reviewer": "local-claude-loop",
+            "signature": "53b57b99f8667ba20326af9fa3e571596bbffc5941d5bf0aa2690aa86f54940f",
+            "verdict": "PASS"
+          }
+        },
+        {
+          "id": "c0a604f8ed647a0d53517f8932125057c278e93103459bc7cb74c67e79691d2c",
+          "payload": {
+            "binding": {
+              "result_hash": "fd278d8d7baa287856ed938ef809466bcef441f93c0d8d57f81a42a3ae893640",
+              "task_id": "exclude-review",
+              "task_revision": 2,
+              "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+            },
+            "evidence_ref": "test:review",
+            "reason": "Independent exact review",
+            "reviewer": "local-claude-loop",
+            "signature": "8127550b5ac430b0dc3d976d150981e562bd4d58193ee1b10947a73f69bd069a",
+            "verdict": "PASS"
+          }
+        },
+        {
+          "id": "e66d798a641deb381e67d95ee9e292557ffe0284c5fbc18b67549abc6a295be6",
+          "payload": {
+            "binding": {
+              "result_hash": "d5cd57251fc37e635f7beb1f4dbd69fb743bfb8c67d61a96f7df063fa8ba2d34",
+              "task_id": "exclude-joint",
+              "task_revision": 2,
+              "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+            },
+            "evidence_ref": "test:review",
+            "reason": "Independent exact review",
+            "reviewer": "local-claude-loop",
+            "signature": "0150398a59c9f97773c3d0e174f9293f34fb9baf49a1b02d7f8318e4088fae30",
+            "verdict": "PASS"
+          }
+        }
+      ]
+    },
+    "input_asset_receipts": {
+      "columns": [
+        "identity",
+        "generation"
+      ],
+      "primary_key": [
+        "identity"
+      ],
+      "rows": []
+    },
+    "pipeline_sources": {
+      "columns": [
+        "result_id",
+        "identity",
+        "payload",
+        "baseline",
+        "task_id"
+      ],
+      "primary_key": [
+        "result_id"
+      ],
+      "rows": []
+    },
+    "pipeline_state": {
+      "columns": [
+        "key",
+        "payload"
+      ],
+      "primary_key": [
+        "key"
+      ],
+      "rows": []
+    },
+    "sqlite_sequence": {
+      "columns": [
+        "name",
+        "seq"
+      ],
+      "primary_key": [
+        "name"
+      ],
+      "rows": [
+        {
+          "name": "task_events",
+          "seq": 27
+        }
+      ]
+    },
+    "task_events": {
+      "columns": [
+        "seq",
+        "id",
+        "state",
+        "revision",
+        "at",
+        "data"
+      ],
+      "primary_key": [
+        "seq"
+      ],
+      "rows": [
+        {
+          "at": 1999999900.0,
+          "data": {},
+          "id": "exclude-state",
+          "revision": 1,
+          "seq": 1,
+          "state": "queued"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {},
+          "id": "exclude-state",
+          "revision": 2,
+          "seq": 2,
+          "state": "awaiting-review"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "review": "31b3bc58c460644fa5b265430e3022c0b2daaabd12dc1bde623f69d28c55c296"
+          },
+          "id": "exclude-state",
+          "revision": 3,
+          "seq": 3,
+          "state": "approved"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "exclude-state",
+          "revision": 4,
+          "seq": 4,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "exclude-state",
+          "revision": 5,
+          "seq": 5,
+          "state": "held"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {},
+          "id": "exclude-review",
+          "revision": 1,
+          "seq": 6,
+          "state": "queued"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {},
+          "id": "exclude-review",
+          "revision": 2,
+          "seq": 7,
+          "state": "awaiting-review"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "review": "c0a604f8ed647a0d53517f8932125057c278e93103459bc7cb74c67e79691d2c"
+          },
+          "id": "exclude-review",
+          "revision": 3,
+          "seq": 8,
+          "state": "approved"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "exclude-review",
+          "revision": 4,
+          "seq": 9,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "HOLD"
+          },
+          "id": "exclude-review",
+          "revision": 5,
+          "seq": 10,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {},
+          "id": "exclude-joint",
+          "revision": 1,
+          "seq": 11,
+          "state": "queued"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {},
+          "id": "exclude-joint",
+          "revision": 2,
+          "seq": 12,
+          "state": "awaiting-review"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "review": "e66d798a641deb381e67d95ee9e292557ffe0284c5fbc18b67549abc6a295be6"
+          },
+          "id": "exclude-joint",
+          "revision": 3,
+          "seq": 13,
+          "state": "approved"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "exclude-joint",
+          "revision": 4,
+          "seq": 14,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "exclude-joint",
+          "revision": 5,
+          "seq": 15,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {},
+          "id": "exclude-coauthor",
+          "revision": 1,
+          "seq": 16,
+          "state": "queued"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {},
+          "id": "exclude-coauthor",
+          "revision": 2,
+          "seq": 17,
+          "state": "awaiting-review"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "review": "408d6e80890e3c5ba8c43f0b88af6f8975c8588abc2a066293dddee0fca2a158"
+          },
+          "id": "exclude-coauthor",
+          "revision": 3,
+          "seq": 18,
+          "state": "approved"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "exclude-coauthor",
+          "revision": 4,
+          "seq": 19,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "exclude-coauthor",
+          "revision": 5,
+          "seq": 20,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {},
+          "id": "exclude-note-table",
+          "revision": 1,
+          "seq": 21,
+          "state": "queued"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {},
+          "id": "exclude-note-table",
+          "revision": 2,
+          "seq": 22,
+          "state": "awaiting-review"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "review": "6bdb20645b5d9f8c6e8f4def5660281bba122d72a470c5e65a2d8cd24159c756"
+          },
+          "id": "exclude-note-table",
+          "revision": 3,
+          "seq": 23,
+          "state": "approved"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "exclude-note-table",
+          "revision": 4,
+          "seq": 24,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "exclude-joint",
+          "revision": 6,
+          "seq": 25,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "exclude-coauthor",
+          "revision": 6,
+          "seq": 26,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "exclude-note-table",
+          "revision": 5,
+          "seq": 27,
+          "state": "handoff-ready"
+        }
+      ]
+    },
+    "task_migrations": {
+      "columns": [
+        "name",
+        "phase"
+      ],
+      "primary_key": [
+        "name"
+      ],
+      "rows": [
+        {
+          "name": "compact-task-events-v1",
+          "phase": "done"
+        }
+      ]
+    },
+    "tasks": {
+      "columns": [
+        "id",
+        "request",
+        "request_hash",
+        "owner",
+        "kind",
+        "state",
+        "revision",
+        "data",
+        "updated"
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "rows": [
+        {
+          "data": {
+            "publication_loop": {
+              "decision_hash": "cb011f88b37c60aec8694a54cf9e71dcc542a804efac8e0fde4421dbddee5a4d",
+              "decision_ref": "test:standing-decision",
+              "exclusion_inputs": "62bacd833f6f0db0381cae2a9c36448d781a3a867c56493ab847470d253e5c2e",
+              "exclusion_note": {
+                "id": "exclude-coauthor",
+                "problem_ids": [
+                  "problem-exclude-coauthor"
+                ]
+              },
+              "phase": "excluded",
+              "reason": "joint work needs its own publication decision",
+              "result_hash": "71887c03800080fbbe7b237c4680cb34db5f61d10c18a806eca369386ef04433"
+            },
+            "result": {
+              "artifacts": [
+                {
+                  "bytes": 31,
+                  "name": "note-v1.pdf",
+                  "release_tag": "outreach-task-exclude-coauthor",
+                  "role": "note-pdf",
+                  "sha256": "baeb93e2524b33b4b673574442684d1116379d0f525c21f276665f0b6bea805e"
+                },
+                {
+                  "bytes": 173,
+                  "name": "source-v1.zip",
+                  "release_tag": "outreach-task-exclude-coauthor",
+                  "role": "source-archive",
+                  "sha256": "0fcd691aaa95ccc1a049162368311d98f3c66e5df7962a9e70e32683134ed58e"
+                },
+                {
+                  "bytes": 860,
+                  "name": "handoff.json",
+                  "release_tag": "outreach-task-exclude-coauthor",
+                  "role": "handoff",
+                  "sha256": "59b7a1efa23c677b7068ddde2fd20810e11c83b62d96f98574dcd203f79452be"
+                },
+                {
+                  "bytes": 88,
+                  "name": "evidence.md",
+                  "release_tag": "outreach-task-exclude-coauthor",
+                  "role": "evidence",
+                  "sha256": "c3cabfef9edfef1bb719cdf6d265313f2939917a310426fcacc842e90d740aa1"
+                }
+              ],
+              "outcome": "completed",
+              "packet": null,
+              "report": "Checked result",
+              "schema_version": 1,
+              "task_id": "exclude-coauthor"
+            },
+            "review": {
+              "binding": {
+                "result_hash": "71887c03800080fbbe7b237c4680cb34db5f61d10c18a806eca369386ef04433",
+                "task_id": "exclude-coauthor",
+                "task_revision": 2,
+                "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              },
+              "evidence_ref": "test:review",
+              "reason": "Independent exact review",
+              "reviewer": "local-claude-loop",
+              "signature": "e641d77dde6ba18c356f7c04aaa88a093468f8bd30435ed549c29884d409b936",
+              "verdict": "PASS"
+            }
+          },
+          "id": "exclude-coauthor",
+          "kind": "mathesis",
+          "owner": "scholar-a",
+          "request": {
+            "id": "exclude-coauthor",
+            "inputs": {},
+            "kind": "mathesis",
+            "owner": "scholar-a",
+            "schema_version": 1,
+            "source_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          },
+          "request_hash": "712d871966e93d15aad344fcbebbe739c92c0a3dddc9abad9dbc041ccd4b8d89",
+          "revision": 6,
+          "state": "handoff-ready",
+          "updated": 1999999900.0
+        },
+        {
+          "data": {
+            "publication_loop": {
+              "decision_hash": "cb011f88b37c60aec8694a54cf9e71dcc542a804efac8e0fde4421dbddee5a4d",
+              "decision_ref": "test:standing-decision",
+              "exclusion_inputs": "1273f152ccf31fd7d5bbb1467fd1825621f54a43e98ef97c448f88d8618eabca",
+              "phase": "excluded",
+              "reason": "joint work needs its own publication decision",
+              "result_hash": "d5cd57251fc37e635f7beb1f4dbd69fb743bfb8c67d61a96f7df063fa8ba2d34"
+            },
+            "result": {
+              "artifacts": [
+                {
+                  "bytes": 31,
+                  "name": "note-v1.pdf",
+                  "release_tag": "outreach-task-exclude-joint",
+                  "role": "note-pdf",
+                  "sha256": "baeb93e2524b33b4b673574442684d1116379d0f525c21f276665f0b6bea805e"
+                },
+                {
+                  "bytes": 173,
+                  "name": "source-v1.zip",
+                  "release_tag": "outreach-task-exclude-joint",
+                  "role": "source-archive",
+                  "sha256": "0fcd691aaa95ccc1a049162368311d98f3c66e5df7962a9e70e32683134ed58e"
+                },
+                {
+                  "bytes": 806,
+                  "name": "handoff.json",
+                  "release_tag": "outreach-task-exclude-joint",
+                  "role": "handoff",
+                  "sha256": "79cd0d44ebbdd02583b2ce9a06b82afe1fba97b3b8e2b25f68606fb13894d6be"
+                },
+                {
+                  "bytes": 88,
+                  "name": "evidence.md",
+                  "release_tag": "outreach-task-exclude-joint",
+                  "role": "evidence",
+                  "sha256": "c3cabfef9edfef1bb719cdf6d265313f2939917a310426fcacc842e90d740aa1"
+                }
+              ],
+              "outcome": "completed",
+              "packet": null,
+              "report": "Checked result",
+              "schema_version": 1,
+              "task_id": "exclude-joint"
+            },
+            "review": {
+              "binding": {
+                "result_hash": "d5cd57251fc37e635f7beb1f4dbd69fb743bfb8c67d61a96f7df063fa8ba2d34",
+                "task_id": "exclude-joint",
+                "task_revision": 2,
+                "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              },
+              "evidence_ref": "test:review",
+              "reason": "Independent exact review",
+              "reviewer": "local-claude-loop",
+              "signature": "0150398a59c9f97773c3d0e174f9293f34fb9baf49a1b02d7f8318e4088fae30",
+              "verdict": "PASS"
+            }
+          },
+          "id": "exclude-joint",
+          "kind": "mathesis",
+          "owner": "scholar-a",
+          "request": {
+            "id": "exclude-joint",
+            "inputs": {
+              "joint_work": true
+            },
+            "kind": "mathesis",
+            "owner": "scholar-a",
+            "schema_version": 1,
+            "source_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          },
+          "request_hash": "fa87125b7d5929aca08f6f168cb73bc723320abff17a74b78048f6dce8c5aa40",
+          "revision": 6,
+          "state": "handoff-ready",
+          "updated": 1999999900.0
+        },
+        {
+          "data": {
+            "publication_loop": {
+              "decision_hash": "cb011f88b37c60aec8694a54cf9e71dcc542a804efac8e0fde4421dbddee5a4d",
+              "decision_ref": "test:standing-decision",
+              "exclusion_inputs": "6eee494ae7fcc15a7c599641425f724a5192d6059efeeb4bef22ebbabeba8c6f",
+              "phase": "excluded",
+              "reason": "held in tables/decisions.json",
+              "result_hash": "4ba0cd279492af186bee439ec45ecfc172521e91c0037488bf26945d3444a0fd"
+            },
+            "result": {
+              "artifacts": [
+                {
+                  "bytes": 31,
+                  "name": "note-v1.pdf",
+                  "release_tag": "outreach-task-exclude-note-table",
+                  "role": "note-pdf",
+                  "sha256": "baeb93e2524b33b4b673574442684d1116379d0f525c21f276665f0b6bea805e"
+                },
+                {
+                  "bytes": 173,
+                  "name": "source-v1.zip",
+                  "release_tag": "outreach-task-exclude-note-table",
+                  "role": "source-archive",
+                  "sha256": "0fcd691aaa95ccc1a049162368311d98f3c66e5df7962a9e70e32683134ed58e"
+                },
+                {
+                  "bytes": 816,
+                  "name": "handoff.json",
+                  "release_tag": "outreach-task-exclude-note-table",
+                  "role": "handoff",
+                  "sha256": "c89539efdf8a4d86774a6e2fbd46634d9babb521e56610fb53d2f84d35b005fa"
+                },
+                {
+                  "bytes": 88,
+                  "name": "evidence.md",
+                  "release_tag": "outreach-task-exclude-note-table",
+                  "role": "evidence",
+                  "sha256": "c3cabfef9edfef1bb719cdf6d265313f2939917a310426fcacc842e90d740aa1"
+                }
+              ],
+              "outcome": "completed",
+              "packet": null,
+              "report": "Checked result",
+              "schema_version": 1,
+              "task_id": "exclude-note-table"
+            },
+            "review": {
+              "binding": {
+                "result_hash": "4ba0cd279492af186bee439ec45ecfc172521e91c0037488bf26945d3444a0fd",
+                "task_id": "exclude-note-table",
+                "task_revision": 2,
+                "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              },
+              "evidence_ref": "test:review",
+              "reason": "Independent exact review",
+              "reviewer": "local-claude-loop",
+              "signature": "53b57b99f8667ba20326af9fa3e571596bbffc5941d5bf0aa2690aa86f54940f",
+              "verdict": "PASS"
+            }
+          },
+          "id": "exclude-note-table",
+          "kind": "mathesis",
+          "owner": "scholar-a",
+          "request": {
+            "id": "exclude-note-table",
+            "inputs": {},
+            "kind": "mathesis",
+            "owner": "scholar-a",
+            "schema_version": 1,
+            "source_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          },
+          "request_hash": "9b294e410e5e6fa580129f061a65963bb9392e068a9c93fd50e10e0255f0387f",
+          "revision": 5,
+          "state": "handoff-ready",
+          "updated": 1999999900.0
+        },
+        {
+          "data": {
+            "result": {
+              "artifacts": [
+                {
+                  "bytes": 31,
+                  "name": "note-v1.pdf",
+                  "release_tag": "outreach-task-exclude-review",
+                  "role": "note-pdf",
+                  "sha256": "baeb93e2524b33b4b673574442684d1116379d0f525c21f276665f0b6bea805e"
+                },
+                {
+                  "bytes": 173,
+                  "name": "source-v1.zip",
+                  "release_tag": "outreach-task-exclude-review",
+                  "role": "source-archive",
+                  "sha256": "0fcd691aaa95ccc1a049162368311d98f3c66e5df7962a9e70e32683134ed58e"
+                },
+                {
+                  "bytes": 808,
+                  "name": "handoff.json",
+                  "release_tag": "outreach-task-exclude-review",
+                  "role": "handoff",
+                  "sha256": "588cb31bc556c4eb4b16ad840a9420b742110f793f5f16de57c4ee77faebae69"
+                },
+                {
+                  "bytes": 88,
+                  "name": "evidence.md",
+                  "release_tag": "outreach-task-exclude-review",
+                  "role": "evidence",
+                  "sha256": "c3cabfef9edfef1bb719cdf6d265313f2939917a310426fcacc842e90d740aa1"
+                }
+              ],
+              "outcome": "completed",
+              "packet": null,
+              "report": "Checked result",
+              "schema_version": 1,
+              "task_id": "exclude-review"
+            },
+            "review": {
+              "binding": {
+                "result_hash": "fd278d8d7baa287856ed938ef809466bcef441f93c0d8d57f81a42a3ae893640",
+                "task_id": "exclude-review",
+                "task_revision": 2,
+                "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              },
+              "evidence_ref": "test:review",
+              "reason": "Independent exact review",
+              "reviewer": "local-claude-loop",
+              "signature": "8127550b5ac430b0dc3d976d150981e562bd4d58193ee1b10947a73f69bd069a",
+              "verdict": "HOLD"
+            }
+          },
+          "id": "exclude-review",
+          "kind": "mathesis",
+          "owner": "scholar-a",
+          "request": {
+            "id": "exclude-review",
+            "inputs": {},
+            "kind": "mathesis",
+            "owner": "scholar-a",
+            "schema_version": 1,
+            "source_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          },
+          "request_hash": "5cc94986312c52ad2ade69b3c29995f77e2f56a1c2198f88eef525f536e6a2a4",
+          "revision": 5,
+          "state": "handoff-ready",
+          "updated": 1999999900.0
+        },
+        {
+          "data": {
+            "result": {
+              "artifacts": [
+                {
+                  "bytes": 31,
+                  "name": "note-v1.pdf",
+                  "release_tag": "outreach-task-exclude-state",
+                  "role": "note-pdf",
+                  "sha256": "baeb93e2524b33b4b673574442684d1116379d0f525c21f276665f0b6bea805e"
+                },
+                {
+                  "bytes": 173,
+                  "name": "source-v1.zip",
+                  "release_tag": "outreach-task-exclude-state",
+                  "role": "source-archive",
+                  "sha256": "0fcd691aaa95ccc1a049162368311d98f3c66e5df7962a9e70e32683134ed58e"
+                },
+                {
+                  "bytes": 806,
+                  "name": "handoff.json",
+                  "release_tag": "outreach-task-exclude-state",
+                  "role": "handoff",
+                  "sha256": "8d8fb2ea2eb18e7e745de7a9ab991f7fe5984be4d54435f6cd07f1e10ba87776"
+                },
+                {
+                  "bytes": 88,
+                  "name": "evidence.md",
+                  "release_tag": "outreach-task-exclude-state",
+                  "role": "evidence",
+                  "sha256": "c3cabfef9edfef1bb719cdf6d265313f2939917a310426fcacc842e90d740aa1"
+                }
+              ],
+              "outcome": "completed",
+              "packet": null,
+              "report": "Checked result",
+              "schema_version": 1,
+              "task_id": "exclude-state"
+            },
+            "review": {
+              "binding": {
+                "result_hash": "1d83401cd85b63400db763282e00e7a08685768369de4ca579b366b6ed21418d",
+                "task_id": "exclude-state",
+                "task_revision": 2,
+                "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              },
+              "evidence_ref": "test:review",
+              "reason": "Independent exact review",
+              "reviewer": "local-claude-loop",
+              "signature": "006ae45529993addae090f01e966ef1cebc130996d78a8cadfb2222a6294c66d",
+              "verdict": "PASS"
+            }
+          },
+          "id": "exclude-state",
+          "kind": "mathesis",
+          "owner": "scholar-a",
+          "request": {
+            "id": "exclude-state",
+            "inputs": {},
+            "kind": "mathesis",
+            "owner": "scholar-a",
+            "schema_version": 1,
+            "source_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          },
+          "request_hash": "19e77ca56c15d860495f557cfaa7e5856cd60256f40341f795124c2886bea26d",
+          "revision": 5,
+          "state": "held",
+          "updated": 1999999900.0
+        }
+      ]
+    }
+  },
+  "expected_final_files": {
+    "tables/decisions.json": "eyJob2xkcyI6IFt7InRhc2tfaWQiOiAic2hvcnRub3RlLTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExIiwgImRlY2lzaW9uIjogIkhPTEQifSwgeyJub3RlX2lkIjogImV4Y2x1ZGUtbm90ZS10YWJsZSIsICJkZWNpc2lvbiI6ICJIT0xEIn1dLCAic2hvcnRfbm90ZV9wdWJsaWNhdGlvbiI6IHsiZW5hYmxlZCI6IHRydWUsICJkZWNpc2lvbl9yZWYiOiAidGVzdDpzdGFuZGluZy1kZWNpc2lvbiIsICJwdXJwb3NlIjogInB1YmxpY2F0aW9uIiwgInByb2Nlc3NpbmdfY29uc2VudCI6ICJ0ZXN0OmNvbnNlbnQiLCAibWFrZV9wdWJsaWNfYWZ0ZXJfYWNjZXB0YW5jZSI6IHRydWUsICJpbmRlcGVuZGVudF9hdXRob3JzIjogWyJBdmVyeSBSZWVkIiwgIkJsYWlyZSBNZXJjZXIiXSwgImFpX2Rpc2Nsb3N1cmUiOiB7ImxldmVsIjogImFzc2lzdGVkIiwgInN0YXRlbWVudF93aXRoX2xlYW4iOiAiSW4gcHJlcGFyaW5nIHRoaXMgbWFudXNjcmlwdCwgdGhlIGF1dGhvcnMgdXNlZCBBSSB0b29scyAoQ2hhdEdQVCBQcm8sIENvZGV4IGFuZCBDbGF1ZGUpIGZvciBsaXRlcmF0dXJlIHNlYXJjaCwgY29tcHV0YXRpb24sIGNoZWNraW5nIGFuZCBmb3JtYWwgdmVyaWZpY2F0aW9uIGluIExlYW4uIEFsbCBwcm9vZnMgY2FuIGJlIGNoZWNrZWQgYnkgaGFuZCwgYW5kIHRoZSBjb21wdXRhdGlvbnMgY2FuIGJlIHJlcHJvZHVjZWQgZnJvbSB0aGUgYWNjb21wYW55aW5nIHZlcmlmaWNhdGlvbiBwYWNrYWdlLiBUaGUgYXV0aG9ycyB0YWtlIGZ1bGwgcmVzcG9uc2liaWxpdHkgZm9yIHRoZSBjb250ZW50LiIsICJzdGF0ZW1lbnRfd2l0aG91dF9sZWFuIjogIkluIHByZXBhcmluZyB0aGlzIG1hbnVzY3JpcHQsIHRoZSBhdXRob3JzIHVzZWQgQUkgdG9vbHMgKENoYXRHUFQgUHJvLCBDb2RleCBhbmQgQ2xhdWRlKSBmb3IgbGl0ZXJhdHVyZSBzZWFyY2gsIGNvbXB1dGF0aW9uIGFuZCBjaGVja2luZy4gQWxsIHByb29mcyBjYW4gYmUgY2hlY2tlZCBieSBoYW5kLCBhbmQgdGhlIGNvbXB1dGF0aW9ucyBjYW4gYmUgcmVwcm9kdWNlZCBmcm9tIHRoZSBhY2NvbXBhbnlpbmcgdmVyaWZpY2F0aW9uIHBhY2thZ2UuIFRoZSBhdXRob3JzIHRha2UgZnVsbCByZXNwb25zaWJpbGl0eSBmb3IgdGhlIGNvbnRlbnQuIn19fQ==",
+    "tables/publications.json": "eyJzY2hlbWFfdmVyc2lvbiI6ICJyZXNlYXJjaC1wdWJsaWNhdGlvbi52MSIsICJwdWJsaWNhdGlvbnMiOiBbXSwgImNvbGxhYm9yYXRpb25zIjogW10sICJub3RlcyI6IFtdfQ==",
+    "managed/submission/author-policy.json": "ewogICJzY2hlbWFfdmVyc2lvbiI6IDEsCiAgInNvdXJjZV9yZXZpc2lvbiI6ICJhYzczNDA2MWM0MzA3NjgwMGFkMjEwYWY2MWI4MWQyNGFlNTE4MWJiIiwKICAic291cmNlX3BhdGgiOiAic2NyaXB0cy9tYWlsZmxvdy9yZWYvQUktU1RBVEVNRU5ULVRFTVBMQVRFLm1kIiwKICAiYXV0aG9yX2ZhY3RzIjogIlJlYWQgUDU2LWluZGVwZW5kZW50LWJvYXJkLmF1dGhvcl9mYWN0cyBpbiBtYW5hZ2VkL3JlcGxpZXMvd29ya2Zsb3cuanNvbi4gUHJlc2VydmUgYWN0dWFsIGF1dGhvciBhZ3JlZW1lbnRzIGFuZCBjb250cmlidXRpb25zOyBtaXNzaW5nIHBlcnNvbmFsIGZhY3RzIGFyZSBub3QgaW5mZXJyZWQgZnJvbSBhIGJ5bGluZS4iLAogICJsb2NrZWRfc3RhdGVtZW50X3dpdGhfbGVhbiI6ICJJbiBwcmVwYXJpbmcgdGhpcyBtYW51c2NyaXB0LCB0aGUgYXV0aG9ycyB1c2VkIEFJIHRvb2xzIChDaGF0R1BUIFBybywgQ29kZXggYW5kIENsYXVkZSkgZm9yIGxpdGVyYXR1cmUgc2VhcmNoLCBjb21wdXRhdGlvbiwgY2hlY2tpbmcgYW5kIGZvcm1hbCB2ZXJpZmljYXRpb24gaW4gTGVhbi4gQWxsIHByb29mcyBjYW4gYmUgY2hlY2tlZCBieSBoYW5kLCBhbmQgdGhlIGNvbXB1dGF0aW9ucyBjYW4gYmUgcmVwcm9kdWNlZCBmcm9tIHRoZSBhY2NvbXBhbnlpbmcgdmVyaWZpY2F0aW9uIHBhY2thZ2UuIFRoZSBhdXRob3JzIHRha2UgZnVsbCByZXNwb25zaWJpbGl0eSBmb3IgdGhlIGNvbnRlbnQuIiwKICAibG9ja2VkX3N0YXRlbWVudF93aXRob3V0X2xlYW4iOiAiSW4gcHJlcGFyaW5nIHRoaXMgbWFudXNjcmlwdCwgdGhlIGF1dGhvcnMgdXNlZCBBSSB0b29scyAoQ2hhdEdQVCBQcm8sIENvZGV4IGFuZCBDbGF1ZGUpIGZvciBsaXRlcmF0dXJlIHNlYXJjaCwgY29tcHV0YXRpb24gYW5kIGNoZWNraW5nLiBBbGwgcHJvb2ZzIGNhbiBiZSBjaGVja2VkIGJ5IGhhbmQsIGFuZCB0aGUgY29tcHV0YXRpb25zIGNhbiBiZSByZXByb2R1Y2VkIGZyb20gdGhlIGFjY29tcGFueWluZyB2ZXJpZmljYXRpb24gcGFja2FnZS4gVGhlIGF1dGhvcnMgdGFrZSBmdWxsIHJlc3BvbnNpYmlsaXR5IGZvciB0aGUgY29udGVudC4iLAogICJhcHBsaWNhdGlvbiI6ICJQcmVzZXJ2ZSB0aGUgMjAyNi0xMC0yOCB1c2VyLWFwcHJvdmVkIHdvcmRpbmcgZm9yIG91ciBhY3R1YWwgY29udHJpYnV0aW9uIGFuZCB2ZXJpZmljYXRpb24gc2NvcGUuIFVzZSB0aGUgTGVhbiB2YXJpYW50IG9ubHkgd2hlbiBhcHBsaWNhYmxlLiBQcmVzZXJ2ZSBjb2F1dGhvcnMnIHN1cHBsaWVkIGRlY2xhcmF0aW9ucy4gVmVyaWZ5IGN1cnJlbnQgdmVudWUgcmVxdWlyZW1lbnRzIGFuZCBhY3R1YWwgdG9vbCB1c2U7IGZsYWcgYW55IHJlcXVpcmVkIHRydXRoZnVsIGFkZGl0aW9uYWwgZGlzY2xvc3VyZSBvciBpbmNvbXBhdGlibGUgdmVudWUgcnVsZSByYXRoZXIgdGhhbiBjbGFpbWluZyBub25leGlzdGVudCBodW1hbi1vbmx5IGF1dGhvcnNoaXAuIERvIG5vdCBpbnNlcnQgbWFudXNjcmlwdCBkaXNjbG9zdXJlIGJvaWxlcnBsYXRlIGluIG9yZGluYXJ5IGFjYWRlbWljIGVtYWlscy4iCn0K"
+  },
+  "expected_writes": []
+}

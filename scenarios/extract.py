@@ -58,23 +58,22 @@ SELECTION = {
  'each_observed_message_gets_a_reason_when_latest_has_a_sent_answer',
  'hello_stranger_stays_in_attention'],
  ('test_sent_events', 'SentEventsTests', 'sent'): [
- 'owner_draft_sent_uses_exact_sent_receipt_and_reviewed_headline',
- 'operator_created_draft_sent_without_ledger_task',
- 'sent_evidence_preserves_conversation_account_and_sender',
- 'operator_direct_send_with_exact_sent_receipt_uses_owner_brief',
- 'sent_message_matches_immutable_draft_receipt', 'unreviewed_task_never_exports_report_or_packet',
- 'internet_identity_matches_receipt_after_graph_id_changes',
- 'unregistered_recipient_is_skipped_without_registration',
- 'two_ticks_and_duplicate_page_rows_are_idempotent'],
+     name[5:] for name in dir(__import__('test_sent_events').SentEventsTests)
+     if name.startswith('test_') and name not in {
+         'test_commit_and_push_only_scoped_files_preserves_unrelated_staged_change',
+         'test_commit_tables_rebases_once_when_main_moved',
+         'unused'}],
  ('test_publication', 'PublicationTests', 'publication'): [
- 'old_workflow_pass_still_enqueues_exact_reviewed_bytes',
- 'correspondent_note_is_published_before_backlog',
- 'mathesis_child_publishes_instead_of_its_passed_source_note',
- 'bounced_or_agent_held_earlier_revisions_do_not_block_passed_note',
- 'passed_note_after_guard_stopped_continuation_is_published',
- 'family_first_author_names_are_not_joint_work',
- 'shortnote_waits_untouched_for_non_passed_mathesis_child',
- 'mathesis_is_preferred_for_same_revision_without_explicit_lineage']}
+     name[5:] for name in dir(__import__('test_publication').PublicationTests)
+     if name.startswith('test_') and name not in {
+         'test_registration_uses_current_table_sha_and_preserves_existing_pause',
+         'test_tick_delivers_existing_then_publishes_then_delivers_new_selections',
+         'test_ready_delivery_precedes_publication_that_overruns_the_tick',
+         'test_delivery_selected_late_in_a_tick_still_goes_out_that_tick',
+         'test_legacy_migration_stays_after_publication',
+         'test_both_delivery_passes_share_deliveries_per_tick',
+         'test_delivery_batch_takes_new_deliveries_oldest_first_before_repolls'}]}
+
 
 
 class Capture:
@@ -113,8 +112,10 @@ def main():
             mapping[identity] = []
             actual = {'mathesis': mathesis_delivery.advance, 'intake': mailbox.intake,
                       'publication': publication.advance, 'sent': sent_events.reconcile}[stage]
+            sent_advance = stage == 'sent' and method == 'failure_logs_status_without_mail_content'
+            if sent_advance: actual = sent_events.advance
             target = {'mathesis': 'managed.mathesis_delivery.advance', 'intake': 'managed.mailbox.intake',
-                      'publication': 'managed.publication.advance', 'sent': 'managed.sent_events.reconcile'}[stage]
+                      'publication': 'managed.publication.advance', 'sent': 'managed.sent_events.advance' if sent_advance else 'managed.sent_events.reconcile'}[stage]
             def invoke(ledger, config, root, *args, **kwargs):
                 nonlocal total
                 capture = Capture(); root = Path(root)
@@ -123,49 +124,136 @@ def main():
                     (root / 'tables/refusals.json').write_text(canonical({'refusals': []}))
                     (root / 'tables/positive.json').write_text(canonical({'entries': []}))
                 case = {'schema_version': 1, 'id': f'{stage}-{method}-{len(mapping[identity])+1}',
-                        'source_test': identity, 'stage': stage, 'now': NOW,
+                        'source_test': identity, 'stage': stage, 'now': ledger.tasks.clock(),
                         'workflow': control.workflow('mathesis'), 'installation': __import__('managed.location', fromlist=['example_config']).example_config(), 'config': copy.deepcopy(config),
                         'initial_rows': dump(ledger.tasks), 'initial_files': files(root),
                         'adapter_attributes': {'releases': {k: getattr(ledger.releases, k) for k in ('repo', 'tag') if hasattr(ledger.releases, k)}}}
                 old_save, old_remote, old_clock = ledger.save, ledger.releases, ledger.tasks.clock
                 def save(*a, **kw):
                     remote = ledger.releases; ledger.releases = old_remote
-                    try: return capture.call('ledger', 'save', old_save, a, kw)
+                    try:
+                        value = capture.call('ledger', 'save', old_save, a, kw)
+                        entry = capture.entries[-1]
+                        entry['saved_snapshot'] = {'generation': ledger.generation,
+                            'digest': ledger.snapshot['sha256']}
+                        return value
                     finally: ledger.releases = remote
                 ledger.save = save
-                ledger.releases = capture.proxy('releases', old_remote); ledger.tasks.clock = lambda: NOW
+                ledger.releases = capture.proxy('releases', old_remote)
                 wrapped = list(args)
                 if stage == 'mathesis':
                     wrapped[1] = capture.proxy('mathesis', args[1]); wrapped[2] = 'secret'
                     if len(wrapped) > 3: wrapped[3] = capture.proxy('publication', args[3])
                 elif stage == 'publication': wrapped[1] = capture.proxy('publication', args[1]); wrapped[2] = 'secret'
                 else:
-                    box = args[0]; wrapped[0] = capture.proxy('mailbox', box)
-                    case['adapter_attributes']['mailbox'] = {'settings': copy.deepcopy(box.settings)}
+                    box = args[0]; wrapped[0] = capture.proxy('mailbox', box) if box is not None else None
+                    case['adapter_attributes']['mailbox'] = {'settings': copy.deepcopy(box.settings)} if box else {}
                     if stage == 'intake': case.update(revision=kwargs['revision'], datetime=kwargs['now'].isoformat())
-                    else: case['datetime'] = args[1].isoformat()
-                with patch('managed.sent_events.commit_tables', lambda *a, **kw: capture.call('registry', 'commit_tables', lambda: None, (), {})):
+                    else:
+                        case['datetime'] = (args[1] if len(args) > 1 else __import__('test_sent_events').NOW).isoformat()
+                        case['options'] = {'max_pages': sent_events.MAX_PAGES, 'mailbox': box is not None, 'advance': sent_advance}
+                case['options'] = {**case.get('options', {}), 'previous': list(getattr(getattr(ledger, 'tick', None), 'previous', {}).get(stage, []))}
+                from managed import recording, registry
+                frame = {'admissions': [], '_errors': {}}
+                token = recording._STAGE.set(frame)
+                original_package, original_render = publication.package, registry.render
+                def package(row, directory, releases):
+                    def read(task_id, result_hash):
+                        metadata, prepared, source = original_package(row, directory, old_remote)
+                        return {'metadata': metadata, 'source': source, 'files': {
+                            f.name: encode(f) for f in sorted(Path(prepared).iterdir())}}
+                    response = capture.call('shortnote', 'package', read, (row['id'], __import__('managed.queue', fromlist=['digest']).digest(row['data']['result'])), {})
+                    prepared = Path(directory) / 'prepared'; prepared.mkdir(exist_ok=True)
+                    from managed.scenario_contract import decode
+                    for name, data in response['files'].items():
+                        path = decode(data, prepared)
+                        if name == response['source']:
+                            (Path(directory) / name).write_bytes(path.read_bytes())
+                    return response['metadata'], prepared, response['source']
+                def render(*a, **kw):
+                    contacts = registry.read(root, 'contacts')
+                    def perform(value):
+                        original_render(*a, **kw)
+                        return {k:v for k,v in files(root).items() if k in {'tables/contacts.json', 'tables/CONTACTS.md', 'tables/POSITIVE.md'}}
+                    capture.call('registry', 'render', perform, (contacts,), {})
+                old_commit = sent_events.commit_tables
+                old_needs_push = sent_events.tables_need_push
+                def commit(*a, **kw):
+                    return capture.call('registry', 'commit_tables', lambda: old_commit(*a, **kw), (), {})
+                def needs_push(*a, **kw):
+                    return capture.call('registry', 'needs_push', lambda: old_needs_push(*a, **kw), (), {})
+                with ExitStack() as hooks:
+                    hooks.enter_context(patch('managed.sent_events.commit_tables', commit))
+                    hooks.enter_context(patch('managed.sent_events.tables_need_push', needs_push))
+                    if stage == 'publication':
+                        hooks.enter_context(patch.object(publication, 'package', package))
+                        from managed import pre_reviewed
+                        def boundary(module, method, args_key):
+                            function = getattr(module, method)
+                            def call(*a, **kw):
+                                entry = {'adapter': 'boundary', 'method': method, 'args': args_key(a, kw), 'kwargs': {}}
+                                capture.entries.append(entry)
+                                try:
+                                    result = function(*a, **kw); entry['result'] = None; return result
+                                except BaseException as error:
+
+                                    if capture.entries[-1] is entry: entry['error'] = error_value(error)
+                                    else: entry['result'] = None
+                                    raise
+                            hooks.enter_context(patch.object(module, method, call))
+                        enqueue = publication.notes.enqueue
+                        def enqueue_observed(*a, **kw):
+                            try:
+                                response = enqueue(*a, **kw)
+                            except Exception as error:
+                                entry = {'adapter': 'boundary', 'method': 'enqueue', 'args': [], 'kwargs': {}, 'result': None}
+                                if not capture.entries or 'error' not in capture.entries[-1]: entry['error'] = error_value(error)
+                                capture.entries.append(entry)
+                                raise
+                            capture.entries.append({'adapter': 'boundary', 'method': 'enqueue', 'args': [], 'kwargs': {}, 'result': None})
+                            return response
+                        hooks.enter_context(patch.object(publication.notes, 'enqueue', enqueue_observed))
+                        boundary(publication, 'source_gate', lambda a, k: [a[0]['id']])
+                        boundary(pre_reviewed, 'select', lambda a, k: [a[0]['id']])
+                        boundary(mathesis_delivery, 'ingest', lambda a, k: [a[1]['task_id']])
+                        boundary(publication, 'record', lambda a, k: [a[1], a[2]['phase']])
+                    if sent_advance:
+                        frozen = hooks.enter_context(patch('managed.sent_events.datetime'))
+                        frozen.now.return_value = __import__('test_sent_events').NOW
+                    if stage == 'sent': hooks.enter_context(patch.object(registry, 'render', render))
                     try: result = actual(ledger, config, root, *wrapped, **kwargs)
-                    except Exception as error: case['error'] = error_value(error); result = None
+                    except BaseException as error: case['error'] = error_value(error); caught = error; result = None
+                if sent_advance:
+                    pages = [e for e in capture.entries if e['method'] == 'sent_events_page']
+                    if pages: case['datetime'] = pages[0]['args'][1]
+                recording._STAGE.reset(token)
+                case['admissions'] = frame['admissions']
                 case.update(script=capture.entries, expected_final_rows=logical(dump(ledger.tasks)), expected_final_files=files(root), expected_writes=writes(capture.entries))
                 ledger.save, ledger.releases, ledger.tasks.clock = old_save, old_remote, old_clock
                 (out / (case['id'] + '.json')).write_text(json.dumps(case, ensure_ascii=False, indent=2) + '\n')
                 mapping[identity].append(case['id']); total += 1
                 if 'error' in case:
-                    from runner import raise_error
-                    raise_error(case['error'])
+                    raise caught
                 return result
             with ExitStack() as stack:
                 original_init = Tasks.__init__
                 stack.enter_context(patch.object(Tasks, '__init__', lambda self, path, clock=None: original_init(self, path, clock=clock or (lambda: NOW - 100))))
+                stack.enter_context(patch.object(publication.notes.w, 'now', return_value='2026-11-01T00:00:00+00:00'))
                 stack.enter_context(patch('managed.control.workflow', return_value='e' * 64))
                 stack.enter_context(patch('test_tasks.workflow', return_value='e' * 64))
                 stack.enter_context(patch(target, side_effect=invoke))
                 result = unittest.TestResult(); test.run(result)
                 if result.errors or result.failures:
                     raise AssertionError(identity + '\n' + str(result.errors + result.failures))
+    # Adapter and coordinator integration tests keep their native assertions.
+    for module_name, class_name in [('test_publication', 'PublicationTests'), ('test_sent_events', 'SentEventsTests'),
+                                   ('test_sent_events', 'SentEventsRecoveryTests'), ('test_sent_events', 'CommitTablesTests')]:
+        cls = getattr(importlib.import_module(module_name), class_name)
+        for name in dir(cls):
+            if name.startswith('test_'):
+                mapping.setdefault(f'{module_name}.{class_name}.{name}', [])
     (Path(__file__).parent / 'test-map.json').write_text(json.dumps(mapping, indent=2) + '\n')
-    print(canonical({'tests': len(mapping), 'scenarios': total}))
+    print(canonical({'converted_tests': sum(bool(v) for v in mapping.values()), 'native_tests': sum(not v for v in mapping.values()), 'scenarios': total}))
 
 
 if __name__ == '__main__': main()

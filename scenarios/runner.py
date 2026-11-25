@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Execute language-neutral scripts against the current Python engine, offline."""
 import base64
-from contextlib import ExitStack, redirect_stderr, redirect_stdout
+from contextlib import ExitStack, contextmanager, redirect_stderr, redirect_stdout
 from datetime import datetime
 import io
 import json
@@ -25,6 +25,8 @@ KEY = 'secret'
 
 def error_value(error):
     value = {'type': type(error).__name__, 'message': str(error)}
+    diagnostic = getattr(error, 'github_diagnostic', None) or publication.github_failure(error)
+    if diagnostic: value['diagnostic'] = diagnostic
     if isinstance(error, HTTPError):
         value.update(status=error.code, body=base64.b64encode(error.read()).decode())
         if error.fp is not None: error.fp.seek(0)
@@ -35,8 +37,10 @@ def raise_error(value):
     if value['type'] == 'HTTPError':
         raise HTTPError('https://service.example.invalid', value['status'], 'scripted', {}, io.BytesIO(base64.b64decode(value['body'])))
     classes = {'TimeoutError': TimeoutError, 'ValueError': ValueError, 'GateError': GateError,
-               'RuntimeError': RuntimeError, 'AssertionError': AssertionError}
-    raise classes[value['type']](value['message'])
+               'RuntimeError': RuntimeError, 'OSError': OSError, 'AssertionError': AssertionError, 'Stopped': type('Stopped', (BaseException,), {})}
+    error = classes[value['type']](value['message'])
+    if value.get('diagnostic'): error.github_diagnostic = value['diagnostic']
+    raise error
 
 
 
@@ -86,23 +90,86 @@ def execute(case):
         stack.callback(tasks.close); load(tasks, case['initial_rows'])
         script = Script(case['script'], root)
         ledger = SimpleNamespace(clock=lambda: case['now'], tasks=tasks, releases=script.adapter('releases', case['adapter_attributes'].get('releases')), save=lambda *a, **kw: script.call('ledger', 'save', a, kw))
+        if '_recording_baseline' in case: ledger._recording_baseline = case['_recording_baseline']
         for target, value in case.get('constants', {}).items(): stack.enter_context(patch(target, value))
         stack.enter_context(patch('managed.control.workflow', return_value=case['workflow']))
         stack.enter_context(patch('managed.sent_events.commit_tables', lambda *a, **kw: script.call('registry', 'commit_tables', (), {})))
+        stack.enter_context(patch('managed.sent_events.tables_need_push', lambda *a, **kw: script.call('registry', 'needs_push', (), {})))
         # Network/process calls are forbidden even if the script is incomplete.
         stack.enter_context(patch('urllib.request.OpenerDirector.open', side_effect=AssertionError('network forbidden')))
         stack.enter_context(patch('subprocess.run', side_effect=AssertionError('process forbidden')))
         stack.enter_context(patch('subprocess.check_output', side_effect=AssertionError('process forbidden')))
-        box = script.adapter('mailbox', case['adapter_attributes'].get('mailbox'))
+        if case['stage'] == 'publication':
+            from managed import pre_reviewed
+            from managed.queue import digest
+            def package(row, directory, releases):
+                from managed import recording
+                args = (row['id'], digest(row['data']['result']))
+                response = recording._capture('shortnote', 'package', lambda *a: script.call('shortnote', 'package', a, {}), args, {}) if recording.enabled() else script.call('shortnote', 'package', args, {})
+                prepared = Path(directory) / 'prepared'; prepared.mkdir(exist_ok=True)
+                for name, data in response['files'].items():
+                    path = decode(data, prepared)
+                    (prepared / name).write_bytes(path.read_bytes())
+                    if name == response['source']: (Path(directory) / name).write_bytes(path.read_bytes())
+                return response['metadata'], prepared, response['source']
+            stack.enter_context(patch.object(publication, 'package', package))
+            def boundary(module, method, args_key):
+                function = getattr(module, method)
+                def call(*a, **kw):
+                    script.call('boundary', method, args_key(a, kw), {})
+                    return function(*a, **kw)
+                stack.enter_context(patch.object(module, method, call))
+            enqueue = publication.notes.enqueue
+            def enqueue_observed(*a, **kw):
+                try: result = enqueue(*a, **kw)
+                finally: script.call('boundary', 'enqueue', (), {})
+                return result
+            stack.enter_context(patch.object(publication.notes, 'enqueue', enqueue_observed))
+            boundary(publication, 'source_gate', lambda a, k: (a[0]['id'],))
+            boundary(pre_reviewed, 'select', lambda a, k: (a[0]['id'],))
+            boundary(mathesis_delivery, 'ingest', lambda a, k: (a[1]['task_id'],))
+            boundary(publication, 'record', lambda a, k: (a[1], a[2]['phase']))
+        if case['stage'] == 'sent':
+            from managed import registry
+            def render(*a, **kw):
+                response = script.call('registry', 'render', (registry.read(root, 'contacts'),), {})
+                for name, content in response.items():
+                    target = root / name; target.parent.mkdir(parents=True, exist_ok=True)
+                    target.write_bytes(base64.b64decode(content))
+            stack.enter_context(patch.object(registry, 'render', render))
+        box = script.adapter('mailbox', case['adapter_attributes'].get('mailbox')) if case.get('options', {}).get('mailbox', True) else None
+        stack.enter_context(patch.object(sent_events, 'MAX_PAGES', case.get('options', {}).get('max_pages', 2)))
+        if case.get('admissions'):
+            admissions = iter(case['admissions'])
+            class Budget:
+                pending = {}
+                count = 0
+                exhausted = False
+                previous = {case['stage']: case.get('options', {}).get('previous', [])}
+                clock = staticmethod(lambda: case['now'])
+                @contextmanager
+                def unit(self, lane, key, step=None):
+                    yield self.allow(lane, key)
+                def allow(self, lane, key):
+                    entry = next(admissions)
+                    assert (entry['lane'], entry['key']) == (lane, key)
+                    return entry['allowed']
+            ledger.tick = Budget()
         error = None
         try:
             with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
-                if case['stage'] == 'mathesis': mathesis_delivery.advance(ledger, case['config'], root, folder, script.adapter('mathesis'), KEY, script.adapter('publication'), **case.get('options', {}))
+                if case['stage'] == 'mathesis': mathesis_delivery.advance(ledger, case['config'], root, folder, script.adapter('mathesis'), KEY, script.adapter('publication'), **{k: v for k,v in case.get('options', {}).items() if k in {'again', 'attempted'}})
                 elif case['stage'] == 'intake': mailbox.intake(ledger, case['config'], root, box, revision=case['revision'], now=datetime.fromisoformat(case['datetime']))
-                elif case['stage'] == 'sent': sent_events.reconcile(ledger, case['config'], root, box, datetime.fromisoformat(case['datetime']))
+                elif case['stage'] == 'sent':
+                    if case.get('options', {}).get('advance'):
+                        actual = sent_events.reconcile
+                        def reconcile(*a, **kw):
+                            return actual(*a, now=datetime.fromisoformat(case['datetime']), **kw)
+                        with patch.object(sent_events, 'reconcile', reconcile): sent_events.advance(ledger, case['config'], root, box)
+                    else: sent_events.reconcile(ledger, case['config'], root, box, datetime.fromisoformat(case['datetime']))
                 elif case['stage'] == 'publication': publication.advance(ledger, case['config'], root, folder, script.adapter('publication'), KEY)
                 else: raise AssertionError('unknown stage')
-        except Exception as exc: error = error_value(exc)
+        except BaseException as exc: error = error_value(exc)
         assert error == case.get('error'), f"{case['id']}: stage error {error}"
         assert not script.failure and script.index == len(script.entries), f"{case['id']}: unused script entries"
         actual = logical(dump(tasks))

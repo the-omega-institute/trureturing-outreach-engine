@@ -3,7 +3,7 @@
   "id": "intake-known_new_thread_and_unknown_first_message_get_separate_dispositions-1",
   "source_test": "test_mailbox_triage.TriageTests.test_known_new_thread_and_unknown_first_message_get_separate_dispositions",
   "stage": "intake",
-  "now": 2000000000.0,
+  "now": 1999999900.0,
   "workflow": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
   "installation": {
     "repositories": {
@@ -47,7 +47,10 @@
       "enabled": false,
       "max_new_tasks_per_tick": 4,
       "backfill_result_ids": [],
-      "daily": false
+      "daily": false,
+      "auto_backfill": false,
+      "backfill_per_tick": 1,
+      "backfill_pending_limit": 16
     },
     "kinds": {
       "firstcontact": false,
@@ -207,6 +210,21 @@
     "cma": {
       "token_base_url": "https://worker.example.invalid",
       "proxy_base_url": "https://auth.example.invalid/api/v1/proxy/s/cma"
+    },
+    "independent_review": {
+      "enabled": false,
+      "max_active": 2,
+      "github": {
+        "service": "github-review-read",
+        "user_service_id": "dedicated-read-only-input-connection",
+        "read_only": true
+      },
+      "profile": {
+        "model": "gpt-6.2-sol",
+        "reasoning_effort": "high"
+      },
+      "register_author_contacts": true,
+      "max_active_per_group": 1
     }
   },
   "config": {
@@ -387,6 +405,10 @@
   },
   "revision": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
   "datetime": "2026-11-18T10:00:00+00:00",
+  "options": {
+    "previous": []
+  },
+  "admissions": [],
   "script": [
     {
       "adapter": "mailbox",
@@ -646,7 +668,11 @@
       "method": "save",
       "args": [],
       "kwargs": {},
-      "result": true
+      "result": true,
+      "saved_snapshot": {
+        "generation": 1,
+        "digest": "c282de45a6004c9d870f35661b3c72222b876fbe80dcb1cafe711320ba5e41dc"
+      }
     }
   ],
   "expected_final_rows": {
@@ -740,7 +766,7 @@
                 "category": "person",
                 "category_reason": "Unmapped sender addressed this mailbox directly",
                 "ccRecipients": [],
-                "checked_at": 2000000000.0,
+                "checked_at": 1999999900.0,
                 "conversationId": "first",
                 "from": {
                   "emailAddress": {
@@ -813,7 +839,7 @@
           "state": "running"
         },
         {
-          "at": 2000000000.0,
+          "at": 1999999900.0,
           "data": {},
           "id": "reply-4b3f9c6e840b91d2ef48675b6fe7e4e4",
           "revision": 1,
@@ -912,7 +938,7 @@
           "request_hash": "dd26c991dc851741641fed8f7e786e43aa5c5b497b9ff7420a5dd066110aa355",
           "revision": 1,
           "state": "queued",
-          "updated": 2000000000.0
+          "updated": 1999999900.0
         },
         {
           "data": {},

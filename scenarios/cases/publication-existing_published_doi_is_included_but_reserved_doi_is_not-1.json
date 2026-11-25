@@ -1,0 +1,1652 @@
+{
+  "schema_version": 1,
+  "id": "publication-existing_published_doi_is_included_but_reserved_doi_is_not-1",
+  "source_test": "test_publication.PublicationTests.test_existing_published_doi_is_included_but_reserved_doi_is_not",
+  "stage": "publication",
+  "now": 1999999900.0,
+  "workflow": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+  "installation": {
+    "repositories": {
+      "data": "example/outreach"
+    },
+    "schema_version": 1,
+    "paused": true,
+    "max_active": 24,
+    "prompt_max_characters": 120000,
+    "kind_quota": "equal",
+    "followup_lane": true,
+    "sandbox_pool": {
+      "max_sandboxes": 4,
+      "agents_per_sandbox": 6,
+      "rotate_after_agents": 24,
+      "quota_blocked_max_agents_placed": 192,
+      "prioritize_correspondence_notes": true,
+      "groups": [
+        {
+          "name": "notes",
+          "kinds": [
+            "shortnote",
+            "mathesis",
+            "firstcontact"
+          ],
+          "max_sandboxes": 1
+        },
+        {
+          "name": "mail",
+          "kinds": [
+            "reply",
+            "research",
+            "submission",
+            "daily"
+          ],
+          "max_sandboxes": 1
+        }
+      ]
+    },
+    "pipeline": {
+      "enabled": false,
+      "max_new_tasks_per_tick": 4,
+      "backfill_result_ids": [],
+      "daily": false,
+      "auto_backfill": false,
+      "backfill_per_tick": 1,
+      "backfill_pending_limit": 16
+    },
+    "kinds": {
+      "firstcontact": false,
+      "reply": false,
+      "research": false,
+      "shortnote": false,
+      "daily": false,
+      "mathesis": false,
+      "submission": false
+    },
+    "automation": {
+      "enabled": false,
+      "automatic_mail": false,
+      "max_new_tasks_per_tick": 6,
+      "max_revisions": 3,
+      "shortnote_extra_uplift_rounds": 2,
+      "routine_academic_mail": "automatic after exact independent review and fresh mailbox checks",
+      "user_decision_mail": "ask, then preserve as user-owned draft for manual sending"
+    },
+    "agent_template": {
+      "profile": {
+        "model": "gpt-6.1-sol",
+        "reasoning_effort": "high",
+        "permissions": {
+          "services": [
+            "api-github-pat",
+            "oracle"
+          ]
+        }
+      }
+    },
+    "mailbox_adapter": "unconfigured",
+    "home_domains": [
+      "campus.example.invalid",
+      "alumni.example.invalid"
+    ],
+    "mailbox": {
+      "account": "owner@example.invalid",
+      "live_since": "2000-01-01T00:00:00Z",
+      "cross_conversation_guard": true,
+      "max_total_attachment_bytes": 26214400,
+      "service_attention_domains": [
+        "overleaf.com"
+      ],
+      "editorial_domains": [
+        "editorialmanager.com",
+        "manuscriptcentral.com",
+        "aps.org",
+        "msp.org",
+        "arxiv.org",
+        "springernature.com",
+        "iop.org",
+        "ams.org",
+        "elsevier.com",
+        "wiley.com"
+      ],
+      "team_addresses": [
+        "coauthor@example.invalid"
+      ],
+      "team_addresses_note": "Configured coauthors",
+      "acceptance_recipients": [
+        "contributor@example.invalid"
+      ]
+    },
+    "claude_loop": "local, started by the user later",
+    "publication_selection": "explicit per note; review alone never publishes",
+    "mathesis": {
+      "mode": "disabled",
+      "submission_credentials": "configured session",
+      "author_confirmation": "required by the existing Mathesis contract",
+      "base_url": "https://mathesis.example.invalid",
+      "completion": "verified durable receipt; downstream review and presentation are Mathesis responsibilities",
+      "legacy_migration_per_tick": 3,
+      "acceptance_submission": "00000000-0000-0000-0000-000000000000"
+    },
+    "github": {
+      "service": "api-github-pat",
+      "user_service_id": "00000000-0000-0000-0000-000000000000"
+    },
+    "identity": {
+      "team_authors": [
+        "Blaire Mercer",
+        "Avery Reed"
+      ],
+      "owner_labels": [
+        "owner",
+        "Avery Reed"
+      ],
+      "first_names": [
+        "Avery",
+        "Blaire"
+      ],
+      "firstcontact_signature": "Best regards,\nAvery and Blaire\nExample University; Example Research Group",
+      "firstcontact_opening_terms": [
+        "avery reed",
+        "blaire mercer",
+        "example university",
+        "example research group"
+      ],
+      "reply_affiliation_markers": [
+        "example university",
+        "example research group",
+        "omega institute"
+      ],
+      "affiliation_patterns": [
+        "example university",
+        "example research group",
+        "omega institute"
+      ],
+      "affiliation_prefixes": [
+        "EU"
+      ],
+      "author_facts": {
+        "Avery Reed": {
+          "affiliation": "Example University",
+          "email": "owner@example.invalid",
+          "orcid": "0000-0000-0000-0000",
+          "country": "Example country",
+          "google_scholar": "https://scholar.example.invalid/profile"
+        },
+        "Blaire Mercer": {
+          "affiliation": "Example Research Group",
+          "email": "coauthor@example.invalid",
+          "orcid": "0000-0000-0000-0000",
+          "country": "Example country"
+        },
+        "ai_statement": "Configured in the private data repository.",
+        "funding": "Configured in the private data repository.",
+        "competing_interests": "Configured in the private data repository.",
+        "originality": "Configured in the private data repository.",
+        "unknown_ask_once": "Configured in the private data repository.",
+        "defaults": "Configured in the private data repository.",
+        "who_are_you_answer": "Configured in the private data repository.",
+        "affiliation_note": "Configured in the private data repository.",
+        "coauthor_background_answer": "Configured in the private data repository."
+      },
+      "direct_display_decision_ref": "example-direct-display",
+      "shortnote_creators": [
+        {
+          "name": "Blaire Mercer",
+          "affiliation": "Example Research Group"
+        },
+        {
+          "name": "Avery Reed",
+          "affiliation": "Example University"
+        }
+      ],
+      "submission_scope": "independent-team"
+    },
+    "credentials": {
+      "nyx_base_url": "https://auth.example.invalid",
+      "nyx_legacy_issuer": "https://legacy-auth.example.invalid",
+      "nyx_owner": "example-owner",
+      "graph_tenant": "example-tenant",
+      "graph_client": "example-client"
+    },
+    "cma": {
+      "token_base_url": "https://worker.example.invalid",
+      "proxy_base_url": "https://auth.example.invalid/api/v1/proxy/s/cma"
+    },
+    "independent_review": {
+      "enabled": false,
+      "max_active": 2,
+      "github": {
+        "service": "github-review-read",
+        "user_service_id": "dedicated-read-only-input-connection",
+        "read_only": true
+      },
+      "profile": {
+        "model": "gpt-6.2-sol",
+        "reasoning_effort": "high"
+      },
+      "register_author_contacts": true,
+      "max_active_per_group": 1
+    }
+  },
+  "config": {
+    "paused": false,
+    "kinds": {
+      "mathesis": true,
+      "shortnote": true
+    },
+    "mathesis": {
+      "mode": "deliver"
+    }
+  },
+  "initial_rows": {
+    "control_events": {
+      "columns": [
+        "id",
+        "payload"
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "rows": [
+        {
+          "id": "9d7dfc5719ba361430de06a2faccb1e73cbfe672ccd667703375f697721d9b5a",
+          "payload": {
+            "binding": {
+              "result_hash": "1676c0e3fa5131d72eb5f487b74d55bf97b94f25d51e9bdfc8b0f7e3238b31b6",
+              "task_id": "note-1",
+              "task_revision": 2,
+              "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+            },
+            "evidence_ref": "test:review",
+            "reason": "Independent exact review",
+            "reviewer": "local-claude-loop",
+            "signature": "ebb39a9d6c77a433f453daf2efae8a0894a5e6be56b4d938e23dbcfee5935860",
+            "verdict": "PASS"
+          }
+        },
+        {
+          "id": "4f3b190ec028841122a6be339cc871a36777249d1e7abc02511fde83473b4388",
+          "payload": {
+            "binding": {
+              "result_hash": "c4ce3e32331b64b1eb5a50a1ddf3124d3f688a2d5d6f8cc57b45ad3833a130ed",
+              "task_id": "reserved-mathesis",
+              "task_revision": 2,
+              "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+            },
+            "evidence_ref": "test:review",
+            "reason": "Independent exact review",
+            "reviewer": "local-claude-loop",
+            "signature": "92a44b507e1ccac41635285e6450ace867e3f3355516d202f268c5fd5517665d",
+            "verdict": "PASS"
+          }
+        }
+      ]
+    },
+    "input_asset_receipts": {
+      "columns": [
+        "identity",
+        "generation"
+      ],
+      "primary_key": [
+        "identity"
+      ],
+      "rows": []
+    },
+    "pipeline_sources": {
+      "columns": [
+        "result_id",
+        "identity",
+        "payload",
+        "baseline",
+        "task_id"
+      ],
+      "primary_key": [
+        "result_id"
+      ],
+      "rows": []
+    },
+    "pipeline_state": {
+      "columns": [
+        "key",
+        "payload"
+      ],
+      "primary_key": [
+        "key"
+      ],
+      "rows": []
+    },
+    "sqlite_sequence": {
+      "columns": [
+        "name",
+        "seq"
+      ],
+      "primary_key": [
+        "name"
+      ],
+      "rows": [
+        {
+          "name": "task_events",
+          "seq": 8
+        }
+      ]
+    },
+    "task_events": {
+      "columns": [
+        "seq",
+        "id",
+        "state",
+        "revision",
+        "at",
+        "data"
+      ],
+      "primary_key": [
+        "seq"
+      ],
+      "rows": [
+        {
+          "seq": 1,
+          "id": "note-1",
+          "state": "queued",
+          "revision": 1,
+          "at": 1999999900.0,
+          "data": {}
+        },
+        {
+          "seq": 2,
+          "id": "note-1",
+          "state": "awaiting-review",
+          "revision": 2,
+          "at": 1999999900.0,
+          "data": {}
+        },
+        {
+          "seq": 3,
+          "id": "note-1",
+          "state": "approved",
+          "revision": 3,
+          "at": 1999999900.0,
+          "data": {
+            "review": "9d7dfc5719ba361430de06a2faccb1e73cbfe672ccd667703375f697721d9b5a"
+          }
+        },
+        {
+          "seq": 4,
+          "id": "note-1",
+          "state": "handoff-ready",
+          "revision": 4,
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          }
+        },
+        {
+          "seq": 5,
+          "id": "reserved-mathesis",
+          "state": "queued",
+          "revision": 1,
+          "at": 1999999900.0,
+          "data": {}
+        },
+        {
+          "seq": 6,
+          "id": "reserved-mathesis",
+          "state": "awaiting-review",
+          "revision": 2,
+          "at": 1999999900.0,
+          "data": {}
+        },
+        {
+          "seq": 7,
+          "id": "reserved-mathesis",
+          "state": "approved",
+          "revision": 3,
+          "at": 1999999900.0,
+          "data": {
+            "review": "4f3b190ec028841122a6be339cc871a36777249d1e7abc02511fde83473b4388"
+          }
+        },
+        {
+          "seq": 8,
+          "id": "reserved-mathesis",
+          "state": "handoff-ready",
+          "revision": 4,
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          }
+        }
+      ]
+    },
+    "task_migrations": {
+      "columns": [
+        "name",
+        "phase"
+      ],
+      "primary_key": [
+        "name"
+      ],
+      "rows": [
+        {
+          "name": "compact-task-events-v1",
+          "phase": "done"
+        }
+      ]
+    },
+    "tasks": {
+      "columns": [
+        "id",
+        "request",
+        "request_hash",
+        "owner",
+        "kind",
+        "state",
+        "revision",
+        "data",
+        "updated"
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "rows": [
+        {
+          "id": "note-1",
+          "request": {
+            "id": "note-1",
+            "inputs": {},
+            "kind": "shortnote",
+            "owner": "scholar-a",
+            "schema_version": 1,
+            "source_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          },
+          "request_hash": "b461890dc2656b084704694136cb1a694f9b6e015599b4ab84fa98738683d735",
+          "owner": "scholar-a",
+          "kind": "shortnote",
+          "state": "handoff-ready",
+          "revision": 4,
+          "data": {
+            "result": {
+              "artifacts": [
+                {
+                  "bytes": 31,
+                  "name": "note-v1.pdf",
+                  "release_tag": "outreach-task-note-1",
+                  "role": "note-pdf",
+                  "sha256": "baeb93e2524b33b4b673574442684d1116379d0f525c21f276665f0b6bea805e"
+                },
+                {
+                  "bytes": 173,
+                  "name": "source-v1.zip",
+                  "release_tag": "outreach-task-note-1",
+                  "role": "source-archive",
+                  "sha256": "0fcd691aaa95ccc1a049162368311d98f3c66e5df7962a9e70e32683134ed58e"
+                },
+                {
+                  "bytes": 728,
+                  "name": "note-v1.json",
+                  "release_tag": "outreach-task-note-1",
+                  "role": "evidence",
+                  "sha256": "b7e764e0eab1d7eb8f4131d99fbee5aa5a9e95ae3fd6d8c901056b932e336c74"
+                },
+                {
+                  "bytes": 88,
+                  "name": "evidence.md",
+                  "release_tag": "outreach-task-note-1",
+                  "role": "evidence",
+                  "sha256": "c3cabfef9edfef1bb719cdf6d265313f2939917a310426fcacc842e90d740aa1"
+                }
+              ],
+              "formalization_gaps": [],
+              "outcome": "completed",
+              "packet": null,
+              "report": "Checked result",
+              "schema_version": 1,
+              "task_id": "note-1",
+              "value_assessment": {
+                "reasons": "Includes the missing boundary case.",
+                "verdict": "incremental"
+              }
+            },
+            "review": {
+              "binding": {
+                "result_hash": "1676c0e3fa5131d72eb5f487b74d55bf97b94f25d51e9bdfc8b0f7e3238b31b6",
+                "task_id": "note-1",
+                "task_revision": 2,
+                "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              },
+              "evidence_ref": "test:review",
+              "reason": "Independent exact review",
+              "reviewer": "local-claude-loop",
+              "signature": "ebb39a9d6c77a433f453daf2efae8a0894a5e6be56b4d938e23dbcfee5935860",
+              "verdict": "PASS"
+            }
+          },
+          "updated": 1999999900.0
+        },
+        {
+          "id": "reserved-mathesis",
+          "request": {
+            "id": "reserved-mathesis",
+            "inputs": {},
+            "kind": "mathesis",
+            "owner": "scholar-a",
+            "schema_version": 1,
+            "source_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          },
+          "request_hash": "e7987b58f80be7d8850062f1ec2bca2f29bb9a5cbea1598ab625aa737fc7c228",
+          "owner": "scholar-a",
+          "kind": "mathesis",
+          "state": "handoff-ready",
+          "revision": 4,
+          "data": {
+            "result": {
+              "artifacts": [
+                {
+                  "bytes": 31,
+                  "name": "note-v1.pdf",
+                  "release_tag": "outreach-task-reserved-mathesis",
+                  "role": "note-pdf",
+                  "sha256": "baeb93e2524b33b4b673574442684d1116379d0f525c21f276665f0b6bea805e"
+                },
+                {
+                  "bytes": 173,
+                  "name": "source-v1.zip",
+                  "release_tag": "outreach-task-reserved-mathesis",
+                  "role": "source-archive",
+                  "sha256": "0fcd691aaa95ccc1a049162368311d98f3c66e5df7962a9e70e32683134ed58e"
+                },
+                {
+                  "bytes": 790,
+                  "name": "handoff.json",
+                  "release_tag": "outreach-task-reserved-mathesis",
+                  "role": "handoff",
+                  "sha256": "c4ad86aa5b31703281d78a6bf244b048d9d3a0028e19c962bac49d899d1f90fb"
+                },
+                {
+                  "bytes": 88,
+                  "name": "evidence.md",
+                  "release_tag": "outreach-task-reserved-mathesis",
+                  "role": "evidence",
+                  "sha256": "c3cabfef9edfef1bb719cdf6d265313f2939917a310426fcacc842e90d740aa1"
+                }
+              ],
+              "outcome": "completed",
+              "packet": null,
+              "report": "Checked result",
+              "schema_version": 1,
+              "task_id": "reserved-mathesis"
+            },
+            "review": {
+              "binding": {
+                "result_hash": "c4ce3e32331b64b1eb5a50a1ddf3124d3f688a2d5d6f8cc57b45ad3833a130ed",
+                "task_id": "reserved-mathesis",
+                "task_revision": 2,
+                "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              },
+              "evidence_ref": "test:review",
+              "reason": "Independent exact review",
+              "reviewer": "local-claude-loop",
+              "signature": "92a44b507e1ccac41635285e6450ace867e3f3355516d202f268c5fd5517665d",
+              "verdict": "PASS"
+            }
+          },
+          "updated": 1999999900.0
+        }
+      ]
+    }
+  },
+  "initial_files": {
+    "tables/decisions.json": "eyJob2xkcyI6IFt7InRhc2tfaWQiOiAic2hvcnRub3RlLTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExIiwgImRlY2lzaW9uIjogIkhPTEQifV0sICJzaG9ydF9ub3RlX3B1YmxpY2F0aW9uIjogeyJlbmFibGVkIjogdHJ1ZSwgImRlY2lzaW9uX3JlZiI6ICJ0ZXN0OnN0YW5kaW5nLWRlY2lzaW9uIiwgInB1cnBvc2UiOiAicHVibGljYXRpb24iLCAicHJvY2Vzc2luZ19jb25zZW50IjogInRlc3Q6Y29uc2VudCIsICJtYWtlX3B1YmxpY19hZnRlcl9hY2NlcHRhbmNlIjogdHJ1ZSwgImluZGVwZW5kZW50X2F1dGhvcnMiOiBbIkF2ZXJ5IFJlZWQiLCAiQmxhaXJlIE1lcmNlciJdLCAiYWlfZGlzY2xvc3VyZSI6IHsibGV2ZWwiOiAiYXNzaXN0ZWQiLCAic3RhdGVtZW50X3dpdGhfbGVhbiI6ICJJbiBwcmVwYXJpbmcgdGhpcyBtYW51c2NyaXB0LCB0aGUgYXV0aG9ycyB1c2VkIEFJIHRvb2xzIChDaGF0R1BUIFBybywgQ29kZXggYW5kIENsYXVkZSkgZm9yIGxpdGVyYXR1cmUgc2VhcmNoLCBjb21wdXRhdGlvbiwgY2hlY2tpbmcgYW5kIGZvcm1hbCB2ZXJpZmljYXRpb24gaW4gTGVhbi4gQWxsIHByb29mcyBjYW4gYmUgY2hlY2tlZCBieSBoYW5kLCBhbmQgdGhlIGNvbXB1dGF0aW9ucyBjYW4gYmUgcmVwcm9kdWNlZCBmcm9tIHRoZSBhY2NvbXBhbnlpbmcgdmVyaWZpY2F0aW9uIHBhY2thZ2UuIFRoZSBhdXRob3JzIHRha2UgZnVsbCByZXNwb25zaWJpbGl0eSBmb3IgdGhlIGNvbnRlbnQuIiwgInN0YXRlbWVudF93aXRob3V0X2xlYW4iOiAiSW4gcHJlcGFyaW5nIHRoaXMgbWFudXNjcmlwdCwgdGhlIGF1dGhvcnMgdXNlZCBBSSB0b29scyAoQ2hhdEdQVCBQcm8sIENvZGV4IGFuZCBDbGF1ZGUpIGZvciBsaXRlcmF0dXJlIHNlYXJjaCwgY29tcHV0YXRpb24gYW5kIGNoZWNraW5nLiBBbGwgcHJvb2ZzIGNhbiBiZSBjaGVja2VkIGJ5IGhhbmQsIGFuZCB0aGUgY29tcHV0YXRpb25zIGNhbiBiZSByZXByb2R1Y2VkIGZyb20gdGhlIGFjY29tcGFueWluZyB2ZXJpZmljYXRpb24gcGFja2FnZS4gVGhlIGF1dGhvcnMgdGFrZSBmdWxsIHJlc3BvbnNpYmlsaXR5IGZvciB0aGUgY29udGVudC4ifX19",
+    "managed/submission/author-policy.json": "ewogICJzY2hlbWFfdmVyc2lvbiI6IDEsCiAgInNvdXJjZV9yZXZpc2lvbiI6ICJhYzczNDA2MWM0MzA3NjgwMGFkMjEwYWY2MWI4MWQyNGFlNTE4MWJiIiwKICAic291cmNlX3BhdGgiOiAic2NyaXB0cy9tYWlsZmxvdy9yZWYvQUktU1RBVEVNRU5ULVRFTVBMQVRFLm1kIiwKICAiYXV0aG9yX2ZhY3RzIjogIlJlYWQgUDU2LWluZGVwZW5kZW50LWJvYXJkLmF1dGhvcl9mYWN0cyBpbiBtYW5hZ2VkL3JlcGxpZXMvd29ya2Zsb3cuanNvbi4gUHJlc2VydmUgYWN0dWFsIGF1dGhvciBhZ3JlZW1lbnRzIGFuZCBjb250cmlidXRpb25zOyBtaXNzaW5nIHBlcnNvbmFsIGZhY3RzIGFyZSBub3QgaW5mZXJyZWQgZnJvbSBhIGJ5bGluZS4iLAogICJsb2NrZWRfc3RhdGVtZW50X3dpdGhfbGVhbiI6ICJJbiBwcmVwYXJpbmcgdGhpcyBtYW51c2NyaXB0LCB0aGUgYXV0aG9ycyB1c2VkIEFJIHRvb2xzIChDaGF0R1BUIFBybywgQ29kZXggYW5kIENsYXVkZSkgZm9yIGxpdGVyYXR1cmUgc2VhcmNoLCBjb21wdXRhdGlvbiwgY2hlY2tpbmcgYW5kIGZvcm1hbCB2ZXJpZmljYXRpb24gaW4gTGVhbi4gQWxsIHByb29mcyBjYW4gYmUgY2hlY2tlZCBieSBoYW5kLCBhbmQgdGhlIGNvbXB1dGF0aW9ucyBjYW4gYmUgcmVwcm9kdWNlZCBmcm9tIHRoZSBhY2NvbXBhbnlpbmcgdmVyaWZpY2F0aW9uIHBhY2thZ2UuIFRoZSBhdXRob3JzIHRha2UgZnVsbCByZXNwb25zaWJpbGl0eSBmb3IgdGhlIGNvbnRlbnQuIiwKICAibG9ja2VkX3N0YXRlbWVudF93aXRob3V0X2xlYW4iOiAiSW4gcHJlcGFyaW5nIHRoaXMgbWFudXNjcmlwdCwgdGhlIGF1dGhvcnMgdXNlZCBBSSB0b29scyAoQ2hhdEdQVCBQcm8sIENvZGV4IGFuZCBDbGF1ZGUpIGZvciBsaXRlcmF0dXJlIHNlYXJjaCwgY29tcHV0YXRpb24gYW5kIGNoZWNraW5nLiBBbGwgcHJvb2ZzIGNhbiBiZSBjaGVja2VkIGJ5IGhhbmQsIGFuZCB0aGUgY29tcHV0YXRpb25zIGNhbiBiZSByZXByb2R1Y2VkIGZyb20gdGhlIGFjY29tcGFueWluZyB2ZXJpZmljYXRpb24gcGFja2FnZS4gVGhlIGF1dGhvcnMgdGFrZSBmdWxsIHJlc3BvbnNpYmlsaXR5IGZvciB0aGUgY29udGVudC4iLAogICJhcHBsaWNhdGlvbiI6ICJQcmVzZXJ2ZSB0aGUgMjAyNi0xMC0yOCB1c2VyLWFwcHJvdmVkIHdvcmRpbmcgZm9yIG91ciBhY3R1YWwgY29udHJpYnV0aW9uIGFuZCB2ZXJpZmljYXRpb24gc2NvcGUuIFVzZSB0aGUgTGVhbiB2YXJpYW50IG9ubHkgd2hlbiBhcHBsaWNhYmxlLiBQcmVzZXJ2ZSBjb2F1dGhvcnMnIHN1cHBsaWVkIGRlY2xhcmF0aW9ucy4gVmVyaWZ5IGN1cnJlbnQgdmVudWUgcmVxdWlyZW1lbnRzIGFuZCBhY3R1YWwgdG9vbCB1c2U7IGZsYWcgYW55IHJlcXVpcmVkIHRydXRoZnVsIGFkZGl0aW9uYWwgZGlzY2xvc3VyZSBvciBpbmNvbXBhdGlibGUgdmVudWUgcnVsZSByYXRoZXIgdGhhbiBjbGFpbWluZyBub25leGlzdGVudCBodW1hbi1vbmx5IGF1dGhvcnNoaXAuIERvIG5vdCBpbnNlcnQgbWFudXNjcmlwdCBkaXNjbG9zdXJlIGJvaWxlcnBsYXRlIGluIG9yZGluYXJ5IGFjYWRlbWljIGVtYWlscy4iCn0K"
+  },
+  "adapter_attributes": {
+    "releases": {
+      "repo": "fixture/repo",
+      "tag": "outreach-control"
+    }
+  },
+  "options": {
+    "previous": []
+  },
+  "admissions": [],
+  "script": [
+    {
+      "adapter": "boundary",
+      "method": "source_gate",
+      "args": [
+        "reserved-mathesis"
+      ],
+      "kwargs": {},
+      "result": null
+    },
+    {
+      "adapter": "shortnote",
+      "method": "package",
+      "args": [
+        "reserved-mathesis",
+        "c4ce3e32331b64b1eb5a50a1ddf3124d3f688a2d5d6f8cc57b45ad3833a130ed"
+      ],
+      "kwargs": {},
+      "result": {
+        "metadata": {
+          "abstract": "The precise result.",
+          "creators": [
+            {
+              "name": "Avery Reed"
+            },
+            {
+              "name": "Blaire Mercer"
+            }
+          ],
+          "evidence_url": "https://sample.example.invalid/commit/proof.lean",
+          "id": "alpha",
+          "license": "cc-by-4.0",
+          "problem_ids": [
+            "problem-alpha"
+          ],
+          "revision": 1,
+          "summary": "The original conjecture is proved.",
+          "title": "Proof of the conjecture",
+          "topic": "Original conjecture"
+        },
+        "source": "source-v1.zip",
+        "files": {
+          "note-v1.json": {
+            "$file": "note-v1.json",
+            "base64": "ewogICJmaWxlcyI6IHsKICAgICJub3RlLXYxLnBkZiI6ICJiYWViOTNlMjUyNGIzM2I0YjY3MzU3NDQ0MjY4NGQxMTE2Mzc5ZDBmNTI1YzIxZjI3NjY2NWYwYjZiZWE4MDVlIiwKICAgICJzb3VyY2UtdjEuemlwIjogIjBmY2Q2OTFhYWE5NWNjYzFhMDQ5MTYyMzY4MzExZDk4ZjNjNjZlNWRmNzk2MmE5ZTcwZTMyNjgzMTM0ZWQ1OGUiCiAgfSwKICAibWV0YWRhdGEiOiB7CiAgICAiYWJzdHJhY3QiOiAiVGhlIHByZWNpc2UgcmVzdWx0LiIsCiAgICAiY3JlYXRvcnMiOiBbCiAgICAgIHsKICAgICAgICAibmFtZSI6ICJBdmVyeSBSZWVkIgogICAgICB9LAogICAgICB7CiAgICAgICAgIm5hbWUiOiAiQmxhaXJlIE1lcmNlciIKICAgICAgfQogICAgXSwKICAgICJldmlkZW5jZV91cmwiOiAiaHR0cHM6Ly9zYW1wbGUuZXhhbXBsZS5pbnZhbGlkL2NvbW1pdC9wcm9vZi5sZWFuIiwKICAgICJpZCI6ICJhbHBoYSIsCiAgICAibGljZW5zZSI6ICJjYy1ieS00LjAiLAogICAgInByb2JsZW1faWRzIjogWwogICAgICAicHJvYmxlbS1hbHBoYSIKICAgIF0sCiAgICAicmV2aXNpb24iOiAxLAogICAgInN1bW1hcnkiOiAiVGhlIG9yaWdpbmFsIGNvbmplY3R1cmUgaXMgcHJvdmVkLiIsCiAgICAidGl0bGUiOiAiUHJvb2Ygb2YgdGhlIGNvbmplY3R1cmUiLAogICAgInRvcGljIjogIk9yaWdpbmFsIGNvbmplY3R1cmUiCiAgfSwKICAic2NoZW1hX3ZlcnNpb24iOiAic2hvcnQtbm90ZS52MSIKfQo="
+          },
+          "note-v1.pdf": {
+            "$file": "note-v1.pdf",
+            "base64": "JVBERi0xLjQKU3ludGhldGljIGNoZWNrZWQgbm90ZQ=="
+          },
+          "source-v1.zip": {
+            "$file": "source-v1.zip",
+            "base64": "UEsDBBQAAAAAAAAAIQDnKJGaOwAAADsAAAAIAAAAbm90ZS50ZXhcZG9jdW1lbnRjbGFzc3thcnRpY2xlfVxiZWdpbntkb2N1bWVudH1Qcm9vZi5cZW5ke2RvY3VtZW50fVBLAQIUAxQAAAAAAAAAIQDnKJGaOwAAADsAAAAIAAAAAAAAAAAAAACAAQAAAABub3RlLnRleFBLBQYAAAAAAQABADYAAABhAAAAAAA="
+          }
+        }
+      }
+    },
+    {
+      "adapter": "boundary",
+      "method": "record",
+      "args": [
+        "reserved-mathesis",
+        "preparing"
+      ],
+      "kwargs": {},
+      "result": null
+    },
+    {
+      "adapter": "ledger",
+      "method": "save",
+      "args": [],
+      "kwargs": {
+        "force": true
+      },
+      "result": true,
+      "saved_snapshot": {
+        "generation": 1,
+        "digest": "a449dee42b287daa54e12752d62896e80abc7fe840be6b11a0e68c30e753d03d"
+      }
+    },
+    {
+      "adapter": "publication",
+      "method": "register_note",
+      "args": [
+        {
+          "abstract": "The precise result.",
+          "creators": [
+            {
+              "name": "Avery Reed"
+            },
+            {
+              "name": "Blaire Mercer"
+            }
+          ],
+          "evidence_url": "https://sample.example.invalid/commit/proof.lean",
+          "id": "alpha",
+          "license": "cc-by-4.0",
+          "problem_ids": [
+            "problem-alpha"
+          ],
+          "revision": 1,
+          "summary": "The original conjecture is proved.",
+          "title": "Proof of the conjecture",
+          "topic": "Original conjecture"
+        }
+      ],
+      "kwargs": {},
+      "result": {
+        "schema_version": "research-publication.v1",
+        "publications": [],
+        "collaborations": [],
+        "notes": [
+          {
+            "id": "alpha",
+            "problem_ids": [
+              "problem-alpha"
+            ],
+            "paused": false
+          }
+        ]
+      }
+    },
+    {
+      "adapter": "publication",
+      "method": "release",
+      "args": [
+        "short-note-alpha"
+      ],
+      "kwargs": {},
+      "result": {
+        "assets": [
+          {
+            "name": "note-v1.pdf"
+          },
+          {
+            "name": "source-v1.zip"
+          },
+          {
+            "name": "note-v1.json"
+          }
+        ],
+        "body": "{\n  \"id\": \"alpha\",\n  \"preferred\": \"note\",\n  \"schema_version\": \"short-note-state.v1\",\n  \"versions\": {\n    \"1\": {\n      \"package_id\": \"b7e764e0eab1d7eb8f4131d99fbee5aa5a9e95ae3fd6d8c901056b932e336c74\",\n      \"phase\": \"doi-reserved\",\n      \"record_id\": 1,\n      \"requested_at\": \"2026-11-01T00:00:00+00:00\",\n      \"reserved_at\": \"2026-11-01T00:00:00+00:00\",\n      \"reserved_doi\": \"10.5281/zenodo.1\"\n    }\n  },\n  \"zenodo_api\": \"https://zenodo.org/api\"\n}\n"
+      }
+    },
+    {
+      "adapter": "publication",
+      "method": "download",
+      "args": [
+        "short-note-alpha",
+        "note-v1.pdf",
+        {
+          "$directory": true
+        }
+      ],
+      "kwargs": {},
+      "result": {
+        "$file": "note-v1.pdf",
+        "base64": "JVBERi0xLjQKU3ludGhldGljIGNoZWNrZWQgbm90ZQ=="
+      }
+    },
+    {
+      "adapter": "publication",
+      "method": "download",
+      "args": [
+        "short-note-alpha",
+        "source-v1.zip",
+        {
+          "$directory": true
+        }
+      ],
+      "kwargs": {},
+      "result": {
+        "$file": "source-v1.zip",
+        "base64": "UEsDBBQAAAAAAAAAIQDnKJGaOwAAADsAAAAIAAAAbm90ZS50ZXhcZG9jdW1lbnRjbGFzc3thcnRpY2xlfVxiZWdpbntkb2N1bWVudH1Qcm9vZi5cZW5ke2RvY3VtZW50fVBLAQIUAxQAAAAAAAAAIQDnKJGaOwAAADsAAAAIAAAAAAAAAAAAAACAAQAAAABub3RlLnRleFBLBQYAAAAAAQABADYAAABhAAAAAAA="
+      }
+    },
+    {
+      "adapter": "publication",
+      "method": "download",
+      "args": [
+        "short-note-alpha",
+        "note-v1.json",
+        {
+          "$directory": true
+        }
+      ],
+      "kwargs": {},
+      "result": {
+        "$file": "note-v1.json",
+        "base64": "ewogICJmaWxlcyI6IHsKICAgICJub3RlLXYxLnBkZiI6ICJiYWViOTNlMjUyNGIzM2I0YjY3MzU3NDQ0MjY4NGQxMTE2Mzc5ZDBmNTI1YzIxZjI3NjY2NWYwYjZiZWE4MDVlIiwKICAgICJzb3VyY2UtdjEuemlwIjogIjBmY2Q2OTFhYWE5NWNjYzFhMDQ5MTYyMzY4MzExZDk4ZjNjNjZlNWRmNzk2MmE5ZTcwZTMyNjgzMTM0ZWQ1OGUiCiAgfSwKICAibWV0YWRhdGEiOiB7CiAgICAiYWJzdHJhY3QiOiAiVGhlIHByZWNpc2UgcmVzdWx0LiIsCiAgICAiY3JlYXRvcnMiOiBbCiAgICAgIHsKICAgICAgICAibmFtZSI6ICJBdmVyeSBSZWVkIgogICAgICB9LAogICAgICB7CiAgICAgICAgIm5hbWUiOiAiQmxhaXJlIE1lcmNlciIKICAgICAgfQogICAgXSwKICAgICJldmlkZW5jZV91cmwiOiAiaHR0cHM6Ly9zYW1wbGUuZXhhbXBsZS5pbnZhbGlkL2NvbW1pdC9wcm9vZi5sZWFuIiwKICAgICJpZCI6ICJhbHBoYSIsCiAgICAibGljZW5zZSI6ICJjYy1ieS00LjAiLAogICAgInByb2JsZW1faWRzIjogWwogICAgICAicHJvYmxlbS1hbHBoYSIKICAgIF0sCiAgICAicmV2aXNpb24iOiAxLAogICAgInN1bW1hcnkiOiAiVGhlIG9yaWdpbmFsIGNvbmplY3R1cmUgaXMgcHJvdmVkLiIsCiAgICAidGl0bGUiOiAiUHJvb2Ygb2YgdGhlIGNvbmplY3R1cmUiLAogICAgInRvcGljIjogIk9yaWdpbmFsIGNvbmplY3R1cmUiCiAgfSwKICAic2NoZW1hX3ZlcnNpb24iOiAic2hvcnQtbm90ZS52MSIKfQo="
+      }
+    },
+    {
+      "adapter": "publication",
+      "method": "release",
+      "args": [
+        "short-note-alpha"
+      ],
+      "kwargs": {},
+      "result": {
+        "assets": [
+          {
+            "name": "note-v1.pdf"
+          },
+          {
+            "name": "source-v1.zip"
+          },
+          {
+            "name": "note-v1.json"
+          }
+        ],
+        "body": "{\n  \"id\": \"alpha\",\n  \"preferred\": \"note\",\n  \"schema_version\": \"short-note-state.v1\",\n  \"versions\": {\n    \"1\": {\n      \"package_id\": \"b7e764e0eab1d7eb8f4131d99fbee5aa5a9e95ae3fd6d8c901056b932e336c74\",\n      \"phase\": \"doi-reserved\",\n      \"record_id\": 1,\n      \"requested_at\": \"2026-11-01T00:00:00+00:00\",\n      \"reserved_at\": \"2026-11-01T00:00:00+00:00\",\n      \"reserved_doi\": \"10.5281/zenodo.1\"\n    }\n  },\n  \"zenodo_api\": \"https://zenodo.org/api\"\n}\n"
+      }
+    },
+    {
+      "adapter": "publication",
+      "method": "download",
+      "args": [
+        "short-note-alpha",
+        "note-v1.json",
+        {
+          "$directory": true
+        }
+      ],
+      "kwargs": {},
+      "result": {
+        "$file": "note-v1.json",
+        "base64": "ewogICJmaWxlcyI6IHsKICAgICJub3RlLXYxLnBkZiI6ICJiYWViOTNlMjUyNGIzM2I0YjY3MzU3NDQ0MjY4NGQxMTE2Mzc5ZDBmNTI1YzIxZjI3NjY2NWYwYjZiZWE4MDVlIiwKICAgICJzb3VyY2UtdjEuemlwIjogIjBmY2Q2OTFhYWE5NWNjYzFhMDQ5MTYyMzY4MzExZDk4ZjNjNjZlNWRmNzk2MmE5ZTcwZTMyNjgzMTM0ZWQ1OGUiCiAgfSwKICAibWV0YWRhdGEiOiB7CiAgICAiYWJzdHJhY3QiOiAiVGhlIHByZWNpc2UgcmVzdWx0LiIsCiAgICAiY3JlYXRvcnMiOiBbCiAgICAgIHsKICAgICAgICAibmFtZSI6ICJBdmVyeSBSZWVkIgogICAgICB9LAogICAgICB7CiAgICAgICAgIm5hbWUiOiAiQmxhaXJlIE1lcmNlciIKICAgICAgfQogICAgXSwKICAgICJldmlkZW5jZV91cmwiOiAiaHR0cHM6Ly9zYW1wbGUuZXhhbXBsZS5pbnZhbGlkL2NvbW1pdC9wcm9vZi5sZWFuIiwKICAgICJpZCI6ICJhbHBoYSIsCiAgICAibGljZW5zZSI6ICJjYy1ieS00LjAiLAogICAgInByb2JsZW1faWRzIjogWwogICAgICAicHJvYmxlbS1hbHBoYSIKICAgIF0sCiAgICAicmV2aXNpb24iOiAxLAogICAgInN1bW1hcnkiOiAiVGhlIG9yaWdpbmFsIGNvbmplY3R1cmUgaXMgcHJvdmVkLiIsCiAgICAidGl0bGUiOiAiUHJvb2Ygb2YgdGhlIGNvbmplY3R1cmUiLAogICAgInRvcGljIjogIk9yaWdpbmFsIGNvbmplY3R1cmUiCiAgfSwKICAic2NoZW1hX3ZlcnNpb24iOiAic2hvcnQtbm90ZS52MSIKfQo="
+      }
+    },
+    {
+      "adapter": "publication",
+      "method": "upload",
+      "args": [
+        "short-note-alpha",
+        {
+          "$file": "request-3f2d7d6b9afb6e6799f9bc50.json",
+          "base64": "ewogICJhY3Rpb24iOiAicHVibGlzaCIsCiAgImlkIjogImFscGhhIiwKICAicmV2aXNpb24iOiAxLAogICJzY2hlbWFfdmVyc2lvbiI6ICJzaG9ydC1ub3RlLXJlcXVlc3QudjEiCn0K"
+        }
+      ],
+      "kwargs": {},
+      "result": null
+    },
+    {
+      "adapter": "boundary",
+      "method": "enqueue",
+      "args": [],
+      "kwargs": {},
+      "result": null
+    },
+    {
+      "adapter": "publication",
+      "method": "download",
+      "args": [
+        "short-note-alpha",
+        "request-3f2d7d6b9afb6e6799f9bc50.json",
+        {
+          "$directory": true
+        }
+      ],
+      "kwargs": {},
+      "result": {
+        "$file": "request-3f2d7d6b9afb6e6799f9bc50.json",
+        "base64": "ewogICJhY3Rpb24iOiAicHVibGlzaCIsCiAgImlkIjogImFscGhhIiwKICAicmV2aXNpb24iOiAxLAogICJzY2hlbWFfdmVyc2lvbiI6ICJzaG9ydC1ub3RlLXJlcXVlc3QudjEiCn0K"
+      }
+    },
+    {
+      "adapter": "releases",
+      "method": "run",
+      "args": [
+        "release",
+        "download",
+        "outreach-task-reserved-mathesis",
+        "--repo",
+        "fixture/repo",
+        "--pattern",
+        "evidence.md",
+        "--dir",
+        {
+          "$directory": true
+        }
+      ],
+      "kwargs": {},
+      "result": null,
+      "download": {
+        "name": "evidence.md",
+        "base64": "IyMgUHJpb3Itd29yayBjaGVjawpWZXJkaWN0OiBmaXJzdC1rbm93bgpPcmFjbGUgR1BUIFBybyByZXNwb25zZSByZWZlcmVuY2U6IHRlc3Q6b3JhY2xlCg=="
+      }
+    },
+    {
+      "adapter": "ledger",
+      "method": "save",
+      "args": [],
+      "kwargs": {},
+      "result": false,
+      "saved_snapshot": {
+        "generation": 1,
+        "digest": "a449dee42b287daa54e12752d62896e80abc7fe840be6b11a0e68c30e753d03d"
+      }
+    },
+    {
+      "adapter": "publication",
+      "method": "release",
+      "args": [
+        "short-note-alpha"
+      ],
+      "kwargs": {},
+      "result": {
+        "assets": [
+          {
+            "name": "note-v1.pdf"
+          },
+          {
+            "name": "source-v1.zip"
+          },
+          {
+            "name": "note-v1.json"
+          },
+          {
+            "name": "request-3f2d7d6b9afb6e6799f9bc50.json"
+          }
+        ],
+        "body": "{\n  \"id\": \"alpha\",\n  \"preferred\": \"note\",\n  \"schema_version\": \"short-note-state.v1\",\n  \"versions\": {\n    \"1\": {\n      \"package_id\": \"b7e764e0eab1d7eb8f4131d99fbee5aa5a9e95ae3fd6d8c901056b932e336c74\",\n      \"phase\": \"doi-reserved\",\n      \"record_id\": 1,\n      \"requested_at\": \"2026-11-01T00:00:00+00:00\",\n      \"reserved_at\": \"2026-11-01T00:00:00+00:00\",\n      \"reserved_doi\": \"10.5281/zenodo.1\"\n    }\n  },\n  \"zenodo_api\": \"https://zenodo.org/api\"\n}\n"
+      }
+    },
+    {
+      "adapter": "ledger",
+      "method": "save",
+      "args": [],
+      "kwargs": {
+        "force": true
+      },
+      "result": true,
+      "saved_snapshot": {
+        "generation": 2,
+        "digest": "ac5500a24e890b049dee84b9b647730c1567a81d4834f29c7fef6599fb08977b"
+      }
+    },
+    {
+      "adapter": "boundary",
+      "method": "select",
+      "args": [
+        "reserved-mathesis"
+      ],
+      "kwargs": {},
+      "result": null
+    },
+    {
+      "adapter": "boundary",
+      "method": "ingest",
+      "args": [
+        "reserved-mathesis"
+      ],
+      "kwargs": {},
+      "result": null
+    },
+    {
+      "adapter": "ledger",
+      "method": "save",
+      "args": [],
+      "kwargs": {
+        "force": true
+      },
+      "result": true,
+      "saved_snapshot": {
+        "generation": 3,
+        "digest": "fc61275eb8b079f670e522a3857ea66e6b454776653e29ef8970c25a7c286751"
+      }
+    },
+    {
+      "adapter": "boundary",
+      "method": "record",
+      "args": [
+        "reserved-mathesis",
+        "queued"
+      ],
+      "kwargs": {},
+      "result": null
+    },
+    {
+      "adapter": "ledger",
+      "method": "save",
+      "args": [],
+      "kwargs": {
+        "force": true
+      },
+      "result": true,
+      "saved_snapshot": {
+        "generation": 4,
+        "digest": "b690b05692e12d025343e8d732ee0d475a3020f3f894724e98d6e02171891b66"
+      }
+    },
+    {
+      "adapter": "boundary",
+      "method": "source_gate",
+      "args": [
+        "note-1"
+      ],
+      "kwargs": {},
+      "result": null
+    },
+    {
+      "adapter": "shortnote",
+      "method": "package",
+      "args": [
+        "note-1",
+        "1676c0e3fa5131d72eb5f487b74d55bf97b94f25d51e9bdfc8b0f7e3238b31b6"
+      ],
+      "kwargs": {},
+      "result": {
+        "metadata": {
+          "abstract": "The precise result.",
+          "creators": [
+            {
+              "name": "Avery Reed"
+            },
+            {
+              "name": "Blaire Mercer"
+            }
+          ],
+          "evidence_url": "https://sample.example.invalid/commit/proof.lean",
+          "id": "alpha",
+          "license": "cc-by-4.0",
+          "problem_ids": [
+            "problem-alpha"
+          ],
+          "revision": 1,
+          "summary": "The original conjecture is proved.",
+          "title": "Proof of the conjecture",
+          "topic": "Original conjecture"
+        },
+        "source": "source-v1.zip",
+        "files": {
+          "note-v1.json": {
+            "$file": "note-v1.json",
+            "base64": "ewogICJmaWxlcyI6IHsKICAgICJub3RlLXYxLnBkZiI6ICJiYWViOTNlMjUyNGIzM2I0YjY3MzU3NDQ0MjY4NGQxMTE2Mzc5ZDBmNTI1YzIxZjI3NjY2NWYwYjZiZWE4MDVlIiwKICAgICJzb3VyY2UtdjEuemlwIjogIjBmY2Q2OTFhYWE5NWNjYzFhMDQ5MTYyMzY4MzExZDk4ZjNjNjZlNWRmNzk2MmE5ZTcwZTMyNjgzMTM0ZWQ1OGUiCiAgfSwKICAibWV0YWRhdGEiOiB7CiAgICAiYWJzdHJhY3QiOiAiVGhlIHByZWNpc2UgcmVzdWx0LiIsCiAgICAiY3JlYXRvcnMiOiBbCiAgICAgIHsKICAgICAgICAibmFtZSI6ICJBdmVyeSBSZWVkIgogICAgICB9LAogICAgICB7CiAgICAgICAgIm5hbWUiOiAiQmxhaXJlIE1lcmNlciIKICAgICAgfQogICAgXSwKICAgICJldmlkZW5jZV91cmwiOiAiaHR0cHM6Ly9zYW1wbGUuZXhhbXBsZS5pbnZhbGlkL2NvbW1pdC9wcm9vZi5sZWFuIiwKICAgICJpZCI6ICJhbHBoYSIsCiAgICAibGljZW5zZSI6ICJjYy1ieS00LjAiLAogICAgInByb2JsZW1faWRzIjogWwogICAgICAicHJvYmxlbS1hbHBoYSIKICAgIF0sCiAgICAicmV2aXNpb24iOiAxLAogICAgInN1bW1hcnkiOiAiVGhlIG9yaWdpbmFsIGNvbmplY3R1cmUgaXMgcHJvdmVkLiIsCiAgICAidGl0bGUiOiAiUHJvb2Ygb2YgdGhlIGNvbmplY3R1cmUiLAogICAgInRvcGljIjogIk9yaWdpbmFsIGNvbmplY3R1cmUiCiAgfSwKICAic2NoZW1hX3ZlcnNpb24iOiAic2hvcnQtbm90ZS52MSIKfQo="
+          },
+          "note-v1.pdf": {
+            "$file": "note-v1.pdf",
+            "base64": "JVBERi0xLjQKU3ludGhldGljIGNoZWNrZWQgbm90ZQ=="
+          },
+          "source-v1.zip": {
+            "$file": "source-v1.zip",
+            "base64": "UEsDBBQAAAAAAAAAIQDnKJGaOwAAADsAAAAIAAAAbm90ZS50ZXhcZG9jdW1lbnRjbGFzc3thcnRpY2xlfVxiZWdpbntkb2N1bWVudH1Qcm9vZi5cZW5ke2RvY3VtZW50fVBLAQIUAxQAAAAAAAAAIQDnKJGaOwAAADsAAAAIAAAAAAAAAAAAAACAAQAAAABub3RlLnRleFBLBQYAAAAAAQABADYAAABhAAAAAAA="
+          }
+        }
+      }
+    }
+  ],
+  "expected_final_rows": {
+    "control_events": {
+      "columns": [
+        "id",
+        "payload"
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "rows": [
+        {
+          "id": "4f3b190ec028841122a6be339cc871a36777249d1e7abc02511fde83473b4388",
+          "payload": {
+            "binding": {
+              "result_hash": "c4ce3e32331b64b1eb5a50a1ddf3124d3f688a2d5d6f8cc57b45ad3833a130ed",
+              "task_id": "reserved-mathesis",
+              "task_revision": 2,
+              "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+            },
+            "evidence_ref": "test:review",
+            "reason": "Independent exact review",
+            "reviewer": "local-claude-loop",
+            "signature": "92a44b507e1ccac41635285e6450ace867e3f3355516d202f268c5fd5517665d",
+            "verdict": "PASS"
+          }
+        },
+        {
+          "id": "9d7dfc5719ba361430de06a2faccb1e73cbfe672ccd667703375f697721d9b5a",
+          "payload": {
+            "binding": {
+              "result_hash": "1676c0e3fa5131d72eb5f487b74d55bf97b94f25d51e9bdfc8b0f7e3238b31b6",
+              "task_id": "note-1",
+              "task_revision": 2,
+              "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+            },
+            "evidence_ref": "test:review",
+            "reason": "Independent exact review",
+            "reviewer": "local-claude-loop",
+            "signature": "ebb39a9d6c77a433f453daf2efae8a0894a5e6be56b4d938e23dbcfee5935860",
+            "verdict": "PASS"
+          }
+        }
+      ]
+    },
+    "input_asset_receipts": {
+      "columns": [
+        "identity",
+        "generation"
+      ],
+      "primary_key": [
+        "identity"
+      ],
+      "rows": []
+    },
+    "pipeline_sources": {
+      "columns": [
+        "result_id",
+        "identity",
+        "payload",
+        "baseline",
+        "task_id"
+      ],
+      "primary_key": [
+        "result_id"
+      ],
+      "rows": []
+    },
+    "pipeline_state": {
+      "columns": [
+        "key",
+        "payload"
+      ],
+      "primary_key": [
+        "key"
+      ],
+      "rows": [
+        {
+          "key": "publication-selection:968a49907c9abf5a522ec5e4f2494f97cb7a2e33faa8e5d26c9371d02ba43778",
+          "payload": {
+            "decision_hash": "cb011f88b37c60aec8694a54cf9e71dcc542a804efac8e0fde4421dbddee5a4d",
+            "decisions": {
+              "ai_disclosure": {
+                "level": "assisted",
+                "statement": "In preparing this manuscript, the authors used AI tools (ChatGPT Pro, Codex and Claude) for literature search, computation, checking and formal verification in Lean. All proofs can be checked by hand, and the computations can be reproduced from the accompanying verification package. The authors take full responsibility for the content."
+              },
+              "decision_ref": "test:standing-decision",
+              "make_public_after_acceptance": true,
+              "processing_consent": "test:consent",
+              "purpose": "publication",
+              "source_file": "source-v1.zip"
+            },
+            "package_id": "b7e764e0eab1d7eb8f4131d99fbee5aa5a9e95ae3fd6d8c901056b932e336c74"
+          }
+        }
+      ]
+    },
+    "sqlite_sequence": {
+      "columns": [
+        "name",
+        "seq"
+      ],
+      "primary_key": [
+        "name"
+      ],
+      "rows": [
+        {
+          "name": "task_events",
+          "seq": 12
+        }
+      ]
+    },
+    "task_events": {
+      "columns": [
+        "seq",
+        "id",
+        "state",
+        "revision",
+        "at",
+        "data"
+      ],
+      "primary_key": [
+        "seq"
+      ],
+      "rows": [
+        {
+          "at": 1999999900.0,
+          "data": {},
+          "id": "note-1",
+          "revision": 1,
+          "seq": 1,
+          "state": "queued"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {},
+          "id": "note-1",
+          "revision": 2,
+          "seq": 2,
+          "state": "awaiting-review"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "review": "9d7dfc5719ba361430de06a2faccb1e73cbfe672ccd667703375f697721d9b5a"
+          },
+          "id": "note-1",
+          "revision": 3,
+          "seq": 3,
+          "state": "approved"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "note-1",
+          "revision": 4,
+          "seq": 4,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {},
+          "id": "reserved-mathesis",
+          "revision": 1,
+          "seq": 5,
+          "state": "queued"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {},
+          "id": "reserved-mathesis",
+          "revision": 2,
+          "seq": 6,
+          "state": "awaiting-review"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "review": "4f3b190ec028841122a6be339cc871a36777249d1e7abc02511fde83473b4388"
+          },
+          "id": "reserved-mathesis",
+          "revision": 3,
+          "seq": 7,
+          "state": "approved"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "reserved-mathesis",
+          "revision": 4,
+          "seq": 8,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "reserved-mathesis",
+          "revision": 5,
+          "seq": 9,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "reserved-mathesis",
+          "revision": 6,
+          "seq": 10,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "reserved-mathesis",
+          "revision": 7,
+          "seq": 11,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "reserved-mathesis",
+          "revision": 8,
+          "seq": 12,
+          "state": "handoff-ready"
+        }
+      ]
+    },
+    "task_migrations": {
+      "columns": [
+        "name",
+        "phase"
+      ],
+      "primary_key": [
+        "name"
+      ],
+      "rows": [
+        {
+          "name": "compact-task-events-v1",
+          "phase": "done"
+        }
+      ]
+    },
+    "tasks": {
+      "columns": [
+        "id",
+        "request",
+        "request_hash",
+        "owner",
+        "kind",
+        "state",
+        "revision",
+        "data",
+        "updated"
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "rows": [
+        {
+          "data": {
+            "result": {
+              "artifacts": [
+                {
+                  "bytes": 31,
+                  "name": "note-v1.pdf",
+                  "release_tag": "outreach-task-note-1",
+                  "role": "note-pdf",
+                  "sha256": "baeb93e2524b33b4b673574442684d1116379d0f525c21f276665f0b6bea805e"
+                },
+                {
+                  "bytes": 173,
+                  "name": "source-v1.zip",
+                  "release_tag": "outreach-task-note-1",
+                  "role": "source-archive",
+                  "sha256": "0fcd691aaa95ccc1a049162368311d98f3c66e5df7962a9e70e32683134ed58e"
+                },
+                {
+                  "bytes": 728,
+                  "name": "note-v1.json",
+                  "release_tag": "outreach-task-note-1",
+                  "role": "evidence",
+                  "sha256": "b7e764e0eab1d7eb8f4131d99fbee5aa5a9e95ae3fd6d8c901056b932e336c74"
+                },
+                {
+                  "bytes": 88,
+                  "name": "evidence.md",
+                  "release_tag": "outreach-task-note-1",
+                  "role": "evidence",
+                  "sha256": "c3cabfef9edfef1bb719cdf6d265313f2939917a310426fcacc842e90d740aa1"
+                }
+              ],
+              "formalization_gaps": [],
+              "outcome": "completed",
+              "packet": null,
+              "report": "Checked result",
+              "schema_version": 1,
+              "task_id": "note-1",
+              "value_assessment": {
+                "reasons": "Includes the missing boundary case.",
+                "verdict": "incremental"
+              }
+            },
+            "review": {
+              "binding": {
+                "result_hash": "1676c0e3fa5131d72eb5f487b74d55bf97b94f25d51e9bdfc8b0f7e3238b31b6",
+                "task_id": "note-1",
+                "task_revision": 2,
+                "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              },
+              "evidence_ref": "test:review",
+              "reason": "Independent exact review",
+              "reviewer": "local-claude-loop",
+              "signature": "ebb39a9d6c77a433f453daf2efae8a0894a5e6be56b4d938e23dbcfee5935860",
+              "verdict": "PASS"
+            }
+          },
+          "id": "note-1",
+          "kind": "shortnote",
+          "owner": "scholar-a",
+          "request": {
+            "id": "note-1",
+            "inputs": {},
+            "kind": "shortnote",
+            "owner": "scholar-a",
+            "schema_version": 1,
+            "source_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          },
+          "request_hash": "b461890dc2656b084704694136cb1a694f9b6e015599b4ab84fa98738683d735",
+          "revision": 4,
+          "state": "handoff-ready",
+          "updated": 1999999900.0
+        },
+        {
+          "data": {
+            "mathesis_delivery": {
+              "envelope": {
+                "decision_ref": "test:standing-decision",
+                "metadata": {
+                  "authorize_publication": true,
+                  "paper": {
+                    "abstract": "The precise result.",
+                    "authors": [
+                      {
+                        "name": "Avery Reed"
+                      },
+                      {
+                        "name": "Blaire Mercer"
+                      }
+                    ],
+                    "license": "CC-BY-4.0",
+                    "title": "Proof of the conjecture"
+                  },
+                  "previous_version": null,
+                  "producer": "trureturing-outreach",
+                  "review": {
+                    "pdf_sha256": "baeb93e2524b33b4b673574442684d1116379d0f525c21f276665f0b6bea805e",
+                    "record": {
+                      "prior_work_check": {
+                        "evidence": {
+                          "bytes": 88,
+                          "name": "evidence.md",
+                          "release_tag": "outreach-task-reserved-mathesis",
+                          "role": "evidence",
+                          "sha256": "c3cabfef9edfef1bb719cdf6d265313f2939917a310426fcacc842e90d740aa1"
+                        },
+                        "oracle_pro_check": true,
+                        "oracle_response_ref": "test:oracle",
+                        "result_hash": "c4ce3e32331b64b1eb5a50a1ddf3124d3f688a2d5d6f8cc57b45ad3833a130ed",
+                        "task_id": "reserved-mathesis",
+                        "verdict": "first-known"
+                      },
+                      "problem_ids": [
+                        "problem-alpha"
+                      ],
+                      "publication_authorization": {
+                        "decision_ref": "test:standing-decision",
+                        "direct_display_decision_ref": "example-direct-display"
+                      },
+                      "result_hash": "c4ce3e32331b64b1eb5a50a1ddf3124d3f688a2d5d6f8cc57b45ad3833a130ed",
+                      "signed_pass": {
+                        "binding": {
+                          "result_hash": "c4ce3e32331b64b1eb5a50a1ddf3124d3f688a2d5d6f8cc57b45ad3833a130ed",
+                          "task_id": "reserved-mathesis",
+                          "task_revision": 2,
+                          "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+                        },
+                        "evidence_ref": "test:review",
+                        "reason": "Independent exact review",
+                        "reviewer": "local-claude-loop",
+                        "signature": "92a44b507e1ccac41635285e6450ace867e3f3355516d202f268c5fd5517665d",
+                        "verdict": "PASS"
+                      },
+                      "task_id": "reserved-mathesis"
+                    },
+                    "source_sha256": "0fcd691aaa95ccc1a049162368311d98f3c66e5df7962a9e70e32683134ed58e",
+                    "verdict": "PASS"
+                  },
+                  "schema": "mathesis.pre-reviewed-delivery.v1",
+                  "version": 1,
+                  "work_id": "alpha"
+                },
+                "pdf": {
+                  "bytes": 31,
+                  "name": "note-v1.pdf",
+                  "release_tag": "outreach-task-reserved-mathesis",
+                  "role": "note-pdf",
+                  "sha256": "baeb93e2524b33b4b673574442684d1116379d0f525c21f276665f0b6bea805e"
+                },
+                "result_hash": "c4ce3e32331b64b1eb5a50a1ddf3124d3f688a2d5d6f8cc57b45ad3833a130ed",
+                "reviewer": "local-claude-loop",
+                "schema_version": 1,
+                "signature": "9542431ed51ee579214aaf6e66d416c4ae273c40bab29578c588185786a32f3a",
+                "source": {
+                  "bytes": 173,
+                  "name": "source-v1.zip",
+                  "release_tag": "outreach-task-reserved-mathesis",
+                  "role": "source-archive",
+                  "sha256": "0fcd691aaa95ccc1a049162368311d98f3c66e5df7962a9e70e32683134ed58e"
+                },
+                "task_id": "reserved-mathesis",
+                "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              },
+              "phase": "ready"
+            },
+            "mathesis_prior_work": {
+              "check": {
+                "evidence": {
+                  "bytes": 88,
+                  "name": "evidence.md",
+                  "release_tag": "outreach-task-reserved-mathesis",
+                  "role": "evidence",
+                  "sha256": "c3cabfef9edfef1bb719cdf6d265313f2939917a310426fcacc842e90d740aa1"
+                },
+                "oracle_pro_check": true,
+                "oracle_response_ref": "test:oracle",
+                "result_hash": "c4ce3e32331b64b1eb5a50a1ddf3124d3f688a2d5d6f8cc57b45ad3833a130ed",
+                "task_id": "reserved-mathesis",
+                "verdict": "first-known"
+              },
+              "phase": "ready",
+              "result_hash": "c4ce3e32331b64b1eb5a50a1ddf3124d3f688a2d5d6f8cc57b45ad3833a130ed"
+            },
+            "publication_loop": {
+              "creators": [
+                {
+                  "name": "Avery Reed"
+                },
+                {
+                  "name": "Blaire Mercer"
+                }
+              ],
+              "decision_hash": "cb011f88b37c60aec8694a54cf9e71dcc542a804efac8e0fde4421dbddee5a4d",
+              "decision_ref": "test:standing-decision",
+              "note_id": "alpha",
+              "phase": "queued",
+              "problem_ids": [
+                "problem-alpha"
+              ],
+              "request": "request-3f2d7d6b9afb6e6799f9bc50.json",
+              "result_hash": "c4ce3e32331b64b1eb5a50a1ddf3124d3f688a2d5d6f8cc57b45ad3833a130ed",
+              "revision": 1
+            },
+            "result": {
+              "artifacts": [
+                {
+                  "bytes": 31,
+                  "name": "note-v1.pdf",
+                  "release_tag": "outreach-task-reserved-mathesis",
+                  "role": "note-pdf",
+                  "sha256": "baeb93e2524b33b4b673574442684d1116379d0f525c21f276665f0b6bea805e"
+                },
+                {
+                  "bytes": 173,
+                  "name": "source-v1.zip",
+                  "release_tag": "outreach-task-reserved-mathesis",
+                  "role": "source-archive",
+                  "sha256": "0fcd691aaa95ccc1a049162368311d98f3c66e5df7962a9e70e32683134ed58e"
+                },
+                {
+                  "bytes": 790,
+                  "name": "handoff.json",
+                  "release_tag": "outreach-task-reserved-mathesis",
+                  "role": "handoff",
+                  "sha256": "c4ad86aa5b31703281d78a6bf244b048d9d3a0028e19c962bac49d899d1f90fb"
+                },
+                {
+                  "bytes": 88,
+                  "name": "evidence.md",
+                  "release_tag": "outreach-task-reserved-mathesis",
+                  "role": "evidence",
+                  "sha256": "c3cabfef9edfef1bb719cdf6d265313f2939917a310426fcacc842e90d740aa1"
+                }
+              ],
+              "outcome": "completed",
+              "packet": null,
+              "report": "Checked result",
+              "schema_version": 1,
+              "task_id": "reserved-mathesis"
+            },
+            "review": {
+              "binding": {
+                "result_hash": "c4ce3e32331b64b1eb5a50a1ddf3124d3f688a2d5d6f8cc57b45ad3833a130ed",
+                "task_id": "reserved-mathesis",
+                "task_revision": 2,
+                "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              },
+              "evidence_ref": "test:review",
+              "reason": "Independent exact review",
+              "reviewer": "local-claude-loop",
+              "signature": "92a44b507e1ccac41635285e6450ace867e3f3355516d202f268c5fd5517665d",
+              "verdict": "PASS"
+            }
+          },
+          "id": "reserved-mathesis",
+          "kind": "mathesis",
+          "owner": "scholar-a",
+          "request": {
+            "id": "reserved-mathesis",
+            "inputs": {},
+            "kind": "mathesis",
+            "owner": "scholar-a",
+            "schema_version": 1,
+            "source_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          },
+          "request_hash": "e7987b58f80be7d8850062f1ec2bca2f29bb9a5cbea1598ab625aa737fc7c228",
+          "revision": 8,
+          "state": "handoff-ready",
+          "updated": 1999999900.0
+        }
+      ]
+    }
+  },
+  "expected_final_files": {
+    "tables/decisions.json": "eyJob2xkcyI6IFt7InRhc2tfaWQiOiAic2hvcnRub3RlLTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExIiwgImRlY2lzaW9uIjogIkhPTEQifV0sICJzaG9ydF9ub3RlX3B1YmxpY2F0aW9uIjogeyJlbmFibGVkIjogdHJ1ZSwgImRlY2lzaW9uX3JlZiI6ICJ0ZXN0OnN0YW5kaW5nLWRlY2lzaW9uIiwgInB1cnBvc2UiOiAicHVibGljYXRpb24iLCAicHJvY2Vzc2luZ19jb25zZW50IjogInRlc3Q6Y29uc2VudCIsICJtYWtlX3B1YmxpY19hZnRlcl9hY2NlcHRhbmNlIjogdHJ1ZSwgImluZGVwZW5kZW50X2F1dGhvcnMiOiBbIkF2ZXJ5IFJlZWQiLCAiQmxhaXJlIE1lcmNlciJdLCAiYWlfZGlzY2xvc3VyZSI6IHsibGV2ZWwiOiAiYXNzaXN0ZWQiLCAic3RhdGVtZW50X3dpdGhfbGVhbiI6ICJJbiBwcmVwYXJpbmcgdGhpcyBtYW51c2NyaXB0LCB0aGUgYXV0aG9ycyB1c2VkIEFJIHRvb2xzIChDaGF0R1BUIFBybywgQ29kZXggYW5kIENsYXVkZSkgZm9yIGxpdGVyYXR1cmUgc2VhcmNoLCBjb21wdXRhdGlvbiwgY2hlY2tpbmcgYW5kIGZvcm1hbCB2ZXJpZmljYXRpb24gaW4gTGVhbi4gQWxsIHByb29mcyBjYW4gYmUgY2hlY2tlZCBieSBoYW5kLCBhbmQgdGhlIGNvbXB1dGF0aW9ucyBjYW4gYmUgcmVwcm9kdWNlZCBmcm9tIHRoZSBhY2NvbXBhbnlpbmcgdmVyaWZpY2F0aW9uIHBhY2thZ2UuIFRoZSBhdXRob3JzIHRha2UgZnVsbCByZXNwb25zaWJpbGl0eSBmb3IgdGhlIGNvbnRlbnQuIiwgInN0YXRlbWVudF93aXRob3V0X2xlYW4iOiAiSW4gcHJlcGFyaW5nIHRoaXMgbWFudXNjcmlwdCwgdGhlIGF1dGhvcnMgdXNlZCBBSSB0b29scyAoQ2hhdEdQVCBQcm8sIENvZGV4IGFuZCBDbGF1ZGUpIGZvciBsaXRlcmF0dXJlIHNlYXJjaCwgY29tcHV0YXRpb24gYW5kIGNoZWNraW5nLiBBbGwgcHJvb2ZzIGNhbiBiZSBjaGVja2VkIGJ5IGhhbmQsIGFuZCB0aGUgY29tcHV0YXRpb25zIGNhbiBiZSByZXByb2R1Y2VkIGZyb20gdGhlIGFjY29tcGFueWluZyB2ZXJpZmljYXRpb24gcGFja2FnZS4gVGhlIGF1dGhvcnMgdGFrZSBmdWxsIHJlc3BvbnNpYmlsaXR5IGZvciB0aGUgY29udGVudC4ifX19",
+    "managed/submission/author-policy.json": "ewogICJzY2hlbWFfdmVyc2lvbiI6IDEsCiAgInNvdXJjZV9yZXZpc2lvbiI6ICJhYzczNDA2MWM0MzA3NjgwMGFkMjEwYWY2MWI4MWQyNGFlNTE4MWJiIiwKICAic291cmNlX3BhdGgiOiAic2NyaXB0cy9tYWlsZmxvdy9yZWYvQUktU1RBVEVNRU5ULVRFTVBMQVRFLm1kIiwKICAiYXV0aG9yX2ZhY3RzIjogIlJlYWQgUDU2LWluZGVwZW5kZW50LWJvYXJkLmF1dGhvcl9mYWN0cyBpbiBtYW5hZ2VkL3JlcGxpZXMvd29ya2Zsb3cuanNvbi4gUHJlc2VydmUgYWN0dWFsIGF1dGhvciBhZ3JlZW1lbnRzIGFuZCBjb250cmlidXRpb25zOyBtaXNzaW5nIHBlcnNvbmFsIGZhY3RzIGFyZSBub3QgaW5mZXJyZWQgZnJvbSBhIGJ5bGluZS4iLAogICJsb2NrZWRfc3RhdGVtZW50X3dpdGhfbGVhbiI6ICJJbiBwcmVwYXJpbmcgdGhpcyBtYW51c2NyaXB0LCB0aGUgYXV0aG9ycyB1c2VkIEFJIHRvb2xzIChDaGF0R1BUIFBybywgQ29kZXggYW5kIENsYXVkZSkgZm9yIGxpdGVyYXR1cmUgc2VhcmNoLCBjb21wdXRhdGlvbiwgY2hlY2tpbmcgYW5kIGZvcm1hbCB2ZXJpZmljYXRpb24gaW4gTGVhbi4gQWxsIHByb29mcyBjYW4gYmUgY2hlY2tlZCBieSBoYW5kLCBhbmQgdGhlIGNvbXB1dGF0aW9ucyBjYW4gYmUgcmVwcm9kdWNlZCBmcm9tIHRoZSBhY2NvbXBhbnlpbmcgdmVyaWZpY2F0aW9uIHBhY2thZ2UuIFRoZSBhdXRob3JzIHRha2UgZnVsbCByZXNwb25zaWJpbGl0eSBmb3IgdGhlIGNvbnRlbnQuIiwKICAibG9ja2VkX3N0YXRlbWVudF93aXRob3V0X2xlYW4iOiAiSW4gcHJlcGFyaW5nIHRoaXMgbWFudXNjcmlwdCwgdGhlIGF1dGhvcnMgdXNlZCBBSSB0b29scyAoQ2hhdEdQVCBQcm8sIENvZGV4IGFuZCBDbGF1ZGUpIGZvciBsaXRlcmF0dXJlIHNlYXJjaCwgY29tcHV0YXRpb24gYW5kIGNoZWNraW5nLiBBbGwgcHJvb2ZzIGNhbiBiZSBjaGVja2VkIGJ5IGhhbmQsIGFuZCB0aGUgY29tcHV0YXRpb25zIGNhbiBiZSByZXByb2R1Y2VkIGZyb20gdGhlIGFjY29tcGFueWluZyB2ZXJpZmljYXRpb24gcGFja2FnZS4gVGhlIGF1dGhvcnMgdGFrZSBmdWxsIHJlc3BvbnNpYmlsaXR5IGZvciB0aGUgY29udGVudC4iLAogICJhcHBsaWNhdGlvbiI6ICJQcmVzZXJ2ZSB0aGUgMjAyNi0xMC0yOCB1c2VyLWFwcHJvdmVkIHdvcmRpbmcgZm9yIG91ciBhY3R1YWwgY29udHJpYnV0aW9uIGFuZCB2ZXJpZmljYXRpb24gc2NvcGUuIFVzZSB0aGUgTGVhbiB2YXJpYW50IG9ubHkgd2hlbiBhcHBsaWNhYmxlLiBQcmVzZXJ2ZSBjb2F1dGhvcnMnIHN1cHBsaWVkIGRlY2xhcmF0aW9ucy4gVmVyaWZ5IGN1cnJlbnQgdmVudWUgcmVxdWlyZW1lbnRzIGFuZCBhY3R1YWwgdG9vbCB1c2U7IGZsYWcgYW55IHJlcXVpcmVkIHRydXRoZnVsIGFkZGl0aW9uYWwgZGlzY2xvc3VyZSBvciBpbmNvbXBhdGlibGUgdmVudWUgcnVsZSByYXRoZXIgdGhhbiBjbGFpbWluZyBub25leGlzdGVudCBodW1hbi1vbmx5IGF1dGhvcnNoaXAuIERvIG5vdCBpbnNlcnQgbWFudXNjcmlwdCBkaXNjbG9zdXJlIGJvaWxlcnBsYXRlIGluIG9yZGluYXJ5IGFjYWRlbWljIGVtYWlscy4iCn0K"
+  },
+  "expected_writes": [
+    {
+      "adapter": "publication",
+      "method": "register_note",
+      "args": [
+        {
+          "abstract": "The precise result.",
+          "creators": [
+            {
+              "name": "Avery Reed"
+            },
+            {
+              "name": "Blaire Mercer"
+            }
+          ],
+          "evidence_url": "https://sample.example.invalid/commit/proof.lean",
+          "id": "alpha",
+          "license": "cc-by-4.0",
+          "problem_ids": [
+            "problem-alpha"
+          ],
+          "revision": 1,
+          "summary": "The original conjecture is proved.",
+          "title": "Proof of the conjecture",
+          "topic": "Original conjecture"
+        }
+      ],
+      "kwargs": {}
+    },
+    {
+      "adapter": "publication",
+      "method": "upload",
+      "args": [
+        "short-note-alpha",
+        {
+          "$file": "request-3f2d7d6b9afb6e6799f9bc50.json",
+          "base64": "ewogICJhY3Rpb24iOiAicHVibGlzaCIsCiAgImlkIjogImFscGhhIiwKICAicmV2aXNpb24iOiAxLAogICJzY2hlbWFfdmVyc2lvbiI6ICJzaG9ydC1ub3RlLXJlcXVlc3QudjEiCn0K"
+        }
+      ],
+      "kwargs": {}
+    }
+  ]
+}

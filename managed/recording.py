@@ -39,9 +39,12 @@ def secrets():
 def scrub(value, extra=()):
     values = secrets() | {s for s in extra if isinstance(s, str) and s}
     variants = set()
+    hex_patterns = {item.encode().hex() for item in values}
+    hex_patterns.update(item for item in values if re.fullmatch(r'[0-9a-fA-F]+', item))
     for item in values:
         variants.update((item, quote(item, safe=''), quote_plus(item),
-                         base64.b64encode(item.encode()).decode(), json.dumps(item)[1:-1]))
+                         base64.b64encode(item.encode()).decode(), json.dumps(item)[1:-1],
+                         item.encode().hex(), item.encode().hex().upper()))
     def clean(v):
         if isinstance(v, dict):
             return {clean(str(k)): '[redacted]' if SECRET_KEYS.search(str(k)) else clean(x) for k, x in v.items()}
@@ -51,6 +54,14 @@ def scrub(value, extra=()):
             try: return clean(json.loads(v))
             except (ValueError, UnicodeError): return clean(v.decode('utf-8', errors='replace'))
         if isinstance(v, str):
+            # Read adapters can return JSON as text rather than decoded objects.
+            # Apply the same credential-key rules inside those string values.
+            try:
+                parsed = json.loads(v)
+                if isinstance(parsed, (dict, list)):
+                    filtered = clean(parsed)
+                    if parsed != filtered: return canonical(filtered)
+            except (ValueError, UnicodeError): pass
             # Files in scenario frames are base64 read responses. Redact inside
             # them as well, retaining original bytes when nothing was masked.
             if len(v) >= 4 and len(v) % 4 == 0:
@@ -62,12 +73,19 @@ def scrub(value, extra=()):
                         parsed = json.loads(raw)
                         filtered = clean(parsed)
                         if parsed != filtered: cleaned = canonical(filtered).encode()
-                    except (ValueError, UnicodeError): pass
+                    except (ValueError, UnicodeError):
+                        try: cleaned = clean(raw.decode('utf-8')).encode('utf-8')
+                        except UnicodeError: pass
                     if cleaned != raw: return base64.b64encode(cleaned).decode()
                 except (ValueError, UnicodeError): pass
             for item in sorted(variants, key=len, reverse=True):
                 v = v.replace(item, '[redacted]')
+            for pattern in hex_patterns:
+                v = re.sub(re.escape(pattern), '[redacted]', v, flags=re.IGNORECASE)
             v = re.sub(r'(?i)(bearer|basic)\s+[^\s"\'<>]+', r'\1 [redacted]', v)
+            v = re.sub(r'(?i)(\b(?:authorization|proxy-authorization|cookie|set-cookie|'
+                       r'[\w-]*(?:token|secret|credential|api[-_]?key))\s*:\s*)[^\r\n]+',
+                       r'\1[redacted]', v)
             v = re.sub(r'(?i)((?:access_token|token|sig|signature|api_key|password)=)[^&\s"\']+', r'\1[redacted]', v)
             v = re.sub(r'(https?://)[^/@\s]+:[^/@\s]+@', r'\1[redacted]@', v)
         return v
@@ -247,6 +265,7 @@ def run(args, *, record_adapter=None, **kwargs):
         if record_adapter: call['adapter'] = record_adapter
         from .run_log import SECRET_ENV_KEYS
         child_secrets = [v for k, v in (kwargs.get('env') or {}).items() if k in SECRET_ENV_KEYS and v]
+        child_secrets += command_secrets(args)
     except Exception as error:
         print('recording-error ' + type(error).__name__, file=sys.stderr)
         return subprocess.run(args, **kwargs)
@@ -272,9 +291,27 @@ def check_output(args, **kwargs):
         return subprocess.check_output(args, **kwargs)
     try: result = subprocess.check_output(args, **kwargs)
     except Exception as error:
-        emit({**call, 'status': getattr(error, 'returncode', None), 'error': type(error).__name__}); raise
-    emit({**call, 'status': 0, 'response_body': result})
+        emit({**call, 'status': getattr(error, 'returncode', None), 'error': type(error).__name__}, command_secrets(args)); raise
+    emit({**call, 'status': 0, 'response_body': result}, command_secrets(args))
     return result
+
+
+def command_secrets(args):
+    """Header values also mask credential echoes in a command's read output."""
+    values = []
+    for arg in map(str, args):
+        header = arg.split('=', 1)[-1] if arg.startswith(('--header=', '-H=')) else arg
+        key, separator, value = header.partition(':')
+        if separator and SECRET_KEYS.search(key.strip()):
+            if key.strip().lower() in {'cookie', 'set-cookie'}:
+                # Register the complete header value, never individual cookie
+                # values such as "1" that also occur throughout valid evidence.
+                values.append(header)
+                if '=' in value: values.append(value.strip())
+            else:
+                values.append(value.strip())
+                values.append(value.strip().split(' ', 1)[-1])
+    return [value for value in values if value]
 
 
 def decision(gate):
@@ -305,8 +342,8 @@ def pending_uploads():
 # A stage frame relates transport evidence to its logical input/output. This is
 # private recording data, never a production replay or a ledger save.
 from contextvars import ContextVar
-_STAGE = ContextVar('recorded_mathesis_stage', default=None)
-_WRITE_METHODS = {'deliver', 'deliver_pre_reviewed', 'withdraw', 'upload', 'create', 'register_note', 'save_state', 'delete_asset'}
+_STAGE = ContextVar('recorded_stage', default=None)
+_WRITE_METHODS = {'deliver', 'deliver_pre_reviewed', 'withdraw', 'upload', 'create', 'register_note', 'save_state', 'delete_asset', 'commit_tables'}
 
 
 def _capture(adapter_name, method, function, args, kwargs):
@@ -317,6 +354,7 @@ def _capture(adapter_name, method, function, args, kwargs):
     try:
         entry = {'adapter': adapter_name, 'method': method, 'kwargs': encode(kwargs)}
         if method in _WRITE_METHODS:
+            entry['saved_snapshot_digest'] = frame.get('_saved_snapshot_digest')
             entry['args_digest'] = hashlib.sha256(canonical(encode(args)).encode()).hexdigest()
         else: entry['args'] = encode(args)
         frame['script'].append(entry)
@@ -358,57 +396,204 @@ def adapter(name, value):
     return _StageAdapter(name, value)
 
 
-def mathesis_stage(stage):
-    @functools.wraps(stage)
-    def wrapped(ledger, config, root, folder, client=None, secret=None, note_gh=None, **kwargs):
-        if not enabled(): return stage(ledger, config, root, folder, client, secret, note_gh, **kwargs)
-        from .scenario_contract import dump, logical, files
-        from .location import example_config
-        from .control import workflow
-        # Capture failures must never disable a stage or alter its outcome.
-        try:
-            frame = {'schema_version': 1, 'id': 'recorded-mathesis', 'stage': 'mathesis',
-                     'initial_rows': dump(ledger.tasks), 'initial_files': files(Path(root)),
-                     'config': config, 'installation': example_config(), 'workflow': workflow('mathesis'),
-                     'now': ledger.tasks.clock(), 'script': [], 'update_times': [], 'admissions': [], '_errors': {},
-                     'adapter_attributes': {'releases': {'repo': ledger.releases.repo, 'tag': ledger.releases.tag}},
-                     'options': {'previous': list(getattr(getattr(ledger, 'tick', None), 'previous', {}).get('mathesis', [])), 'again': kwargs.get('again', False), 'attempted': sorted(kwargs['attempted']) if kwargs.get('attempted') is not None else None}}
-        except Exception as error:
-            emit({'event': 'mathesis_stage_unavailable', 'error': type(error).__name__})
-            return stage(ledger, config, root, folder, client, secret, note_gh, **kwargs)
-        token = _STAGE.set(frame)
-        original_save, original_releases, original_update = ledger.save, ledger.releases, ledger.tasks.update
-        def save(*a, **kw):
-            remote = ledger.releases; ledger.releases = original_releases
-            try: return _capture('ledger', 'save', original_save, a, kw)
-            finally: ledger.releases = remote
-        def update(*a, **kw):
-            row = original_update(*a, **kw)
+def policy_read(function):
+    """Capture the effective policy, including engine fallbacks and overlays."""
+    @functools.wraps(function)
+    def wrapped(path, *args, **kwargs):
+        result = function(path, *args, **kwargs)
+        frame = _STAGE.get()
+        if enabled() and frame is not None:
             try:
-                at = ledger.tasks.db.execute('SELECT at FROM task_events WHERE id=? AND revision=? ORDER BY seq DESC LIMIT 1', (row['id'], row['revision'])).fetchone()[0]
-                frame['update_times'].append([row['updated'], at])
-            except Exception as error:
-                print('recording-error ' + type(error).__name__, file=sys.stderr)
-                frame['incomplete'] = True
-            return row
-        ledger.save = save; ledger.releases = adapter('releases', original_releases); ledger.tasks.update = update
-        try:
-            return stage(ledger, config, root, folder, adapter('mathesis', client) if client is not None else None,
-                         secret, adapter('publication', note_gh) if note_gh is not None else None, **kwargs)
-        except Exception as error:
-            frame['error'] = {'type': type(error).__name__, 'message': ''}; raise
-        finally:
-            ledger.save, ledger.releases, ledger.tasks.update = original_save, original_releases, original_update
-            _STAGE.reset(token)
-            try:
-                frame.pop('_errors', None)
-                frame['expected_final_rows'] = logical(dump(ledger.tasks))
-                frame['now_end'] = ledger.tasks.clock()
-                safe_frame = scrub(frame, (secret,) if secret else ())
-                if safe_frame != frame: safe_frame['redacted'] = True
-                emit({'event': 'mathesis_stage', 'case': safe_frame})
-            except Exception as error: emit({'event': 'mathesis_stage_unavailable', 'error': type(error).__name__})
+                raw = result.encode('utf-8')
+                if len(raw) > MAX_STAGE_FILE_BYTES: frame['incomplete'] = True
+                else: frame['initial_files'][path] = base64.b64encode(raw).decode()
+            except Exception: frame['incomplete'] = True
+        return result
     return wrapped
+
+
+# Hard ceiling includes the complete canonical JSONL event and its newline.
+MAX_STAGE_FRAME_BYTES = 1024 * 1024
+MAX_STAGE_FILE_BYTES = MAX_STAGE_FRAME_BYTES // 2
+_AUDIT_INSTALLED = False
+
+
+def _stage_file_open(event, args):
+    if event != 'open': return
+    frame = _STAGE.get()
+    if frame is None or frame.get('_reading_file'): return
+    try:
+        path, mode, flags = args
+        if not isinstance(path, (str, bytes, os.PathLike)): return
+        path = Path(path).resolve()
+        relative = path.relative_to(frame['_root']).as_posix()
+        if not relative.startswith(('tables/', 'managed/')) or relative in frame['initial_files']: return
+        # Capture the bytes before the first access (including a write). A
+        # missing file is represented by absence, and its later write is in
+        # final_files. No directory walk or unrelated policy file is recorded.
+        frame['_reading_file'] = True
+        if path.is_file():
+            if path.stat().st_size > MAX_STAGE_FILE_BYTES:
+                frame['incomplete'] = True
+            else:
+                raw = path.read_bytes()
+                frame['initial_files'][relative] = base64.b64encode(raw).decode()
+        frame['_touched_files'].add(relative)
+    except Exception:
+        pass
+    finally:
+        frame['_reading_file'] = False
+
+
+def stage_frame(name):
+    def decorate(stage):
+        @functools.wraps(stage)
+        def wrapped(ledger, config, root, *args, **kwargs):
+            if not enabled(): return stage(ledger, config, root, *args, **kwargs)
+            from .scenario_contract import table_digests, capture_tables
+            from .location import example_config
+            from .control import workflow
+            global _AUDIT_INSTALLED
+            try:
+                if not _AUDIT_INSTALLED:
+                    sys.addaudithook(_stage_file_open); _AUDIT_INSTALLED = True
+                baseline = getattr(ledger, '_recording_baseline', None)
+                initial, initial_index, delta, overflow = capture_tables(ledger.tasks, baseline)
+                frame = {'schema_version': 2, 'id': 'recorded-' + name, 'stage': name,
+                         'initial_digests': initial, 'initial_files': {},
+                         'base_digests': (baseline or initial_index)['digests'], 'initial_delta': delta,
+                         'incomplete': overflow,
+                         'config': config, 'installation': example_config(), 'workflow': workflow('mathesis'),
+                         'now': ledger.tasks.clock(), 'script': [], 'update_times': [], 'admissions': [],
+                         '_errors': {}, '_root': Path(root).resolve(), '_touched_files': set(),
+                         'adapter_attributes': {'releases': {k: getattr(ledger.releases, k, '') for k in ('repo', 'tag')}},
+                         'options': {'previous': list(getattr(getattr(ledger, 'tick', None), 'previous', {}).get(name, []))}}
+                if name == 'mathesis':
+                    frame['options'].update(again=kwargs.get('again', False), attempted=sorted(kwargs['attempted']) if kwargs.get('attempted') is not None else None)
+                if name == 'sent':
+                    from datetime import datetime, timezone
+                    box = args[0] if args else kwargs.get('mailbox')
+                    frame['adapter_attributes']['mailbox'] = {'settings': getattr(box, 'settings', {})}
+                    frame['options'].update(max_pages=2, mailbox=box is not None)
+                    frame['datetime'] = (args[1] if len(args) > 1 and args[1] else datetime.now(timezone.utc)).isoformat()
+            except Exception as error:
+                emit({'event': name + '_stage_unavailable', 'error': type(error).__name__})
+                return stage(ledger, config, root, *args, **kwargs)
+            token = _STAGE.set(frame)
+            original_save, original_releases, original_update = ledger.save, ledger.releases, ledger.tasks.update
+            def save(*a, **kw):
+                remote = ledger.releases; ledger.releases = original_releases
+                try:
+                    result = _capture('ledger', 'save', original_save, a, kw)
+                    snapshot = getattr(ledger, 'snapshot', None)
+                    frame['_saved_snapshot_digest'] = snapshot['sha256'] if snapshot else hashlib.sha256(canonical(table_digests(ledger.tasks)).encode()).hexdigest()
+                    frame['script'][-1]['saved_snapshot'] = {'generation': getattr(ledger, 'generation', 0), 'digest': frame['_saved_snapshot_digest']}
+                    return result
+                finally: ledger.releases = remote
+            def update(*a, **kw):
+                row = original_update(*a, **kw)
+                try:
+                    at = ledger.tasks.db.execute('SELECT at FROM task_events WHERE id=? AND revision=? ORDER BY seq DESC LIMIT 1', (row['id'], row['revision'])).fetchone()[0]
+                    frame['update_times'].append([row['updated'], at])
+                except Exception: frame['incomplete'] = True
+                return row
+            ledger.save = save; ledger.releases = adapter('releases', original_releases); ledger.tasks.update = update
+            secret = kwargs.get('secret')
+            values = list(args)
+            if name == 'mathesis':
+                for index, label in ((1, 'mathesis'), (3, 'publication')):
+                    if len(values) > index and values[index] is not None: values[index] = adapter(label, values[index])
+                if len(values) > 2: secret = values[2]
+            elif name == 'publication':
+                if len(values) > 1 and values[1] is not None: values[1] = adapter('publication', values[1])
+                if len(values) > 2: secret = values[2]
+            elif name == 'sent' and values and values[0] is not None: values[0] = adapter('mailbox', values[0])
+            try:
+                return stage(ledger, config, root, *values, **kwargs)
+            except Exception as error:
+                frame['error'] = {'type': type(error).__name__, 'message': ''}; raise
+            finally:
+                ledger.save, ledger.releases, ledger.tasks.update = original_save, original_releases, original_update
+                _STAGE.reset(token)
+                try:
+                    final_digests, final_index, _, _ = capture_tables(ledger.tasks)
+                    frame['expected_final_digests'] = final_digests
+                    frame['now_end'] = ledger.tasks.clock()
+                    touched = frame['_touched_files']
+                    frame['expected_final_files'] = {p: base64.b64encode((Path(root) / p).read_bytes()).decode()
+                        for p in touched if (Path(root) / p).is_file() and (Path(root) / p).stat().st_size <= MAX_STAGE_FILE_BYTES}
+                    frame = {k: v for k, v in frame.items() if not k.startswith('_')}
+                    safe = scrub(frame, (secret,) if secret else ())
+                    if safe != frame: safe['redacted'] = True
+                    event = {'event': name + '_stage', 'case': safe}
+                    if frame.get('incomplete') or len((canonical({'schema_version': 1, **event}) + '\n').encode()) > MAX_STAGE_FRAME_BYTES:
+                        emit({'event': name + '_stage_unavailable', 'reason': 'frame-size-or-capture',
+                              'initial_digests': frame['initial_digests'], 'final_digests': frame['expected_final_digests']})
+                    else:
+                        emit(event)
+                        ledger._recording_baseline = final_index
+                except Exception as error: emit({'event': name + '_stage_unavailable', 'error': type(error).__name__})
+        return wrapped
+    return decorate
+
+
+mathesis_stage = stage_frame('mathesis')
+
+
+def package_read(function):
+    """Record the filesystem service result once, including exact prepared bytes.
+
+    Transport evidence remains independently recorded. Stage replay treats the
+    validated package as a typed short-note service observation.
+    """
+    @functools.wraps(function)
+    def wrapped(row, directory, releases):
+        if not enabled() or _STAGE.get() is None or _STAGE.get()['stage'] != 'publication':
+            return function(row, directory, releases)
+        result = None
+        def read(task_id, result_hash):
+            nonlocal result
+            result = function(row, directory, releases.target if isinstance(releases, _StageAdapter) else releases)
+            metadata, prepared, source = result
+            return {'metadata': metadata, 'source': source,
+                    'files': {p.name: p for p in sorted(Path(prepared).iterdir())}}
+        _capture('shortnote', 'package', read, (row['id'], hashlib.sha256(canonical(row['data']['result']).encode()).hexdigest()), {})
+        return result
+    return wrapped
+
+
+def contact_render(root, function):
+    if not enabled() or _STAGE.get() is None: return function()
+    from . import registry
+    from .scenario_contract import files
+    def render(contacts):
+        function()
+        return {name: base64.b64encode((Path(root) / name).read_bytes()).decode() for name in ('tables/contacts.json', 'tables/CONTACTS.md', 'tables/POSITIVE.md') if (Path(root) / name).is_file()}
+    return _capture('registry', 'render', render, (registry.read(root, 'contacts'),), {})
+
+
+def contact_commit(function):
+    if not enabled() or _STAGE.get() is None: return function()
+    return _capture('registry', 'commit_tables', function, (), {})
+
+
+def contact_needs_push(function):
+    if not enabled() or _STAGE.get() is None: return function()
+    return _capture('registry', 'needs_push', function, (), {})
+
+
+def snapshot_index(path):
+    if not enabled() or not Path(path).is_file(): return None
+    try:
+        import sqlite3
+        from types import SimpleNamespace
+        from .scenario_contract import capture_tables
+        db = sqlite3.connect(Path(path).resolve().as_uri() + '?mode=ro&immutable=1', uri=True)
+        try: return capture_tables(SimpleNamespace(db=db))[1]
+        finally: db.close()
+    except Exception as error:
+        emit({'event': 'snapshot_index_unavailable', 'error': type(error).__name__})
+        return None
 
 
 def observed_error(error, summary):

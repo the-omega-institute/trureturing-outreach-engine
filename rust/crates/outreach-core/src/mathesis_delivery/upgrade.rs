@@ -54,7 +54,11 @@ fn prior_section(text: &str) -> Result<Option<Value>> {
     }
     Ok(Some(value))
 }
-fn evidence(replay: &Replay<'_>, port: &mut impl DeliveryPorts, row: &Value) -> StageResult<Value> {
+pub(crate) fn evidence(
+    replay: &Replay<'_>,
+    port: &mut impl DeliveryPorts,
+    row: &Value,
+) -> StageResult<Value> {
     let mut candidates = vec![row.clone()];
     let mut current = row;
     let mut seen = std::collections::BTreeSet::new();

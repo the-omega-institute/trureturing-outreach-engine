@@ -1,12 +1,13 @@
 """Serialized, metadata-only Sent Items intake for the maintained contact map."""
 from datetime import datetime, timezone
+import hashlib
 import json
 import os
 from pathlib import Path
 import re
 import sys
 
-from . import registry
+from . import registry, recording
 from .mailbox import address, instant, _machine_sender
 from .queue import canonical, require
 from .tasks import review_current
@@ -148,11 +149,25 @@ def commit_tables(root):
     push(root)
 
 
+def tables_need_push(root):
+    """Read local Git state only; include commits left by an uncertain push."""
+    from .location import DATA_BRANCH
+
+    if recording.check_output(['git', 'status', '--porcelain', '--', *FILES], cwd=root):
+        return True
+    ahead = recording.check_output(
+        ['git', 'rev-list', '--count', f'refs/remotes/origin/{DATA_BRANCH}..HEAD'], cwd=root)
+    return int(ahead) > 0
+
+
+@recording.stage_frame('sent')
 def reconcile(ledger, config, root, mailbox, now=None, *, observe=None):
     """At most two pages per tick. Checkpoint only after table push succeeds.
 
     A fixed-window sweep resumes newest-first pagination across ticks; after its
     last page the next tick starts another live-window sweep to catch new sends.
+    Recovery reuses the pending cursor's frozen until, even for a retried first
+    page without a next_link; expanding that window could skip intervening mail.
     """
     if mailbox is None or config.get('paused'):
         return {'status': 'disabled', 'events': 0, 'pages': 0}
@@ -164,7 +179,16 @@ def reconcile(ledger, config, root, mailbox, now=None, *, observe=None):
     db = ledger.tasks.db
     saved = db.execute('SELECT payload FROM pipeline_state WHERE key=?', (CURSOR,)).fetchone()
     cursor = json.loads(saved[0]) if saved else {}
-    if cursor.get('since') != since or not cursor.get('next_link'):
+    pending = db.execute('SELECT payload FROM pipeline_state WHERE key=?', ('sent-events-pending',)).fetchone()
+    pending = json.loads(pending[0]) if pending else {}
+    if pending and pending['cursor'].get('since') != since:
+        # Invalidate before page admission/read, even if this tick cannot finish
+        # a page. A new live window must never resurrect the old page handle.
+        db.execute('DELETE FROM pipeline_state WHERE key=?', ('sent-events-pending',))
+        pending = {}
+    if pending:
+        cursor = pending['cursor']
+    elif cursor.get('since') != since or not cursor.get('next_link'):
         cursor = {'since': since, 'until': until}
     require(instant(cursor['until']) <= instant(until), 'Sent cursor is in the future')
     ignored = {str(a).strip().casefold() for a in config.get('mailbox', {}).get('team_addresses', [])}
@@ -179,11 +203,21 @@ def reconcile(ledger, config, root, mailbox, now=None, *, observe=None):
             messages, link = mailbox.sent_events_page(since, cursor['until'], cursor.get('next_link'))
             if observe is not None:
                 observe(messages)
-            report['events'] += record_page(root, messages, rows, ignored, instant(since), instant(cursor['until']), account)
+            added = record_page(root, messages, rows, ignored, instant(since), instant(cursor['until']), account)
+            report['events'] += added
             # Always repair views and retry persistence, including after a prior
             # partial failure when all events are now present in the working tree.
-            registry.render(root, paths=FILES[1:])
-            commit_tables(root)
+            recording.contact_render(root, lambda: registry.render(root, paths=FILES[1:]))
+            if added or recording.contact_needs_push(lambda: tables_need_push(root)):
+                # The digest binds Rust's typed persistence permit for parity;
+                # Python recovery uses only the frozen cursor and deduplication,
+                # and deliberately does not read or validate contacts_digest.
+                intent = {'cursor': cursor.copy(), 'contacts_digest': hashlib.sha256(
+                    canonical(registry.read(root, 'contacts')).encode()).hexdigest()}
+                db.execute('INSERT OR REPLACE INTO pipeline_state VALUES(?,?)', ('sent-events-pending', canonical(intent)))
+                ledger.save(force=True)
+                recording.contact_commit(lambda: commit_tables(root))
+            db.execute('DELETE FROM pipeline_state WHERE key=?', ('sent-events-pending',))
             cursor['next_link'] = link
             db.execute('INSERT OR REPLACE INTO pipeline_state VALUES(?,?)', (CURSOR, canonical(cursor)))
             ledger.save()

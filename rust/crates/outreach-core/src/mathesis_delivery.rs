@@ -578,8 +578,8 @@ fn collection(
         "Collection requires the authentic signed PASS for this exact result",
     )?;
     check(
-        signed["reviewer"] == "local-claude-loop",
-        "Collection requires independent Claude review",
+        crate::validation::independent_reviewer(&signed["reviewer"])?,
+        "Collection requires independent signed review",
     )?;
     check(
         metadata["review"]["record"]["prior_work_check"].is_object()

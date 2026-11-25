@@ -83,8 +83,10 @@ def main():
         ]
         tasks = Tasks(snapshot)
         try:
-            for collection in [False, True]:
-                identity = 'mathesis-stage-' + str(int(collection))
+            for n, (collection, reviewer) in enumerate([
+                    (False, 'local-claude-loop'), (True, 'local-claude-loop'),
+                    (True, 'hosted-cma-review')]):
+                identity = 'mathesis-stage-' + str(n)
                 directory = folder / identity;directory.mkdir()
                 (directory / 'source.zip').write_bytes(b'PK\x03\x04Synthetic source')
                 (directory / 'note.pdf').write_bytes(b'%PDF-Synthetic PDF')
@@ -102,7 +104,7 @@ def main():
                 row = tasks.add(req)
                 row = tasks.update(identity, row['revision'], 'awaiting-review', {'result': {'schema_version': 1, 'task_id': identity,
                     'outcome': 'completed', 'report': 'Synthetic checked manuscript', 'artifacts': artifacts, 'packet': None}})
-                tasks.verdict(sign({**review, 'binding': tasks.review_binding(row)}), KEY)
+                tasks.verdict(sign({**review, 'binding': tasks.review_binding(row), 'reviewer':reviewer}), KEY)
                 decisions = {'source_file': 'source.zip', 'purpose': 'publication' if collection else 'review_only',
                              'processing_consent': True, 'ai_disclosure': 'Synthetic disclosure', 'decision_ref': 'synthetic:authorization',
                              'make_public_after_acceptance': collection}

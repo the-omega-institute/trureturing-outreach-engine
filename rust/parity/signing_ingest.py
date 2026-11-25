@@ -233,6 +233,16 @@ def main():
         root = folder / 'data'
         snapshot, envelopes, review, close, edit, rows = fixture(root)
         scenarios = [(f'family-{k}', [(k, v)]) for k, v in envelopes.items()]
+        from managed.mathesis_delivery import signature as mathesis_signature
+        for family in ('review', 'mathesis', 'decision', 'draft-revision'):
+            for n, reviewer in enumerate(('hosted-cma-review', 'unknown-reviewer', None, [], {})):
+                value = {k:v for k,v in envelopes[family].items() if k != 'signature'}
+                value['reviewer'] = reviewer
+                if family == 'mathesis':
+                    value['signature'] = mathesis_signature(value, KEY)
+                else:
+                    value = sign(value)
+                scenarios.append((f'reviewer-{family}-{n}', [(family, value)]))
         scenarios += [('close', [('decision', sign(close))]), ('edit', [('review', sign(edit))]),
                       ('firstcontact-edit', [('review', sign(rows['first_edit']))]),
                       ('all-families', list(envelopes.items())), ('duplicate-event', [('review', envelopes['review']), ('review', envelopes['review'])])]

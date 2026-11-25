@@ -402,6 +402,7 @@ pub fn mathesis(
         ("reviewer", string("local-claude-loop")),
     ]);
     if collection {
+        value["reviewer"] = row["data"]["review"]["reviewer"].clone();
         require(
             manifest["private_correspondence_included"] == false,
             "Scientific-only handoff required",

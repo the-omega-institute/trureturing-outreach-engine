@@ -43,6 +43,10 @@ pub fn hashable(v: &Value) -> Result<()> {
         _ => Ok(()),
     }
 }
+pub fn independent_reviewer(v: &Value) -> Result<bool> {
+    hashable(v)?;
+    Ok(["local-claude-loop", "hosted-cma-review"].contains(&s(v)))
+}
 pub fn lookup<'a>(v: &'a Value, k: &str) -> Result<&'a Value> {
     match v {
         Value::Object(o) => o.get(k).ok_or_else(|| Error::new(format!("'{k}'"))),

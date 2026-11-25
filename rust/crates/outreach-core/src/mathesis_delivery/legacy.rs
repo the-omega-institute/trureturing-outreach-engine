@@ -201,7 +201,7 @@ fn build(replay: &Replay<'_>, row: &Value, secret: &[u8]) -> StageResult<Value> 
             ("metadata", metadata),
             ("pdf", pdf.clone()),
             ("source", source.clone()),
-            ("reviewer", string("local-claude-loop")),
+            ("reviewer", row["data"]["review"]["reviewer"].clone()),
         ]),
         secret,
     )?;

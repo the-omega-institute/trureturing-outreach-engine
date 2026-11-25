@@ -353,10 +353,10 @@ class PublicationTests(unittest.TestCase):
             nonlocal evidence_reads
             if args[args.index('--pattern') + 1] == 'evidence.md':
                 evidence_reads += 1
-                # The cache sees no structured verdict, so select scans again.
-                if evidence_reads % 2 == 0:
-                    checkpoint_counts.append(self.row()['data']['publication_loop'].get('consecutive_failures'))
-                    return live.run(*args)
+                # An exact cached copy is reused, so the failing read is the
+                # first evidence download of each attempt.
+                checkpoint_counts.append(self.row()['data']['publication_loop'].get('consecutive_failures'))
+                return live.run(*args)
             return run(*args)
 
         failure = subprocess.CompletedProcess([], 1, b'', b'no assets match the file pattern')
@@ -366,7 +366,7 @@ class PublicationTests(unittest.TestCase):
                 self.run_publication()
                 loop = self.row()['data']['publication_loop']
                 self.assertEqual(loop['consecutive_failures'], count)
-                self.assertEqual(loop['step'], 'select')
+                self.assertEqual(loop['step'], 'prior-work-cache')
                 self.assertEqual(loop['diagnostic'], 'gh release download no assets match')
                 self.assertEqual(loop['next_retry_at'], now + delay)
                 self.run_publication()

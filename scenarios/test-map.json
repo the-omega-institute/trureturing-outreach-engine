@@ -276,6 +276,9 @@
     "publication-enqueue_response_loss_replays_original_immutable_request-1",
     "publication-enqueue_response_loss_replays_original_immutable_request-2"
   ],
+  "test_publication.PublicationTests.test_equal_priority_notes_preserve_arrival_order": [
+    "publication-equal_priority_notes_preserve_arrival_order-1"
+  ],
   "test_publication.PublicationTests.test_exact_pass_enqueues_durable_request_and_signs_decision": [
     "publication-exact_pass_enqueues_durable_request_and_signs_decision-1"
   ],

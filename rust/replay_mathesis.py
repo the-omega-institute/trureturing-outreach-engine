@@ -31,8 +31,9 @@ def replay(directory, snapshot, binary, key=None):
             raise ValueError('open snapshot')
         before = hashlib.sha256(snapshot.read_bytes()).hexdigest()
         connection = sqlite3.connect('file:' + quote(str(snapshot)) + '?mode=ro&immutable=1', uri=True)
-        try: initial = logical(dump(SimpleNamespace(db=connection)))
+        try: initial = dump(SimpleNamespace(db=connection))
         finally: connection.close()
+        logical_initial = logical(initial)
         events = []
         for path in sorted(directory.glob('calls-*.jsonl')):
             for line in path.read_text().splitlines(): events.append(json.loads(line))
@@ -44,8 +45,8 @@ def replay(directory, snapshot, binary, key=None):
             if not any(p['snapshot']['sha256'] == before for p in starts): raise ValueError('start snapshot mismatch')
         elif cases:
             if 'initial_rows' in cases[0]:
-                if canonical(initial) != canonical(logical(cases[0]['initial_rows'])): raise ValueError('fixture start mismatch')
-            elif {k: hashlib.sha256(canonical(v).encode()).hexdigest() for k,v in initial.items()} != cases[0]['initial_digests']:
+                if canonical(logical_initial) != canonical(logical(cases[0]['initial_rows'])): raise ValueError('fixture start mismatch')
+            elif {k: hashlib.sha256(canonical(v).encode()).hexdigest() for k,v in logical_initial.items()} != cases[0]['initial_digests']:
                 raise ValueError('fixture start mismatch')
         eligible = []
         for case in cases:

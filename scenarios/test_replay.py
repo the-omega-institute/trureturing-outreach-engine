@@ -23,6 +23,7 @@ class ReplayTests(unittest.TestCase):
         names = [
             'mathesis-pass_signed_selection_and_persisted_receipt_finish_without_platform_review-1',
             'publication-exact_pass_enqueues_durable_request_and_signs_decision-1',
+            'publication-equal_priority_notes_preserve_arrival_order-1',
             'sent-owner_draft_sent_uses_exact_sent_receipt_and_reviewed_headline-1',
         ]
         binary = ROOT / 'rust/target/debug/examples/scenarios'

@@ -446,7 +446,7 @@ temporary copy. The caller supplies the starting generation, clock, assets and
 required resource bytes; no private window is discovered automatically.
 
 The synthetic differential suites exercise 4,572 request/packet/source-gap/time
-cases (4,048 identical rejections), 241 byte-equal signing outputs, 13 supported ingestion
+cases (4,048 identical rejections), 242 byte-equal signing outputs, 13 supported ingestion
 families across 378 replay cases / 1,509 passes (654 matching rejections), and
 17 byte-equal stage selections/resources subsequently accepted by Python.
 Replay covers PASS/BOUNCE/HOLD, answer and close decisions, wrong states, stale
@@ -524,8 +524,8 @@ service traits. No Rust network adapter, production replay, uploader or cutover
 is enabled. Sandbox-pool work, including the #26 last-healthy-Sandbox behavior,
 is explicitly deferred to phase 3c.
 
-`../scenarios/README.md` describes the **241 Python-first scenarios** and their
-source-test map. Rust matches **233**, with eight intake cases skipped. Run:
+`../scenarios/README.md` describes the **242 Python-first scenarios** and their
+source-test map. Rust matches **234**, with eight intake cases skipped. Run:
 
 ```sh
 python3.12 ../scenarios/runner.py

@@ -13,18 +13,19 @@ python3.12 rust/scenarios.py
 python3.12 -m unittest discover -s scenarios -p 'test_*.py'
 ```
 
-There are **241 scenarios from 111 converted tests**. Python runs all 241; Rust
-matches all **233 Mathesis, publication and sent-event scenarios**, and skips the
+There are **242 scenarios from 112 converted tests**. Python runs all 242; Rust
+matches all **234 Mathesis, publication and sent-event scenarios**, and skips the
 eight intake scenarios. The counts by source suite are:
 
 | Source tests | Converted tests | Scenarios |
 | --- | ---: | ---: |
 | `test_mathesis_delivery.DeliveryTests` | 17 | 34 |
 | `test_pre_reviewed.PreReviewedTests` | 13 | 21 |
-| `test_publication.PublicationTests` | 47 | 141 |
+| `test_publication.PublicationTests` | 48 | 142 |
 | `test_sent_events.SentEventsTests` | 26 | 37 |
 | `test_mailbox_triage.TriageTests` | 8 | 8 |
 
+The publication count includes one new equal-priority arrival-order regression.
 Original tests remain, including assertions about restart recovery and operator
 views. Seven publication tests retain native coverage: the six coordinator or
 Mathesis multi-pass scheduling tests and

@@ -375,8 +375,11 @@ def process(ledger, cma, task_id, run, config, folder, secret):
             write(ledger, task_id, run)
         if run.get('agent_id') and not run.get('cleanup_complete'):
             # These Sandboxes belong to the pool, even when this is their last Agent.
+            # Carry the previous outcome and the ledger clock so an accepted
+            # DELETE is observed (not resent) and the 24 h check can fire.
             run['cleanup'] = cma.retire(run['agent_id'], run['create_key'] + '-cleanup',
-                                        owned_sandbox_id=None)
+                                        owned_sandbox_id=None, previous=run.get('cleanup'),
+                                        now=ledger.tasks.clock())
             run['cleanup_complete'] = run['cleanup'].get('deleted') is True
             write(ledger, task_id, run)
         return

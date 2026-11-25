@@ -360,6 +360,31 @@ class HostedReviewTests(unittest.TestCase):
             "SELECT payload FROM pipeline_state WHERE key='sandbox_pool'").fetchone()[0]), [self.entry])
         self.assertEqual([method for _, method in calls if method != 'GET'], ['DELETE'])
 
+    def test_accepted_reviewer_delete_is_observed_not_resent(self):
+        from managed.cma import CMA as Adapter, AGENT_CLEANUP_WAIT_SECONDS
+        self.advance()
+        calls = []
+        agent = {'id': 'agt_review', 'status': 'ready', 'sandbox': {'id': 'sbx_mail'}}
+        def request(path, method='GET', body=None, key=None):
+            calls.append((path, method))
+            if path == '/api/v1/agents/agt_review' and method == 'DELETE':
+                return {'status': 'accepted'}
+            if path != '/api/v1/agents/agt_review':
+                self.fail('Reviewer cleanup touched shared Sandbox inventory: ' + path)
+            return dict(agent)
+        adapter = Adapter(token='synthetic'); adapter.request = request; adapter.retire_wait = 0
+        self.cma.retire = adapter.retire
+        for _ in range(3):
+            self.advance()
+        self.assertEqual(sum(method == 'DELETE' for _, method in calls), 1)
+        cleanup = self.row()['data']['hosted_review']['cleanup']
+        self.assertEqual(cleanup.get('delete_outcome'), 'accepted')
+        started = cleanup['cleanup_started_at']
+        self.tasks.clock = lambda: started + AGENT_CLEANUP_WAIT_SECONDS + 1
+        self.advance()
+        self.assertIn('operator_check', self.row()['data']['hosted_review']['cleanup'])
+        self.assertEqual(sum(method == 'DELETE' for _, method in calls), 1)
+
     def test_delivered_and_immutable_intent_rows_keep_their_signed_review(self):
         self.advance(); self.advance()
         base = self.row()

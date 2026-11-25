@@ -11,7 +11,6 @@ import argparse
 from datetime import date, datetime, timezone
 import json
 from pathlib import Path
-from urllib.error import HTTPError, URLError
 
 from . import submission_mail, submissions
 from .queue import canonical
@@ -64,19 +63,10 @@ def collect(mailbox, since, until=None):
     until = until or datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
     rows = mailbox.messages('inbox', {'$filter': 'receivedDateTime ge ' + since +
                                      ' and receivedDateTime le ' + until}, include_unique_body=True)
-    result, seen = [], set()
-    for row in rows:
-        conversation = row.get('conversationId')
-        if not conversation or conversation in seen:
-            continue
-        if not submission_mail.is_system_message(row) and not submission_mail.parse_message(row):
-            continue
-        seen.add(conversation)
-        thread = mailbox.thread(conversation)
-        for message in thread:
-            if submission_mail.parse_message(message):
-                result.append(message)
-    return result
+    # The bounded Graph listing already includes the sender's unique body.
+    # Reopening whole threads reintroduces quoted links, outbound drafts and
+    # messages outside this incoming-mail window.
+    return [row for row in rows if not row.get('isDraft') and submission_mail.parse_message(row)]
 
 
 def reconcile(root=ROOT, mailbox=None, since=None, until=None, verify=None):
@@ -90,20 +80,7 @@ def reconcile(root=ROOT, mailbox=None, since=None, until=None, verify=None):
     if not since or _iso(since) > _iso(until or datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')):
         raise ValueError('Submission mailbox boundary is missing or in the future')
     messages = collect(mailbox, since, until)
-    try:
-        report = submission_mail.reconcile(board['papers'], messages, verify=verify)
-    except HTTPError as error:
-        # arXiv rate limits and transient server failures must leave the board
-        # untouched and allow the serialized workflow to continue.
-        if error.code == 429 or 500 <= error.code < 600:
-            return {'updates': [], 'ambiguous': [], 'ignored': [], 'messages': len(messages),
-                    'status': 'arxiv-unavailable',
-                    'error': f'HTTPError {error.code}: {str(error.reason)[:200]}'}, board
-        raise
-    except (URLError, TimeoutError, OSError) as error:
-        return {'updates': [], 'ambiguous': [], 'ignored': [], 'messages': len(messages),
-                'status': 'arxiv-unavailable',
-                'error': type(error).__name__ + ': ' + str(error)[:200]}, board
+    report = submission_mail.reconcile(board['papers'], messages, verify=verify)
     if report['updates']:
         updated = submission_mail.apply_updates(board, report)
         updated['updated_on'] = datetime.now(timezone.utc).date().isoformat()
@@ -111,9 +88,12 @@ def reconcile(root=ROOT, mailbox=None, since=None, until=None, verify=None):
     else:
         updated = board
     _, additions = publication_catalog(root, report.get('publications', []))
-    report = {**report, 'messages': len(messages),
-              'new_publications': additions,
-              'status': 'updated' if report['updates'] or additions else 'idle'}
+    status = 'updated' if report['updates'] or additions else 'idle'
+    if status == 'idle' and report['deferred']:
+        status = ('arxiv-unavailable' if any(item['reason']=='arxiv-unavailable' for item in report['deferred'])
+                  else 'verification-pending')
+        report['error'] = report['deferred'][0]['error']
+    report = {**report, 'messages': len(messages), 'new_publications': additions, 'status': status}
     return report, updated
 
 

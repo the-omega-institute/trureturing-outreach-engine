@@ -57,6 +57,14 @@ Known submission rows retain their separate reconciliation, and table writes
 use `managed.data_writes` on the configured private data branch. The existing
 Pages feed projection and delivery publish the result.
 
+Discovery uses the bounded incoming-mail listing and its `uniqueBody`, without
+reopening whole conversations or inspecting drafts. Every public arXiv link in
+a message is considered. Duplicate identities share one public lookup per pass,
+using the highest requested version. An unavailable or unverified public record
+is reported as deferred while other verified papers continue to the catalog.
+The next scheduled pass retries deferred identities from the same incoming-mail
+window; no discovery cursor advances past an unverified paper.
+
 ## Close an owner question
 
 To close reviewed reply or research questions without requesting another CMA

@@ -207,6 +207,11 @@
   "independent_review": {
     "enabled": false,
     "max_active": 2,
+    "github": {
+      "service": "github-review-read",
+      "user_service_id": "dedicated-read-only-input-connection",
+      "read_only": true
+    },
     "profile": {
       "model": "gpt-6.2-sol",
       "reasoning_effort": "high"

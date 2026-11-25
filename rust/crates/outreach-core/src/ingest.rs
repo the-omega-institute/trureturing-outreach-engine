@@ -10,7 +10,7 @@ use outreach_canon::{
 };
 use std::collections::BTreeSet;
 
-pub const INPUT_PREFIXES: [&str; 12] = [
+pub const INPUT_PREFIXES: [&str; 13] = [
     "request-",
     "local-result-",
     "submission-review-",
@@ -21,6 +21,7 @@ pub const INPUT_PREFIXES: [&str; 12] = [
     "prompt-requeue-",
     "failed-requeue-",
     "pool-adopt-",
+    "independent-review-reset-",
     "formalization-backfill-",
     "prior-work-backfill-",
 ];
@@ -338,11 +339,64 @@ impl<'a> Replay<'a> {
             "prompt-requeue-" => self.prompt_requeue(v),
             "failed-requeue-" => self.failed_requeue(v, secret),
             "pool-adopt-" => self.pool_adopt(v, secret),
+            "independent-review-reset-" => self.independent_review_reset(v, secret),
             "formalization-backfill-" | "prior-work-backfill-" => self.backfill(family, v, secret),
             "local-result-" => self.local_result(v, secret),
             "mathesis-" => self.mathesis(v, secret),
             _ => Err(Error::new("Unknown input family")),
         }
+    }
+    fn independent_review_reset(&mut self, v: &Value, key: &[u8]) -> Result<()> {
+        require(
+            !key.is_empty(),
+            "Review reset verification key is not configured",
+        )?;
+        require(
+            keys(
+                v,
+                &[
+                    "schema_version",
+                    "task_id",
+                    "row_revision",
+                    "review_digest",
+                    "reason",
+                    "signature",
+                ],
+                &[],
+            ) && one(&v["schema_version"]),
+            "Invalid independent review reset",
+        )?;
+        signature_type(v, true, "Review reset signature failed")?;
+        require(verify_envelope(v, key)?, "Review reset signature failed")?;
+        require(nonempty(&v["reason"]), "Review reset needs a reason")?;
+        let event = digest(v)?;
+        if self.seen(&event) {
+            return Ok(());
+        }
+        let row = self.task(&v["task_id"])?;
+        let run = &row["data"]["hosted_review"];
+        require(
+            run["phase"] == "needs_attention" && truth(&run["cleanup_complete"]),
+            "Only a parked review with completed Agent cleanup may be reset",
+        )?;
+        require(
+            integer(&v["row_revision"])
+                && python_eq(&row["revision"], &v["row_revision"])
+                && v["review_digest"] == digest(run)?,
+            "Parked review changed",
+        )?;
+        let mut data = row["data"].clone();
+        let mut history = array(&data["hosted_review_history"]).to_vec();
+        history.push(run.clone());
+        data["hosted_review_history"] = Value::Array(history);
+        data["hosted_review_reset"] = string(event);
+        let fields = data
+            .as_object_mut()
+            .ok_or_else(|| Error::new("Invalid task data"))?;
+        fields.shift_remove("hosted_review");
+        fields.shift_remove("hosted_review_preparation");
+        self.update(&row, s(&row["state"]), data)?;
+        self.control(v)
     }
     fn add(&mut self, v: &Value) -> Result<()> {
         request(v)?;
@@ -1108,7 +1162,7 @@ impl<'a> Replay<'a> {
                 INPUT_PREFIXES
                     .iter()
                     .position(|p| s(&a.metadata["name"]).starts_with(p))
-                    .unwrap_or(12),
+                    .unwrap_or(INPUT_PREFIXES.len()),
                 s(&a.metadata["name"]),
             )
         });
@@ -1137,6 +1191,7 @@ impl<'a> Replay<'a> {
                         "prompt-requeue-",
                         "failed-requeue-",
                         "pool-adopt-",
+                        "independent-review-reset-",
                         "local-result-",
                     ]
                     .contains(&family)

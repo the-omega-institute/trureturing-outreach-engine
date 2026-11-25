@@ -15,7 +15,10 @@ License: not yet specified
 Set `independent_review.enabled=true` in the private data configuration to run
 exact-version review inside the scheduled coordinator. Its `profile` selects the
 actual CMA reviewer model; provenance records `hosted-cma-review`, its fresh Agent,
-original operation/response IDs, checked artifact inventory and preserved verdict.
+original operation/response IDs, actual model, checked artifact inventory and preserved verdict.
+Mail queue and Mathesis selection records retain that reviewer identity.
+Operator-signed reviews retain `local-claude-loop`; owner decisions still require
+the operator signing protocol.
 The local Claude loop remains an additional diagnostic and optimization tool.
 It is not needed to start, observe or apply a routine production review.
 
@@ -31,10 +34,43 @@ mailbox, source, authority and publication gates. Historical Claude signatures
 remain readable; signed owner decisions still use their original protocol.
 
 Admission disconnects resume the original body/key/operation. A changed result
-or policy invalidates the old review. Missing artifacts, invalid output and
+or supplied policy/identity invalidates the old review. The snapshot includes all
+workflow inputs, including the mail voice guide, plus operative `AGENTS.md`,
+`WORKSPACE.md` and identity. Pause and kind disable stop new admissions while
+existing responses and Agent retirement continue. The pool retains its last
+Sandbox while enabled review work waits. Completed reviewer cleanup stops and
+deletes only its Agent; the pool owns Sandbox retirement. New correspondence
+reviews precede stale policy rebinds, with newest work first. Published or
+delivered rows and immutable delivery/draft intents keep their original review. Missing artifacts, invalid output and
 terminal provider failures cannot PASS; their original handles and diagnostics
-remain in `data.hosted_review` for targeted repair. Definitive failures are
-parked rather than automatically creating repeated mathematical reviews.
+remain in `data.hosted_review` for targeted repair. Lifecycle-busy (409), 5xx
+and transport failures retry the original handles with exponential delays capped
+at one hour. Definitive failures park until an operator repairs their cause.
+After the old Agent's cleanup completes, stage an exact signed reset with:
+
+```sh
+python3.12 -m managed.control independent-review-reset --task TASK_ID --reason 'Corrected reviewer profile'
+```
+
+The command signs the current row revision and review digest, then stages an
+immutable request for the coordinator. Replays apply once; a changed row rejects
+the reset. The coordinator archives the old run and gives the new attempt new
+creation/admission keys. Reset grants no review or owner decision.
+
+Reviewer access is configured separately in `independent_review.github` with
+`service`, `user_service_id` and `read_only=true`. Provision a dedicated NyxID
+service/connection backed by a GitHub fine-grained token restricted to **Contents:
+read** in the input repositories (private data Releases and any referenced source
+repositories). Both the service and connection must differ from the coordinator's;
+the service must expose only the reader connection. Its actual
+server/token scope must enforce read-only access; the config flag declares this
+provisioning requirement and does not change token scopes. No fallback uses the
+coordinator's write-capable PAT. Missing configuration parks preparation with a
+diagnostic. The reviewer profile receives only this service, never the author's
+Oracle, mail, publication or credential services. It can read repository content
+and Release inputs available to that connection; public literature remains
+available through the Agent's ordinary runtime networking. The prompt describes
+review duties only; activation remains in private configuration.
 
 With `independent_review.register_author_contacts=true`, the same serialized
 writer verifies the signed source-author proposal, rechecks current refusals,

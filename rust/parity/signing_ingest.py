@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Live Python signing and 12-family ingestion differential tests. Synthetic only."""
+"""Live Python signing and 13-family ingestion differential tests. Synthetic only."""
 import copy
 from contextlib import redirect_stderr
 import hashlib
@@ -146,9 +146,17 @@ def fixture(root):
     mathesis['signature'] = signature(mathesis, KEY)
     req = {'schema_version': 1, 'id': 'new-request', 'kind': 'research', 'owner': 'scholar-a', 'source_revision': 'a' * 40,
            'inputs': {}, 'workflow_hash': control.workflow('research')}
+    from managed.independent_review import reset_binding
+    parked_review = {'phase':'needs_attention', 'cleanup_complete':True,
+                     'create_key':'synthetic-review-create', 'last_error':'Invalid reviewer output'}
+    reset_row = add('review-reset', 'reply', 'awaiting-review', {'result':research,
+                    'hosted_review':parked_review, 'hosted_review_preparation':{'phase':'old-failure'}})
+    reset_request = sign({'schema_version':1, 'task_id':reset_row['id'],
+                          'reason':'Synthetic operator corrected reviewer profile',
+                          **reset_binding(tasks, reset_row['id'])})
     envelopes = {'request': req, 'review': sign(review), 'decision': sign(decision), 'draft-revision': sign(draft),
                  'submission-review': sign(sub), 'local-result': sign(local), 'prompt-requeue': prompt, 'failed-requeue': sign(failed),
-                 'pool-adopt': sign(pool), 'formalization-backfill': sign(formal), 'prior-work-backfill': sign(prior), 'mathesis': mathesis}
+                 'pool-adopt': sign(pool), 'independent-review-reset':reset_request, 'formalization-backfill': sign(formal), 'prior-work-backfill': sign(prior), 'mathesis': mathesis}
     tasks.close()
     from managed.queue import Queue
     queue = Queue(snapshot, {'reply': control.workflow('reply')}, clock=lambda: NOW - 50)
@@ -233,6 +241,13 @@ def main():
         root = folder / 'data'
         snapshot, envelopes, review, close, edit, rows = fixture(root)
         scenarios = [(f'family-{k}', [(k, v)]) for k, v in envelopes.items()]
+        reset_value = envelopes['independent-review-reset']
+        scenarios.append(('reset-replay', [('independent-review-reset', reset_value)] * 2))
+        for field, value in [('review_digest','0'*64), ('row_revision',True), ('row_revision',999), ('reason','')]:
+            unsigned = {k:v for k,v in reset_value.items() if k != 'signature'}
+            scenarios.append(('reset-changed-' + field + '-' + str(value), [
+                ('independent-review-reset', sign({**unsigned, field:value}))]))
+        scenarios.append(('reset-forged', [('independent-review-reset', {**reset_value, 'reason':'forged'})]))
         from managed.mathesis_delivery import signature as mathesis_signature
         for family in ('review', 'mathesis', 'decision', 'draft-revision'):
             for n, reviewer in enumerate(('hosted-cma-review', 'unknown-reviewer', None, [], {})):
@@ -398,7 +413,7 @@ def main():
             signed_files += 1
         from ingestion_regressions import run
         run(snapshot, root, folder, envelopes, review, KEY, NOW)
-    print(f'Signing/ingestion parity: {signed_files} byte-equal signed files; {cases} replay cases / {replay_passes} passes; {rejected} matching rejections; 12 input families; originals unchanged')
+    print(f'Signing/ingestion parity: {signed_files} byte-equal signed files; {cases} replay cases / {replay_passes} passes; {rejected} matching rejections; {len(envelopes)} input families; originals unchanged')
 
 
 if __name__ == '__main__':

@@ -86,10 +86,10 @@ class AutomationTests(unittest.TestCase):
         req=request(name,'contact-a',kind);req['inputs']={'automation_contract':1}
         if user_decision_ever:req['inputs']['user_decision_ever']=True
         return self.ledger.tasks.add(req)
-    def review(self,row,result,verdict='PASS',rebind_workflow_hash=None):
+    def review(self,row,result,verdict='PASS',rebind_workflow_hash=None,reviewer='local-claude-loop'):
         validate_result(result,row)
         row=self.ledger.tasks.update(row['id'],row['revision'],'awaiting-review',{'result':result})
-        env={'binding':self.ledger.tasks.review_binding(row),'reviewer':'local-claude-loop','verdict':verdict,
+        env={'binding':self.ledger.tasks.review_binding(row),'reviewer':reviewer,'verdict':verdict,
              'reason':'Read complete thread and exact current files.','evidence_ref':'fixture:independent-review'}
         if rebind_workflow_hash is not None:env['rebind_workflow_hash']=rebind_workflow_hash
         env=sign_review(env,'secret',kind=row['kind'])
@@ -111,6 +111,18 @@ class AutomationTests(unittest.TestCase):
         data['contacts'].append({'id': 'contact-' + address, 'name': 'Recipient Fixture',
                                  'email': address, 'problem_ids': []})
         self.tables('contacts', data)
+
+    def test_hosted_scientific_reviewer_identity_survives_mail_queue(self):
+        row = self.add('hosted-mail')
+        self.review(row, self.result(row), reviewer='hosted-cma-review')
+        self.route()
+        box = Mailbox()
+        delivery.advance(self.ledger, self.cfg, self.root, box)
+        self.assertEqual(len(box.calls), 1)
+        envelope = json.loads(self.ledger.tasks.db.execute(
+            'SELECT envelope FROM reviews WHERE item=?', (row['id'],)).fetchone()[0])
+        self.assertEqual(envelope['reviewer'], 'hosted-cma-review')
+        self.assertEqual(envelope['evidence_ref'], 'fixture:independent-review')
 
     def test_home_to_cc_and_subdomains_force_an_auto_routed_reply_to_drafts(self):
         self.cfg['home_domains'] = ['campus.example.invalid', 'alumni.example.invalid']

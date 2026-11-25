@@ -84,7 +84,7 @@ def main():
         tasks = Tasks(snapshot)
         try:
             for n, (collection, reviewer) in enumerate([
-                    (False, 'local-claude-loop'), (True, 'local-claude-loop'),
+                    (False, 'local-claude-loop'), (False, 'hosted-cma-review'), (True, 'local-claude-loop'),
                     (True, 'hosted-cma-review')]):
                 identity = 'mathesis-stage-' + str(n)
                 directory = folder / identity;directory.mkdir()

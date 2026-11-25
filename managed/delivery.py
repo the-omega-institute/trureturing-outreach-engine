@@ -980,7 +980,8 @@ def advance(ledger, config, root, mailbox=None):
                     if current['state']=='drafted':queue.research_checked(binding,data['review']['evidence_ref'])
                     if queue.get(row['id'])['state']=='research-checked':queue.enqueue(binding)
                     if queue.get(row['id'])['state']=='in-review':
-                        queue.verdict({'schema_version':1,**binding,'reviewer':'local-claude-loop','verdict':'PASS',
+                        queue.reviewer=data['review']['reviewer']
+                        queue.verdict({'schema_version':1,**binding,'reviewer':queue.reviewer,'verdict':'PASS',
                                        'reason':data['review']['reason'],'evidence_ref':data['review']['evidence_ref']})
                     old=queue.db.execute('SELECT revision FROM policies WHERE kind=?',(row['kind'],)).fetchone()
                     queue.set_policy(row['kind'],(old[0] if old else 0)+1,policy)

@@ -410,7 +410,7 @@ class Releases:
 
 
 SNAPSHOTS_KEPT=3
-INPUT_PREFIXES=('request-','local-result-','submission-review-','review-','decision-','draft-revision-','mathesis-','prompt-requeue-','failed-requeue-','pool-adopt-','pool-clear-check-','task-clear-check-',BACKFILL_PREFIX+'-',PRIOR_WORK_BACKFILL+'-')
+INPUT_PREFIXES=('request-','local-result-','submission-review-','review-','decision-','draft-revision-','mathesis-','prompt-requeue-','failed-requeue-','pool-adopt-','pool-clear-check-','task-clear-check-','independent-review-reset-',BACKFILL_PREFIX+'-',PRIOR_WORK_BACKFILL+'-')
 SAVE_INTERVAL=45
 INGEST_REJECTION_LIMIT=3
 
@@ -581,6 +581,9 @@ class Ledger:
                     clear_sandbox_operator_check(self,value,review_secret)
                 elif name.startswith('task-clear-check-'):
                     clear_task_operator_check(self,value,review_secret)
+                elif name.startswith('independent-review-reset-'):
+                    from .independent_review import reset
+                    reset(self,value,review_secret)
                 elif name.startswith('local-result-'):
                     from .local_run import ingest
                     ingest(self,value,review_secret)
@@ -655,7 +658,7 @@ def legacy_workflow(kind, revision=None):
     return digest({p:workflow_text(p, revision) for p in paths})
 
 
-def workflow(kind, revision=None, policy_revision=None):
+def workflow_inputs(kind, revision=None, policy_revision=None):
     # task_prompt() and the per-kind review contracts select these inputs.
     # Mail uses its own workflow/rubric plus the shared firstcontact rubric;
     # scientific tasks use research's rubric, and only submissions use author
@@ -695,7 +698,11 @@ def workflow(kind, revision=None, policy_revision=None):
     if kind=='daily':selected['publication']={'daily':automation['publication']['daily']}
     elif kind in {'research','shortnote','mathesis'}:
         selected['publication']={key:automation['publication'][key] for key in ('coverage','public_updates')}
-    return digest({**inputs,'automation.json':selected})
+    return {**inputs,'automation.json':selected}
+
+
+def workflow(kind, revision=None, policy_revision=None):
+    return digest(workflow_inputs(kind, revision, policy_revision))
 
 
 def verify_request_workflow(request):
@@ -3606,10 +3613,14 @@ def run_tick(ledger,config,folder,tick,oracle_fetcher=None):
             db.execute('INSERT OR REPLACE INTO pipeline_state VALUES(?,?)',('connector_errors',value))
     # Ingest remains first so fresh reviews/decisions precede every dependent
     # effect. Rotate the remaining passes, without changing their own gates.
+    review_stage = hosted_review_enabled(config) or ledger.tasks.db.execute("""
+        SELECT 1 FROM tasks WHERE json_extract(data, '$.hosted_review.create_key') IS NOT NULL
+        AND coalesce(json_extract(data, '$.hosted_review.cleanup_complete'), 0) != 1 LIMIT 1
+        """).fetchone() is not None
     stages=tick.order(['advance','automation','delivery','sent-events','mathesis',
                        'formalization-requests','prior-work-issues','maintenance']
-                      + (['independent-review'] if hosted_review_enabled(config) else []))
-    if hosted_review_enabled(config):
+                      + (['independent-review'] if review_stage else []))
+    if review_stage:
         tick.reserve('independent-review', 30, dedicated=True)
     # Pool health, result collection, repair turns and admissions live in
     # advance. Mailbox intake alone took ~300 s on 2026-11-08 and advance then
@@ -3673,9 +3684,17 @@ def run_tick(ledger,config,folder,tick,oracle_fetcher=None):
                             oracle_capacity=oracle_capacity)
                 finally:tick.report('firstcontact-history')
             elif name=='independent-review':
-                review_independently(ledger,cma,config,folder)
                 from .author_contacts import advance as register_reviewed_authors
-                register_reviewed_authors(ledger,config,ROOT,os.environ.get('OUTREACH_REVIEW_KEY'))
+                for stage, action in (
+                        ('independent-review', lambda: review_independently(ledger,cma,config,folder)),
+                        ('author-registration', lambda: register_reviewed_authors(
+                            ledger,config,ROOT,os.environ.get('OUTREACH_REVIEW_KEY')))):
+                    with unit(ledger,'independent-review',stage) as ready:
+                        if not ready:continue
+                        try:action()
+                        except Exception as exc:
+                            connector_errors.append({'connector':stage, 'phase':'needs_attention',
+                                                     'error':type(exc).__name__+': '+str(exc)[:300]})
             elif name=='automation':continue_work(ledger,config,ROOT,revision=revision)
             elif name=='delivery':
                 deliver(ledger,config,ROOT,mailbox)
@@ -3787,6 +3806,7 @@ def _main(argv=None):
     p.add_argument('--group',required=True);p.add_argument('--reason',required=True)
     p=commands.add_parser('pool-clear-check');p.add_argument('--sandbox',required=True);p.add_argument('--reason',required=True)
     p=commands.add_parser('task-clear-check');p.add_argument('--task',required=True);p.add_argument('--reason',required=True)
+    p=commands.add_parser('independent-review-reset');p.add_argument('--task',required=True);p.add_argument('--reason',required=True)
     p=commands.add_parser('enqueue');p.add_argument('request',type=Path)
     p=commands.add_parser('review');p.add_argument('envelope',type=Path)
     p=commands.add_parser('decision');p.add_argument('envelope',type=Path)
@@ -3832,7 +3852,7 @@ def _main(argv=None):
             secret=review_key()
             envelope['signature']=hmac.new(secret.encode(),canonical(envelope).encode(),hashlib.sha256).hexdigest()
             result=stage(envelope,'pool-adopt',releases,folder)
-        elif args.action in {'pool-clear-check','task-clear-check'}:
+        elif args.action in {'pool-clear-check','task-clear-check','independent-review-reset'}:
             require(args.reason.strip(),'Cleanup acknowledgement needs a reason')
             ledger=Ledger(releases,folder)
             envelope={'schema_version':1,'reason':args.reason}
@@ -3840,9 +3860,13 @@ def _main(argv=None):
                 if args.action=='pool-clear-check':
                     envelope['sandbox_id']=args.sandbox;prefix='pool-clear-check'
                     envelope.update(cleanup_check_binding(ledger.tasks,sandbox_id=args.sandbox))
-                else:
+                elif args.action=='task-clear-check':
                     envelope['task_id']=args.task;prefix='task-clear-check'
                     envelope.update(cleanup_check_binding(ledger.tasks,task_id=args.task))
+                else:
+                    from .independent_review import reset_binding
+                    envelope['task_id']=args.task;prefix='independent-review-reset'
+                    envelope.update(reset_binding(ledger.tasks,args.task))
             finally:ledger.tasks.close()
             secret=review_key()
             envelope['signature']=hmac.new(secret.encode(),canonical(envelope).encode(),hashlib.sha256).hexdigest()
@@ -3962,6 +3986,7 @@ def _main(argv=None):
             else:
                 result=stage(value,'request' if args.action=='enqueue' else args.action,releases,folder)
         elif args.action=='doctor':
+            hosted_reviewer = config.get('independent_review',{}).get('enabled') is True
             try:review_key_configured=bool(review_key())
             except (OSError, ValueError):review_key_configured=False
             cma={'status':'unconfigured','reason':'Set a supported CMA_ACCESS_TOKEN in Actions; local discovery can use NyxID CLI'}
@@ -3969,7 +3994,10 @@ def _main(argv=None):
                 try:cma={'status':'reachable','capabilities':CMA().discover()}
                 except Exception as exc:cma={'status':'unavailable','reason':type(exc).__name__+': '+str(exc)[:300]}
             result={'schema_version':1,'paused':config['paused'],'cma':cma,
-                'mailbox':config.get('mailbox_adapter','unconfigured'),'reviewer':'local Claude loop, not started by this service',
+                'mailbox':config.get('mailbox_adapter','unconfigured'),
+                'reviewer':{'identity':'hosted-cma-review' if hosted_reviewer else 'local-claude-loop',
+                            'model':config.get('independent_review',{}).get('profile',{}).get('model') if hosted_reviewer else None,
+                            'hosted_enabled':hosted_reviewer},
                 'review_key_configured':review_key_configured,
                 'publication':'scripts/short_notes/service.py','control_release_exists':releases.release() is not None}
         else:

@@ -78,7 +78,7 @@ def run(config, folder):
             ledger.save()
         require(digest(row['data']['result']) == digest(result), 'The synthetic result changed')
         if row['state'] == 'awaiting-review':
-            review = {'binding': ledger.tasks.review_binding(row), 'reviewer': 'local-claude-loop',
+            review = {'binding': ledger.tasks.review_binding(row), 'reviewer': 'hosted-cma-review',
                       'verdict': 'PASS', 'reason': 'Synthetic signed-review fixture for transport acceptance only.',
                       'evidence_ref': 'test-fixture:synthetic-review-v1; no human/Claude scientific review claimed'}
             review['signature'] = hmac.new(secret.encode(), canonical(review).encode(), hashlib.sha256).hexdigest()
@@ -88,7 +88,7 @@ def run(config, folder):
         envelope = {'schema_version': 1, 'task_id': task_id, 'result_hash': digest(result),
                     'workflow_hash': row['request']['workflow_hash'],
                     'decision_ref': 'user-authorized private infrastructure test, 2026-10-31',
-                    'metadata': metadata, 'source': artifact, 'reviewer': 'local-claude-loop'}
+                    'metadata': metadata, 'source': artifact, 'reviewer': row['data']['review']['reviewer']}
         envelope['signature'] = delivery.signature(envelope, secret)
         stage(envelope, 'mathesis', remote, folder)
         require(not ledger.ingest(secret), 'Signed delivery ingestion failed')

@@ -399,7 +399,7 @@ pub fn mathesis(
         ("decision_ref", decisions["decision_ref"].clone()),
         ("metadata", Value::Null),
         ("source", source.clone()),
-        ("reviewer", string("local-claude-loop")),
+        ("reviewer", row["data"]["review"]["reviewer"].clone()),
     ]);
     if collection {
         value["reviewer"] = row["data"]["review"]["reviewer"].clone();

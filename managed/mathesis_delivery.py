@@ -121,7 +121,7 @@ def select(row, directory, decisions, secret):
     require(source is not None, 'The selected source is not an exact reviewed artifact')
     value = {'schema_version': 1, 'task_id': row['id'], 'result_hash': digest(result),
              'workflow_hash': row['request']['workflow_hash'], 'decision_ref': prepared['decision_ref'],
-             'metadata': prepared['metadata'], 'source': source, 'reviewer': 'local-claude-loop'}
+             'metadata': prepared['metadata'], 'source': source, 'reviewer': row['data']['review']['reviewer']}
     value['signature'] = signature(value, secret)
     return validate(value, secret)
 

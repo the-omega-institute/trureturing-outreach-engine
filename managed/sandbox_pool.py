@@ -363,7 +363,7 @@ class SandboxPool:
         return True
 
     def awaited(self, entry, rows):
-        """The group's last usable Sandbox is not idle while its queued work waits.
+        """The group's last usable Sandbox is not idle while queued work or reviews wait.
 
         Placement can fall behind for longer than the idle grace (2026-11-23: the
         advance stage ran out of tick budget). Once the quota evidence expired,
@@ -378,7 +378,20 @@ class SandboxPool:
                e.get('state')=='active' and not self.draining(e) and not e.get('intent') and
                (self.observed.get(e['sandbox_id']) or {}).get('status')=='active' for e in self.entries):
             return False
-        return any(r['state']=='queued' and self.kinds.get(r['kind']) and self.group(r)==group for r in rows)
+        from .control import workflow
+        from .independent_review import effect_started, pending_effect
+        from .tasks import reviewable, review_current, matches_workflow
+        current_hashes = {}
+        def review_pending(row):
+            if not self.reserve_review_slots:return False
+            if reviewable(row):return not effect_started(row, self.ledger.tasks)
+            if not pending_effect(row, self.ledger.tasks) or not review_current(row, row['request']['workflow_hash']):
+                return False
+            kind = row['kind']
+            if kind not in current_hashes:current_hashes[kind] = workflow(kind)
+            return not matches_workflow(row, current_hashes[kind])
+        return any(self.kinds.get(r['kind']) and self.group(r)==group and
+                   (r['state']=='queued' or review_pending(r)) for r in rows)
 
     def cleanup_entry(self, cma, entry, status, rows, now):
         sandbox_id=entry['sandbox_id']

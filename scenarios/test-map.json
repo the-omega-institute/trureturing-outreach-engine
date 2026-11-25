@@ -1,0 +1,197 @@
+{
+  "test_mathesis_delivery.DeliveryTests.test_pass_signed_selection_and_persisted_receipt_finish_without_platform_review": [
+    "mathesis-pass_signed_selection_and_persisted_receipt_finish_without_platform_review-1",
+    "mathesis-pass_signed_selection_and_persisted_receipt_finish_without_platform_review-2"
+  ],
+  "test_mathesis_delivery.DeliveryTests.test_lost_post_response_restores_original_identity_even_while_paused": [
+    "mathesis-lost_post_response_restores_original_identity_even_while_paused-1",
+    "mathesis-lost_post_response_restores_original_identity_even_while_paused-2"
+  ],
+  "test_mathesis_delivery.DeliveryTests.test_get_timeout_preserves_original_handle_before_another_current_version": [
+    "mathesis-get_timeout_preserves_original_handle_before_another_current_version-1",
+    "mathesis-get_timeout_preserves_original_handle_before_another_current_version-2"
+  ],
+  "test_mathesis_delivery.DeliveryTests.test_checkpoint_failure_prevents_external_post": [
+    "mathesis-checkpoint_failure_prevents_external_post-1"
+  ],
+  "test_mathesis_delivery.DeliveryTests.test_pause_disabled_kind_and_prepare_mode_never_post": [
+    "mathesis-pause_disabled_kind_and_prepare_mode_never_post-1",
+    "mathesis-pause_disabled_kind_and_prepare_mode_never_post-2",
+    "mathesis-pause_disabled_kind_and_prepare_mode_never_post-3"
+  ],
+  "test_mathesis_delivery.DeliveryTests.test_test_mode_cannot_write_production_ledger": [
+    "mathesis-test_mode_cannot_write_production_ledger-1"
+  ],
+  "test_mathesis_delivery.DeliveryTests.test_same_work_in_two_tasks_reuses_persisted_receipt": [
+    "mathesis-same_work_in_two_tasks_reuses_persisted_receipt-1"
+  ],
+  "test_mathesis_delivery.DeliveryTests.test_changed_metadata_for_same_manuscript_version_cannot_post": [
+    "mathesis-changed_metadata_for_same_manuscript_version_cannot_post-1"
+  ],
+  "test_mathesis_delivery.DeliveryTests.test_artifact_readback_hash_failure_cannot_post": [
+    "mathesis-artifact_readback_hash_failure_cannot_post-1"
+  ],
+  "test_mathesis_delivery.DeliveryTests.test_wrong_post_or_get_receipt_cannot_finish": [
+    "mathesis-wrong_post_or_get_receipt_cannot_finish-1",
+    "mathesis-wrong_post_or_get_receipt_cannot_finish-2",
+    "mathesis-wrong_post_or_get_receipt_cannot_finish-3",
+    "mathesis-wrong_post_or_get_receipt_cannot_finish-4"
+  ],
+  "test_mathesis_delivery.DeliveryTests.test_http_conflict_stays_visible_and_does_not_retry": [
+    "mathesis-http_conflict_stays_visible_and_does_not_retry-1",
+    "mathesis-http_conflict_stays_visible_and_does_not_retry-2"
+  ],
+  "test_mathesis_delivery.DeliveryTests.test_conflict_revises_our_current_delivery_with_exact_passed_source": [
+    "mathesis-conflict_revises_our_current_delivery_with_exact_passed_source-1",
+    "mathesis-conflict_revises_our_current_delivery_with_exact_passed_source-2"
+  ],
+  "test_mathesis_delivery.DeliveryTests.test_conflict_identical_sha_adopts_current_receipt_without_posting_again": [
+    "mathesis-conflict_identical_sha_adopts_current_receipt_without_posting_again-1",
+    "mathesis-conflict_identical_sha_adopts_current_receipt_without_posting_again-2"
+  ],
+  "test_mathesis_delivery.DeliveryTests.test_conflict_other_producer_keeps_diagnostic_and_never_revises": [
+    "mathesis-conflict_other_producer_keeps_diagnostic_and_never_revises-1",
+    "mathesis-conflict_other_producer_keeps_diagnostic_and_never_revises-2"
+  ],
+  "test_mathesis_delivery.DeliveryTests.test_lost_conflict_revision_response_replays_without_another_version": [
+    "mathesis-lost_conflict_revision_response_replays_without_another_version-1",
+    "mathesis-lost_conflict_revision_response_replays_without_another_version-2",
+    "mathesis-lost_conflict_revision_response_replays_without_another_version-3"
+  ],
+  "test_mathesis_delivery.DeliveryTests.test_paused_conflict_can_adopt_but_cannot_post_a_revision": [
+    "mathesis-paused_conflict_can_adopt_but_cannot_post_a_revision-1",
+    "mathesis-paused_conflict_can_adopt_but_cannot_post_a_revision-2",
+    "mathesis-paused_conflict_can_adopt_but_cannot_post_a_revision-3"
+  ],
+  "test_mathesis_delivery.DeliveryTests.test_new_workflow_or_revoked_review_prevents_post": [
+    "mathesis-new_workflow_or_revoked_review_prevents_post-1",
+    "mathesis-new_workflow_or_revoked_review_prevents_post-2"
+  ],
+  "test_pre_reviewed.PreReviewedTests.test_exact_envelope_pass_authors_hashes_decisions_and_pinned_lean": [
+    "mathesis-exact_envelope_pass_authors_hashes_decisions_and_pinned_lean-1"
+  ],
+  "test_pre_reviewed.PreReviewedTests.test_unattempted_old_handoff_upgrades_without_mutating_signed_selection": [
+    "mathesis-unattempted_old_handoff_upgrades_without_mutating_signed_selection-1"
+  ],
+  "test_pre_reviewed.PreReviewedTests.test_lost_link_queue_response_retries_without_another_collection_post": [
+    "mathesis-lost_link_queue_response_retries_without_another_collection_post-1",
+    "mathesis-lost_link_queue_response_retries_without_another_collection_post-2"
+  ],
+  "test_pre_reviewed.PreReviewedTests.test_release_file_mutation_never_posts": [
+    "mathesis-release_file_mutation_never_posts-1"
+  ],
+  "test_pre_reviewed.PreReviewedTests.test_checkpoint_failure_prevents_collection_post": [
+    "mathesis-checkpoint_failure_prevents_collection_post-1"
+  ],
+  "test_pre_reviewed.PreReviewedTests.test_conflicts_keep_the_original_version_without_allocating_another": [
+    "mathesis-conflicts_keep_the_original_version_without_allocating_another-1",
+    "mathesis-conflicts_keep_the_original_version_without_allocating_another-2"
+  ],
+  "test_pre_reviewed.PreReviewedTests.test_lost_post_response_replays_identical_selection_after_restore": [
+    "mathesis-lost_post_response_replays_identical_selection_after_restore-1",
+    "mathesis-lost_post_response_replays_identical_selection_after_restore-2"
+  ],
+  "test_pre_reviewed.PreReviewedTests.test_readback_hash_failure_keeps_receipt_and_reconciles_while_paused": [
+    "mathesis-readback_hash_failure_keeps_receipt_and_reconciles_while_paused-1",
+    "mathesis-readback_hash_failure_keeps_receipt_and_reconciles_while_paused-2",
+    "mathesis-readback_hash_failure_keeps_receipt_and_reconciles_while_paused-3"
+  ],
+  "test_pre_reviewed.PreReviewedTests.test_wrong_version_or_source_hash_never_verifies": [
+    "mathesis-wrong_version_or_source_hash_never_verifies-1",
+    "mathesis-wrong_version_or_source_hash_never_verifies-2"
+  ],
+  "test_pre_reviewed.PreReviewedTests.test_missing_prior_work_is_recorded_without_blocking_collection": [
+    "mathesis-missing_prior_work_is_recorded_without_blocking_collection-1",
+    "mathesis-missing_prior_work_is_recorded_without_blocking_collection-2"
+  ],
+  "test_pre_reviewed.PreReviewedTests.test_legacy_accepted_is_skipped_with_operator_reason": [
+    "mathesis-legacy_accepted_is_skipped_with_operator_reason-1"
+  ],
+  "test_pre_reviewed.PreReviewedTests.test_uncertain_withdrawal_retries_from_checkpoint": [
+    "mathesis-uncertain_withdrawal_retries_from_checkpoint-1",
+    "mathesis-uncertain_withdrawal_retries_from_checkpoint-2"
+  ],
+  "test_pre_reviewed.PreReviewedTests.test_collection_is_delivered_and_read_back_before_withdrawal": [
+    "mathesis-collection_is_delivered_and_read_back_before_withdrawal-1"
+  ],
+  "test_mailbox_triage.TriageTests.test_intake_skips_operator_staged_inbound": [
+    "intake-intake_skips_operator_staged_inbound-1"
+  ],
+  "test_mailbox_triage.TriageTests.test_intake_records_covered_unmapped_sender_as_handled": [
+    "intake-intake_records_covered_unmapped_sender_as_handled-1"
+  ],
+  "test_mailbox_triage.TriageTests.test_intake_skips_hydrated_reply_on_latest_inbound": [
+    "intake-intake_skips_hydrated_reply_on_latest_inbound-1"
+  ],
+  "test_mailbox_triage.TriageTests.test_intake_stages_reply_while_research_covers_the_message": [
+    "intake-intake_stages_reply_while_research_covers_the_message-1"
+  ],
+  "test_mailbox_triage.TriageTests.test_intake_stages_when_covering_task_is_terminal": [
+    "intake-intake_stages_when_covering_task_is_terminal-1"
+  ],
+  "test_mailbox_triage.TriageTests.test_known_new_thread_and_unknown_first_message_get_separate_dispositions": [
+    "intake-known_new_thread_and_unknown_first_message_get_separate_dispositions-1"
+  ],
+  "test_mailbox_triage.TriageTests.test_each_observed_message_gets_a_reason_when_latest_has_a_sent_answer": [
+    "intake-each_observed_message_gets_a_reason_when_latest_has_a_sent_answer-1"
+  ],
+  "test_mailbox_triage.TriageTests.test_hello_stranger_stays_in_attention": [
+    "intake-hello_stranger_stays_in_attention-1"
+  ],
+  "test_sent_events.SentEventsTests.test_owner_draft_sent_uses_exact_sent_receipt_and_reviewed_headline": [
+    "sent-owner_draft_sent_uses_exact_sent_receipt_and_reviewed_headline-1"
+  ],
+  "test_sent_events.SentEventsTests.test_operator_created_draft_sent_without_ledger_task": [
+    "sent-operator_created_draft_sent_without_ledger_task-1"
+  ],
+  "test_sent_events.SentEventsTests.test_sent_evidence_preserves_conversation_account_and_sender": [
+    "sent-sent_evidence_preserves_conversation_account_and_sender-1"
+  ],
+  "test_sent_events.SentEventsTests.test_operator_direct_send_with_exact_sent_receipt_uses_owner_brief": [
+    "sent-operator_direct_send_with_exact_sent_receipt_uses_owner_brief-1"
+  ],
+  "test_sent_events.SentEventsTests.test_sent_message_matches_immutable_draft_receipt": [
+    "sent-sent_message_matches_immutable_draft_receipt-1"
+  ],
+  "test_sent_events.SentEventsTests.test_unreviewed_task_never_exports_report_or_packet": [
+    "sent-unreviewed_task_never_exports_report_or_packet-1"
+  ],
+  "test_sent_events.SentEventsTests.test_internet_identity_matches_receipt_after_graph_id_changes": [
+    "sent-internet_identity_matches_receipt_after_graph_id_changes-1"
+  ],
+  "test_sent_events.SentEventsTests.test_unregistered_recipient_is_skipped_without_registration": [
+    "sent-unregistered_recipient_is_skipped_without_registration-1"
+  ],
+  "test_sent_events.SentEventsTests.test_two_ticks_and_duplicate_page_rows_are_idempotent": [
+    "sent-two_ticks_and_duplicate_page_rows_are_idempotent-1",
+    "sent-two_ticks_and_duplicate_page_rows_are_idempotent-2"
+  ],
+  "test_publication.PublicationTests.test_old_workflow_pass_still_enqueues_exact_reviewed_bytes": [
+    "publication-old_workflow_pass_still_enqueues_exact_reviewed_bytes-1"
+  ],
+  "test_publication.PublicationTests.test_correspondent_note_is_published_before_backlog": [
+    "publication-correspondent_note_is_published_before_backlog-1"
+  ],
+  "test_publication.PublicationTests.test_mathesis_child_publishes_instead_of_its_passed_source_note": [
+    "publication-mathesis_child_publishes_instead_of_its_passed_source_note-1"
+  ],
+  "test_publication.PublicationTests.test_bounced_or_agent_held_earlier_revisions_do_not_block_passed_note": [
+    "publication-bounced_or_agent_held_earlier_revisions_do_not_block_passed_note-1"
+  ],
+  "test_publication.PublicationTests.test_passed_note_after_guard_stopped_continuation_is_published": [
+    "publication-passed_note_after_guard_stopped_continuation_is_published-1"
+  ],
+  "test_publication.PublicationTests.test_family_first_author_names_are_not_joint_work": [
+    "publication-family_first_author_names_are_not_joint_work-1"
+  ],
+  "test_publication.PublicationTests.test_shortnote_waits_untouched_for_non_passed_mathesis_child": [
+    "publication-shortnote_waits_untouched_for_non_passed_mathesis_child-1",
+    "publication-shortnote_waits_untouched_for_non_passed_mathesis_child-2",
+    "publication-shortnote_waits_untouched_for_non_passed_mathesis_child-3",
+    "publication-shortnote_waits_untouched_for_non_passed_mathesis_child-4",
+    "publication-shortnote_waits_untouched_for_non_passed_mathesis_child-5"
+  ],
+  "test_publication.PublicationTests.test_mathesis_is_preferred_for_same_revision_without_explicit_lineage": [
+    "publication-mathesis_is_preferred_for_same_revision_without_explicit_lineage-1"
+  ]
+}

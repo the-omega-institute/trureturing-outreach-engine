@@ -3,6 +3,8 @@
 Preparation never asserts an author's consent. Live delivery requires an exact
 decision record; test delivery is confined to private synthetic manuscripts.
 """
+from . import recording
+
 import argparse
 import base64
 import hashlib
@@ -35,7 +37,7 @@ class Mathesis:
         if body is not None:
             headers['Content-Type'] = 'application/json'
             raw = canonical(body).encode()
-        with build_opener(NoRedirect()).open(Request(self.base + path, data=raw, method=method, headers=headers), timeout=60) as response:
+        with recording.open('mathesis', build_opener(NoRedirect()), Request(self.base + path, data=raw, method=method, headers=headers), timeout=60) as response:
             content = response.read()
         return json.loads(content) if content else {}
 
@@ -98,7 +100,7 @@ class Mathesis:
                 and type(version) is int and version > 0 and kind in {'pdf', 'source'},
                 'Read an exact collected file version')
         path = f'/api/v1/collected-papers/{work_id}/files/{kind}?version={version}'
-        with build_opener(NoRedirect()).open(Request(self.base + path,
+        with recording.open('mathesis', build_opener(NoRedirect()), Request(self.base + path,
                 headers={'User-Agent': 'trureturing-outreach/mathesis'}), timeout=60) as response:
             raw = response.read(30 * 1024 * 1024 + 1)
         require(0 < len(raw) <= 30 * 1024 * 1024, 'Invalid collected file size')
@@ -130,7 +132,7 @@ class Mathesis:
         headers = {'Authorization': 'Bearer ' + self.token,
                    'User-Agent': 'trureturing-outreach/mathesis',
                    'Content-Type': 'multipart/form-data; boundary=' + boundary}
-        with build_opener(NoRedirect()).open(Request(self.base + '/api/v1/pre-reviewed-deliveries',
+        with recording.open('mathesis', build_opener(NoRedirect()), Request(self.base + '/api/v1/pre-reviewed-deliveries',
                 data=b''.join(parts), headers=headers, method='POST'), timeout=60) as response:
             receipt = json.loads(response.read())
         return collection_receipt(receipt, metadata)

@@ -3,6 +3,8 @@
 Tokens stay in the environment or NyxID credential store. A disconnected SSE
 stream never implies that a server-owned turn stopped.
 """
+from . import recording
+
 import json
 import base64
 import hashlib
@@ -59,7 +61,7 @@ class CMA:
             data=None
             if body is not None:
                 data=json.dumps(body,ensure_ascii=False).encode();headers['Content-Type']='application/json'
-            with build_opener(NoRedirect()).open(
+            with recording.open('cma', build_opener(NoRedirect()),
                 Request(self.base+path,data=data,headers=headers,method=method),
                 timeout=artifact_io_timeout(30),
             ) as response:
@@ -92,7 +94,7 @@ class CMA:
                 p=Path(temp)/'request.json';p.write_text(json.dumps(body,ensure_ascii=False))
                 args+=['--data','@'+str(p),'--header','Content-Type:application/json']
             if not stream:
-                done=subprocess.run(args,capture_output=True,text=True,timeout=artifact_io_timeout(35))
+                done=recording.run(args,capture_output=True,text=True,timeout=artifact_io_timeout(35))
                 try:result=json.loads(done.stdout) if done.stdout.strip() else {}
                 except ValueError:
                     if not done.returncode:raise
@@ -130,6 +132,9 @@ class CMA:
                     raise CMARequestError(refusal['status'],refusal)
                 raise RuntimeError('Admission outcome unknown; reconnect with the saved request and key')
             finally:
+                if recording.enabled():
+                    recording.emit({**recording.command_call(args + ['--stream']),
+                        'status': process.poll(), 'response_body': captured})
                 selector.close()
                 process.terminate()
                 try:process.wait(timeout=3)

@@ -5,6 +5,8 @@ is the live writer; local commands inspect, stage or sign, never race that write
 Every external-call intent is checkpointed before the call. Mail requires an
 activated, reconciled adapter; public publication/Mathesis submission is separate.
 """
+from . import recording
+
 import argparse
 from contextlib import contextmanager
 from datetime import datetime, timezone
@@ -198,11 +200,11 @@ class Releases:
     RETRY_DELAYS=(2,5)
 
     def run(self,*args,missing=False):
-        done=subprocess.run(['gh',*args],capture_output=True,timeout=artifact_io_timeout())
+        done=recording.run(['gh',*args],record_adapter='releases',capture_output=True,timeout=artifact_io_timeout())
         for delay in (self.RETRY_DELAYS if tuple(args[:2]) in self.READ_ONLY else ()):
             if not done.returncode or not re.search(rb'HTTP 5\d\d',done.stderr):break
             time.sleep(artifact_io_timeout(delay))
-            done=subprocess.run(['gh',*args],capture_output=True,timeout=artifact_io_timeout())
+            done=recording.run(['gh',*args],record_adapter='releases',capture_output=True,timeout=artifact_io_timeout())
         if done.returncode:
             if missing and b'(HTTP 404)' in done.stderr:return None
             stderr = done.stderr.decode(errors='replace')
@@ -265,7 +267,7 @@ class Releases:
     def fetch_workflow_revision(self, revision, *, engine=False):
         """Restore a historical pin into the checkout that owns it."""
         try:
-            result = subprocess.run(
+            result = recording.run(
                 ['git', 'fetch', '--depth=1', '--no-tags', '--no-write-fetch-head', 'origin', revision],
                 cwd=ENGINE_ROOT if engine else ROOT,
                 env={**os.environ, 'GIT_TERMINAL_PROMPT': '0'},
@@ -448,11 +450,13 @@ class Ledger:
                 self.snapshot={**snap,'generation':self.generation,'run_id':pointer.get('run_id')}
                 self.published_run=pointer.get('run_id')
                 self.run_history=pointer.get('run_history',[])[:SNAPSHOTS_KEPT-1]
+        if recording.enabled():recording.pointer('start', json.loads(rel.get('body') or '{}') if rel else None)
         self.tasks=Tasks(self.folder/'state.sqlite3')
     def version(self):
         # Queue writes use a second connection to this same SQLite file.
         # total_changes alone would miss its send-intent/send-call markers.
         return (self.tasks.db.total_changes,self.tasks.db.execute('PRAGMA data_version').fetchone()[0])
+    @recording.save_pointer
     def save(self,force=False):
         """Publish at most once per 45s for replayable local progress.
 
@@ -2347,6 +2351,7 @@ class CreditGate:
                 and self.ledger.tasks.clock()-self.block['last_probe_at']>=CREDIT_PROBE_ACCEPT):
             self.block=None;self.save()
 
+    @recording.credit_decision
     def allow(self,row,*,reserve=True):
         if self.stopped:return False
         if not self.block:return True
@@ -2963,6 +2968,7 @@ def advance(ledger,cma,config,folder,revision=None,mailbox=None,oracle_capacity=
                     unavailable_repins += 1
                     ledger.save();updates.append(row['id']);continue
                 skips['workflow-source-unavailable'] += 1
+                recording.admission(row['id'],'workflow-source-unavailable',False)
                 if tick and ((old_pins[0], bool(old_pins[1])) not in fetched_revisions
                              or (old_pins[1] and (old_pins[1], False) not in fetched_revisions)):
                     tick.pending.setdefault('advance', []).append(row['id'])
@@ -2972,28 +2978,31 @@ def advance(ledger,cma,config,folder,revision=None,mailbox=None,oracle_capacity=
             # pool, free slots in existing Sandboxes still admit work (checked
             # after pool.slot below); 2026-11-08 one failed 4th-Sandbox create
             # per tick had idled five free slots for hours.
-            if group in capacity_limited and not pool:skips['capacity-limited']+=1;continue
+            if group in capacity_limited and not pool:skips['capacity-limited']+=1;recording.admission(row['id'],'capacity-limited',False);continue
             # Cheap global capacity check before gates and full-ledger scans.
-            if active_count()>=config['max_active']:skips['max-active']+=1;continue
+            if active_count()>=config['max_active']:skips['max-active']+=1;recording.admission(row['id'],'max-active',False);continue
             try:
                 queued_gates(row,tasks,revisions)
             except ValueError as exc:
                 skips['gate-held']+=1
+                recording.admission(row['id'],'gate-held',False)
                 tasks.update(row['id'],row['revision'],'held',{**data,'reason':str(exc)});ledger.save();continue
             current=current_rows();active=[r for r in current if r['state'] in ACTIVE]
-            if any(owners(r,mailbox_self)&owners(row,mailbox_self) for r in active):skips['owner-busy']+=1;continue
-            if len(active)>=config['max_active']:skips['max-active']+=1;continue
+            if any(owners(r,mailbox_self)&owners(row,mailbox_self) for r in active):skips['owner-busy']+=1;recording.admission(row['id'],'owner-busy',False);continue
+            if len(active)>=config['max_active']:skips['max-active']+=1;recording.admission(row['id'],'max-active',False);continue
             if at_share(row,current,config,
                         lambda candidate:lane_demand(candidate,tasks,config,active,mailbox_self,revisions),
                         correspondence):
-                skips['lane-share:'+lane_of(row,config,correspondence)]+=1;continue
-            if not credit.allow(row,reserve=not grouped):skips['credit']+=1;continue
+                reason='lane-share:'+lane_of(row,config,correspondence)
+                skips[reason]+=1;recording.admission(row['id'],reason,False);continue
+            if not credit.allow(row,reserve=not grouped):skips['credit']+=1;recording.admission(row['id'],'credit',False);continue
             pool_entry=None
             if pool:
                 available,pool_entry=pool.slot(row,cma=cma,rows=current_rows())
-                if not available:skips['pool-slot']+=1;continue
-                if group in capacity_limited and pool_entry is None:skips['capacity-limited']+=1;continue
+                if not available:skips['pool-slot']+=1;recording.admission(row['id'],'pool-slot',False);continue
+                if group in capacity_limited and pool_entry is None:skips['capacity-limited']+=1;recording.admission(row['id'],'capacity-limited',False);continue
             skips['passed-gates:'+row['kind']]+=1
+            recording.admission(row['id'],'passed-gates',True)
             inputs=row['request']['inputs']
             resolve_thread=row['kind'] in {'reply','research'} and inputs.get('thread_ref') and not inputs.get('thread')
             if resolve_thread or row['kind']=='firstcontact':
@@ -3424,6 +3433,7 @@ def advance(ledger,cma,config,folder,revision=None,mailbox=None,oracle_capacity=
             state={'provisioning':'provision-unknown','admitting':'admission-unknown'}.get(current['state'],current['state'])
             tasks.update(row['id'],current['revision'],state,data);ledger.save()
         updates.append(row['id'])
+    if recording.enabled():recording.emit({'event': 'admission', 'gate': 'coordinator', 'decisions': dict(sorted(skips.items()))})
     if skips:print('admission-skips '+json.dumps(dict(sorted(skips.items()))),file=sys.stderr,flush=True)
     with phase(ledger,'pool-idle'):
         if pool:pool.idle(cma,rows=current_rows())

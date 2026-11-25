@@ -8,6 +8,7 @@ import re
 import tempfile
 
 from .location import settings
+from . import recording
 from .mathesis import collection_receipt
 from .queue import canonical, digest, require
 from .tick import unit
@@ -301,7 +302,7 @@ def queue_public_link(envelope, receipt, root, gh=None):
     request = {'schema_version': 'short-note-request.v1', 'id': metadata['work_id'],
                'action': 'link-mathesis', 'revision': int(source[1]), 'receipt': receipt}
     catalog = notes.w.read(Path(root) / 'tables/publications.json')
-    gh = gh or notes.w.GitHub(notes.w.OUTREACH)
+    gh = recording.adapter('publication', gh or notes.w.GitHub(notes.w.OUTREACH))
     queued = notes.enqueue(catalog, request, gh)
     with tempfile.TemporaryDirectory() as temp:
         require(notes.w.read(gh.download(notes.w.tag_for(request['id']), queued['request'], temp)) == request,

@@ -1,6 +1,7 @@
 """Production review survives writer restarts without a local supervisor."""
 import copy
 import json
+import os
 from pathlib import Path
 import tempfile
 import unittest
@@ -657,10 +658,13 @@ class HostedReviewTests(unittest.TestCase):
             target = self.root / 'doctor.json'
             from unittest.mock import Mock
             remote = Mock(); remote.release.return_value = None
+            # doctor only probes CMA when a token or the NyxID CLI is present;
+            # supply a synthetic token so the test never depends on the host.
             with patch.object(control, 'load_config', return_value=self.config), \
                  patch.object(control, 'Releases', return_value=remote), \
                  patch.object(control, 'CMA') as adapter, \
-                 patch.object(control, 'review_key', return_value='signing-key'):
+                 patch.object(control, 'review_key', return_value='signing-key'), \
+                 patch.dict(os.environ, {'CMA_ACCESS_TOKEN': 'synthetic'}):
                 adapter.return_value.discover.return_value = {}
                 control.main(['--output', str(target), 'doctor'])
             report = json.loads(target.read_text())['reviewer']

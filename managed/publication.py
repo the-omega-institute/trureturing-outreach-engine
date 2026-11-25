@@ -402,6 +402,9 @@ def advance(ledger, config, root, folder, gh=None, secret=None):
             mathesis_sources.update(parent['id'] for parent in parents if parent['kind'] == 'shortnote')
     queued = {(loop.get('note_id'), loop.get('revision')) for r in all_rows
               if (loop := r['data'].get('publication_loop', {})).get('phase') == 'queued'}
+    # Revisions whose Mathesis selection a Mathesis row has already taken.
+    taken = {(loop.get('note_id'), loop.get('revision')) for r in all_rows if r['kind'] == 'mathesis'
+             and (loop := r['data'].get('publication_loop', {})).get('phase') == 'queued'}
     rows = [r for r in all_rows if r['kind'] in {'mathesis', 'shortnote'} and reviewed(r)
             and r['id'] not in mathesis_sources and not revisions.reason(r)]
     # Keep correspondence and owner priority, including for equal retry times.
@@ -469,7 +472,12 @@ def advance(ledger, config, root, folder, gh=None, secret=None):
                     record(ledger, row['id'], {**state, 'phase': 'pending', 'reason': reason})
                     continue
                 key = (metadata['id'], metadata['revision'])
-                if key in queued:
+                # A source note queued before its Mathesis child existed has
+                # already submitted this revision; the child still owes its
+                # Mathesis selection. Every other queued revision is a duplicate.
+                submitted = key in queued
+                if submitted and (row['kind'] != 'mathesis' or key in taken
+                                  or row['data'].get('mathesis_delivery')):
                     continue
                 step = 'exclusion'
                 reason, inputs = check_exclusion(row, ledger.tasks, table, decision, metadata)
@@ -486,19 +494,20 @@ def advance(ledger, config, root, folder, gh=None, secret=None):
                 step = 'checkpoint'
                 checkpoint = {**old, **state, 'phase': 'pending'} if retry else state
                 record(ledger, row['id'], checkpoint, force=True)
-                step = 'register'
-                catalog = gh.register_note(metadata)
-                step = 'stage'
-                notes.w.stage(prepared, gh)
-                request = {'schema_version': 'short-note-request.v1', 'id': metadata['id'],
-                           'action': 'publish', 'revision': metadata['revision']}
-                step = 'enqueue'
-                receipt = notes.enqueue(catalog, request, gh)
-                state['request'] = receipt['request']
-                step = 'request-readback'
-                with tempfile.TemporaryDirectory(dir=folder) as readback:
-                    require(notes.w.read(gh.download(notes.w.tag_for(metadata['id']), receipt['request'], readback))
-                            == request, 'Publication request readback differs')
+                if not submitted:
+                    step = 'register'
+                    catalog = gh.register_note(metadata)
+                    step = 'stage'
+                    notes.w.stage(prepared, gh)
+                    request = {'schema_version': 'short-note-request.v1', 'id': metadata['id'],
+                               'action': 'publish', 'revision': metadata['revision']}
+                    step = 'enqueue'
+                    receipt = notes.enqueue(catalog, request, gh)
+                    state['request'] = receipt['request']
+                    step = 'request-readback'
+                    with tempfile.TemporaryDirectory(dir=folder) as readback:
+                        saved = gh.download(notes.w.tag_for(metadata['id']), receipt['request'], readback)
+                        require(notes.w.read(saved) == request, 'Publication request readback differs')
                 # Mathesis and Zenodo are independent consumers. The current
                 # Mathesis contract explicitly permits delivery before any DOI.
                 if row['kind'] == 'mathesis' and not row['data'].get('mathesis_delivery'):
@@ -537,6 +546,8 @@ def advance(ledger, config, root, folder, gh=None, secret=None):
             state['phase'] = 'queued'
             remaining -= 1
             queued.add(key)
+            if row['kind'] == 'mathesis':
+                taken.add(key)
         finally:
             # Slow exclusions, duplicates and other no-op paths also yield.
             if state['phase'] == 'preparing' and clock() - started >= recheck.SLOW_SECONDS:

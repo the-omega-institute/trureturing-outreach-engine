@@ -9,6 +9,8 @@ pub struct StatusInput {
     pub baseline: Value,
     pub rejected: Value,
     pub connector_errors: Value,
+    pub pool_operator_checks: Value,
+    pub task_cleanup_checks: Vec<Value>,
     pub old_questions: i64,
 }
 pub fn status(input: StatusInput, env: &Environment) -> Result<Value> {
@@ -130,5 +132,10 @@ pub fn status(input: StatusInput, env: &Environment) -> Result<Value> {
         ),
         ("admission_errors", Value::Array(admission)),
         ("connector_errors", input.connector_errors),
+        ("sandbox_pool_operator_checks", input.pool_operator_checks),
+        (
+            "task_cleanup_operator_checks",
+            Value::Array(input.task_cleanup_checks),
+        ),
     ]))
 }

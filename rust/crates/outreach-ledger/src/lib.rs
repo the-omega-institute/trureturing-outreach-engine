@@ -406,6 +406,25 @@ impl Ledger {
                 Ok((r.get(0)?, r.get(1)?))
             })?)
     }
+    /// Task cleanup operator checks in the order of Python's status_summary query.
+    pub fn task_cleanup_checks(&self) -> Result<Vec<Value>> {
+        let mut stmt = self.db.prepare(include_str!("task_cleanup_checks.sql"))?;
+        let mut rows = stmt.query([])?;
+        let mut result = Vec::new();
+        while let Some(row) = rows.next()? {
+            let id: String = row.get(0)?;
+            let check = CanonValue::parse(&row.get::<_, String>(1)?)?.into_value();
+            result.push(Value::Object(
+                [
+                    ("task_id".to_string(), Value::String(id)),
+                    ("check".to_string(), check),
+                ]
+                .into_iter()
+                .collect(),
+            ));
+        }
+        Ok(result)
+    }
     pub fn old_owner_questions(&self, cutoff: f64) -> Result<i64> {
         let mut stmt = self.db.prepare(include_str!("old_owner_questions.sql"))?;
         let mut rows = stmt.query([true])?;

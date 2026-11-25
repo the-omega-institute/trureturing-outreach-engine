@@ -125,6 +125,47 @@ class PoolFixture:
 
 
 class PoolTests(PoolFixture,unittest.TestCase):
+    def test_retiring_failed_entry_reconciles_agents_and_clears_stale_error(self):
+        from managed.sandbox_pool import SandboxPool
+        sid='sbx_stuck';wid='wks_stuck'
+        row=self.queue('stuck-agent')
+        self.ledger.tasks.update(row['id'],row['revision'],'failed',{
+            'agent_id':'agt_stuck','sandbox_id':sid,'workspace_id':wid,
+            'cleanup':{'deleted':True}})
+        entry={'sandbox_id':sid,'workspace_id':wid,'state':'failed',
+               'agents_placed':1,'cleanup_error':'TimeoutError: old read',
+               'cleanup':{'sandbox_id':sid,'sandbox_retired':False},
+               'cleanup_intent':{'key':'outreach-pool-retire-'+sid},
+               'cleanup_checked_at':0}
+        self.ledger.tasks.db.execute('INSERT OR REPLACE INTO pipeline_state VALUES(?,?)',
+                                     ('sandbox_pool_cleanup',canonical([entry])))
+        self.ledger.tasks.db.execute('INSERT OR REPLACE INTO pipeline_state VALUES(?,?)',
+                                     ('sandbox_pool',canonical([])))
+        state={'status':'retiring'};agent={'id':'agt_stuck','name':'outreach-stuck-agent','status':'failed'};calls=[]
+        class SweepCMA:
+            retire_sandbox=RESTCMA.retire_sandbox
+
+            def request(_,path,method='GET',body=None,key=None):
+                calls.append((path,method,key))
+                if path==f'/api/v1/sandboxes/{sid}' and method=='DELETE':
+                    state['status']='retiring';return {}
+                if path==f'/api/v1/sandboxes/{sid}':return dict(state)
+                if path.startswith('/api/v1/agents?'):
+                    return {'items':[dict(agent)],'next':None}
+                if path==f'/api/v1/agents/agt_stuck/stop':
+                    agent['status']='failed';raise CMARequestError(409,'failed Agent')
+                if path==f'/api/v1/agents/agt_stuck' and method=='DELETE':
+                    agent['status']='deleted';return {'status':'deleted'}
+                if path==f'/api/v1/agents/agt_stuck':return dict(agent)
+                if path==f'/api/v1/sandboxes/{sid}/workspaces':return {'items':[{'id':wid}]}
+                raise AssertionError((path,method))
+        pool=SandboxPool(self.ledger,self.cfg['sandbox_pool'],self.cfg['kinds'],paused=True)
+        pool.health(SweepCMA(),rows=self.ledger.tasks.all())
+        self.assertTrue(any(path.startswith('/api/v1/agents?') for path,_,_ in calls))
+        self.assertTrue(any(path.endswith('/agt_stuck') and method=='DELETE' for path,method,_ in calls))
+        saved=self.state('sandbox_pool_cleanup')[0]
+        self.assertNotIn('cleanup_error',saved)
+
     def test_first_sandbox_fills_to_six_before_second_opens(self):
         for i in range(13):self.queue('new-'+str(i))
         self.tick()
@@ -1118,7 +1159,9 @@ class PoolLifecycleTests(PoolFixture,unittest.TestCase):
                              'outreach-pool-retire-'+entry['sandbox_id'])
             self.restore()
         self.assertEqual(len(self.retirement_calls()),3)
-        self.assertEqual(len({c[2] for c in self.retirement_calls()}),1)
+        keys=[c[2] for c in self.retirement_calls()]
+        self.assertEqual(keys[0],keys[1])
+        self.assertNotEqual(keys[1],keys[2])
 
     def test_failed_forced_checkpoint_prevents_retirement(self):
         self.seed_pool();self.tick();self.now+=600;self.remote.fail_pointer=True

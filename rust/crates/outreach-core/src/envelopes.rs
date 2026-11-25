@@ -341,6 +341,9 @@ pub fn mathesis_reviewed(row: &Value) -> Result<()> {
     )
 }
 pub fn validate_mathesis(v: &Value, secret: &[u8]) -> Result<()> {
+    validate_mathesis_mode(v, secret, false)
+}
+pub(crate) fn validate_mathesis_mode(v: &Value, secret: &[u8], test: bool) -> Result<()> {
     let collection = v["metadata"]["schema"] == "mathesis.pre-reviewed-delivery.v1";
     require(
         keys(
@@ -395,6 +398,10 @@ pub fn validate_mathesis(v: &Value, secret: &[u8]) -> Result<()> {
         "Select a preserved scientific source from this reviewed task",
     )?;
     if collection {
+        require(
+            !test,
+            "Collection cannot use the private synthetic manuscript test",
+        )?;
         collection_metadata(m)?;
         let pdf = &v["pdf"];
         require(
@@ -434,10 +441,24 @@ pub fn validate_mathesis(v: &Value, secret: &[u8]) -> Result<()> {
             && ["publication", "review_only"].contains(&s(&p["purpose"])),
         "Record actual author information, processing consent and disclosure",
     )?;
-    require(
-        m["producer"] == "trureturing-outreach",
-        "Invalid production producer",
-    )
+    if test {
+        require(
+            m["producer"] == "outreach-infrastructure-test"
+                && m["work_id"] == "test-runtime-20261031"
+                && m["version"] == "1"
+                && p["purpose"] == "review_only"
+                && a["sha256"]
+                    == "1a07d345c39df2081ca4796666afb1f2a5628388c3e3e675bffce6d4813c17c2"
+                && p["make_public_after_acceptance"] == false
+                && p["open_to_contributors"] == false,
+            "The acceptance entry only reuses the existing private synthetic manuscript",
+        )
+    } else {
+        require(
+            m["producer"] == "trureturing-outreach",
+            "Invalid production producer",
+        )
+    }
 }
 pub fn collection_metadata(v: &Value) -> Result<()> {
     require(

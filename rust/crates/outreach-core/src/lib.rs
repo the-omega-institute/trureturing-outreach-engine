@@ -6,6 +6,7 @@ mod exceptions;
 pub mod gates;
 pub mod ingest;
 mod lanes;
+pub mod mathesis_delivery;
 mod registry;
 pub mod results;
 mod reviews;

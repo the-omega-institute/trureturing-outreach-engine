@@ -1,4 +1,6 @@
 """Local Claude entry for the existing broadcast-kit daily producer; no timer."""
+from . import recording
+
 import argparse
 from datetime import date, datetime, timedelta
 import hashlib
@@ -19,7 +21,7 @@ from .location import DATA_ROOT, ENGINE_ROOT as ROOT
 
 
 def local_root():
-    common = subprocess.check_output(['git', 'rev-parse', '--path-format=absolute', '--git-common-dir'],
+    common = recording.check_output(['git', 'rev-parse', '--path-format=absolute', '--git-common-dir'],
                                      cwd=ROOT, text=True).strip()
     return Path(common).parent.parent / 'mail/outreach-maintenance/daily'
 
@@ -273,7 +275,7 @@ def main(argv=None):
                 env = dict(os.environ)
                 env['PYTHONPATH'] = os.pathsep.join([str(ROOT), config['broadcast_kit'], env.get('PYTHONPATH', '')])
                 command = [config['python'], '-m', 'managed.daily_local', args.action, '--config', str(path), '--day', day]
-                raise SystemExit(subprocess.run(command, cwd=ROOT, env=env).returncode)
+                raise SystemExit(recording.run(command, cwd=ROOT, env=env).returncode)
             sys.path.insert(0, config['broadcast_kit'])
             from broadcast_kit import research_daily
             result = operate(args.action, config, day, research_daily)

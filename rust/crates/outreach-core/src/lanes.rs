@@ -26,7 +26,7 @@ fn ids(values: &[&Value]) -> BTreeSet<String> {
     }
     result
 }
-fn linked(rows: &[Value], env: &Environment) -> Result<BTreeSet<String>> {
+pub(crate) fn linked(rows: &[Value], env: &Environment) -> Result<BTreeSet<String>> {
     let mut output = BTreeSet::new();
     if !truth(&env.config["sandbox_pool"]["prioritize_correspondence_notes"])
         || !rows.iter().any(note)

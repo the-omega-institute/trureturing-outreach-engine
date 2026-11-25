@@ -31,6 +31,7 @@ pub struct InputAsset {
 pub struct Replay<'a> {
     pub tables: Value,
     undo: Option<Vec<Undo>>,
+    pub stage_update_times: std::collections::VecDeque<(f64, f64)>,
     pub generation: i64,
     pub now: f64,
     pub saved_version: Option<String>,
@@ -58,6 +59,7 @@ impl<'a> Replay<'a> {
             environment,
             resource,
             undo: None,
+            stage_update_times: std::collections::VecDeque::new(),
         }
     }
     fn push_row(&mut self, table: &'static str, value: Value) -> Result<()> {
@@ -155,7 +157,7 @@ impl<'a> Replay<'a> {
             .as_array_mut()
             .ok_or_else(|| Error::new(format!("Missing replay table: {table}")))
     }
-    fn task(&self, id: &Value) -> Result<Value> {
+    pub(crate) fn task(&self, id: &Value) -> Result<Value> {
         let row = self
             .rows("tasks")
             .iter()
@@ -177,14 +179,14 @@ impl<'a> Replay<'a> {
             object([("id", string(digest(v)?)), ("payload", v.clone())]),
         )
     }
-    fn state(&self, key: &str) -> Value {
+    pub(crate) fn state(&self, key: &str) -> Value {
         self.rows("pipeline_state")
             .iter()
             .find(|r| r["key"] == key)
             .map(|r| r["payload"].clone())
             .unwrap_or(Value::Null)
     }
-    fn set_state(&mut self, key: &str, value: Value) -> Result<()> {
+    pub(crate) fn set_state(&mut self, key: &str, value: Value) -> Result<()> {
         let value = object([("key", string(key)), ("payload", value)]);
         if let Some(index) = self
             .rows("pipeline_state")
@@ -250,7 +252,7 @@ impl<'a> Replay<'a> {
             .ok_or_else(|| Error::new("Unknown task"))?;
         self.replace_row("tasks", index, c.row)
     }
-    fn update(&mut self, row: &Value, state: &str, data: Value) -> Result<()> {
+    pub(crate) fn update(&mut self, row: &Value, state: &str, data: Value) -> Result<()> {
         let summary = event_summary(&data);
         let mut row = row.clone();
         row["revision"] = increment(
@@ -261,12 +263,20 @@ impl<'a> Replay<'a> {
         .into();
         row["state"] = string(state);
         row["data"] = data;
-        row["updated"] = outreach_canon::float(self.now)?;
-        self.apply_change(Change {
+        let (updated, at) = self
+            .stage_update_times
+            .pop_front()
+            .unwrap_or((self.now, self.now));
+        row["updated"] = outreach_canon::float(updated)?;
+        let previous_now = self.now;
+        self.now = at;
+        let result = self.apply_change(Change {
             row,
             event_data: summary,
             preserved: None,
-        })
+        });
+        self.now = previous_now;
+        result
     }
     fn context(&self) -> Context<'_> {
         Context {

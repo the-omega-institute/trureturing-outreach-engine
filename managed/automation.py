@@ -3,6 +3,8 @@
 Classification is a proposal until Claude reviews the exact result. Questions
 and independent-paper work stay separate from the permission to send mail.
 """
+from . import recording
+
 import copy
 from datetime import datetime, timezone
 import json
@@ -347,7 +349,7 @@ def stage_submission(paper_id, files, root, releases, folder, submission_round='
     require(paper['stage'] != 'submitted', 'Paper is already recorded as submitted')
     # Resolve the two roots through the common Git directory, including when this
     # command is tested in a disposable workflow-maintenance worktree.
-    common = subprocess.check_output(['git','rev-parse','--path-format=absolute','--git-common-dir'],
+    common = recording.check_output(['git','rev-parse','--path-format=absolute','--git-common-dir'],
                                      cwd=root,text=True).strip()
     canonical = Path(common).parent.resolve()
     workspace = (canonical/paper['workspace']).resolve()

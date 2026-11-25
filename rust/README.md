@@ -482,8 +482,9 @@ not a CI timing gate.
 
 - Production ingestion, durable forced-save intent boundaries, reconciliation,
   Release upload/download and all live ledger writes remain Python-owned.
-  Network adapters, full coordinator/delivery/publication stages, automatic run
-  recording and cutover belong to later phases. The local replay does not confer
+  Live Rust network adapters, the other coordinator/delivery/publication stages
+  and cutover belong to later phases. Phase 3a adds opt-in Python recording and
+  offline Rust Mathesis delivery; it does not enable production replay. The local replay does not confer
   production write authority.
 - Other phase-1 operator inventories (`work`, full `status`, `todo`) and network
   Release restore are not exposed by this CLI. The current work/status builders
@@ -512,3 +513,84 @@ not a CI timing gate.
   the frozen SQL projection because it must track the live Python query exactly;
   moving that unrelated status selector into typed core policy remains later work with a
   corresponding live-query parity check.
+
+
+## Phase 3a: recording and the first stage
+
+`../scenarios/schema.json` is the language-independent scenario contract.
+`../scenarios/test-map.json` records all original test IDs; the scenario README
+explains the 85 cases and the behaviors made explicit by extraction. Run:
+
+```sh
+python3.12 ../scenarios/runner.py
+python3.12 scenarios.py
+python3.12 -m unittest discover -s ../scenarios -p 'test_*.py'
+```
+
+Python passes all 85 cases. Rust passes the 55 Mathesis cases and explicitly
+skips the other 30. Its stage includes receipt persistence/reconciliation,
+conflict revision pins, collection readback, legacy migration and withdrawal,
+and upgrading an unattempted old selection. The pure core receives time,
+admission decisions, artifact reads and persistence through ports. Its typed
+`MathesisClient` accepts `Persisted<ManuscriptIntent>`,
+`Persisted<CollectionIntent>` and `Persisted<WithdrawIntent>` for writes. Reading
+link requests also require a persisted capability. The capability has private
+fields and no Clone/Deserialize implementation; two compile-fail doctests check
+construction and calling a write with a raw intent. Only a successful
+`save_forced` port call constructs a capability. The offline fake acknowledges
+that boundary; a future production implementation must acknowledge the actual
+Release pointer commit. No production Rust implementation is supplied.
+
+Recording is off by default. Set `OUTREACH_RECORD_DIR` to a private directory
+outside the engine checkout, with a new directory for each run. Python appends
+canonical UTF-8 JSONL to mode-0600 `calls-PID.jsonl` files, with a lock around each
+append. HTTP records include adapter, method, exact path plus path template,
+canonical body digest, idempotency key, status, read request/response bodies and
+write receipts. Write request bodies are represented by digests. CLI records
+retain exit status (not an inferred HTTP success code), read stdout and command
+identity. Retries appear as separate transport calls. Multipart request digests
+use metadata and ordered file identities, independent of the random MIME
+boundary. Transport exceptions retain their type and known status. Budget,
+credit and coordinator admission gates and committed start/end Release
+pointers are also recorded. Recording errors report their class and do not
+turn a completed effect into a failed operation.
+
+Redaction reuses `run_log.SECRETS` and its shared environment-key table, adds
+credential-field and URL/header masking, and masks secrets inside encoded read
+files. Receipt HMAC signatures remain verification material; signing keys and
+credential URL signatures are masked. Mathesis frames with redacted inputs are
+marked and skipped by replay. Treat all recording data as private even after
+credential masking: it can contain correspondence and scientific material.
+`managed.recording.pending_uploads()` is the documented integration hook for a
+future private-control Release uploader. Phase 3a never calls an uploader.
+
+The Mathesis recording frame relates the stage's logical input and final rows
+to ordered adapter observations. It retains the actual update timestamps and
+budget admissions, so replay does not depend on machine speed. A supplied
+closed start snapshot must match the recorded start Release pointer; a synthetic
+fixture without a pointer must match the first frame's initial rows. Earlier
+unported stages are observed at this boundary, not executed by Rust. Read
+arguments match in order; write arguments match their canonical digest and
+return a recorded receipt without issuing a write. All subprocess output from
+the Rust runner is captured; the replay command emits only
+`equal`/`different`/`skipped` counts:
+
+```sh
+cargo build --locked --offline -p outreach-core --example scenarios
+python3.12 replay_mathesis.py /private/run-recording /private/start.sqlite3 --key-file /private/review-key
+```
+
+The key can also come from `OUTREACH_REVIEW_KEY`; it is passed to the local
+runner in memory, never written or printed. Missing keys, redacted frames and
+unavailable stage captures are skipped; snapshot mismatches, malformed records
+and replay mismatches increment `different` and give a failing exit. The
+snapshot is opened read-only/immutable and checked before and after. This
+command neither uploads recordings nor starts a coordinator tick.
+
+Phase 3b still needs the other stage ports (CMA progression and sandbox pool,
+mailbox intake, delivery/sent records, publication, pipeline and continuations,
+maintenance and question handling), wider scenario conversion, and production
+Rust adapter implementations, including complete filesystem/package validation.
+Run-wide replay across unported stages, recording upload/retention, live replay
+coverage and implementation cutover remain later work. Python remains the only
+production ledger writer throughout this slice.

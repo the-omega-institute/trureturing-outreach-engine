@@ -2,10 +2,10 @@ name: Rust parity
 
 on:
   pull_request:
-    paths: ['rust/**', 'managed/**', 'scripts/short_notes/**', '.github/workflows/rust.yml']
+    paths: ['scenarios/**', 'rust/**', 'managed/**', 'scripts/short_notes/**', '.github/workflows/rust.yml']
   push:
     branches: [main]
-    paths: ['rust/**', 'managed/**', 'scripts/short_notes/**', '.github/workflows/rust.yml']
+    paths: ['scenarios/**', 'rust/**', 'managed/**', 'scripts/short_notes/**', '.github/workflows/rust.yml']
 
 permissions:
   contents: read
@@ -58,6 +58,15 @@ jobs:
         run: python3 parity/signing_ingest.py
       - name: Offline stage builder parity
         run: python3 parity/builders.py
+      - name: Python scenarios and recording boundaries
+        working-directory: .
+        run: |
+          python3 scenarios/runner.py
+          python3 -m unittest discover -s managed/tests -p test_recording.py
+      - name: Rust Mathesis scenarios
+        run: |
+          python3 scenarios.py
+          python3 -m unittest discover -s ../scenarios -p 'test_*.py'
       - name: Clippy
         run: cargo clippy --locked --workspace --all-targets -- -D warnings
       - name: Test

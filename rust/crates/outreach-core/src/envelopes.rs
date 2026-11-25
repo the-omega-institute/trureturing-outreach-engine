@@ -64,12 +64,12 @@ pub fn validate_review(v: &Value, secret: &[u8]) -> Result<()> {
     )?;
     rebind(v)?;
     signature(v, secret, "Invalid signed review: review signature failed")?;
-    if v["reviewer"] == "local-claude-loop" {
+    let independent = independent_reviewer(&v["reviewer"])?;
+    if independent {
         hashable(&v["verdict"])?;
     }
     require(
-        v["reviewer"] == "local-claude-loop"
-            && ["PASS", "BOUNCE", "HOLD"].contains(&s(&v["verdict"])),
+        independent && ["PASS", "BOUNCE", "HOLD"].contains(&s(&v["verdict"])),
         "Invalid reviewer/verdict",
     )?;
     require(
@@ -374,7 +374,7 @@ pub(crate) fn validate_mathesis_mode(v: &Value, secret: &[u8], test: bool) -> Re
     )?;
     require(
         one(&v["schema_version"])
-            && v["reviewer"] == "local-claude-loop"
+            && independent_reviewer(&v["reviewer"])?
             && nonempty(&v["decision_ref"]),
         "Preserve the actual author/processing decision reference",
     )?;

@@ -523,6 +523,47 @@ class TickBudgetTests(unittest.TestCase):
         self.assertEqual(self.rows()['a']['state'],'awaiting-review')
 
 
+    def test_review_and_author_registration_failures_are_isolated_and_tick_continues(self):
+        self.seed([])
+        from managed.location import example_config
+        config = example_config()
+        config['independent_review']['enabled'] = True
+        config['automation']['enabled'] = True
+        config['paused'] = False
+        from managed.independent_review import advance as actual_review
+        for failure in ('missing-key', 'row-exception'):
+            calls = []
+            def register(*args):
+                calls.append('register')
+                raise RuntimeError('Synthetic author stage error')
+            review_failure = actual_review if failure == 'missing-key' else KeyError('synthetic malformed row')
+            with patch.dict('os.environ', {'OUTREACH_REVIEW_KEY':''}), \
+                 patch('managed.control.load_config', return_value=config), \
+                 patch('managed.independent_review.advance', side_effect=review_failure), \
+                 patch('managed.author_contacts.advance', side_effect=register), \
+                 patch('managed.prior_work_issues.advance', side_effect=lambda *args:calls.append('later')):
+                _, status = self.run_tick()
+            self.assertIn('register', calls)
+            self.assertIn('later', calls)
+            errors = {e['connector']:e for e in status['connector_errors']}
+            self.assertEqual(errors['independent-review']['phase'], 'needs_attention')
+            self.assertEqual(errors['author-registration']['phase'], 'needs_attention')
+
+    def test_tick_observes_existing_review_when_activation_is_disabled(self):
+        self.seed([])
+        with tempfile.TemporaryDirectory() as folder:
+            ledger = Ledger(self.remote, folder)
+            try:
+                row = ledger.tasks.add(request('review-only','owner'))
+                ledger.tasks.update(row['id'], row['revision'], 'awaiting-review', {
+                    'hosted_review':{'phase':'reviewing','create_key':'original','response_id':'response'}})
+                ledger.save(force=True)
+            finally: ledger.tasks.close()
+        with patch('managed.independent_review.advance') as observe:
+            self.run_tick()
+        observe.assert_called_once()
+
+
 if __name__=='__main__':unittest.main()
 
 

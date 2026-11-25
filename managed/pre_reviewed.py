@@ -12,6 +12,7 @@ from . import recording
 from .mathesis import collection_receipt
 from .queue import canonical, digest, require
 from .tick import unit
+from .tasks import INDEPENDENT_REVIEWERS
 
 SCHEMA = 'mathesis.pre-reviewed-delivery.v1'
 PRIOR_WORK_NOT_RUN = {
@@ -168,7 +169,7 @@ def legacy_collection_envelope(row, legacy, secret, previous_version=None):
                 'workflow_hash': row['request']['workflow_hash'],
                 'decision_ref': legacy.get('decision_ref') or 'legacy-manuscript-delivery-migration',
                 'metadata': collection_metadata, 'pdf': pdf, 'source': source,
-                'reviewer': 'local-claude-loop'}
+                'reviewer': row['data']['review']['reviewer']}
     envelope['signature'] = signature(envelope, secret)
     return validate(envelope, secret)
 
@@ -227,7 +228,7 @@ def select(row, directory, decisions, secret, tasks=None, releases=None, metadat
                              'version': decisions.get('collection_version', metadata['revision']),
                              'previous_version': decisions.get('collection_previous_version', decisions.get('previous_version')),
                              'authorize_publication': True, 'paper': paper, 'review': review},
-                'pdf': pdf, 'source': source, 'reviewer': 'local-claude-loop'}
+                'pdf': pdf, 'source': source, 'reviewer': row['data']['review']['reviewer']}
     envelope['signature'] = signature(envelope, secret)
     return validate(envelope, secret)
 
@@ -265,7 +266,7 @@ def check_row(row, envelope, secret):
     require(review == row['data']['review'] and hmac.compare_digest(review.get('signature', ''),
             hmac.new(secret.encode(), canonical(unsigned).encode(), hashlib.sha256).hexdigest()),
             'Collection requires the authentic signed PASS for this exact result')
-    require(review.get('reviewer') == 'local-claude-loop', 'Collection requires independent Claude review')
+    require(review.get('reviewer') in INDEPENDENT_REVIEWERS, 'Collection requires independent signed review')
     require(isinstance(record.get('prior_work_check'), dict)
             and isinstance(record['prior_work_check'].get('verdict'), str),
             'Collection requires a Prior-work record')

@@ -4,6 +4,7 @@ import unittest
 from urllib.parse import parse_qs, urlsplit
 
 from managed.cma import AGENT_CLEANUP_WAIT_SECONDS, CMA, CMARequestError
+from managed.sandbox_pool import ledger_agents
 
 
 class LifecycleCMA(CMA):
@@ -51,6 +52,41 @@ class LifecycleCMA(CMA):
 
 
 class CMAAgentCleanupTests(unittest.TestCase):
+    def test_hosted_review_agent_is_owned_by_ledger_cleanup_only(self):
+        rows=[{'data':{'hosted_review':{
+            'agent_id':'agt_review', 'phase':'completed', 'cleanup_complete':False},
+            'hosted_review_history':[{'agent_id':'agt_old_review',
+                                      'cleanup':{'agent_id':'agt_old_cleanup'}}]}}]
+        owned=ledger_agents(rows)
+        self.assertEqual(owned, {'agt_review', 'agt_old_review', 'agt_old_cleanup'})
+        calls=[]
+        agents={
+            'agt_review':{'id':'agt_review','name':'independent-review-abc','status':'failed'},
+            'agt_foreign':{'id':'agt_foreign','name':'human-debug','status':'ready'},
+        }
+
+        def request(path, method='GET', body=None, key=None):
+            calls.append((path, method, key))
+            if path == '/api/v1/sandboxes/sbx_review':
+                return {'status':'active'}
+            if path.startswith('/api/v1/agents?'):
+                return {'items':[dict(agent) for agent in agents.values()], 'next':None}
+            if path == '/api/v1/agents/agt_review' and method == 'DELETE':
+                agents['agt_review']['status']='deleted'
+                return {'status':'deleted'}
+            if path == '/api/v1/agents/agt_review/stop':
+                raise CMARequestError(409, 'failed Agent')
+            raise AssertionError((path, method))
+
+        cma=CMA(token='fake'); cma.request=request
+        result=cma.retire_sandbox(None, 'sbx_review', 'outreach-pool-retire-sbx_review', {},
+                                  dead_ok=True, finished=owned)
+        self.assertEqual(result['foreign_agents'], ['agt_foreign'])
+        self.assertEqual([path for path, method, _ in calls if method == 'DELETE'],
+                         ['/api/v1/agents/agt_review'])
+        self.assertFalse(any('agt_foreign' in path and method in {'POST','DELETE'}
+                             for path, method, _ in calls))
+
     def test_task_retire_does_not_sweep_shared_sandbox_agents(self):
         calls=[]
         agents={

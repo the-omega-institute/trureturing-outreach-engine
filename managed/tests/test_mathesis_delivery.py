@@ -146,6 +146,10 @@ class AcceptanceTests(unittest.TestCase):
                     self.assertTrue(report['production_ledger_unchanged'])
                     self.assertEqual(report['posts_on_restored_replay'], 0)
         self.assertEqual(client.posts, 1)
+        staged_reviews = [json.loads(raw) for name, raw in test.assets.items()
+                          if name.startswith('review-') and name.endswith('.json')]
+        self.assertTrue(staged_reviews)
+        self.assertTrue(all(value['reviewer'] == 'hosted-cma-review' for value in staged_reviews))
         self.assertFalse(production.assets)
 
 

@@ -259,10 +259,20 @@ def reconcile(ledger, config, root, now=None, revision=None):
     revision = revision or source_head()
     contacts = read(root,'contacts')['contacts']
     backfill = set(settings.get('backfill_result_ids',[]))
+    auto_backfill = settings.get('auto_backfill', False)
+    historical_limit = settings.get('backfill_per_tick', 1)
+    pending_limit = settings.get('backfill_pending_limit', 16)
+    require(type(auto_backfill) is bool and type(historical_limit) is int and 1 <= historical_limit <= 4
+            and type(pending_limit) is int and 1 <= pending_limit <= 256,
+            'Bound automatic historical coverage and its pending queue')
+    historical_started = 0
     budget = settings.get('max_new_tasks_per_tick',4)
     require(type(budget) is int and 1<=budget<=16, 'Bound pipeline task creation to 1..16 per tick')
     coverage_ready = cache_note_coverage(ledger, budget)
     rows = tasks.all()
+    pending_notes = sum(r['kind'] == 'shortnote' and r['state'] in
+                        {'queued','provisioning','provision-unknown','admitting','admission-unknown',
+                         'running','credit-wait','revising','awaiting-review'} for r in rows)
     covered = note_coverage(rows, tasks)
     by_id = {r['id']:r for r in rows}
     revisions = note_revisions.Revisions(tasks, rows)
@@ -315,17 +325,20 @@ def reconcile(ledger, config, root, now=None, revision=None):
                 'to prepare the Mathesis handoff. Exclude private correspondence and the private difference list.'
             }, revision))
 
-    for record in units(ledger,'pipeline-sources',db.execute('SELECT * FROM pipeline_sources ORDER BY rowid').fetchall(),
+    for record in units(ledger,'pipeline-sources',db.execute('SELECT * FROM pipeline_sources ORDER BY baseline,rowid').fetchall(),
                         key=lambda r:r['result_id']):
         rid = record['result_id']
         if (not config['kinds'].get('shortnote') or rid not in resolved or record['task_id']
-                or (record['baseline'] and rid not in backfill)):
+                or (record['baseline'] and rid not in backfill and not auto_backfill)):
             continue
         if rid in covered:
             db.execute('UPDATE pipeline_sources SET task_id=? WHERE result_id=?', (covered[rid][0]['id'], rid))
             ledger.save()
             continue
         if not coverage_ready:
+            continue
+        automatic_historical = record['baseline'] and rid not in backfill
+        if automatic_historical and (historical_started >= historical_limit or pending_notes >= pending_limit):
             continue
         row = json.loads(record['payload'])
         matches = [p for p in contacts if rid in p.get('problem_ids',[])]
@@ -337,6 +350,9 @@ def reconcile(ledger, config, root, now=None, revision=None):
             'instructions':'Read current holds and ownership. Reuse an existing note first. Produce a checked, rebuildable note and PDF. This is the source for author outreach and Mathesis; no sending or publication authority. '+AUTHOR_CONTACT_INSTRUCTIONS},revision)
         if enqueue(value):
             db.execute('UPDATE pipeline_sources SET task_id=? WHERE result_id=?',(value['id'],rid));ledger.save()
+            pending_notes += 1
+            if automatic_historical:
+                historical_started += 1
 
     for record in units(ledger,'pipeline-notes',db.execute('SELECT DISTINCT task_id FROM pipeline_sources WHERE task_id IS NOT NULL').fetchall(),
                         key=lambda r:r['task_id']):

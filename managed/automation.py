@@ -991,6 +991,9 @@ def work(tasks, root, config=None):
                              'state':r['state'], 'updated':r['updated'], 'request':r['request'],
                              'reason':r['data'].get('last_error') or r['data'].get('reason'),
                              'result':r['data'].get('result'), 'review':r['data'].get('review'),
+                             'hosted_review':{k:v for k,v in (r['data'].get('hosted_review')
+                                              or r['data'].get('hosted_review_preparation') or {}).items()
+                                              if k not in {'prompt','create_body'}},
                              **({'reviewer_edit':{key:r['data']['reviewer_edit'][key] for key in
                                  ('from_result_hash','body_sha256_before','body_sha256_after')}}
                                 if 'reviewer_edit' in r['data'] else {}),

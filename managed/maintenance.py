@@ -57,6 +57,17 @@ def check_config(config):
     if pool:
         from .sandbox_pool import group_config
         group_config(pool, config['kinds'])
+    review=config.get('independent_review', {})
+    if review:
+        if (type(review.get('enabled')) is not bool
+                or type(review.get('max_active', 1)) is not int
+                or not 1 <= review.get('max_active', 1) <= 4
+                or type(review.get('max_active_per_group', 1)) is not int
+                or not 1 <= review.get('max_active_per_group', 1) <= review.get('max_active', 1)
+                or type(review.get('register_author_contacts', False)) is not bool):
+            raise ValueError('Declare a bounded independent review configuration')
+        if review['enabled'] and (not pool or pool['agents_per_sandbox'] < 2):
+            raise ValueError('Independent review needs an existing pool with a reserved Agent slot')
     # Without a pool each task owns a Sandbox; with one, Agents share at most
     # max_sandboxes x agents_per_sandbox slots (CMA allows 16 Agents per Workspace).
     ceiling=16 if not pool else pool['max_sandboxes']*pool['agents_per_sandbox']

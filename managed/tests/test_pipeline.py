@@ -49,6 +49,32 @@ class PipelineTests(unittest.TestCase):
     def tick(self):
         reconcile(self.ledger,self.config,self.root,now=self.time,revision='b'*40)
 
+    def test_automatic_history_is_bounded_and_new_sources_go_first(self):
+        self.catalog['results'].append(self.result('historical-two'))
+        self.write_tables(); self.tick()
+        self.catalog['results'].append(self.result('new-result')); self.write_tables()
+        self.config['paused'] = False
+        self.config['pipeline'].update(auto_backfill=True, backfill_per_tick=1,
+                                        backfill_pending_limit=16, max_new_tasks_per_tick=2)
+        self.tick()
+        notes = [r for r in self.ledger.tasks.all() if r['kind'] == 'shortnote']
+        self.assertEqual(len(notes), 2)
+        self.assertEqual(notes[0]['request']['inputs']['pipeline']['result_id'], 'new-result')
+        self.tick(); self.tick()
+        self.assertEqual(sum(r['kind'] == 'shortnote' for r in self.ledger.tasks.all()), 3)
+
+    def test_automatic_history_waits_for_live_queue_capacity(self):
+        self.tick()
+        self.catalog['results'].append(self.result('new-result')); self.write_tables()
+        self.config['paused'] = False
+        self.config['pipeline'].update(auto_backfill=True, backfill_pending_limit=1)
+        self.tick(); self.tick()
+        notes = [r for r in self.ledger.tasks.all() if r['kind'] == 'shortnote']
+        self.assertEqual(len(notes), 1)
+        self.assertEqual(notes[0]['request']['inputs']['pipeline']['result_id'], 'new-result')
+        self.assertIsNone(self.ledger.tasks.db.execute(
+            "SELECT task_id FROM pipeline_sources WHERE result_id='historical'").fetchone()[0])
+
     def new_note(self):
         self.tick();self.catalog['results'].append(self.result('new-result'));self.write_tables()
         self.config['paused']=False;self.tick()

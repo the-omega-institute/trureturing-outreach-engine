@@ -322,7 +322,7 @@ fn reviewed(row: &Value) -> Result<bool> {
         && eligible
         && result["outcome"] == "completed"
         && review["verdict"] == "PASS"
-        && review["reviewer"] == "local-claude-loop"
+        && validation::independent_reviewer(&review["reviewer"])?
         && review["binding"]["result_hash"] == digest(result)?
         && review["binding"]["workflow_hash"] == row["request"]["workflow_hash"])
 }

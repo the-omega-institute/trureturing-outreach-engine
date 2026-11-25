@@ -8,8 +8,9 @@ values, and `outreach-cli` exposes `outreach control status --compact`, `reviews
 commands perform local reads and never download Releases, initialize a database,
 run migrations, stage inputs, or perform external effects.
 
-Phase 2 adds local envelope builders and an in-memory replay of all 12 ingestion
-families. The SQLite adapter still has no writer. Python under `managed/` is
+Phase 2 adds local envelope builders and an in-memory replay of 13 supported ingestion
+families, including exact operator-signed resets of parked hosted reviews.
+The SQLite adapter still has no writer. Python under `managed/` is
 unchanged and remains the only production ledger writer. No Rust command uploads
 to a Release, edits GitHub, sends mail, or runs a coordinator tick.
 
@@ -445,9 +446,9 @@ temporary copy. The caller supplies the starting generation, clock, assets and
 required resource bytes; no private window is discovered automatically.
 
 The synthetic differential suites exercise 4,572 request/packet/source-gap/time
-cases (4,048 identical rejections), 241 byte-equal signing outputs, all 12 ingestion
-families across 351 replay cases / 1,401 passes (582 matching rejections), and
-15 byte-equal stage selections/resources subsequently accepted by Python.
+cases (4,048 identical rejections), 241 byte-equal signing outputs, 13 supported ingestion
+families across 378 replay cases / 1,509 passes (654 matching rejections), and
+17 byte-equal stage selections/resources subsequently accepted by Python.
 Replay covers PASS/BOUNCE/HOLD, answer and close decisions, wrong states, stale
 bindings, duplicate events, reply/firstcontact edits and edit refusals, agent-held
 and parked results, owner/mail workflow rebinds, invalid signature types, all

@@ -211,6 +211,15 @@ def generate(folder):
         write(work, {'reviews': tasks.reviews()})
     finally: tasks.close()
     fixtures.append(('binding', root, path, work))
+    # Hosted reviews qualify for the same publication exceptions as local reviews.
+    root = folder / 'hosted-review'; base(root)
+    write(root / 'tables/decisions.json', {'short_note_publication': {'enabled': True}})
+    row = test_exceptions.passed('hosted-note')
+    current = control.workflow('shortnote')
+    row['request']['workflow_hash'] = current
+    row['data']['review']['binding']['workflow_hash'] = current
+    row['data']['review']['reviewer'] = 'hosted-cma-review'
+    fixtures.append(('hosted-review', root, *build(root, [row], {'tasks':[row]})))
     # Reuse every source snapshot exercised by the production exceptions suite.
     # Capture before later test edits; retain only in this TemporaryDirectory.
     real_inventory = exceptions.inventory

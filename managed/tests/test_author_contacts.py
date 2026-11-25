@@ -80,6 +80,45 @@ class AuthorContactsTests(unittest.TestCase):
         control.validate_result(result,row)
         result.pop('author_contacts');control.validate_result(result,row)
 
+    def test_production_registers_reviewed_authors_without_operator_polling(self):
+        from types import SimpleNamespace
+        self.reviewed()
+        ledger = SimpleNamespace(tasks=self.tasks, save=lambda **kwargs:None)
+        config = {'paused':False, 'independent_review':{'enabled':True, 'register_author_contacts':True}}
+        with patch('managed.data_writes.commit_paths') as commit, patch('managed.data_writes.push') as push:
+            authors.advance(ledger, config, self.root, 'secret')
+            authors.advance(ledger, config, self.root, 'secret')
+        self.assertEqual(len(registry.people(self.root)), 1)
+        self.assertEqual(commit.call_count, 1)
+        self.assertEqual(push.call_count, 1)
+        self.assertEqual(self.tasks.get(self.row['id'])['data']['author_contacts_reconciled']['phase'], 'reconciled')
+
+    def test_production_registration_preserves_new_refusal(self):
+        from types import SimpleNamespace
+        self.reviewed(); self.refuse()
+        ledger = SimpleNamespace(tasks=self.tasks, save=lambda **kwargs:None)
+        config = {'paused':False, 'independent_review':{'enabled':True, 'register_author_contacts':True}}
+        with patch('managed.data_writes.commit_paths'), patch('managed.data_writes.push'):
+            authors.advance(ledger, config, self.root, 'secret')
+        self.assertEqual(registry.people(self.root), [])
+        row = self.tasks.get(self.row['id'])
+        self.assertTrue(row['data']['author_contacts_reconciled']['skipped'])
+
+    def test_production_rejects_a_forged_pass_before_registry_writes(self):
+        from types import SimpleNamespace
+        self.reviewed()
+        row = self.tasks.get(self.row['id'])
+        data = copy.deepcopy(row['data']); data['review']['signature'] = '0' * 64
+        self.tasks.update(row['id'], row['revision'], row['state'], data)
+        ledger = SimpleNamespace(tasks=self.tasks, save=lambda **kwargs:None)
+        config = {'paused':False, 'independent_review':{'enabled':True, 'register_author_contacts':True}}
+        with patch('managed.data_writes.commit_paths') as commit, patch('managed.data_writes.push') as push:
+            authors.advance(ledger, config, self.root, 'secret')
+            authors.advance(ledger, config, self.root, 'secret')
+        commit.assert_not_called(); push.assert_not_called()
+        self.assertEqual(registry.people(self.root), [])
+        self.assertEqual(self.tasks.get(row['id'])['data']['author_contacts_reconciled']['attempts'], 1)
+
     def test_explicit_empty_and_unreachable_author_are_valid_with_reasons(self):
         result=self.result([])
         with self.assertRaisesRegex(ValueError,'author_contacts_reason'):control.validate_result(result,self.row)

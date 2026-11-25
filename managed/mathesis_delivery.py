@@ -14,7 +14,7 @@ from . import note_revisions, recording
 from .mathesis import Mathesis, plan
 from .tick import units, unit
 from .queue import canonical, digest, require
-from .tasks import matches_workflow
+from .tasks import matches_workflow, INDEPENDENT_REVIEWERS
 
 TEST_TAG = 'outreach-mathesis-test-20261031'
 TEST_SOURCE_SHA = '1a07d345c39df2081ca4796666afb1f2a5628388c3e3e675bffce6d4813c17c2'
@@ -46,7 +46,7 @@ def validate(value, secret, test=False):
     unsigned = {k: v for k, v in value.items() if k != 'signature'}
     require(hmac.compare_digest(signature(unsigned, secret), value['signature']),
             'Mathesis delivery signature failed')
-    require(value['schema_version'] == 1 and value['reviewer'] == 'local-claude-loop'
+    require(value['schema_version'] == 1 and value['reviewer'] in INDEPENDENT_REVIEWERS
             and isinstance(value['decision_ref'], str) and value['decision_ref'].strip(),
             'Preserve the actual author/processing decision reference')
     metadata, source = value['metadata'], value['source']
@@ -121,7 +121,7 @@ def select(row, directory, decisions, secret):
     require(source is not None, 'The selected source is not an exact reviewed artifact')
     value = {'schema_version': 1, 'task_id': row['id'], 'result_hash': digest(result),
              'workflow_hash': row['request']['workflow_hash'], 'decision_ref': prepared['decision_ref'],
-             'metadata': prepared['metadata'], 'source': source, 'reviewer': 'local-claude-loop'}
+             'metadata': prepared['metadata'], 'source': source, 'reviewer': row['data']['review']['reviewer']}
     value['signature'] = signature(value, secret)
     return validate(value, secret)
 

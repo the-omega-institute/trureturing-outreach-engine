@@ -194,8 +194,9 @@ class HostedReviewTests(unittest.TestCase):
         self.assertTrue(completed['cleanup_complete'])
         self.assertNotIn('foreign_agents', completed['cleanup'])
         self.assertNotIn('sandbox_retired', completed['cleanup'])
-        # Engine #22: an idle (ready) Agent is deleted directly after a fresh read.
+        # Live CMA refuses DELETE of a ready Agent; the reviewer is stopped first.
         self.assertEqual([(path, method, key) for path, method, key in calls if method != 'GET'], [
+            ('/api/v1/agents/agt_review/stop', 'POST', run['create_key'] + '-cleanup-stop'),
             ('/api/v1/agents/agt_review', 'DELETE', run['create_key'] + '-cleanup-delete'),
         ])
         self.assertEqual(agents['agt_other']['status'], 'working')
@@ -359,7 +360,7 @@ class HostedReviewTests(unittest.TestCase):
         self.assertTrue(self.row()['data']['hosted_review']['cleanup_complete'])
         self.assertEqual(json.loads(self.tasks.db.execute(
             "SELECT payload FROM pipeline_state WHERE key='sandbox_pool'").fetchone()[0]), [self.entry])
-        self.assertEqual([method for _, method in calls if method != 'GET'], ['DELETE'])
+        self.assertEqual([method for _, method in calls if method != 'GET'], ['POST', 'DELETE'])
 
     def test_accepted_reviewer_delete_is_observed_not_resent(self):
         from managed.cma import CMA as Adapter, AGENT_CLEANUP_WAIT_SECONDS
@@ -368,6 +369,9 @@ class HostedReviewTests(unittest.TestCase):
         agent = {'id': 'agt_review', 'status': 'ready', 'sandbox': {'id': 'sbx_mail'}}
         def request(path, method='GET', body=None, key=None):
             calls.append((path, method))
+            if path == '/api/v1/agents/agt_review/stop':
+                agent['status'] = 'stopped'
+                return dict(agent)
             if path == '/api/v1/agents/agt_review' and method == 'DELETE':
                 return {'status': 'accepted'}
             if path != '/api/v1/agents/agt_review':

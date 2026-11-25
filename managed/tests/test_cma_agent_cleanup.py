@@ -41,11 +41,14 @@ class LifecycleCMA(CMA):
             if aid not in self.agents:raise CMARequestError(404,{'code':'agent_not_found'})
             return copy.deepcopy(self.agents[aid])
         if path.endswith('/stop'):
-            if self.stop_error:raise self.stop_error
-            self.agents[aid]['status']='stopping'
-            return {'status':'stopping'}
+            if self.stop_error and self.agents[aid]['status'] not in {'ready'}:raise self.stop_error
+            self.agents[aid]['status']='stopped' if self.agents[aid]['status']=='ready' else 'stopping'
+            return {'status':self.agents[aid]['status']}
         if method=='DELETE':
             if self.delete_error:raise self.delete_error
+            # Live CMA: 409 agent_not_stopped unless the Agent is stopped or terminal.
+            if self.agents[aid]['status'] not in {'stopped','failed','terminal','completed','cancelled','canceled'}:
+                raise CMARequestError(409,{'code':'agent_not_stopped'})
             if not self.accepted:self.agents[aid]['status']='deleted'
             return {'status':'accepted' if self.accepted else 'deleted'}
         raise AssertionError((path,method))
@@ -193,7 +196,8 @@ class CMAAgentCleanupTests(unittest.TestCase):
         cma=LifecycleCMA({'agt_ready':'ready'})
         result=cma.retire('agt_ready','stable-key',now=1000)
         self.assertTrue(result['deleted'])
-        self.assertEqual([method for _,method,_ in cma.calls],['GET','DELETE'])
+        # Live CMA refuses DELETE of a ready Agent, so it is stopped first.
+        self.assertEqual([method for _,method,_ in cma.calls],['GET','POST','DELETE'])
 
     def test_foreign_agent_is_left_alone_and_keeps_sandbox(self):
         calls=[]
@@ -377,6 +381,12 @@ class CMAAgentCleanupTests(unittest.TestCase):
         self.assertNotEqual(methods[1],('agt_r','DELETE'))
         self.assertIn(('stop','POST'),methods)
 
+    def test_ready_agent_is_never_deleted_before_stop(self):
+        cma=LifecycleCMA({'agt_idle':'ready'})
+        cma.retire('agt_idle','key',now=1000)
+        methods=[(path.rsplit('/',1)[-1],method) for path,method,_ in cma.calls if method!='GET']
+        self.assertEqual(methods,[('stop','POST'),('agt_idle','DELETE')])
+
     def test_four_ready_agents_retire_sandbox_within_budget(self):
         for budget in (2,4):
             with self.subTest(budget=budget):
@@ -389,7 +399,11 @@ class CMAAgentCleanupTests(unittest.TestCase):
                     self.assertLessEqual(sum(method=='DELETE' and '/agents/' in path
                         for path,method,_ in cma.calls[start:]),budget)
                 self.assertTrue(result['sandbox_retired'])
-                self.assertFalse(any(method=='POST' for _,method,_ in cma.calls))
+                # Every idle Agent is stopped before its DELETE.
+                for n in range(4):
+                    order=[(method,path.endswith('/stop')) for path,method,_ in cma.calls
+                           if path.startswith('/api/v1/agents/agt_'+str(n)) and method!='GET']
+                    self.assertEqual(order,[('POST',True),('DELETE',False)])
 
 
 

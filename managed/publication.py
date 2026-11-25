@@ -374,6 +374,19 @@ def delivery_choices(ledger, gh, decision, metadata, prepared, selected):
     return selected
 
 
+def ingested_here(row, old, key):
+    """True when this loop ingested the row's current result for this revision.
+
+    The checkpoint naming the revision precedes every ingest. A selection whose
+    final 'queued' record was lost (a failed save or a stopped run) completes
+    that record; other existing deliveries keep their current handling.
+    """
+    envelope = row['data']['mathesis_delivery'].get('envelope', {})
+    selection = (envelope.get('metadata', {}).get('work_id'), envelope.get('metadata', {}).get('version'))
+    return ((old.get('note_id'), old.get('revision')) == key and selection == key
+            and envelope.get('task_id') == row['id'] and envelope.get('result_hash') == digest(row['data']['result']))
+
+
 def advance(ledger, config, root, folder, gh=None, secret=None):
     from .note_revisions import Revisions
     if config['paused'] or not config['kinds'].get('mathesis') or config.get('mathesis', {}).get('test_only'):
@@ -472,12 +485,14 @@ def advance(ledger, config, root, folder, gh=None, secret=None):
                     record(ledger, row['id'], {**state, 'phase': 'pending', 'reason': reason})
                     continue
                 key = (metadata['id'], metadata['revision'])
-                # A source note queued before its Mathesis child existed has
-                # already submitted this revision; the child still owes its
-                # Mathesis selection. Every other queued revision is a duplicate.
+                # A revision queued by any non-Mathesis row, including one
+                # queued earlier in this tick, is already submitted. A Mathesis
+                # row still owes its own selection unless a Mathesis row took
+                # it, or completes the record of a selection this loop already
+                # ingested. Every other row with a queued revision is skipped.
                 submitted = key in queued
-                if submitted and (row['kind'] != 'mathesis' or key in taken
-                                  or row['data'].get('mathesis_delivery')):
+                if submitted and (row['kind'] != 'mathesis' or key in taken or (
+                        row['data'].get('mathesis_delivery') and not ingested_here(row, old, key))):
                     continue
                 step = 'exclusion'
                 reason, inputs = check_exclusion(row, ledger.tasks, table, decision, metadata)

@@ -56,7 +56,7 @@ class CleanupRecoveryTests(PoolFixture,unittest.TestCase):
                             operator_check={'kind':'manual'},cleanup_checked_at=self.now))
                     self.seed_cleanup(entries)
                     self.cma.statuses['sbx_failed']=exc
-                    pool=SandboxPool(self.ledger,self.cfg['sandbox_pool'],self.cfg['kinds'],paused=True)
+                    pool=SandboxPool(self.ledger,self.cfg['sandbox_pool'],self.cfg['kinds'])
                     pool.health(self.cma,rows=[])
                     self.assertEqual([e['sandbox_id'] for e in pool.errors],['sbx_failed'])
                     saved=next(e for e in self.state('sandbox_pool_cleanup') if e['sandbox_id']=='sbx_failed')
@@ -69,7 +69,7 @@ class CleanupRecoveryTests(PoolFixture,unittest.TestCase):
         self.seed_cleanup([self.failed_entry('sbx_previous'),self.failed_entry()])
         self.cma.statuses['sbx_previous']={'status':'retiring'}
         self.cma.statuses['sbx_failed']=TimeoutError('unavailable')
-        pool=SandboxPool(self.ledger,self.cfg['sandbox_pool'],self.cfg['kinds'],paused=True)
+        pool=SandboxPool(self.ledger,self.cfg['sandbox_pool'],self.cfg['kinds'])
         pool.health(self.cma,rows=[])
         failed=next(e for e in self.state('sandbox_pool_cleanup') if e['sandbox_id']=='sbx_failed')
         self.assertNotIn('sandbox_delete_requested',failed['cleanup'])
@@ -204,7 +204,7 @@ class CleanupRecoveryTests(PoolFixture,unittest.TestCase):
         cma=LifecycleCMA({'agt_idle'+str(n):'ready' for n in range(4)})
         for n in range(4):self.finished('idle'+str(n),state='failed',cleanup={'deleted':True})
         self.seed_cleanup([self.failed_entry()])
-        pool=SandboxPool(self.ledger,self.cfg['sandbox_pool'],self.cfg['kinds'],paused=True)
+        pool=SandboxPool(self.ledger,self.cfg['sandbox_pool'],self.cfg['kinds'])
         pool.health(cma,rows=self.ledger.tasks.all())
         entry=self.state('sandbox_pool_cleanup')[0]
         self.assertTrue(entry['cleanup']['sandbox_retired'])
@@ -236,7 +236,7 @@ class CleanupRecoveryTests(PoolFixture,unittest.TestCase):
         self.seed_cleanup([self.failed_entry()])
         for generation in range(3):
             for _ in range(3):
-                pool=SandboxPool(self.ledger,self.cfg['sandbox_pool'],self.cfg['kinds'],paused=True)
+                pool=SandboxPool(self.ledger,self.cfg['sandbox_pool'],self.cfg['kinds'])
                 pool.health(self.cma,rows=self.ledger.tasks.all())
             entry=self.state('sandbox_pool_cleanup')[0]
             self.assertIn('operator_check',entry)
@@ -287,7 +287,7 @@ class CleanupRecoveryTests(PoolFixture,unittest.TestCase):
                     ('sandbox_pool_operator_checks',canonical([
                         {'sandbox_id':e['sandbox_id'],'check':e['operator_check']} for e in entries])))
                 self.now+=6*3600
-                pool=SandboxPool(self.ledger,self.cfg['sandbox_pool'],self.cfg['kinds'],paused=True)
+                pool=SandboxPool(self.ledger,self.cfg['sandbox_pool'],self.cfg['kinds'])
                 pool.health(cma,rows=self.ledger.tasks.all())
                 self.assertTrue(all(e.get('operator_check') for e in self.state('sandbox_pool_cleanup')))
                 self.assertFalse(any(method!='GET' for _,method,_ in cma.calls))

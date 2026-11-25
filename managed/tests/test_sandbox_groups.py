@@ -13,7 +13,7 @@ from test_sandbox_pool import PoolFixture
 from test_tasks import request
 
 
-class SandboxGroupTests(PoolFixture, unittest.TestCase):
+class GroupFixture(PoolFixture):
     def setUp(self):
         super().setUp()
         self.cfg['kinds']['shortnote'] = True
@@ -33,6 +33,8 @@ class SandboxGroupTests(PoolFixture, unittest.TestCase):
                                      (canonical(entries), 'sandbox_pool'))
         return entries
 
+
+class SandboxGroupTests(GroupFixture, unittest.TestCase):
     def test_validation_rejects_duplicate_missing_and_unknown_kinds_and_excess_limits(self):
         config = self.cfg['sandbox_pool']
         groups = config['groups']
@@ -235,7 +237,7 @@ class SandboxGroupTests(PoolFixture, unittest.TestCase):
         self.assertEqual(self.ledger.tasks.get('mail')['state'], 'running')
         self.assertEqual(self.state('sandbox_pool_capacity'), {'groups': {'notes': self.now}})
 
-    def test_expired_notes_capacity_window_retries_creation_and_fills_draining_slots(self):
+    def test_expired_notes_capacity_window_fills_existing_slots_without_creation(self):
         self.cfg.update(kind_quota='equal', followup_lane=True)
         self.cfg['sandbox_pool'].update(rotate_after_agents=24, quota_blocked_max_agents_placed=192)
         blocked_at = self.now
@@ -254,27 +256,20 @@ class SandboxGroupTests(PoolFixture, unittest.TestCase):
         for index in range(211):
             self.queue(f'waiting-note-{index:03}', 'shortnote')
 
-        create = self.cma.create
-        self.cma.operations['op_quota'] = {'status': 'failed', 'error': 'sandbox limit reached: 10 of 10'}
-
-        def create_at_capacity(body, key):
-            if not body.get('workspace_id'):
-                return {'id': 'op_quota'}
-            return create(body, key)
-
-        with patch.object(self.cma, 'create', side_effect=create_at_capacity) as attempts:
+        with patch.object(self.cma, 'create', wraps=self.cma.create) as attempts:
             self.tick()
 
         self.assertEqual([call.args[0].get('workspace_id') for call in attempts.call_args_list],
-                         [None] + [notes['workspace_id']] * 5)
+                         [notes['workspace_id']] * 5)
         rows = self.ledger.tasks.all()
         self.assertEqual(sum(row['state'] == 'queued' for row in rows), 206)
         self.assertEqual(sum(row['state'] == 'running' and row['data']['workspace_id'] == notes['workspace_id']
                              for row in rows), 6)
         self.assertEqual(self.state()[0]['agents_placed'], 42)
-        self.assertEqual(self.state('sandbox_pool_capacity'), {'groups': {'notes': self.now}})
+        self.assertNotIn('draining', self.state()[0])
+        self.assertEqual(self.state('sandbox_pool_capacity'), {'groups': {'notes': blocked_at}})
 
-    def test_group_rotation_opens_one_replacement_while_old_agent_finishes(self):
+    def test_group_sandbox_keeps_admitting_while_old_agent_finishes(self):
         notes, mail = self.tagged_entries(placements=(37, 1))
         self.occupy(notes, 0, state='running')
         for index in range(7):
@@ -283,15 +278,14 @@ class SandboxGroupTests(PoolFixture, unittest.TestCase):
 
         self.tick()
 
-        replacement = self.state()[-1]
-        self.assertEqual(replacement['group'], 'notes')
-        self.assertEqual(replacement['agents_placed'], 6)
-        self.assertEqual([body.get('workspace_id') for body in self.cma.creates.values()].count(None), 1)
-        self.assertEqual(self.state()[0]['agents_placed'], 37)
-        self.assertEqual(self.ledger.tasks.get('waiting-note-6')['state'], 'queued')
+        self.assertEqual(len(self.state()), 2)
+        self.assertEqual([body.get('workspace_id') for body in self.cma.creates.values()].count(None), 0)
+        self.assertEqual(self.state()[0]['agents_placed'], 42)
+        for index in (5, 6):  # The max-1 group waits for a free slot.
+            self.assertEqual(self.ledger.tasks.get(f'waiting-note-{index}')['state'], 'queued')
         self.assertEqual(self.ledger.tasks.get('mail')['data']['workspace_id'], mail['workspace_id'])
 
-    def test_full_global_pool_uses_draining_notes_until_placement_ceiling(self):
+    def test_full_global_pool_keeps_admitting_into_notes_past_former_ceiling(self):
         self.cfg['sandbox_pool'].update(max_sandboxes=2, quota_blocked_max_agents_placed=192)
         blocked_at = self.now
         self.now += CAPACITY_BLOCK_SECONDS + 1
@@ -305,13 +299,13 @@ class SandboxGroupTests(PoolFixture, unittest.TestCase):
         self.tick()
 
         self.assertEqual([body.get('workspace_id') for body in self.cma.creates.values()],
-                         [notes['workspace_id']])
+                         [notes['workspace_id']] * 2)
         self.assertEqual(self.ledger.tasks.get('last-placement')['state'], 'running')
-        self.assertEqual(self.ledger.tasks.get('waiting-note')['state'], 'queued')
-        self.assertEqual(self.state()[0]['agents_placed'], 192)
+        self.assertEqual(self.ledger.tasks.get('waiting-note')['state'], 'running')
+        self.assertEqual(self.state()[0]['agents_placed'], 193)
         self.assertEqual(self.state('sandbox_pool_capacity'), {'groups': {'notes': blocked_at}})
 
-    def test_empty_draining_group_survives_fresh_workspace_wait_and_quota_failure(self):
+    def test_used_group_sandbox_admits_without_waiting_for_a_replacement(self):
         notes, _ = self.tagged_entries(placements=(37, 1))
         self.cma.create_status = 'queued'
         self.queue('replacement', 'shortnote')
@@ -319,24 +313,16 @@ class SandboxGroupTests(PoolFixture, unittest.TestCase):
 
         self.tick()
 
-        replacement = self.ledger.tasks.get('replacement')
-        self.assertEqual(replacement['state'], 'provisioning')
-        self.assertEqual(self.ledger.tasks.get('waiting-note')['state'], 'queued')
-        self.assertEqual(len(self.cma.creates), 1)
+        for name in ('replacement', 'waiting-note'):
+            row = self.ledger.tasks.get(name)
+            self.assertEqual(row['data']['workspace_id'], notes['workspace_id'])
+            self.assertNotIn('pool_create', row['data'])
+        self.assertEqual([body.get('workspace_id') for body in self.cma.creates.values()],
+                         [notes['workspace_id']] * 2)
         self.assertEqual(self.state()[0]['sandbox_id'], notes['sandbox_id'])
+        self.assertEqual(self.state()[0]['agents_placed'], 39)
 
-        self.cma.operations[replacement['data']['operation_id']] = {
-            'status': 'failed', 'error': 'sandbox limit reached: 10 of 10'}
-        self.cma.create_status = 'succeeded'
-        self.restore()
-        self.tick()
-
-        waiting = self.ledger.tasks.get('waiting-note')
-        self.assertEqual(waiting['state'], 'running')
-        self.assertEqual(waiting['data']['workspace_id'], notes['workspace_id'])
-        self.assertEqual(self.state('sandbox_pool_capacity'), {'groups': {'notes': self.now}})
-
-    def test_stalled_creation_recovers_only_its_group_and_keeps_mail_rotating(self):
+    def test_stalled_creation_recovers_only_its_group_and_leaves_mail_in_place(self):
         notes, mail = self.tagged_entries(placements=(24, 24))
         pending = self.queue('legacy-creation', 'shortnote')
         self.ledger.tasks.update(pending['id'], pending['revision'], 'provisioning',
@@ -351,10 +337,10 @@ class SandboxGroupTests(PoolFixture, unittest.TestCase):
         self.assertEqual(recovered['data']['sandbox_failure_history'][0]['operation_id'], 'op_lost')
         self.assertEqual(recovered['data']['sandbox_failure_history'][0]['create_key'], 'original-key')
         self.assertEqual(self.ledger.tasks.get('note')['data']['workspace_id'], notes['workspace_id'])
-        self.assertEqual(self.ledger.tasks.get('mail')['state'], 'running')
+        self.assertEqual(self.ledger.tasks.get('mail')['data']['workspace_id'], mail['workspace_id'])
         self.assertEqual(self.state('sandbox_pool_capacity'), {'groups': {'notes': self.now}})
         self.assertEqual({e['sandbox_id']: e['group'] for e in self.state('sandbox_pool_cleanup')},
-                         {'sbx_lost': 'notes', mail['sandbox_id']: 'mail'})
+                         {'sbx_lost': 'notes'})
 
     def test_notes_health_error_does_not_prevent_mail_creation(self):
         notes = {**self.seed_pool()[0], 'group': 'notes'}
@@ -401,50 +387,389 @@ class SandboxGroupTests(PoolFixture, unittest.TestCase):
             'sandbox_pool_capacity', canonical({'groups': {'notes': self.now, 'mail': self.now}})))
         # Placement fell behind (advance ran out of tick budget); only health runs.
         self.now += CAPACITY_BLOCK_SECONDS + 600
-        pool = SandboxPool(self.ledger, self.cfg['sandbox_pool'], self.cfg['kinds'], paused=paused)
-        pool.health(self.cma)
-        pool.idle(self.cma)
+        pool = SandboxPool(self.ledger, self.cfg['sandbox_pool'], self.cfg['kinds'])
+        if paused:  # A paused coordinator still runs pool health and idle passes.
+            self.cfg['paused'] = True
+            self.tick()
+        else:
+            pool.health(self.cma)
+            pool.idle(self.cma)
         rotated = {e['sandbox_id']: e.get('rotated') for e in self.state('sandbox_pool_cleanup')}
         return pool, entries, rotated
 
     def test_group_keeps_its_last_sandbox_while_its_queued_work_waits(self):
         waiting = self.queue('waiting', 'shortnote')
         pool, (notes, mail), rotated = self.idle_past_quota_evidence()
-        # The mail group has no queued work and still rotates its idle Sandbox.
-        self.assertEqual(rotated, {mail['sandbox_id']: 'idle'})
-        self.assertEqual([e['sandbox_id'] for e in self.state()], [notes['sandbox_id']])
+        # Each group keeps its last Sandbox, with or without queued work.
+        self.assertEqual(rotated, {})
+        self.assertEqual([e['sandbox_id'] for e in self.state()], [notes['sandbox_id'], mail['sandbox_id']])
         self.assertIn(notes['sandbox_id'], pool.available)
         self.assertEqual(pool.slot(waiting), (True, self.state()[0]))
-        # Without waiting work the same Sandbox rotates as idle.
+        # Without waiting work it is still kept after the idle period.
         self.ledger.tasks.update('waiting', waiting['revision'], 'failed', {})
         pool = SandboxPool(self.ledger, self.cfg['sandbox_pool'], self.cfg['kinds'])
+        self.now += pool.idle_seconds
         pool.health(self.cma)
-        self.assertEqual(self.state(), [])
-        self.assertEqual(self.state('sandbox_pool_cleanup')[-1]['rotated'], 'idle')
+        self.assertEqual([e['sandbox_id'] for e in self.state()], [notes['sandbox_id'], mail['sandbox_id']])
+        self.assertEqual(self.state('sandbox_pool_cleanup'), [])
 
-    def test_idle_rotation_is_unchanged_when_paused(self):
+    def test_paused_coordinator_keeps_each_groups_last_sandbox(self):
         self.queue('waiting', 'shortnote')
         _, (notes, mail), rotated = self.idle_past_quota_evidence(paused=True)
-        self.assertEqual(rotated, {notes['sandbox_id']: 'idle', mail['sandbox_id']: 'idle'})
+        self.assertEqual(rotated, {})
+        self.assertEqual([e['sandbox_id'] for e in self.state()], [notes['sandbox_id'], mail['sandbox_id']])
 
-    def test_idle_rotation_is_unchanged_for_disabled_kinds(self):
+    def test_disabled_kind_queue_keeps_each_groups_last_sandbox(self):
         self.queue('waiting', 'mathesis')  # The notes group's mathesis kind is not enabled.
         _, (notes, mail), rotated = self.idle_past_quota_evidence()
-        self.assertEqual(rotated, {notes['sandbox_id']: 'idle', mail['sandbox_id']: 'idle'})
+        self.assertEqual(rotated, {})
+        self.assertEqual([e['sandbox_id'] for e in self.state()], [notes['sandbox_id'], mail['sandbox_id']])
 
-    def test_only_the_last_usable_sandbox_of_the_group_is_kept(self):
+    def test_every_sandbox_of_a_group_with_queued_work_is_kept(self):
         self.queue('waiting', 'shortnote')
         _, (notes, mail, spare), rotated = self.idle_past_quota_evidence(extra_notes=True)
-        [kept] = [e['sandbox_id'] for e in self.state()]
-        [other] = {notes['sandbox_id'], spare['sandbox_id']} - {kept}
-        self.assertEqual(rotated, {other: 'idle', mail['sandbox_id']: 'idle'})
+        self.assertEqual([e['sandbox_id'] for e in self.state()],
+                         [notes['sandbox_id'], mail['sandbox_id'], spare['sandbox_id']])
+        self.assertEqual(rotated, {})
 
     def test_peer_that_failed_since_the_last_pass_does_not_count_as_usable(self):
         waiting = self.queue('waiting', 'shortnote')
         pool, (notes, mail, spare), rotated = self.idle_past_quota_evidence(extra_notes=True,
                                                                             spare_status='failed')
-        # The healthy Sandbox is kept; its failed peer follows failure cleanup.
-        self.assertEqual(rotated, {mail['sandbox_id']: 'idle', spare['sandbox_id']: None})
+        # The healthy Sandboxes are kept; the failed peer follows failure cleanup.
+        self.assertEqual(rotated, {spare['sandbox_id']: None})
         self.assertEqual(self.state('sandbox_pool_cleanup')[-1]['state'], 'failed')
-        self.assertEqual([e['sandbox_id'] for e in self.state()], [notes['sandbox_id']])
+        self.assertEqual([e['sandbox_id'] for e in self.state()], [notes['sandbox_id'], mail['sandbox_id']])
         self.assertEqual(pool.slot(waiting), (True, self.state()[0]))
+
+
+class IdleOnlyRetirementTests(GroupFixture, unittest.TestCase):
+    """Owner decisions 2026-11-26: placement counts never retire a Sandbox; a surplus
+    Sandbox retires only when its group is idle, and each group keeps its last one."""
+
+    def surplus_entries(self, placements=200):
+        """A notes group (max 2) whose first Sandbox is kept and whose second is surplus."""
+        self.cfg['sandbox_pool']['groups'][0]['max_sandboxes'] = 2
+        keeper, mail = self.tagged_entries()
+        surplus = {**keeper, 'sandbox_id': 'sbx_surplus', 'workspace_id': 'wks_surplus',
+                   'agents_placed': placements}
+        self.ledger.tasks.db.execute('UPDATE pipeline_state SET payload=? WHERE key=?',
+                                     (canonical([keeper, mail, surplus]), 'sandbox_pool'))
+        return keeper, surplus, mail
+
+    def admits_into_used_sandbox(self, count):
+        # The notes group (max 1) has one active, observed Sandbox with two live
+        # Agents, no capacity evidence and room for another Sandbox in the pool.
+        notes, _ = self.tagged_entries(placements=(count, 1))
+        for index in range(2):
+            self.occupy(notes, index, state='running')
+        self.queue('note', 'shortnote')
+        self.tick()
+        self.assertEqual([body.get('workspace_id') for body in self.cma.creates.values()],
+                         [notes['workspace_id']])
+        self.assertEqual(self.ledger.tasks.get('note')['data']['workspace_id'], notes['workspace_id'])
+        self.assertEqual(self.ledger.tasks.get('note')['data']['pool_sandbox_id'], notes['sandbox_id'])
+        self.assertEqual(self.state()[0]['agents_placed'], count + 1)
+        self.assertEqual(self.state('sandbox_pool_cleanup'), [])
+
+    def test_sandbox_with_24_placements_admits_group_work_without_creating_a_sandbox(self):
+        self.admits_into_used_sandbox(24)
+
+    def test_sandbox_with_60_placements_admits_group_work_without_creating_a_sandbox(self):
+        self.admits_into_used_sandbox(60)
+
+    def test_sandbox_with_200_placements_admits_group_work_without_creating_a_sandbox(self):
+        self.admits_into_used_sandbox(200)
+
+    def test_idle_surplus_sandbox_retires_through_cleanup_with_a_stable_key(self):
+        keeper, surplus, mail = self.surplus_entries()
+        self.occupy(surplus, 0, deleted=True)  # Finished; its Agent is deleted.
+        lost = []
+
+        def lose_first_surplus_delete(sandbox_id, key):
+            if sandbox_id == surplus['sandbox_id'] and not lost:
+                lost.append(key)
+                raise TimeoutError('No response')
+
+        self.cma.before_retire = lose_first_surplus_delete
+        pool = SandboxPool(self.ledger, self.cfg['sandbox_pool'], self.cfg['kinds'], reserve_review_slots=1)
+        self.now += 599
+        pool.health(self.cma)
+        pool.idle(self.cma)
+        self.assertEqual(self.state('sandbox_pool_cleanup'), [])
+        self.now += 1
+        pool.health(self.cma)
+        self.ledger.save(force=True)
+        [retired] = self.state('sandbox_pool_cleanup')
+        self.assertEqual((retired['sandbox_id'], retired['state'], retired['rotated'], retired['agents_placed']),
+                         (surplus['sandbox_id'], 'retiring', 'idle', 200))
+        self.assertEqual(retired['cleanup_intent'], {'key': 'outreach-pool-retire-' + surplus['sandbox_id']})
+        self.assertEqual([e['sandbox_id'] for e in self.state()], [keeper['sandbox_id'], mail['sandbox_id']])
+        self.restore()
+        SandboxPool(self.ledger, self.cfg['sandbox_pool'], self.cfg['kinds'], reserve_review_slots=1).health(self.cma)
+        deletes = [key for path, method, key in self.cma.calls if method == 'DELETE']
+        self.assertEqual(deletes, ['outreach-pool-retire-' + surplus['sandbox_id'] + '-sandbox-delete'] * 2)
+        self.assertEqual(lost, deletes[:1])
+        self.assertEqual([e['sandbox_id'] for e in self.state()], [keeper['sandbox_id'], mail['sandbox_id']])
+
+    def surplus_kept_until_the_group_has_no_work(self, add_work):
+        """Admission switches never make a group idle; the surplus retires once work ends."""
+        keeper, surplus, mail = self.surplus_entries()
+        row = add_work()
+        self.now += 10 * 24 * 3600  # Far beyond the idle period.
+        original, retired = SandboxPool.failed_entry, []
+
+        def recorded(pool, sandbox_id, *args, **kwargs):
+            retired.append(sandbox_id)
+            return original(pool, sandbox_id, *args, **kwargs)
+
+        with patch.object(SandboxPool, 'failed_entry', recorded):
+            self.tick()
+            self.now += 10 * 24 * 3600
+            self.tick()
+        self.assertEqual(retired, [])
+        self.assertEqual([e['sandbox_id'] for e in self.state()],
+                         [keeper['sandbox_id'], mail['sandbox_id'], surplus['sandbox_id']])
+        self.assertEqual(self.state('sandbox_pool_cleanup'), [])
+        self.assertFalse([path for path, method, _ in self.cma.calls if method == 'DELETE'])
+        # The work was not admitted or changed; the group's work then ends and
+        # the surplus retires after the idle period.
+        self.assertEqual(self.ledger.tasks.get(row['id'])['state'], row['state'])
+        row = self.ledger.tasks.get(row['id'])
+        self.ledger.tasks.update(row['id'], row['revision'], 'failed', row['data'])
+        self.tick()
+        self.assertIn(surplus['sandbox_id'], [e['sandbox_id'] for e in self.state()])
+        self.now += 600
+        self.tick()
+        [cleanup] = self.state('sandbox_pool_cleanup')
+        self.assertEqual((cleanup['sandbox_id'], cleanup['rotated'], cleanup['cleanup_intent']),
+                         (surplus['sandbox_id'], 'idle', {'key': 'outreach-pool-retire-' + surplus['sandbox_id']}))
+        self.assertEqual([e['sandbox_id'] for e in self.state()], [keeper['sandbox_id'], mail['sandbox_id']])
+        self.assertEqual([key for _, method, key in self.cma.calls if method == 'DELETE'],
+                         ['outreach-pool-retire-' + surplus['sandbox_id'] + '-sandbox-delete'])
+
+    def test_paused_coordinator_keeps_a_surplus_sandbox_for_queued_group_work(self):
+        self.cfg['paused'] = True
+        self.surplus_kept_until_the_group_has_no_work(lambda: self.queue('waiting', 'shortnote'))
+
+    def test_disabled_kind_queued_work_keeps_a_surplus_sandbox(self):
+        # The notes group's mathesis kind is not enabled.
+        self.surplus_kept_until_the_group_has_no_work(lambda: self.queue('disabled', 'mathesis'))
+
+    def test_paused_coordinator_keeps_a_surplus_sandbox_for_a_pending_review(self):
+        self.cfg['paused'] = True
+        self.cfg['kinds']['mathesis'] = True
+
+        def pending_review():
+            row = self.queue('reviewable', 'mathesis')
+            return self.ledger.tasks.update(row['id'], row['revision'], 'awaiting-review',
+                                            {'result': {'outcome': 'completed'}})
+
+        self.surplus_kept_until_the_group_has_no_work(pending_review)
+
+    def test_unobserved_peer_does_not_make_the_last_sandbox_surplus(self):
+        keeper, surplus, mail = self.surplus_entries()
+        self.cma.statuses[keeper['sandbox_id']] = TimeoutError('health read timed out')
+        self.now += 600
+        pool = SandboxPool(self.ledger, self.cfg['sandbox_pool'], self.cfg['kinds'])
+        pool.health(self.cma)
+        pool.idle(self.cma)
+        self.assertEqual([e['sandbox_id'] for e in self.state()],
+                         [keeper['sandbox_id'], mail['sandbox_id'], surplus['sandbox_id']])
+        self.assertEqual(self.state('sandbox_pool_cleanup'), [])
+
+    def kept_at_high_count(self, prepare=lambda surplus: None, elapsed=600, **pool_args):
+        """The surplus Sandbox (200 placements) is kept while prepare's condition holds."""
+        keeper, surplus, _ = self.surplus_entries()
+        prepare(surplus)
+        self.now += elapsed
+        pool = SandboxPool(self.ledger, self.cfg['sandbox_pool'], self.cfg['kinds'], **pool_args)
+        pool.health(self.cma)
+        pool.idle(self.cma)
+        for entry in (keeper, surplus):
+            self.assertIn(entry['sandbox_id'], [e['sandbox_id'] for e in self.state()])
+        self.assertEqual(self.state('sandbox_pool_cleanup'), [])
+        self.assertFalse([path for path, method, _ in self.cma.calls if method == 'DELETE'])
+        return surplus
+
+    def test_live_agent_keeps_the_sandbox(self):
+        self.kept_at_high_count(lambda surplus: self.occupy(surplus, 0, state='running'))
+
+    def test_queued_group_task_keeps_the_sandbox(self):
+        self.kept_at_high_count(lambda surplus: self.queue('waiting', 'shortnote'))
+
+    def test_pending_review_keeps_the_sandbox(self):
+        self.cfg['kinds']['mathesis'] = True
+
+        def pending_review(surplus):
+            row = self.queue('reviewable', 'mathesis')
+            self.ledger.tasks.update(row['id'], row['revision'], 'awaiting-review',
+                                     {'result': {'outcome': 'completed'}})
+
+        self.kept_at_high_count(pending_review, reserve_review_slots=1)
+
+    def test_provisioning_row_reserved_on_it_keeps_the_sandbox(self):
+        def reserved(surplus):
+            row = self.queue('reserved', 'shortnote')
+            self.ledger.tasks.update(row['id'], row['revision'], 'provisioning',
+                                     {'pool_sandbox_id': surplus['sandbox_id'], 'pool_group': 'notes'})
+
+        self.kept_at_high_count(reserved)
+
+    def test_creation_in_flight_in_the_group_keeps_the_sandbox(self):
+        def creating(surplus):
+            row = self.queue('creating', 'shortnote')
+            self.ledger.tasks.update(row['id'], row['revision'], 'provisioning',
+                                     {'pool_create': True, 'pool_group': 'notes', 'operation_id': 'op_new',
+                                      'pool_create_started_at': self.now + 600})
+
+        self.kept_at_high_count(creating)
+
+    def test_idle_period_not_yet_elapsed_keeps_the_sandbox(self):
+        self.kept_at_high_count(elapsed=599)
+
+    def test_capacity_block_keeps_a_usable_surplus_sandbox(self):
+        self.kept_at_high_count(lambda surplus: self.ledger.tasks.db.execute(
+            'INSERT INTO pipeline_state VALUES(?,?)',
+            ('sandbox_pool_capacity', canonical({'groups': {'notes': self.now}}))))
+
+    def test_paused_sandbox_whose_group_has_work_is_kept(self):
+        def paused_with_work(surplus):
+            self.cma.statuses[surplus['sandbox_id']] = {'status': 'paused'}
+            self.queue('waiting', 'shortnote')
+
+        surplus = self.kept_at_high_count(paused_with_work)
+        self.assertEqual(next(e for e in self.state() if e['sandbox_id'] == surplus['sandbox_id'])['state'],
+                         'paused')
+
+    def test_group_work_restarts_the_idle_period(self):
+        surplus = self.kept_at_high_count(lambda surplus: self.queue('waiting', 'shortnote'))
+        waiting = self.ledger.tasks.get('waiting')
+        self.ledger.tasks.update('waiting', waiting['revision'], 'failed', {})
+        pool = SandboxPool(self.ledger, self.cfg['sandbox_pool'], self.cfg['kinds'])
+        self.now += 599
+        pool.health(self.cma)
+        self.assertIn(surplus['sandbox_id'], [e['sandbox_id'] for e in self.state()])
+        self.now += 1
+        pool.health(self.cma)
+        self.assertEqual([(e['sandbox_id'], e['rotated']) for e in self.state('sandbox_pool_cleanup')],
+                         [(surplus['sandbox_id'], 'idle')])
+
+    def test_full_sandbox_in_a_max_one_group_makes_work_wait_without_a_second_sandbox(self):
+        notes, _ = self.tagged_entries(placements=(200, 1))
+        occupants = [self.occupy(notes, index, state='running') for index in range(6)]
+        self.queue('waiting-a', 'shortnote')
+        self.queue('waiting-b', 'shortnote')
+        self.tick()
+        self.assertFalse(self.cma.creates)
+        self.assertEqual([self.ledger.tasks.get(n)['state'] for n in ('waiting-a', 'waiting-b')], ['queued'] * 2)
+        self.assertEqual(len(self.state()), 2)
+        finished = self.ledger.tasks.get(occupants[0]['id'])
+        self.ledger.tasks.update(finished['id'], finished['revision'], 'held',
+                                 {**finished['data'], 'cleanup': {'deleted': True}})
+        self.tick()
+        self.assertEqual([body.get('workspace_id') for body in self.cma.creates.values()], [notes['workspace_id']])
+        self.assertEqual(sorted(self.ledger.tasks.get(n)['state'] for n in ('waiting-a', 'waiting-b')),
+                         ['queued', 'running'])
+
+    def test_review_slot_reservation_is_unchanged_at_a_high_placement_count(self):
+        notes, _ = self.tagged_entries(placements=(200, 1))
+        for index in range(5):
+            self.occupy(notes, index, state='running')
+        row = self.queue('note', 'shortnote')
+        pool = SandboxPool(self.ledger, self.cfg['sandbox_pool'], self.cfg['kinds'], reserve_review_slots=1)
+        pool.health(self.cma)
+        self.assertEqual(pool.admission_limit(pool.entries[0], self.ledger.tasks.all()), 5)
+        self.assertEqual(pool.slot(row), (False, None))
+        finished = self.ledger.tasks.get(notes['sandbox_id'] + '-0')
+        self.ledger.tasks.update(finished['id'], finished['revision'], 'held',
+                                 {**finished['data'], 'cleanup': {'deleted': True}})
+        self.assertEqual(pool.slot(row), (True, pool.entries[0]))
+
+
+class LastSandboxRetentionTests(GroupFixture, unittest.TestCase):
+    """Owner decision 2026-11-26: the pipeline is continuous, so each configured
+    group keeps its last healthy Sandbox; only broken-Sandbox paths retire it."""
+
+    def assert_kept_across_ticks(self, notes, mail):
+        original, retired = SandboxPool.failed_entry, []
+
+        def recorded(pool, sandbox_id, *args, **kwargs):
+            retired.append(sandbox_id)
+            return original(pool, sandbox_id, *args, **kwargs)
+
+        with patch.object(SandboxPool, 'failed_entry', recorded):
+            self.tick()
+            self.now += 10 * 24 * 3600  # Far beyond the idle period.
+            self.tick()
+        self.assertEqual(retired, [])
+        self.assertEqual([e['sandbox_id'] for e in self.state()], [notes['sandbox_id'], mail['sandbox_id']])
+        self.assertEqual(self.state('sandbox_pool_cleanup'), [])
+        self.assertFalse([path for path, method, _ in self.cma.calls if method == 'DELETE'])
+        self.assertFalse(self.cma.creates)
+
+    def test_only_sandbox_with_an_empty_queue_is_kept_long_after_the_idle_period(self):
+        notes, mail = self.tagged_entries(placements=(200, 200))
+        self.now += 10 * 24 * 3600
+        self.assert_kept_across_ticks(notes, mail)
+
+    def test_only_sandbox_is_kept_while_the_coordinator_is_paused_with_queued_work(self):
+        notes, mail = self.tagged_entries()
+        self.cfg['paused'] = True
+        self.queue('waiting-note', 'shortnote')
+        self.queue('waiting-mail')
+        self.assert_kept_across_ticks(notes, mail)
+        self.assertEqual(self.ledger.tasks.get('waiting-note')['state'], 'queued')
+
+    def test_only_sandbox_is_kept_with_only_disabled_kind_work_queued(self):
+        notes, mail = self.tagged_entries()
+        self.queue('disabled', 'mathesis')  # The notes group's mathesis kind is not enabled.
+        self.assert_kept_across_ticks(notes, mail)
+        self.assertEqual(self.ledger.tasks.get('disabled')['state'], 'queued')
+
+    def test_cma_paused_only_sandbox_is_kept(self):
+        notes, mail = self.tagged_entries()
+        self.cma.statuses[notes['sandbox_id']] = {'status': 'paused'}
+        self.assert_kept_across_ticks(notes, mail)
+        self.assertEqual(self.state()[0]['state'], 'paused')
+        self.assertFalse([path for path, method, _ in self.cma.calls if method == 'POST'])
+
+    def test_cma_paused_only_sandbox_is_revived_for_work(self):
+        notes, mail = self.tagged_entries()
+        self.cma.statuses[notes['sandbox_id']] = {'status': 'paused'}
+        self.now += 6000
+        self.queue('note', 'shortnote')
+        self.tick()
+        self.assertEqual([(path, method) for path, method, _ in self.cma.calls if method in {'POST', 'DELETE'}],
+                         [('/api/v1/sandboxes/' + notes['sandbox_id'] + '/revive', 'POST')])
+        self.assertFalse(self.cma.creates)
+        self.cma.statuses[notes['sandbox_id']] = {'status': 'active'}
+        self.tick()
+        self.assertEqual(self.ledger.tasks.get('note')['data']['workspace_id'], notes['workspace_id'])
+        self.assertEqual(self.state('sandbox_pool_cleanup'), [])
+
+    def test_failed_last_sandbox_is_retired_and_replaced(self):
+        notes, mail = self.tagged_entries()
+        self.cma.statuses[notes['sandbox_id']] = {'status': 'failed'}
+        self.queue('note', 'shortnote')
+        self.tick()
+        self.assertEqual([(e['sandbox_id'], e['state']) for e in self.state('sandbox_pool_cleanup')],
+                         [(notes['sandbox_id'], 'failed')])
+        [replacement] = [e for e in self.state() if e['group'] == 'notes']
+        self.assertNotEqual(replacement['sandbox_id'], notes['sandbox_id'])
+        self.assertEqual(self.ledger.tasks.get('note')['data']['workspace_id'], replacement['workspace_id'])
+
+    def test_stalled_last_sandbox_is_retired_and_replaced(self):
+        from managed.sandbox_pool import RETIRE_STALLED_SECONDS
+        notes, mail = self.tagged_entries()
+        self.cma.statuses[notes['sandbox_id']] = {'status': 'credential_rotating'}
+        self.tick()
+        self.assertEqual(self.state()[0]['sandbox_id'], notes['sandbox_id'])
+        self.now += RETIRE_STALLED_SECONDS
+        self.queue('note', 'shortnote')
+        self.tick()
+        [stalled] = self.state('sandbox_pool_cleanup')
+        self.assertEqual((stalled['sandbox_id'], stalled['stalled']), (notes['sandbox_id'], 'credential_rotating'))
+        [replacement] = [e for e in self.state() if e['group'] == 'notes']
+        self.assertNotEqual(replacement['sandbox_id'], notes['sandbox_id'])
+        self.assertEqual(self.ledger.tasks.get('note')['data']['workspace_id'], replacement['workspace_id'])

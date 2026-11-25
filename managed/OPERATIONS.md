@@ -45,6 +45,25 @@ For authorized local inspection, run `python3 -m managed.control status`,
 `python3 -m managed.control work`, or `python3 -m managed.control reviews`
 with the configured private data checkout and an authenticated GitHub CLI.
 
+## Sandbox pool retirement
+
+A healthy pool Sandbox admits its group's work up to `agents_per_sandbox`,
+less the reserved review slot, however many Agents it has hosted.
+`agents_placed` is usage telemetry only. The pipeline is continuous: each
+configured group keeps its last healthy Sandbox whatever the queue holds,
+including an empty queue, a paused coordinator or only disabled kinds. A
+CMA-paused last Sandbox is revived for work. That Sandbox leaves the pool only
+through the corrupt, stalled, failed and removed-group paths, and the group's
+next task creates its replacement. A surplus healthy Sandbox beyond the group's
+last one retires after its group has had no queued, provisioning or running
+work, no pending review and no creation in flight for the idle period
+(`OUTREACH_POOL_IDLE_PAUSE_SECONDS`, default 600). Every row of the group
+counts, whatever the coordinator pause, kind enablement or hosted-review switch
+says; those switches govern admission only. A pool without configured groups
+retires idle Sandboxes the same way. Running Agents are never stopped or moved.
+The former `rotate_after_agents` and `quota_blocked_max_agents_placed` keys are
+unused; they remain optional and are still validated as positive integers.
+
 ## CMA cleanup observations
 
 Idle `ready` Agents can be deleted directly. Working Agents must first be

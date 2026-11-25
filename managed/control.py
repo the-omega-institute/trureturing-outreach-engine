@@ -2663,7 +2663,7 @@ def advance(ledger,cma,config,folder,revision=None,mailbox=None,oracle_capacity=
     initial_rows = current_rows()
     correspondence = linked_contacts(initial_rows, ROOT, config)
     revisions = note_revisions.Revisions(tasks, initial_rows) if config['kinds'].get('mathesis') else None
-    pool=SandboxPool(ledger,config['sandbox_pool'],config['kinds'],paused=config['paused'],
+    pool=SandboxPool(ledger,config['sandbox_pool'],config['kinds'],
                      correspondence=correspondence,rows=initial_rows,
                      reserve_review_slots=int(bool(hosted_review_enabled(config)))) if config.get('sandbox_pool') else None
     grouped=bool(pool and config['sandbox_pool'].get('groups'))

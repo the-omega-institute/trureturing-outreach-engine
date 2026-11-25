@@ -87,6 +87,19 @@ class PoolAdoptTests(PoolFixture, unittest.TestCase):
         pool.health(self.cma)
         self.assertIn('sbx_orphan', pool.available)
 
+    def test_readopted_rotation_with_many_placements_is_admissible(self):
+        self.set_cleanup([self.retained(rotated='draining', draining=True, agents_placed=75)])
+        self.adopt(self.envelope(group='notes'))
+        [entry] = self.state()
+        self.assertEqual((entry['agents_placed'], entry['readopted']['rotated']), (75, 'draining'))
+        pool = SandboxPool(self.ledger, {'max_sandboxes': 2, 'agents_per_sandbox': 6, **GROUPS},
+                           {'firstcontact': True, 'reply': True})
+        pool.health(self.cma)
+        self.assertIn('sbx_orphan', pool.available)
+        row = self.ledger.tasks.add(request('first-contact', 'owner', 'firstcontact'))
+        self.assertEqual(pool.slot(row), (True, pool.entries[0]))
+        self.assertEqual(pool.entries[0]['agents_placed'], 75)
+
     def test_every_other_cleanup_list_case_is_still_refused(self):
         retained = 'CMA has not retained it'
         cases = {

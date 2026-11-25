@@ -37,8 +37,8 @@ Admission disconnects resume the original body/key/operation. A changed result
 or supplied policy/identity invalidates the old review. The snapshot includes all
 workflow inputs, including the mail voice guide, plus operative `AGENTS.md`,
 `WORKSPACE.md` and identity. Pause and kind disable stop new admissions while
-existing responses and Agent retirement continue. The pool retains its last
-Sandbox while enabled review work waits. Completed reviewer cleanup stops and
+existing responses and Agent retirement continue. Each pool group keeps its
+last healthy Sandbox continuously. Completed reviewer cleanup stops and
 deletes only its Agent; the pool owns Sandbox retirement. New correspondence
 reviews precede stale policy rebinds, with newest work first. Published or
 delivered rows and immutable delivery/draft intents keep their original review. Missing artifacts, invalid output and

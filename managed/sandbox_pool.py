@@ -23,7 +23,8 @@ STALLED_SECONDS=2*3600
 # pool can open a working replacement.
 RETIRE_STALLED_SECONDS=12*3600
 # Retain account-quota evidence across ticks after the failed creation leaves
-# ACTIVE, but let normal rotation resume if no fresh failure is observed.
+# ACTIVE. While it lasts, an empty surplus Sandbox of the group is kept; it
+# expires unless a fresh failure is observed.
 CAPACITY_BLOCK_SECONDS=2*3600
 # A lost/blocked creation must not reserve the next Sandbox indefinitely.
 # After this bound, missing first-Workspace identity is quota evidence and the
@@ -186,25 +187,24 @@ def summary(tasks, rows=None):
 
 
 class SandboxPool:
-    def __init__(self, ledger, config, kinds=None, *, paused=False, correspondence=(), rows=None, reserve_review_slots=0):
+    def __init__(self, ledger, config, kinds=None, *, correspondence=(), rows=None, reserve_review_slots=0):
         self.ledger=ledger
-        self.kinds = kinds or {}
-        self.paused = paused
         self.correspondence = correspondence
         self.max_sandboxes=config['max_sandboxes']
         self.agents_per_sandbox=config['agents_per_sandbox']
         self.reserve_review_slots=min(reserve_review_slots, max(0, self.agents_per_sandbox-1))
-        self.rotate_after_agents=config.get('rotate_after_agents',24)
-        self.quota_blocked_max_agents_placed=config.get('quota_blocked_max_agents_placed',96)
         require(type(self.max_sandboxes) is int and self.max_sandboxes>0,
                 'sandbox_pool.max_sandboxes must be positive')
         require(type(self.agents_per_sandbox) is int and 0<self.agents_per_sandbox<=16,
                 'sandbox_pool.agents_per_sandbox must be between 1 and 16')
-        require(type(self.rotate_after_agents) is int and self.rotate_after_agents>0,
-                'sandbox_pool.rotate_after_agents must be a positive integer')
-        require(type(self.quota_blocked_max_agents_placed) is int and self.quota_blocked_max_agents_placed>0,
-                'sandbox_pool.quota_blocked_max_agents_placed must be a positive integer')
-        self.group_limits, self.kind_groups = group_config(config, self.kinds)
+        # Unused: the number of Agents a Sandbox has hosted never affects
+        # admission or retirement (owner decision 2026-11-26). Existing
+        # configurations that still set these former thresholds validate.
+        for key in ('rotate_after_agents','quota_blocked_max_agents_placed'):
+            require(type(config.get(key,1)) is int and config.get(key,1)>0,
+                    'sandbox_pool.'+key+' must be a positive integer')
+        # Enabled kinds only validate group coverage; retirement never reads them.
+        self.group_limits, self.kind_groups = group_config(config, kinds or {})
         self.idle_seconds=float(os.environ.get('OUTREACH_POOL_IDLE_PAUSE_SECONDS','600'))
         require(math.isfinite(self.idle_seconds) and self.idle_seconds>=0,
                 'Invalid pool idle pause seconds')
@@ -212,8 +212,9 @@ class SandboxPool:
         self.failed=self.read('sandbox_pool_cleanup')
         rows=ledger.tasks.all() if rows is None else rows
         for entry in [*self.entries,*self.failed]:
+            # agents_placed is telemetry only; it keeps counting and is never reset.
             if 'agents_placed' not in entry:entry['agents_placed']=placements(rows,entry)
-            self.draining(entry)
+            entry.pop('draining',None)  # Flag of the former count-based rotation.
         if self.group_limits:
             self.migrate_groups(rows)
         self.write('sandbox_pool',self.entries)
@@ -323,75 +324,84 @@ class SandboxPool:
             else:entry.setdefault('idle_since',now)  # Legacy entries start a full grace period.
         self.write('sandbox_pool',self.entries)
 
-    def draining(self, entry):
-        if entry['agents_placed']>=self.rotate_after_agents:entry['draining']=True
-        return entry.get('draining',False)
-
     def assigned(self, entry):
         # Called with the task's provisioning reservation in the same ledger
         # checkpoint, before CMA creation. Replaying that creation adds nothing.
         entry['agents_placed']+=1
-        self.draining(entry)
         self.write('sandbox_pool',self.entries)
 
     def rotate_empty(self, entry, rows, now):
+        """Retire an empty surplus Sandbox only once its whole group has been idle.
+
+        Each configured group keeps its last healthy Sandbox continuously.
+        Ordinary retirement (idle or paused) of a surplus Sandbox waits until
+        the group has had no work for the idle period; running Agents are
+        never stopped. Corrupt, stalled, failed and removed-group Sandboxes
+        follow their own paths.
+        """
         if any(live_reference(r,entry) for r in rows):return False
         group = entry.get('group') if self.group_limits else None
         if group is not None and group not in self.group_limits:
             self.failed_entry(entry['sandbox_id'], entry.get('workspace_id'), rotated='group-removed')
             return True
-        # Keep the last usable capacity across empty ticks while the account
-        # cannot create replacements. The placement ceiling still forces rotation.
+        if self.last_healthy(entry):return False
+        if self.busy(group, rows):
+            entry['idle_since']=now  # The group's idle period restarts.
+            return False
+        # Keep usable capacity across empty ticks while the account cannot
+        # create a replacement.
         if (entry.get('state') == 'active' and not entry.get('intent') and
-                entry['agents_placed'] < self.quota_blocked_max_agents_placed):
-            if self.capacity_blocked(rows, group):
-                return False
-            # Keep a draining Workspace available through an empty tick while
-            # its group needs a replacement or is waiting for its first Workspace.
-            # Otherwise health could retire it before a quota rejection arrives.
-            if (self.group_limits and self.draining(entry) and
-                    not any(e.get('group') == group and not self.draining(e) for e in self.entries) and
-                    any(self.group(r) == group and (self.creation_waiting(r) or
-                        (not self.paused and r['state'] == 'queued' and self.kinds.get(r['kind']))) for r in rows)):
-                return False
-        reason=('draining' if self.draining(entry) else 'paused' if entry.get('state')=='paused' else
-                'idle' if entry.get('state') in {'active','pausing'} and
-                now-entry['idle_since']>=self.idle_seconds else None)
-        if not reason:return False
-        if reason=='idle' and self.awaited(entry,rows):return False
+                self.capacity_blocked(rows, group)):
+            return False
+        reason=('paused' if entry.get('state')=='paused' else
+                'idle' if entry.get('state') in {'active','pausing'} else None)
+        if not reason or now-entry['idle_since']<self.idle_seconds:return False
         self.failed_entry(entry['sandbox_id'],entry.get('workspace_id'),rotated=reason)
         return True
 
-    def awaited(self, entry, rows):
-        """The group's last usable Sandbox is not idle while queued work or reviews wait.
+    def last_healthy(self, entry):
+        """Whether entry is the Sandbox its configured group keeps continuously.
 
+        The pipeline is continuous (owner decision 2026-11-26), so idleness, an
+        empty queue or a pause never retires a group's last healthy Sandbox.
+        The group keeps its first healthy Sandbox. A peer counts only once this
+        pass has observed it healthy: its saved state may predate a failure
+        found later in the same pass. Without configured groups nothing is kept.
+        """
+        if not self.group_limits:return False
+        for peer in self.entries:
+            if peer is entry:return True
+            if (peer.get('group')==entry.get('group') and peer.get('state') in HEALTHY and
+                    (self.observed.get(peer['sandbox_id']) or {}).get('status') in HEALTHY):
+                return False
+        return True
+
+    def busy(self, group, rows):
+        """Whether the group has work, whatever the admission switches say.
+
+        Any queued, provisioning, admitting or running row of the group counts,
+        including a creation still waiting for its first Workspace, and so does
+        a pending review. The coordinator pause, kind enablement and the hosted
+        review switch govern admission only; they never make a group idle.
         Placement can fall behind for longer than the idle grace (2026-11-23: the
         advance stage ran out of tick budget). Once the quota evidence expired,
         the notes group's only Sandbox was rotated 'idle' beside 258 queued
         tasks and the account could not create a replacement.
-        A peer counts only once this health pass has observed it active: its
-        saved state may predate a failure found later in the same pass.
         """
-        if self.paused:return False
-        group=entry.get('group') if self.group_limits else None
-        if any(e is not entry and (e.get('group') if self.group_limits else None)==group and
-               e.get('state')=='active' and not self.draining(e) and not e.get('intent') and
-               (self.observed.get(e['sandbox_id']) or {}).get('status')=='active' for e in self.entries):
-            return False
+        mine=[r for r in rows if self.group(r)==group]
+        if any(r['state']=='queued' or r['state'] in ACTIVE for r in mine):return True
         from .control import workflow
         from .independent_review import effect_started, pending_effect
         from .tasks import reviewable, review_current, matches_workflow
         current_hashes = {}
         def review_pending(row):
-            if not self.reserve_review_slots:return False
             if reviewable(row):return not effect_started(row, self.ledger.tasks)
             if not pending_effect(row, self.ledger.tasks) or not review_current(row, row['request']['workflow_hash']):
                 return False
             kind = row['kind']
             if kind not in current_hashes:current_hashes[kind] = workflow(kind)
             return not matches_workflow(row, current_hashes[kind])
-        return any(self.kinds.get(r['kind']) and self.group(r)==group and
-                   (r['state']=='queued' or review_pending(r)) for r in rows)
+        return any(review_pending(r) for r in mine)
 
     def cleanup_entry(self, cma, entry, status, rows, now):
         sandbox_id=entry['sandbox_id']
@@ -502,7 +512,7 @@ class SandboxPool:
                         entry['stalled']=status
                         entry=self.failed_entry(sandbox_id,entry.get('workspace_id'))
                     if entry in self.entries:self.rotate_empty(entry,rows,now)
-                    if entry in self.entries and status=='active' and not intent and not self.draining(entry):
+                    if entry in self.entries and status=='active' and not intent:
                         self.available.add(sandbox_id)
                 if entry in self.failed:
                     self.cleanup_entry(cma,entry,status,rows,now)
@@ -573,6 +583,7 @@ class SandboxPool:
                 except Exception as exc:
                     entry['cleanup_error']=type(exc).__name__+': '+str(exc)[:300]
                     self.error(sandbox_id,exc)
+        self.write('sandbox_pool',self.entries)  # Restarted group idle periods.
         self.write('sandbox_pool_cleanup',self.failed)
         self.ledger.save()
 
@@ -588,9 +599,10 @@ class SandboxPool:
         if self.group_limits and group not in self.group_limits:
             return False, None
         entries = [e for e in self.entries if e.get('group') == group] if self.group_limits else self.entries
-        non_draining = [entry for entry in entries if not self.draining(entry)]
+        # Every healthy Sandbox admits up to its limit, however many Agents it
+        # has already hosted.
         candidates=[(sum(live_reference(r,entry) for r in rows),index,entry)
-                    for index,entry in enumerate(non_draining)
+                    for index,entry in enumerate(entries)
                     if entry['sandbox_id'] in self.available]
         candidates=[candidate for candidate in candidates if candidate[0]<self.admission_limit(candidate[2],rows)]
         if candidates:
@@ -598,26 +610,9 @@ class SandboxPool:
         # Only a pending first Workspace in this group serializes its creation.
         pending = [r for r in rows if self.creation_waiting(r)]
         waiting = any(self.group(r) == group for r in pending)
-        group_count = len(non_draining) if self.group_limits else len(entries)
-        can_create = (not waiting and group_count < self.group_limits.get(group, self.max_sandboxes)
+        can_create = (not waiting and len(entries) < self.group_limits.get(group, self.max_sandboxes)
                       and self.can_create_within_pool(entries, rows, pending))
-
-        # Give a fresh attempt its bounded first-Workspace wait. Otherwise
-        # a group with only draining entries can keep working when local limits
-        # block creation, even after the cached account-quota evidence expires.
-        if ((not self.group_limits or not non_draining) and
-                (self.capacity_blocked(rows, group) or
-                 (self.group_limits and not waiting and not can_create))):
-            fallback=[(sum(live_reference(r,entry) for r in rows),index,entry)
-                      for index,entry in enumerate(entries)
-                      if entry.get('draining') and entry.get('state')=='active'
-                      and entry['agents_placed']<self.quota_blocked_max_agents_placed
-                      and (self.observed.get(entry['sandbox_id']) or {}).get('status')=='active'
-                      and not entry.get('intent')]
-            fallback=[candidate for candidate in fallback if candidate[0]<self.admission_limit(candidate[2],rows)]
-            if fallback:
-                return True,min(fallback,key=lambda candidate:candidate[:2])[2]
-        for entry in non_draining:
+        for entry in entries:
             if (entry['sandbox_id'] in self.observed and
                     sum(live_reference(r,entry) for r in rows)<self.admission_limit(entry,rows) and
                     entry.get('state') in {'paused','pausing','reviving'}):
@@ -651,7 +646,6 @@ class SandboxPool:
                'state':'active','idle_since':self.ledger.tasks.clock(),'agents_placed':1}
         if self.group_limits:
             entry['group'] = self.group(row) or next(iter(self.group_limits))
-        self.draining(entry)
         if not any(e['sandbox_id']==sandbox_id for e in self.entries):
             self.entries.append(entry)
             self.write('sandbox_pool',self.entries)

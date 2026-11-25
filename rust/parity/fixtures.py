@@ -75,6 +75,30 @@ def generate(folder):
     fixtures = []
     root = folder / 'empty'; base(root)
     fixtures.append(('empty', root, *build(root, [])))
+    # CMA lifecycle evidence is durable task data; compact status still exposes
+    # the existing operator-check projection, with byte-identical Python/Rust output.
+    root = folder / 'cma-cleanup'; base(root)
+    check = {'kind': 'cma-agent-cleanup', 'agents': ['agt_synthetic'],
+             'reason': 'Agent cleanup is still pending after 24 hours of observation'}
+    path, work = build(root, [
+        {'id': 'cma-inflight', 'state': 'failed', 'data': {'agent_id': 'agt_inflight',
+            'cleanup': {'deleted': False, 'delete_outcome': 'accepted', 'cleanup_attempts': 0,
+                        'cleanup_started_at': NOW - 100, 'delete_requested_at': NOW - 100}}},
+        {'id': 'cma-timeout', 'state': 'failed', 'data': {'agent_id': 'agt_synthetic',
+            'cleanup': {'deleted': False, 'delete_outcome': 'accepted', 'cleanup_attempts': 3,
+                        'cleanup_started_at': NOW - 86400, 'operator_check': check,
+                        'operator_check_acknowledged': 'a' * 64}}},
+        {'id': 'cma-foreign', 'state': 'failed', 'data': {'owned_sandbox_id': 'sbx_legacy',
+            'cleanup': {'deleted': True, 'sandbox_retired': False, 'foreign_agents_since': NOW - 86400,
+                        'operator_check': {'kind': 'cma-sandbox-cleanup', 'sandbox_id': 'sbx_legacy',
+                                           'agents': ['agt_foreign'], 'reason': 'Foreign Agents remain'}}}},
+    ])
+    tasks = Tasks(path)
+    try:
+        tasks.db.execute('INSERT INTO pipeline_state VALUES(?,?)',
+            ('sandbox_pool_operator_checks', canonical([{'sandbox_id': 'sbx_synthetic', 'check': check}])))
+    finally: tasks.close()
+    fixtures.append(('cma-cleanup', root, path, work))
     root = folder / 'states'; config = base(root)
     rows = []
     for n, state in enumerate(sorted(STATES)):

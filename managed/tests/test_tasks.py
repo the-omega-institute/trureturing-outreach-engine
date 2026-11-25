@@ -51,7 +51,7 @@ class CMA:
         return {'response_id':'resp_original'}
     def response(self,response_id):return {'status':'in_progress'}
     def sandbox_of(self,agent_id):return 'sbx_test'
-    def retire(self,agent_id,key,owned_sandbox_id=None):self.retired.append(agent_id);return {'deleted':True,'sandbox_retired':bool(owned_sandbox_id)}
+    def retire(self,agent_id,key,owned_sandbox_id=None,**kwargs):self.retired.append(agent_id);return {'deleted':True,'sandbox_retired':bool(owned_sandbox_id)}
 
 
 class TaskTests(unittest.TestCase):

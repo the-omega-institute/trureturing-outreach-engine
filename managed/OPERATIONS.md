@@ -45,6 +45,24 @@ For authorized local inspection, run `python3 -m managed.control status`,
 `python3 -m managed.control work`, or `python3 -m managed.control reviews`
 with the configured private data checkout and an authenticated GitHub CLI.
 
+## CMA cleanup observations
+
+Idle `ready` Agents can be deleted directly. Working Agents must first be
+observed stopped; a `409 agent_not_ready` stop refusal for a terminal Agent
+does not consume a cleanup attempt. An accepted Agent DELETE is persisted and
+followed by GET observations of its original ID, even if inventory omits it or
+CMA continues to report its old status. Observations do not consume the three
+refusal attempts. After 24 hours without completion, or a terminal observation
+refusal, cleanup raises an operator check. Transient read failures retain the
+acceptance and the observation deadline.
+
+Checked pool Agents remain observable on the retained-entry recheck cadence
+(six hours). A resource-gone GET clears their checks from the Agent outcome,
+Sandbox cleanup entry and status projection. A legacy task-owned Sandbox with
+other Agents is retained, and raises a check after 24 hours. Signed check clears
+retain an acknowledgement digest in subsequent lifecycle keys so retries cannot
+reuse keys from an earlier refusal cycle.
+
 ## Publication discovery from mail
 
 Receipt reconciliation reads arXiv notices and explicit public arXiv links in

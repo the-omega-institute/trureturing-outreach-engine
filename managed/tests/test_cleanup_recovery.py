@@ -7,10 +7,11 @@ from unittest.mock import patch
 
 from fixture_config import use_cli_config
 from managed import control, recheck
-from managed.cma import CMARequestError
-from managed.queue import canonical
+from managed.cma import AGENT_CLEANUP_WAIT_SECONDS, CMARequestError
+from managed.queue import canonical, digest
 from managed.sandbox_pool import SandboxPool
 from test_sandbox_pool import PoolFixture
+from test_cma_agent_cleanup import LifecycleCMA
 
 
 SECRET='synthetic-cleanup-key'
@@ -86,7 +87,7 @@ class CleanupRecoveryTests(PoolFixture,unittest.TestCase):
         blocked=self.finished('blocked',reason='original result reason')
         control_row=self.finished('control')
         calls=[];original=self.cma.retire
-        def retire(agent_id,*args):
+        def retire(agent_id,*args,**kwargs):
             if agent_id=='agt_blocked':
                 calls.append(args);raise TimeoutError('lost transport')
             return original(agent_id,*args)
@@ -115,7 +116,7 @@ class CleanupRecoveryTests(PoolFixture,unittest.TestCase):
                 if disabled=='paused':self.cfg['paused']=True
                 else:self.cfg['paused']=False;self.cfg['kinds']['research']=False
                 calls=[]
-                def retire(*args):
+                def retire(*args,**kwargs):
                     calls.append(args)
                     if len(calls)==1:raise TimeoutError('lost transport')
                     return {'deleted':True}
@@ -136,7 +137,7 @@ class CleanupRecoveryTests(PoolFixture,unittest.TestCase):
     def test_cleanup_rate_limit_uses_its_own_budget(self):
         row=self.finished(reason='original reason',rate_limit_retries=4)
         self.cfg['recovery']={'rate_limit_max_attempts':1}
-        def retire(*args):raise CMARequestError(429,{'code':'rate_limit_exceeded'})
+        def retire(*args,**kwargs):raise CMARequestError(429,{'code':'rate_limit_exceeded'})
         self.cma.retire=retire
         self.tick();self.now+=4000;self.tick()
         failed=self.ledger.tasks.get(row['id'])
@@ -146,7 +147,7 @@ class CleanupRecoveryTests(PoolFixture,unittest.TestCase):
 
     def test_cleanup_exhaustion_preserves_failed_task_requeue_classification(self):
         row=self.finished(state='failed',reason='prompt too large',error_class='request-too-large')
-        def retire(*args):raise TimeoutError('lost transport')
+        def retire(*args,**kwargs):raise TimeoutError('lost transport')
         self.cma.retire=retire
         for _ in range(3):self.tick();self.now+=4000
         current=self.ledger.tasks.get(row['id'])
@@ -164,11 +165,144 @@ class CleanupRecoveryTests(PoolFixture,unittest.TestCase):
         control.clear_task_operator_check(self.ledger,value,SECRET)
         control.clear_task_operator_check(self.ledger,value,SECRET)
         cleared=self.ledger.tasks.get(row['id'])
-        self.assertEqual(cleared['data']['cleanup'],{'deleted':False,'cleanup_attempts':0})
+        self.assertEqual(cleared['data']['cleanup'],{'deleted':False,'cleanup_attempts':0,
+            'operator_check_acknowledged':digest(value)})
         self.assertEqual(cleared['revision'],row['revision']+1)
         self.tick()
         self.assertEqual(len(self.cma.retire_calls),1)
         self.assertTrue(self.ledger.tasks.get(row['id'])['data']['cleanup']['deleted'])
+
+    def test_task_accepted_delete_survives_restore_without_consuming_attempts(self):
+        self.cma=LifecycleCMA({'agt_finished':'failed'},accepted=True)
+        row=self.finished(state='failed')
+        self.tick();self.restore()
+        for _ in range(5):
+            self.now+=60;self.tick()
+            cleanup=self.ledger.tasks.get(row['id'])['data']['cleanup']
+            self.assertEqual(cleanup['cleanup_attempts'],0)
+            self.assertNotIn('operator_check',cleanup)
+        self.assertEqual(sum(method=='DELETE' for _,method,_ in self.cma.calls),1)
+        self.cma.agents.clear();self.tick()
+        self.assertTrue(self.ledger.tasks.get(row['id'])['data']['cleanup']['deleted'])
+
+    def test_legacy_task_check_clears_on_marked_agent_404(self):
+        self.cma=LifecycleCMA({},accepted=True)
+        self.cma.sandbox_status='retired'
+        for name,sandbox in (('plain',None),('owned','sbx_legacy')):
+            with self.subTest(sandbox=sandbox):
+                row=self.finished(name,state='failed',owned_sandbox_id=sandbox,
+                    cleanup={'deleted':False,'cleanup_attempts':3,'delete_outcome':'accepted',
+                        'operator_check':{'kind':'cma-agent-cleanup',
+                            'reason':'Agent or owned Sandbox retirement did not complete after three bounded attempts'}})
+                self.tick()
+                cleanup=self.ledger.tasks.get(row['id'])['data']['cleanup']
+                self.assertTrue(cleanup['deleted'])
+                self.assertNotIn('operator_check',cleanup)
+                self.assertFalse(any(method!='GET' for _,method,_ in self.cma.calls))
+
+    def test_four_ready_pool_agents_retire_in_one_health_budget(self):
+        cma=LifecycleCMA({'agt_idle'+str(n):'ready' for n in range(4)})
+        for n in range(4):self.finished('idle'+str(n),state='failed',cleanup={'deleted':True})
+        self.seed_cleanup([self.failed_entry()])
+        pool=SandboxPool(self.ledger,self.cfg['sandbox_pool'],self.cfg['kinds'],paused=True)
+        pool.health(cma,rows=self.ledger.tasks.all())
+        entry=self.state('sandbox_pool_cleanup')[0]
+        self.assertTrue(entry['cleanup']['sandbox_retired'])
+        self.assertEqual(sum(method=='DELETE' and '/agents/' in path for path,method,_ in cma.calls),4)
+        self.assertEqual(pool.agent_cleanup_remaining,4)
+        self.assertFalse(any(method=='POST' for _,method,_ in cma.calls))
+
+    def test_task_clear_never_repeats_lifecycle_key(self):
+        self.cma=LifecycleCMA({'agt_finished':'ready'})
+        self.cma.delete_error=CMARequestError(409,{'code':'retry_later'})
+        row=self.finished(state='failed')
+        for generation in range(3):
+            for _ in range(3):self.tick()
+            current=self.ledger.tasks.get(row['id'])
+            self.assertIn('operator_check',current['data']['cleanup'])
+            value=self.task_clear(row['id'])
+            control.clear_task_operator_check(self.ledger,value,SECRET)
+            self.ledger.save(force=True)
+            self.restore()
+        keys=[key for _,method,key in self.cma.calls if method=='DELETE']
+        self.assertEqual(len(keys),9)
+        self.assertEqual(len(set(keys)),9)
+
+    def test_pool_clear_resumes_agent_writes_with_new_keys(self):
+        self.cma=LifecycleCMA({'agt_finished':'ready'})
+        self.cma.delete_error=CMARequestError(409,{'code':'retry_later'})
+        row=self.finished(state='failed',cleanup={'deleted':True})
+        self.seed_cleanup([self.failed_entry()])
+        for generation in range(3):
+            for _ in range(3):
+                pool=SandboxPool(self.ledger,self.cfg['sandbox_pool'],self.cfg['kinds'],paused=True)
+                pool.health(self.cma,rows=self.ledger.tasks.all())
+            entry=self.state('sandbox_pool_cleanup')[0]
+            self.assertIn('operator_check',entry)
+            control.clear_sandbox_operator_check(self.ledger,self.pool_clear('sbx_failed'),SECRET)
+            entry=self.state('sandbox_pool_cleanup')[0]
+            self.assertNotIn('operator_check',entry['cleanup']['agent_cleanup'][0])
+            self.assertEqual(entry['cleanup']['agent_cleanup'][0]['cleanup_attempts'],0)
+        keys=[key for _,method,key in self.cma.calls if method=='DELETE']
+        self.assertEqual(len(keys),9)
+        self.assertEqual(len(set(keys)),9)
+
+    def test_legacy_task_foreign_agents_raise_check_after_bounded_retention(self):
+        self.cfg.pop('sandbox_pool')
+        self.cma=LifecycleCMA({'agt_finished':'ready','agt_foreign':'ready'})
+        self.finished(state='failed',owned_sandbox_id='sbx_legacy')
+        self.tick();self.restore()
+        self.now+=AGENT_CLEANUP_WAIT_SECONDS-1;self.tick()
+        self.assertNotIn('operator_check',self.ledger.tasks.get('finished')['data']['cleanup'])
+        self.now+=1;self.tick()
+        cleanup=self.ledger.tasks.get('finished')['data']['cleanup']
+        self.assertEqual(cleanup['operator_check']['kind'],'cma-sandbox-cleanup')
+        self.assertEqual(cleanup['operator_check']['agents'],['agt_foreign'])
+        calls=len(self.cma.calls)
+        self.tick();self.now+=3600;self.tick()
+        self.assertEqual(len(self.cma.calls),calls)
+        self.assertEqual(self.cma.agents['agt_foreign']['status'],'ready')
+        self.assertFalse(any(method=='DELETE' and '/sandboxes/' in path for path,method,_ in self.cma.calls))
+
+    def test_two_legacy_pool_checks_clear_when_original_agent_get_is_gone(self):
+        for omitted,retired in ((False,False),(True,False),(True,True)):
+            with self.subTest(omitted=omitted,retired=retired):
+                cma=LifecycleCMA({'agt_one':'failed','agt_two':'failed'},accepted=True)
+                cma.inventory_by_sandbox={'sbx_one':['agt_one'],'sbx_two':['agt_two']}
+                entries=[]
+                for name in ('one','two'):
+                    self.finished(name,state='failed',cleanup={'deleted':True})
+                    check={'kind':'cma-agent-cleanup','agents':['agt_'+name],
+                           'reason':'Engine-owned Agent cleanup requires an operator check; see agent outcomes'}
+                    outcome={'agent_id':'agt_'+name,'deleted':False,'status':'failed',
+                        'delete_outcome':'accepted','cleanup_attempts':3,
+                        'errors':[{'action':'stop','status':409,'error':'agent_not_ready'}],
+                        'operator_check':{'kind':'cma-agent-cleanup',
+                            'reason':'Agent cleanup did not complete after three bounded attempts'}}
+                    entries.append(self.failed_entry('sbx_'+name,operator_check=check,
+                        cleanup={'operator_check':check,'agent_cleanup':[outcome]},cleanup_checked_at=0))
+                self.seed_cleanup(entries)
+                self.ledger.tasks.db.execute('INSERT OR REPLACE INTO pipeline_state VALUES(?,?)',
+                    ('sandbox_pool_operator_checks',canonical([
+                        {'sandbox_id':e['sandbox_id'],'check':e['operator_check']} for e in entries])))
+                self.now+=6*3600
+                pool=SandboxPool(self.ledger,self.cfg['sandbox_pool'],self.cfg['kinds'],paused=True)
+                pool.health(cma,rows=self.ledger.tasks.all())
+                self.assertTrue(all(e.get('operator_check') for e in self.state('sandbox_pool_cleanup')))
+                self.assertFalse(any(method!='GET' for _,method,_ in cma.calls))
+                cma.get_error=CMARequestError(404,{'code':'agent_not_found'})
+                cma.omit_inventory=omitted
+                if retired:cma.sandbox_status='retired'
+                self.now+=6*3600
+                pool.health(cma,rows=self.ledger.tasks.all())
+                self.assertEqual(self.state('sandbox_pool_operator_checks'),[])
+                for entry in self.state('sandbox_pool_cleanup'):
+                    self.assertNotIn('operator_check',entry)
+                    self.assertNotIn('operator_check',entry['cleanup'])
+                    for outcome in entry['cleanup']['agent_cleanup']:
+                        self.assertTrue(outcome['deleted'])
+                        self.assertNotIn('operator_check',outcome)
+                self.assertFalse(any(method=='DELETE' and '/agents/' in path for path,method,_ in cma.calls))
 
     def test_task_clear_rejects_check_revision_and_signature_mismatches(self):
         row=self.finished(cleanup={'operator_check':{'kind':'initial'}})

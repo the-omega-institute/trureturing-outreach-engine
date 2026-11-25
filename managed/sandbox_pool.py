@@ -402,7 +402,8 @@ class SandboxPool:
         # CMA then reports `retiring` while the old Agent inventory is still
         # present. Reconcile that inventory again. `cleanup_error` is a stale
         # read/transport marker, not proof that retirement is in flight.
-        dead=(status=='failed' or (bool(entry.get('corrupt')) and status=='active') or
+        unresolved_agents=any(not a.get('deleted') for a in cleanup.get('agent_cleanup',[]))
+        dead=((status=='retired' and unresolved_agents) or status=='failed' or (bool(entry.get('corrupt')) and status=='active') or
                ((bool(entry.get('stalled')) or bool(entry.get('rotated'))) and
                 status not in {'retired'}) or
                (entry in self.failed and entry.get('state') in {'failed','retiring'} and
@@ -415,9 +416,11 @@ class SandboxPool:
                 self.ledger.save(force=True)
                 budget=self.agent_cleanup_remaining
                 entry['cleanup']=cma.retire_sandbox(None,sandbox_id,
-                    entry['cleanup_intent']['key'],entry.get('cleanup') or {},dead_ok=True,
+                    entry['cleanup_intent']['key']+('-ack-'+entry['operator_check_acknowledged']
+                        if entry.get('operator_check_acknowledged') else ''),
+                    entry.get('cleanup') or {},dead_ok=True,
                     finished=ledger_agents(rows),max_agent_deletions=budget,
-                    sweep_owned=True,task_ids={r['id'] for r in rows})
+                    sweep_owned=True,task_ids={r['id'] for r in rows},now=now)
                 if entry['cleanup'].get('sandbox_transport_error'):
                     detail=entry['cleanup']['sandbox_transport_error'].get('error','transport failure')
                     self.errors.append({'sandbox_id':sandbox_id,'error':str(detail)[:300]})

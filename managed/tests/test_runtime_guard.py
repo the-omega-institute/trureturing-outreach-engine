@@ -66,9 +66,9 @@ class RobustnessTests(PoolFixture, unittest.TestCase):
         self.cma.response=lambda _: {'status':'completed','output':[{'type':'message','content':[
             {'type':'output_text','text':json.dumps(result)}]}]}
         retire=self.cma.retire
-        def retire_after_readback(*args):
+        def retire_after_readback(*args,**kwargs):
             remote.calls.append('retire')
-            return retire(*args)
+            return retire(*args,**kwargs)
         self.cma.retire=retire_after_readback
         return remote, reference, raw
 
@@ -385,6 +385,12 @@ class SandboxFailureTests(PoolFixture, unittest.TestCase):
                 if '/agents?' in path:
                     return pages['agt_dead' if 'cursor=agt_dead' in path else None]
                 if path.endswith('/workspaces'):return {'items':[{}]}
+                if method=='GET' and path.startswith('/api/v1/agents/'):
+                    # Individual reads report the Agent's own status, as CMA does.
+                    agent=path.rsplit('/',1)[-1]
+                    for page in pages.values():
+                        for item in page['items']:
+                            if item['id']==agent:return dict(item)
                 return {'status':'active'}
             cma.request=request;calls.clear()
             cma.retire_sandbox(None,'sbx_corrupt','key',{},dead_ok=True,finished=finished)

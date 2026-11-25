@@ -22,6 +22,9 @@ from .location import settings
 from .tick import artifact_io_timeout
 
 
+AGENT_CLEANUP_WAIT_SECONDS=24*3600
+
+
 class NoRedirect(HTTPRedirectHandler):
     def redirect_request(self, *args, **kwargs):
         raise RuntimeError('CMA credentials cannot follow redirects')
@@ -264,135 +267,144 @@ class CMA:
         if sandbox_id:value['sandbox_id']=sandbox_id
         return value
 
-    def _retire_agent(self, agent_id, key, agent=None, sandbox_id=None):
-        """Stop and delete one Agent, retaining the original keys on replay.
+    @staticmethod
+    def _cleanup_observation(result, now, sandbox_id=None, error=None):
+        """Bound lifecycle observations without spending the refusal budget."""
+        if error is not None:
+            result['observation_error']=CMA._error('get',error)
+            code=getattr(error,'code',None)
+            if isinstance(code,int) and 400<=code<500 and code not in {408,425,429}:
+                result['operator_check']=CMA._operator_check(
+                    result['agent_id'],'Agent cleanup observation was refused; verify CMA routing/resource state',sandbox_id)
+        if result.get('deleted'):
+            result.pop('operator_check',None)
+        elif now-result['cleanup_started_at']>=AGENT_CLEANUP_WAIT_SECONDS:
+            result['operator_check']=CMA._operator_check(
+                result['agent_id'],'Agent cleanup is still pending after 24 hours of observation',sandbox_id)
+        return result
 
-        Failed Agents are terminal enough to submit the delete after a stop
-        refusal. Ready and working Agents still need an observed stopped state.
-        A missing Sandbox is a durable operator check: repeating the same stop
-        forever cannot repair a CMA object that no longer exists.
+    def _retire_agent(self, agent_id, key, agent=None, sandbox_id=None, previous=None, now=None):
+        """Delete idle/terminal Agents; stop working Agents before deleting.
+
+        An accepted DELETE owns the next observation, even if CMA still reports
+        failed/ready/stopped. Never resubmit it just because that view is stale.
+        Checks pause writes but continue GET reconciliation by the original ID.
         """
+        previous=previous or {}
+        now=time.time() if now is None else now
+        result={field:previous[field] for field in
+                ('delete_outcome','delete_requested_at','operator_check') if field in previous}
+        result.update(agent_id=agent_id,stopped=False,deleted=False,errors=[],
+                      cleanup_started_at=previous.get('cleanup_started_at',now))
+        observing=(previous.get('delete_outcome')=='accepted' or bool(previous.get('operator_check')))
         try:
-            agent=agent or self.request('/api/v1/agents/'+agent_id)
+            # Inventory can be stale or omit an Agent whose DELETE is pending.
+            # An individual GET is required to reconcile that original handle.
+            # A listing that says ready/stopped would lead straight to DELETE;
+            # confirm that with a fresh GET so a stale listing never deletes an
+            # Agent that has started working since.
+            if observing or not agent or agent.get('status') in {'ready','stopped'}:
+                agent=self.request('/api/v1/agents/'+agent_id)
         except Exception as exc:
             if CMA._gone(exc):
-                return {'agent_id':agent_id,'stopped':True,'deleted':True,
-                        'status':'gone','gone':True,'errors':[],
-                        'operator_check':CMA._operator_check(
-                            agent_id,'Sandbox or Agent is already gone; verify CMA cleanup manually',sandbox_id)}
-            raise
+                result.update(stopped=True,deleted=True,status='gone',gone=True)
+                result.pop('operator_check',None)
+                return result
+            if not observing:raise
+            result['status']=previous.get('status')
+            return CMA._cleanup_observation(result,now,sandbox_id,error=exc)
+        sandbox_id=sandbox_id or (agent.get('sandbox') or {}).get('id')
         status=agent.get('status')
-        result={'agent_id':agent_id,'stopped':status in {'stopped','stopping','deleting','deleted'},
-                'deleted':status=='deleted','status':status,'errors':[]}
-        if status=='deleted':return result
-        if status=='deleting':
-            if getattr(self,'retire_wait',0):
-                try:agent=CMA._await_status(self,agent_id,{'deleted'},agent)
-                except Exception as exc:
-                    if CMA._gone(exc):return {**result,'deleted':True,'status':'gone','gone':True}
-                    raise
-                result.update(status=agent.get('status'),deleted=agent.get('status')=='deleted')
-            return result
+        result.update(status=status,stopped=status in {'stopped','stopping','deleting','deleted'},
+                      deleted=status=='deleted')
+        if result['deleted'] or observing or status=='deleting':
+            return CMA._cleanup_observation(result,now,sandbox_id)
 
         original_status=status
-        stop_refused=False
-        if status not in {'stopped','stopping'}:
+        if status not in {'ready','stopped','stopping'}:
             try:
                 stopped=self.request('/api/v1/agents/'+agent_id+'/stop','POST',{},key+'-stop')
-                # Some CMA deployments return the transition in the POST body;
-                # use it when present and reconcile with a GET otherwise.
-                if isinstance(stopped,dict) and stopped.get('status'):
-                    agent=stopped
-                else:
-                    agent=None
+                agent=stopped if isinstance(stopped,dict) and stopped.get('status') else None
             except Exception as exc:
                 if CMA._gone(exc):
-                    return {**result,'operator_check':CMA._operator_check(
-                        agent_id,'Sandbox disappeared while stopping the Agent',sandbox_id)}
+                    result['operator_check']=CMA._operator_check(
+                        agent_id,'Sandbox disappeared while stopping the Agent',sandbox_id)
+                    return result
                 if getattr(exc,'code',None) not in {400,409,422}:raise
-                result['errors'].append(CMA._error('stop',exc))
-                stop_refused=True
-                agent=None
-            if stop_refused and original_status in {'failed','ready'}:
+                # CMA cannot stop an already failed/terminal Agent. Its refusal
+                # does not invalidate DELETE or consume a cleanup attempt.
+                benign=(original_status in {'failed','terminal','completed','cancelled','canceled'} and
+                        getattr(exc,'code',None)==409 and 'agent_not_ready' in str(getattr(exc,'body','')))
+                if not benign:result['errors'].append(CMA._error('stop',exc))
                 agent={'status':original_status}
-            else:
-                try:
-                    agent=CMA._await_status(self,agent_id,{'stopped','deleted'},agent)
+            if original_status not in {'failed','terminal','completed','cancelled','canceled'}:
+                try:agent=CMA._await_status(self,agent_id,{'stopped','deleted'},agent)
                 except Exception as exc:
                     if CMA._gone(exc):
-                        return {**result,'operator_check':CMA._operator_check(
-                            agent_id,'Sandbox disappeared while observing the stop',sandbox_id)}
+                        result['operator_check']=CMA._operator_check(
+                            agent_id,'Sandbox disappeared while observing the stop',sandbox_id)
+                        return result
                     raise
+            else:
+                agent=agent or {'status':original_status}
         elif status=='stopping' and getattr(self,'retire_wait',0):
             try:agent=CMA._await_status(self,agent_id,{'stopped','deleted'},agent)
             except Exception as exc:
                 if CMA._gone(exc):
-                    return {**result,'operator_check':CMA._operator_check(
-                        agent_id,'Sandbox disappeared while observing the stop',sandbox_id)}
+                    result['operator_check']=CMA._operator_check(
+                        agent_id,'Sandbox disappeared while observing the stop',sandbox_id)
+                    return result
                 raise
 
         status=agent.get('status')
         result.update(status=status,stopped=status in {'stopped','stopping','deleting','deleted'},
                       deleted=status=='deleted')
-        # A stop refusal for a failed Agent is terminal and CMA permits its
-        # deletion. A ready Agent still needs an observed stopped state: a
-        # successful stop request can be asynchronous and a cached ready view
-        # is not proof that DELETE is safe.
-        can_delete=status in {'stopped','deleted'} or original_status=='failed'
-        if not can_delete:
-            return result
-        if status=='deleted':return result
+        if status not in {'ready','stopped','deleted'} and original_status not in {
+                'failed','terminal','completed','cancelled','canceled'}:
+            return CMA._cleanup_observation(result,now,sandbox_id)
+        if status=='deleted':return CMA._cleanup_observation(result,now,sandbox_id)
         try:
             deleted=self.request('/api/v1/agents/'+agent_id,'DELETE',None,key+'-delete')
-            if isinstance(deleted,dict) and deleted.get('status'):
-                agent=deleted
-            else:
-                agent=None
+            agent=deleted if isinstance(deleted,dict) and deleted.get('status') else None
         except Exception as exc:
             if CMA._gone(exc):
-                return {**result,'stopped':True,'deleted':True,'status':'gone','gone':True,
-                        'delete_outcome':'gone'}
+                result.update(stopped=True,deleted=True,status='gone',gone=True,delete_outcome='gone')
+                result.pop('operator_check',None)
+                return result
             if getattr(exc,'code',None) not in {400,409,422}:raise
             result['errors'].append(CMA._error('delete',exc));return result
-        result['delete_outcome']='accepted'
-        try:
-            agent=CMA._await_status(self,agent_id,{'deleted'},agent)
+        result.update(delete_outcome='accepted',delete_requested_at=now,errors=[])
+        try:agent=CMA._await_status(self,agent_id,{'deleted'},agent)
         except Exception as exc:
             if CMA._gone(exc):
-                return {**result,'stopped':True,'deleted':True,'status':'gone','gone':True}
-            raise
-        result.update(status=agent.get('status'),stopped=True,deleted=agent.get('status')=='deleted')
-        return result
+                result.update(stopped=True,deleted=True,status='gone',gone=True)
+                return CMA._cleanup_observation(result,now,sandbox_id)
+            # Persist acceptance even when its immediate readback is unavailable.
+            return CMA._cleanup_observation(result,now,sandbox_id,error=exc)
+        else:
+            result.update(status=agent.get('status'),stopped=True,deleted=agent.get('status')=='deleted')
+        return CMA._cleanup_observation(result,now,sandbox_id)
 
     def retire(self, agent_id, key, owned_sandbox_id=None, *, sweep_owned=False,
-                       task_ids=frozenset()):
-        try:agent=self.request('/api/v1/agents/'+agent_id)
+                       task_ids=frozenset(), previous=None, now=None):
+        try:
+            result=CMA._retire_agent(self,agent_id,key,sandbox_id=owned_sandbox_id,previous=previous,now=now)
         except Exception as exc:
-            if CMA._gone(exc):
-                result={'agent_id':agent_id,'stopped':True,'deleted':True,
-                        'status':'gone','gone':True,'errors':[]}
-            elif getattr(exc,'code',None)==404 and owned_sandbox_id:
-                # A routing 404 is not proof that the Agent is gone, but the
-                # caller still supplied the original Sandbox identity. Reconcile
-                # that Sandbox and retain the routing check in the result.
-                result={'agent_id':agent_id,'stopped':False,'deleted':False,
-                        'status':'routing-404','errors':[],
-                        'operator_check':CMA._operator_check(
-                            agent_id,'Agent GET returned an unclassified 404; verify CMA routing/resource shape',
-                            owned_sandbox_id)}
-            else:
-                raise
-            if owned_sandbox_id:
-                result=self.retire_sandbox(agent_id,owned_sandbox_id,key,result,
-                                          sweep_owned=sweep_owned,task_ids=task_ids)
-        else:
-            sid=owned_sandbox_id or (agent.get('sandbox') or {}).get('id')
-            result=self._retire_agent(agent_id,key,agent,sid)
-            if owned_sandbox_id and result.get('deleted') and not result.get('operator_check'):
-                result=self.retire_sandbox(agent_id,owned_sandbox_id,key,result,
-                                          sweep_owned=sweep_owned,task_ids=task_ids)
-        # The pool consumes this per-call budget counter directly. Task cleanup
-        # records describe durable outcomes and never store the internal counter.
+            if getattr(exc,'code',None)!=404 or not owned_sandbox_id:raise
+            result={'agent_id':agent_id,'stopped':False,'deleted':False,'status':'routing-404','errors':[],
+                    'operator_check':CMA._operator_check(
+                        agent_id,'Agent GET returned an unclassified 404; verify CMA routing/resource shape',
+                        owned_sandbox_id)}
+            result=self.retire_sandbox(agent_id,owned_sandbox_id,key,result,
+                                      sweep_owned=sweep_owned,task_ids=task_ids,now=now)
+        if owned_sandbox_id and result.get('deleted') and not result.get('operator_check'):
+            # Keep Sandbox retention/deletion evidence across task ticks too.
+            prior=dict(previous or {})
+            prior.update(result)
+            for field in ('operator_check','cleanup_error'):
+                if field not in result:prior.pop(field,None)
+            result=self.retire_sandbox(agent_id,owned_sandbox_id,key,prior,
+                                      sweep_owned=sweep_owned,task_ids=task_ids,now=now)
         result.pop('_agent_deletions',None)
         return result
 
@@ -403,7 +415,8 @@ class CMA:
         return (isinstance(name,str) and name in {'outreach-'+task_id for task_id in (task_ids or ())})
 
     def retire_sandbox(self,agent_id,sandbox_id,key,result,dead_ok=False,finished=frozenset(),
-                       max_agent_deletions=None, sweep_owned=True, task_ids=None):
+                       max_agent_deletions=None, sweep_owned=True, task_ids=None, now=None):
+        now=time.time() if now is None else now
         result=dict(result or {})
         try:sandbox=self.request('/api/v1/sandboxes/'+sandbox_id)
         except Exception as exc:
@@ -413,9 +426,13 @@ class CMA:
                                               'reason':'Sandbox is already gone; verify its Agents manually'})
                 return result
             raise
-        if sandbox.get('status')=='retired':return {**result,'sandbox_id':sandbox_id,'sandbox_retired':True}
+        retired=sandbox.get('status')=='retired'
+        unresolved=any(not a.get('deleted') for a in result.get('agent_cleanup',[]))
+        if retired and not unresolved:return {**result,'sandbox_id':sandbox_id,'sandbox_retired':True}
         query={'sandbox':sandbox_id,'limit':100}
-        agents=self.request('/api/v1/agents?'+urlencode(query))
+        # CMA may stop listing a retired Sandbox before its checked Agent
+        # handles disappear. Those saved handles still require individual GETs.
+        agents={'items':[]} if retired else self.request('/api/v1/agents?'+urlencode(query))
         items=list(agents['items'])
         # A dead pool Sandbox accumulates hundreds of Agents; read every page
         # (bounded) instead of retaining it forever on the first cursor.
@@ -428,56 +445,69 @@ class CMA:
         previous_checks=result.get('operator_check') or {}
         checked=set(previous_checks.get('agents',[])) if isinstance(previous_checks,dict) else set()
         preserve_check=result.get('status')=='routing-404'
-        present_ids={a.get('id') for a in items if a.get('id') and a.get('status')!='deleted'}
-        checked &= present_ids
-        if not checked and not preserve_check:
-            result.pop('operator_check',None)
         if sweep_owned:
             owned=[a for a in items if CMA._ours(a,owned_ids,task_ids)]
         else:
             owned=[a for a in items if a.get('id') in owned_ids]
         outcomes_by_id={item.get('agent_id'):item for item in result.get('agent_cleanup',[])
                         if isinstance(item,dict) and item.get('agent_id')}
-        pending=[];checks=list(checked);processed=0;processed_ids=set()
+        # A list omission is insufficient proof of deletion. Continue observing
+        # accepted and checked handles even when they fall out of inventory.
+        listed={a.get('id') for a in owned}
+        for aid,prior in outcomes_by_id.items():
+            if aid not in listed and not prior.get('deleted') and (
+                    prior.get('delete_outcome')=='accepted' or prior.get('operator_check') or aid in checked):
+                owned.append({'id':aid,'status':prior.get('status')})
+        pending=[];checks=[];processed=0;processed_ids=set()
+        result.pop('operator_check',None)
+        if preserve_check:result['operator_check']=previous_checks
         for item in owned:
             aid=item.get('id')
-            if not aid or item.get('status')=='deleted':continue
+            if not aid:continue
+            prior=dict(outcomes_by_id.get(aid,{}))
+            if item.get('status')=='deleted':
+                if prior:
+                    prior.update(deleted=True,status='deleted');prior.pop('operator_check',None)
+                    outcomes_by_id[aid]=prior
+                continue
             if aid == result.get('agent_id') and result.get('deleted'):continue
-            if aid in checked:
-                checks.append(aid);continue
+            if aid in checked and not prior.get('operator_check'):
+                prior['operator_check']=CMA._operator_check(
+                    aid,'Agent cleanup requires an operator check; observing the original handle',sandbox_id)
             if max_agent_deletions is not None and processed>=max_agent_deletions:
-                pending.append(aid);continue
+                if prior.get('operator_check'):checks.append(aid)
+                else:pending.append(aid)
+                continue
             processed+=1
             processed_ids.add(aid)
-            prior_attempts=outcomes_by_id.get(aid,{}).get('cleanup_attempts',0)
+            prior_attempts=prior.get('cleanup_attempts',0)
             agent_key=key+'-agent-'+aid
             if prior_attempts:agent_key+='-retry-'+str(prior_attempts)
-            try:outcome=CMA._retire_agent(self,aid,agent_key,item,sandbox_id)
+            try:outcome=CMA._retire_agent(self,aid,agent_key,item,sandbox_id,prior,now)
             except Exception as exc:
-                outcome={'agent_id':aid,'stopped':False,'deleted':False,'status':item.get('status'),
+                outcome={**prior,'agent_id':aid,'stopped':False,'deleted':False,'status':item.get('status'),
                          'errors':[CMA._error('retire',exc)]}
-            prior=outcomes_by_id.get(aid,{})
             failed=(not outcome.get('deleted') and
                     bool(outcome.get('errors') or outcome.get('cleanup_error')))
-            attempts=prior.get('cleanup_attempts',0)+(1 if failed else 0)
+            attempts=prior_attempts+(1 if failed else 0)
             outcome['cleanup_attempts']=attempts
             if (not outcome.get('deleted') and attempts>=3 and
-                    not outcome.get('operator_check')):
+                    outcome.get('delete_outcome')!='accepted' and not outcome.get('operator_check')):
                 outcome['operator_check']=CMA._operator_check(
                     aid,'Agent cleanup did not complete after three bounded attempts',sandbox_id)
             outcomes_by_id[aid]=outcome
-            if outcome.get('operator_check'):
-                checks.append(aid)
-            elif not outcome.get('deleted'):
-                pending.append(aid)
+            if outcome.get('operator_check'):checks.append(aid)
+            elif not outcome.get('deleted'):pending.append(aid)
         pending.extend(a.get('id') for a in owned if a.get('id') and
                        a.get('status')!='deleted' and a.get('id') not in processed_ids and
-                       a.get('id') not in checked and a.get('id') not in checks)
+                       a.get('id') not in checks)
         pending=list(dict.fromkeys(pending))
         outcomes=list(outcomes_by_id.values())
-        if checks:
+        if outcomes:result['agent_cleanup']=outcomes
+        if checks or preserve_check:
             operator={'kind':'cma-agent-cleanup','sandbox_id':sandbox_id,'agents':sorted(set(checks)),
                       'reason':'Engine-owned Agent cleanup requires an operator check; see agent outcomes'}
+            if preserve_check:operator=previous_checks
             result.update(sandbox_id=sandbox_id,sandbox_retired=False,operator_check=operator,
                           agent_cleanup=outcomes,_agent_deletions=processed)
             if pending:result['owned_agents_pending']=pending
@@ -491,6 +521,8 @@ class CMA:
         # Preserve other work in the Sandbox. The pool can classify ownership
         # across tasks; a task retirement knows only its own Agent identity.
         result.pop('owned_agents_pending',None);result.pop('agent_inventory_pending',None)
+        if retired:
+            return {**result,'sandbox_id':sandbox_id,'sandbox_retired':True,'_agent_deletions':processed}
         if sweep_owned:
             foreign=[a for a in items if not CMA._ours(a,owned_ids,task_ids) and
                      a.get('status')!='deleted']
@@ -504,7 +536,8 @@ class CMA:
                       'foreign_agents':foreign_ids,'_agent_deletions':processed}
             # A task can share a pool Sandbox with other live tasks. Only the
             # pool's inventory sweep can decide that remaining work is foreign.
-            if sweep_owned:
+            retained.setdefault('foreign_agents_since',now)
+            if sweep_owned or now-retained['foreign_agents_since']>=AGENT_CLEANUP_WAIT_SECONDS:
                 retained['operator_check']={'kind':'cma-sandbox-cleanup','sandbox_id':sandbox_id,
                     'agents':foreign_ids,
                     'reason':'Foreign Agents remain; operator must reconcile them before Sandbox DELETE'}
@@ -513,7 +546,7 @@ class CMA:
         if workspaces.get('next') or len(workspaces['items'])>1:
             return {**result,'sandbox_id':sandbox_id,'sandbox_retired':False,'reason':'Additional workspaces found; retained Sandbox',
                     '_agent_deletions':processed}
-        result.pop('reason',None);result.pop('foreign_agents',None)
+        result.pop('reason',None);result.pop('foreign_agents',None);result.pop('foreign_agents_since',None)
         if (sandbox.get('status')=='retiring' and result.get('sandbox_delete_requested') and
                 not result.get('sandbox_delete_error')):
             # A prior DELETE was admitted but its response was lost. Reconcile

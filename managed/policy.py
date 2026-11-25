@@ -1,6 +1,8 @@
 """Resolve policy from the data overlay and executable source from the engine."""
 from functools import lru_cache
 from pathlib import Path
+from . import recording
+
 import re
 import subprocess
 
@@ -15,7 +17,7 @@ class MissingPolicy(RuntimeError):
 def verify_commit(root, revision):
     if not re.fullmatch(r'[0-9a-f]{40}', revision):
         raise ValueError('Pin the workflow commit')
-    result = subprocess.run(['git', 'cat-file', '-t', revision], cwd=root, capture_output=True)
+    result = recording.run(['git', 'cat-file', '-t', revision], cwd=root, capture_output=True)
     if result.returncode or result.stdout.strip() != b'commit':
         raise ValueError(f'Workflow commit unavailable at {revision}')
 
@@ -25,9 +27,9 @@ def committed_text(root, revision, path):
     if not re.fullmatch(r'[0-9a-f]{40}', revision):
         raise ValueError('Pin the workflow commit')
     object_name = f'{revision}:{path}'
-    result = subprocess.run(['git', 'show', object_name], cwd=root, capture_output=True)
+    result = recording.run(['git', 'show', object_name], cwd=root, capture_output=True)
     if result.returncode:
-        entry = subprocess.run(['git', 'ls-tree', revision, '--', path], cwd=root,
+        entry = recording.run(['git', 'ls-tree', revision, '--', path], cwd=root,
                                capture_output=True)
         if entry.returncode == 0 and not entry.stdout:
             raise FileNotFoundError(f'File absent at {revision}: {path}')

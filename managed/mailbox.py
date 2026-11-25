@@ -4,6 +4,8 @@ This adapter is inactive until mailbox reconciliation and live authentication
 are explicitly configured. It never creates an OAuth application or refreshes
 an unsupported session. All reads use the server, including Sent and Drafts.
 """
+from . import recording
+
 import base64
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
@@ -115,7 +117,7 @@ class Graph:
         attempts = 3 if method == 'GET' else 1
         for attempt in range(attempts):
             try:
-                with build_opener(NoRedirect()).open(Request(self.BASE+path,data=raw,headers=headers,method=method),
+                with recording.open('mailbox', build_opener(NoRedirect()), Request(self.BASE+path,data=raw,headers=headers,method=method),
                                                      timeout=60) as response:
                     data = response.read()
                     if raw_response:
@@ -147,7 +149,7 @@ class Graph:
                        'Content-Range': f'bytes {offset}-{offset + len(chunk) - 1}/{size}'}
         try:
             request = Request(url, data=chunk, headers=headers, method=method)
-            with build_opener(NoRedirect()).open(request, timeout=60) as response:
+            with recording.open('mailbox', build_opener(NoRedirect()), request, timeout=60) as response:
                 status = response.status
                 return status, {} if status == 201 else json.loads(response.read())
         except HTTPError as exc:
@@ -178,7 +180,7 @@ class Graph:
         require(path=='/me/messages', 'MIME creation is limited to mailbox drafts')
         headers={'Authorization':'Bearer '+self.token,'Content-Type':'text/plain',
                  'User-Agent':'trureturing-outreach/managed','Prefer':'IdType="ImmutableId"'}
-        with build_opener(NoRedirect()).open(Request(self.BASE+path,data=content,headers=headers,method='POST'),timeout=30) as response:
+        with recording.open('mailbox', build_opener(NoRedirect()), Request(self.BASE+path,data=content,headers=headers,method='POST'),timeout=30) as response:
             return json.loads(response.read())
 
 

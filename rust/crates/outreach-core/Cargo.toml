@@ -7,6 +7,9 @@ publish.workspace = true
 
 [dependencies]
 outreach-model.workspace = true
+outreach-canon.workspace = true
+regex.workspace = true
+unicode-normalization.workspace = true
 
 [lints]
 workspace = true

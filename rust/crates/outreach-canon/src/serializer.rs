@@ -3,8 +3,8 @@ use crate::{Error, MAX_DEPTH, Result, Value, check_integer, python_float};
 /// Python json.dumps options for the representable JSON domain. indent is the
 /// string repeated per level (Some("  ") corresponds to Python indent=2).
 /// None separators selects Python's defaults, including the indent-dependent
-/// item separator. sort_keys=false follows Value's stored map order; parse
-/// currently stores keys in sorted order, not their original input order.
+/// item separator. sort_keys=false follows insertion order; duplicate keys keep their first
+/// position and their last value, matching Python dictionaries.
 #[derive(Clone, Copy, Debug)]
 pub struct SerializeOptions<'a> {
     pub separators: Option<(&'a str, &'a str)>,

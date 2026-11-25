@@ -1,4 +1,6 @@
 """GitHub-hosted commands with one private output boundary."""
+from . import recording
+
 import base64
 from contextlib import contextmanager
 import json
@@ -21,15 +23,15 @@ def data_checkout():
     auth = base64.b64encode(('x-access-token:' + token).encode()).decode()
     register_secret(auth)
     url = f'https://github.com/{DATA_REPO}.git'
-    subprocess.run(['git', 'init', '--quiet', str(DATA_ROOT)], check=True)
-    subprocess.run(['git', 'remote', 'add', 'origin', url], cwd=DATA_ROOT, check=True)
-    subprocess.run(['git', '-c', f'http.https://github.com/.extraheader=AUTHORIZATION: basic {auth}',
+    recording.run(['git', 'init', '--quiet', str(DATA_ROOT)], check=True)
+    recording.run(['git', 'remote', 'add', 'origin', url], cwd=DATA_ROOT, check=True)
+    recording.run(['git', '-c', f'http.https://github.com/.extraheader=AUTHORIZATION: basic {auth}',
                     'fetch', '--quiet', '--no-tags', 'origin', f'refs/heads/{DATA_BRANCH}'],
                    cwd=DATA_ROOT, check=True)
-    subprocess.run(['git', 'checkout', '--quiet', '--detach', 'FETCH_HEAD'],
+    recording.run(['git', 'checkout', '--quiet', '--detach', 'FETCH_HEAD'],
                    cwd=DATA_ROOT, check=True)
     # Save scoped authentication inside the private checkout for subsequent git operations.
-    subprocess.run(['git', 'config', 'http.https://github.com/.extraheader', 'AUTHORIZATION: basic ' + auth],
+    recording.run(['git', 'config', 'http.https://github.com/.extraheader', 'AUTHORIZATION: basic ' + auth],
                    cwd=DATA_ROOT, check=True)
     load_config(production=True)
     for kind in sorted(KINDS):
@@ -39,7 +41,7 @@ def data_checkout():
 def credentials():
     if not os.environ.get('OUTREACH_NYX_SESSION'):
         return
-    subprocess.run([sys.executable, '-m', 'pip', 'install', '--quiet', 'PyNaCl==1.6.2', 'msal==1.37.0'],
+    recording.run([sys.executable, '-m', 'pip', 'install', '--quiet', 'PyNaCl==1.6.2', 'msal==1.37.0'],
                    check=True)
     from .credentials import main
     return main(['hosted'] + (['--force-refresh'] if os.environ.get('FORCE_REFRESH') == 'true' else []))
@@ -59,11 +61,11 @@ def coverage():
     paths = ('tables/results.json',)
     with TemporaryDirectory() as directory:
         upstream = Path(directory) / 'upstream'
-        subprocess.run(['git', 'clone', '--quiet', '--filter=blob:none', '--depth=1', '--no-checkout',
+        recording.run(['git', 'clone', '--quiet', '--filter=blob:none', '--depth=1', '--no-checkout',
                         '--single-branch', '--branch', 'dev',
                         'https://github.com/the-omega-institute/trureturing.git', str(upstream)], check=True)
-        subprocess.run(['git', '-C', str(upstream), 'sparse-checkout', 'set', 'Blueprint'], check=True)
-        subprocess.run(['git', '-C', str(upstream), 'checkout', '--quiet', 'dev'], check=True)
+        recording.run(['git', '-C', str(upstream), 'sparse-checkout', 'set', 'Blueprint'], check=True)
+        recording.run(['git', '-C', str(upstream), 'checkout', '--quiet', 'dev'], check=True)
         for attempt in range(3):
             print(maintenance.upstream(upstream, 'HEAD'))
             print(maintenance.check())
@@ -80,11 +82,11 @@ def coverage():
 def foundation(action):
     env = {**os.environ, 'OUTREACH_PUBLIC_LOG': '0', 'GIT_ALLOW_PROTOCOL': 'file'}
     if action == 'foundation':
-        subprocess.run([sys.executable, '-m', 'managed.maintenance', 'check-engine'], env=env, check=True)
+        recording.run([sys.executable, '-m', 'managed.maintenance', 'check-engine'], env=env, check=True)
         directory = 'managed/tests'
     else:
         directory = 'scripts/short_notes'
-    return subprocess.run([sys.executable, '-m', 'unittest', 'discover', '-s', directory], env=env).returncode
+    return recording.run([sys.executable, '-m', 'unittest', 'discover', '-s', directory], env=env).returncode
 
 
 def command(action):

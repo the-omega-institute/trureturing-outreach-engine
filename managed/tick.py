@@ -1,6 +1,7 @@
 """Cooperative tick deadline and content-free progress; never cancel an operation."""
 from contextlib import contextmanager, nullcontext
 from .run_log import phase_timing
+from .recording import decision
 from contextvars import ContextVar
 import json
 import math
@@ -86,6 +87,7 @@ class Tick:
             limit=max(limit,min(stage_limit,self.deadline+RESERVE_GRACE))
         return limit
 
+    @decision
     def allow(self,lane,key):
         if self.clock()>=self.limit():
             if not self.exhausted:

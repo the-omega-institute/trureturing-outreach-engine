@@ -1,0 +1,1 @@
+SELECT id,json_extract(data,'$.cleanup.operator_check') AS operator_check FROM tasks WHERE json_type(data,'$.cleanup.operator_check')='object'

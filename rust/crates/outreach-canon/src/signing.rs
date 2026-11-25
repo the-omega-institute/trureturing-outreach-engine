@@ -67,7 +67,7 @@ fn verify(signed: &Value, key: &[u8], mathesis: bool) -> Result<bool> {
         return Ok(false);
     }
     let mut unsigned = object(signed)?.clone();
-    let Some(Value::String(signature)) = unsigned.remove("signature") else {
+    let Some(Value::String(signature)) = unsigned.shift_remove("signature") else {
         return Ok(false);
     };
     let unsigned = Value::Object(unsigned);
@@ -161,6 +161,18 @@ pub fn verify_typed_envelope(signed: &Value, key: &[u8], kind: EnvelopeKind) -> 
         ],
     };
     let mut expected = required.to_vec();
+    if matches!(kind, EnvelopeKind::Decision) && fields.contains_key("action") {
+        expected.retain(|k| *k != "answers");
+        expected.extend(["action", "reason"]);
+        if signed["action"] != "close"
+            || !signed["reason"].as_str().is_some_and(|s| {
+                s.chars()
+                    .any(|c| !c.is_whitespace() && !('\u{1c}'..='\u{1f}').contains(&c))
+            })
+        {
+            return Ok(false);
+        }
+    }
     match kind {
         EnvelopeKind::Review => {
             for name in ["rebind_workflow_hash", "edited_body"] {

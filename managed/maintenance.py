@@ -1,4 +1,6 @@
 """Validate the compact control repository or refresh upstream result coverage."""
+from . import recording
+
 import argparse
 from collections import Counter
 import json
@@ -77,8 +79,8 @@ def check_config(config):
 
 
 def upstream(repo,ref):
-    commit=subprocess.check_output(['git','rev-parse',ref+'^{commit}'],cwd=repo,text=True).strip()
-    raw=subprocess.check_output(['git','grep','-h','scribe-open-problem-resolution-v1',commit,'--','Blueprint'],cwd=repo,text=True)
+    commit=recording.check_output(['git','rev-parse',ref+'^{commit}'],cwd=repo,text=True).strip()
+    raw=recording.check_output(['git','grep','-h','scribe-open-problem-resolution-v1',commit,'--','Blueprint'],cwd=repo,text=True)
     markers={}
     for line in raw.splitlines():
         match=re.search(r'<!--\s*scribe-open-problem-resolution-v1\s+(\{.*\})\s*-->',line)

@@ -23,6 +23,7 @@ import zipfile
 
 if str(Path(__file__).resolve().parents[2]) not in sys.path:
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from managed import recording
 from managed.location import DATA_BRANCH, DATA_REPO as OUTREACH, settings
 PAGES = 'the-omega-institute/trureturing-pages'
 SLUG = re.compile(r'[a-z0-9]+(?:-[a-z0-9]+)*')
@@ -305,7 +306,7 @@ class GitHub:
         env = dict(os.environ)
         if self.token:
             env['GH_TOKEN'] = self.token
-        result = subprocess.run(['gh', *args], capture_output=True, env=env)
+        result = recording.run(['gh', *args], capture_output=True, env=env)
         if result.returncode:
             error = result.stderr.decode(errors='replace')
             if allow_missing and '(HTTP 404)' in error:
@@ -430,7 +431,7 @@ class Zenodo:
             headers['Content-Type'] = 'application/octet-stream'
         request = Request(target, method=method, data=data, headers=headers)
         try:
-            with build_opener(NoRedirect).open(request, timeout=90) as response:
+            with recording.open('zenodo', build_opener(NoRedirect), request, timeout=90) as response:
                 raw = response.read()
         except HTTPError as error:
             raise ZenodoHTTPError(method, error.code) from None

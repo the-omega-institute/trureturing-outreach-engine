@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from fixture_config import use_cli_config
 from managed import control
-from managed.queue import canonical
+from managed.queue import canonical, digest
 from managed.sandbox_pool import SandboxPool
 from test_sandbox_pool import PoolFixture
 from test_tasks import request
@@ -125,6 +125,24 @@ class PoolAdoptTests(PoolFixture, unittest.TestCase):
         prefix, value = staged[0]
         self.assertEqual(prefix, 'pool-adopt')
         self.assertEqual(value, self.envelope(reason='quota'))
+
+    def test_signed_cleanup_acknowledgement_clears_pool_check(self):
+        check={'kind':'cma-sandbox-cleanup','sandbox_id':'sbx_orphan',
+               'agents':['agt_foreign'],'reason':'Foreign Agent remains'}
+        entry=self.retained(cleanup={'sandbox_id':'sbx_orphan','sandbox_retired':False,
+                                     'operator_check':check},operator_check=check)
+        self.set_cleanup([entry])
+        self.ledger.tasks.db.execute('INSERT OR REPLACE INTO pipeline_state VALUES(?,?)',
+                                     ('sandbox_pool_operator_checks',canonical([{'sandbox_id':'sbx_orphan','check':check}])))
+        value={'schema_version':1,'sandbox_id':'sbx_orphan','reason':'Operator reconciled Agent',
+               'check_digest':digest(check),'row_revision':digest(entry)}
+        value['signature']=hmac.new(SECRET.encode(),canonical(value).encode(),hashlib.sha256).hexdigest()
+        control.clear_sandbox_operator_check(self.ledger,value,SECRET)
+        control.clear_sandbox_operator_check(self.ledger,value,SECRET)
+        self.assertEqual(self.state('sandbox_pool_operator_checks'),[])
+        [remaining]=self.state('sandbox_pool_cleanup')
+        self.assertNotIn('operator_check',remaining)
+        self.assertNotIn('operator_check',remaining['cleanup'])
 
 
 def setUpModule():

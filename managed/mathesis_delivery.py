@@ -10,7 +10,7 @@ import tempfile
 from urllib.error import HTTPError
 
 from .correspondence import delivery_problem_ids, linked_contacts
-from . import note_revisions
+from . import note_revisions, recording
 from .mathesis import Mathesis, plan
 from .tick import units, unit
 from .queue import canonical, digest, require
@@ -174,7 +174,7 @@ def error_summary(error):
                         summary[key] = ' '.join(problem[key].split())[:160]
         except (ValueError, OSError, AttributeError):
             pass
-    return summary
+    return recording.observed_error(error, summary)
 
 
 def gate(row, tasks, root):
@@ -459,6 +459,7 @@ def _needs_delivery(row, active, revisions=None):
             and value.get('public_link', {}).get('phase') != 'queued')
 
 
+@recording.mathesis_stage
 def advance(ledger, config, root, folder, client=None, secret=None, note_gh=None, *, attempted=None, again=False):
     """Persist intent, deliver, GET the receipt, then finish. Never await review.
 
@@ -505,7 +506,7 @@ def advance(ledger, config, root, folder, client=None, secret=None, note_gh=None
         if client is None:
             token = os.environ.get('MATHESIS_ACCESS_TOKEN') or os.environ.get('CMA_ACCESS_TOKEN')
             require(token, 'Mathesis submitting identity is unavailable')
-            client = Mathesis(token)
+            client = recording.adapter('mathesis', Mathesis(token))
         client.verify_owner()
         identity_verified = True
         migrate_legacy_deliveries(ledger, config, root, folder, client, secret,
@@ -546,7 +547,7 @@ def advance(ledger, config, root, folder, client=None, secret=None, note_gh=None
             if client is None:
                 token = os.environ.get('MATHESIS_ACCESS_TOKEN') or os.environ.get('CMA_ACCESS_TOKEN')
                 require(token, 'Mathesis submitting identity is unavailable')
-                client = Mathesis(token)
+                client = recording.adapter('mathesis', Mathesis(token))
             if not identity_verified:
                 client.verify_owner()
                 identity_verified = True

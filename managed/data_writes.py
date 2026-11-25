@@ -1,4 +1,6 @@
 """Branch-aware persistence for maintained data tables."""
+from . import recording
+
 import base64
 import json
 from pathlib import Path
@@ -13,11 +15,11 @@ AUTHOR = ('-c', 'user.name=Outreach automation', '-c', 'user.email=automation@ex
 
 
 def git(root, *args, check=True):
-    return subprocess.run(['git', *AUTHOR, *args], cwd=root, check=check)
+    return recording.run(['git', *AUTHOR, *args], cwd=root, check=check)
 
 
 def commit_paths(paths, message, root=DATA_ROOT):
-    changes = subprocess.check_output(['git', 'status', '--porcelain', '--', *paths], cwd=root)
+    changes = recording.check_output(['git', 'status', '--porcelain', '--', *paths], cwd=root)
     if not changes:
         return False
     git(root, 'add', '--', *paths)

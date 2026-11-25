@@ -13,10 +13,12 @@ from datetime import date
 from html import unescape
 import re
 from urllib.parse import urlsplit
+from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 import xml.etree.ElementTree as ET
 
 from .queue import require
+from .location import settings
 
 ARXIV_ID = re.compile(r"(?<![\w.])(?:arXiv\s*:\s*)?(\d{4}\.\d{4,5})(?:v([1-9]\d*))?", re.I)
 ARXIV_URL = re.compile(r"https?://(?:www\.)?arxiv\.org/(?:abs|pdf|html)/(\d{4}\.\d{4,5})(?:v([1-9]\d*))?(?:\.pdf)?", re.I)
@@ -57,20 +59,22 @@ def is_system_message(message):
             ("arxiv" in subject.casefold() and bool(ARXIV_ID.search(subject + " " + body))))
 
 
-def parse_message(message):
-    """Extract a public arXiv identity and optional metadata from one message."""
+def parse_receipts(message):
+    """Extract every public arXiv identity from the sender's own message."""
     subject = _text(message.get("subject"))
-    body_value = message.get("body", {}).get("content") if isinstance(message.get("body"), dict) else message.get("body")
+    body_field = message.get("uniqueBody")
+    if body_field is None:
+        body_field = message.get("body")
+    body_value = body_field.get("content") if isinstance(body_field, dict) else body_field
     body = _text(body_value)
     combined = subject + "\n" + body
-    if not is_system_message({**message, "body": {"content": body}}):
-        return None
-    match = ARXIV_URL.search(combined)
-    if match is None:
-        match = ARXIV_ID.search(combined)
+    system = is_system_message({**message, "body": {"content": body}})
+    matches = list(ARXIV_URL.finditer(combined))
+    if system:
+        matches.extend(ARXIV_ID.finditer(combined))
+    if not system and not matches:
+        return []
     result = {"submit_id": (SUBMIT_ID.search(combined).group(1) if SUBMIT_ID.search(combined) else None),
-              "arxiv_id": match.group(1) if match else None,
-              "arxiv_version": _version(match.group(2)) if match and match.group(2) else None,
               "title": None, "authors": [], "received_at": message.get("receivedDateTime")}
     title = re.search(r"(?im)^\s*title\s*:\s*(.+?)\s*$", body)
     authors = re.search(r"(?im)^\s*authors?\s*:\s*(.+?)\s*$", body)
@@ -78,9 +82,21 @@ def parse_message(message):
         result["title"] = _text(title.group(1))
     if authors:
         result["authors"] = [_text(value) for value in re.split(r",\s*(?=[A-Z][^,;]+(?:,|$))|;", authors.group(1)) if _text(value)]
-    if result["arxiv_id"]:
-        result["arxiv_url"] = _public(result["arxiv_id"], result["arxiv_version"])
-    return result if result["arxiv_id"] or result["submit_id"] else None
+    receipts = {}
+    for match in matches:
+        identity, version = match.group(1), _version(match.group(2))
+        previous = receipts.get(identity)
+        if previous is None or int((version or 'v0')[1:]) > int((previous['arxiv_version'] or 'v0')[1:]):
+            receipts[identity] = {**result, 'arxiv_id': identity, 'arxiv_version': version,
+                                  'arxiv_url': _public(identity, version)}
+    if not receipts and result['submit_id']:
+        return [{**result, 'arxiv_id': None, 'arxiv_version': None}]
+    return list(receipts.values())
+
+
+def parse_message(message):
+    """Return the first receipt for existing single-message callers."""
+    return next(iter(parse_receipts(message)), None)
 
 
 def parse_api_response(raw):
@@ -98,6 +114,7 @@ def parse_api_response(raw):
     result = {"arxiv_id": match.group(1), "arxiv_version": match.group(2) or "v1",
               "arxiv_url": _public(match.group(1), match.group(2)),
               "title": _text(entry.findtext("a:title", "", ns)), "authors": authors,
+              "abstract": _text(entry.findtext("a:summary", "", ns)),
               "date": date.fromisoformat(published).isoformat()}
     return result
 
@@ -142,26 +159,51 @@ def match(receipt, papers):
 
 def reconcile(papers, messages, verify=None):
     """Build deterministic updates from arXiv messages without mutating input."""
-    updates, ambiguous, ignored = [], [], []
+    updates, ambiguous, ignored, publications, deferred = [], [], [], [], []
+    receipts = {}
     for message in messages:
-        receipt = parse_message(message)
-        if receipt is None or not receipt.get("arxiv_id"):
-            if receipt and receipt.get("submit_id"):
+        for receipt in parse_receipts(message):
+            if not receipt.get('arxiv_id'):
                 ignored.append({"submit_id": receipt["submit_id"], "reason": "submission request is not public"})
-            continue
+                continue
+            previous = receipts.get(receipt['arxiv_id'])
+            if previous is None or int((receipt['arxiv_version'] or 'v0')[1:]) > int((previous[0]['arxiv_version'] or 'v0')[1:]):
+                receipts[receipt['arxiv_id']] = receipt, message.get('internetMessageId')
+    for receipt, message_ref in receipts.values():
         known = next((row for row in papers if row.get("arxiv_id") == receipt["arxiv_id"]), None)
         if known and known.get("arxiv_status") == "public":
             if not receipt.get("arxiv_version") or int(known.get("arxiv_version", "v0")[1:]) >= int(receipt["arxiv_version"][1:]):
                 continue
-        record = (verify or verify_public)(receipt)
+        try:
+            record = (verify or verify_public)(receipt)
+        except HTTPError as error:
+            deferred.append({'arxiv_id': receipt['arxiv_id'], 'reason': 'arxiv-unavailable',
+                             'error': 'HTTPError ' + str(error.code)})
+            error.close()
+            continue
+        except (URLError, TimeoutError, OSError) as error:
+            deferred.append({'arxiv_id': receipt['arxiv_id'], 'reason': 'arxiv-unavailable',
+                             'error': type(error).__name__})
+            continue
+        except (ET.ParseError, ValueError) as error:
+            deferred.append({'arxiv_id': receipt['arxiv_id'], 'reason': 'public-record-unverified',
+                             'error': type(error).__name__})
+            continue
+        # A public coauthored paper is independently identifiable even when no
+        # private submission-board row exists. Never infer a journal, workspace
+        # or authorship agreement merely to make the paper discoverable.
+        team = set(settings('identity')['team_authors'])
+        if team and team <= set(record.get('authors', [])):
+            publications.append(record)
         candidate = match({**receipt, **record}, papers)
         if isinstance(candidate, list):
             ambiguous.append({"receipt": receipt, "candidates": candidate})
         elif candidate is not None:
-            updates.append({"paper_id": candidate["id"], "record": record, "message_ref": message.get("internetMessageId")})
+            updates.append({"paper_id": candidate["id"], "record": record, "message_ref": message_ref})
         else:
             ignored.append({"arxiv_id": receipt["arxiv_id"], "reason": "no unique board match"})
-    return {"updates": updates, "ambiguous": ambiguous, "ignored": ignored}
+    return {"updates": updates, "ambiguous": ambiguous, "ignored": ignored,
+            "publications": publications, "deferred": deferred}
 
 
 def apply_updates(data, report):

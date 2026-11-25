@@ -1,0 +1,983 @@
+{
+  "schema_version": 1,
+  "id": "mathesis-lost_conflict_revision_response_replays_without_another_version-1",
+  "source_test": "test_mathesis_delivery.DeliveryTests.test_lost_conflict_revision_response_replays_without_another_version",
+  "stage": "mathesis",
+  "now": 2000000000.0,
+  "workflow": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+  "installation": {
+    "repositories": {
+      "data": "example/outreach"
+    },
+    "schema_version": 1,
+    "paused": true,
+    "max_active": 24,
+    "prompt_max_characters": 120000,
+    "kind_quota": "equal",
+    "followup_lane": true,
+    "sandbox_pool": {
+      "max_sandboxes": 4,
+      "agents_per_sandbox": 6,
+      "rotate_after_agents": 24,
+      "quota_blocked_max_agents_placed": 192,
+      "prioritize_correspondence_notes": true,
+      "groups": [
+        {
+          "name": "notes",
+          "kinds": [
+            "shortnote",
+            "mathesis",
+            "firstcontact"
+          ],
+          "max_sandboxes": 1
+        },
+        {
+          "name": "mail",
+          "kinds": [
+            "reply",
+            "research",
+            "submission",
+            "daily"
+          ],
+          "max_sandboxes": 1
+        }
+      ]
+    },
+    "pipeline": {
+      "enabled": false,
+      "max_new_tasks_per_tick": 4,
+      "backfill_result_ids": [],
+      "daily": false
+    },
+    "kinds": {
+      "firstcontact": false,
+      "reply": false,
+      "research": false,
+      "shortnote": false,
+      "daily": false,
+      "mathesis": false,
+      "submission": false
+    },
+    "automation": {
+      "enabled": false,
+      "automatic_mail": false,
+      "max_new_tasks_per_tick": 6,
+      "max_revisions": 3,
+      "shortnote_extra_uplift_rounds": 2,
+      "routine_academic_mail": "automatic after exact independent review and fresh mailbox checks",
+      "user_decision_mail": "ask, then preserve as user-owned draft for manual sending"
+    },
+    "agent_template": {
+      "profile": {
+        "model": "gpt-6.1-sol",
+        "reasoning_effort": "high",
+        "permissions": {
+          "services": [
+            "api-github-pat",
+            "oracle"
+          ]
+        }
+      }
+    },
+    "mailbox_adapter": "unconfigured",
+    "home_domains": [
+      "campus.example.invalid",
+      "alumni.example.invalid"
+    ],
+    "mailbox": {
+      "account": "owner@example.invalid",
+      "live_since": "2000-01-01T00:00:00Z",
+      "cross_conversation_guard": true,
+      "max_total_attachment_bytes": 26214400,
+      "service_attention_domains": [
+        "overleaf.com"
+      ],
+      "editorial_domains": [
+        "editorialmanager.com",
+        "manuscriptcentral.com",
+        "aps.org",
+        "msp.org",
+        "arxiv.org",
+        "springernature.com",
+        "iop.org",
+        "ams.org",
+        "elsevier.com",
+        "wiley.com"
+      ],
+      "team_addresses": [
+        "coauthor@example.invalid"
+      ],
+      "team_addresses_note": "Configured coauthors",
+      "acceptance_recipients": [
+        "contributor@example.invalid"
+      ]
+    },
+    "claude_loop": "local, started by the user later",
+    "publication_selection": "explicit per note; review alone never publishes",
+    "mathesis": {
+      "mode": "disabled",
+      "submission_credentials": "configured session",
+      "author_confirmation": "required by the existing Mathesis contract",
+      "base_url": "https://mathesis.example.invalid",
+      "completion": "verified durable receipt; downstream review and presentation are Mathesis responsibilities",
+      "legacy_migration_per_tick": 3,
+      "acceptance_submission": "00000000-0000-0000-0000-000000000000"
+    },
+    "github": {
+      "service": "api-github-pat",
+      "user_service_id": "00000000-0000-0000-0000-000000000000"
+    },
+    "identity": {
+      "team_authors": [
+        "Blaire Mercer",
+        "Avery Reed"
+      ],
+      "owner_labels": [
+        "owner",
+        "Avery Reed"
+      ],
+      "first_names": [
+        "Avery",
+        "Blaire"
+      ],
+      "firstcontact_signature": "Best regards,\nAvery and Blaire\nExample University; Example Research Group",
+      "firstcontact_opening_terms": [
+        "avery reed",
+        "blaire mercer",
+        "example university",
+        "example research group"
+      ],
+      "reply_affiliation_markers": [
+        "example university",
+        "example research group",
+        "omega institute"
+      ],
+      "affiliation_patterns": [
+        "example university",
+        "example research group",
+        "omega institute"
+      ],
+      "affiliation_prefixes": [
+        "EU"
+      ],
+      "author_facts": {
+        "Avery Reed": {
+          "affiliation": "Example University",
+          "email": "owner@example.invalid",
+          "orcid": "0000-0000-0000-0000",
+          "country": "Example country",
+          "google_scholar": "https://scholar.example.invalid/profile"
+        },
+        "Blaire Mercer": {
+          "affiliation": "Example Research Group",
+          "email": "coauthor@example.invalid",
+          "orcid": "0000-0000-0000-0000",
+          "country": "Example country"
+        },
+        "ai_statement": "Configured in the private data repository.",
+        "funding": "Configured in the private data repository.",
+        "competing_interests": "Configured in the private data repository.",
+        "originality": "Configured in the private data repository.",
+        "unknown_ask_once": "Configured in the private data repository.",
+        "defaults": "Configured in the private data repository.",
+        "who_are_you_answer": "Configured in the private data repository.",
+        "affiliation_note": "Configured in the private data repository.",
+        "coauthor_background_answer": "Configured in the private data repository."
+      },
+      "direct_display_decision_ref": "example-direct-display",
+      "shortnote_creators": [
+        {
+          "name": "Blaire Mercer",
+          "affiliation": "Example Research Group"
+        },
+        {
+          "name": "Avery Reed",
+          "affiliation": "Example University"
+        }
+      ],
+      "submission_scope": "independent-team"
+    },
+    "credentials": {
+      "nyx_base_url": "https://auth.example.invalid",
+      "nyx_legacy_issuer": "https://legacy-auth.example.invalid",
+      "nyx_owner": "example-owner",
+      "graph_tenant": "example-tenant",
+      "graph_client": "example-client"
+    },
+    "cma": {
+      "token_base_url": "https://worker.example.invalid",
+      "proxy_base_url": "https://auth.example.invalid/api/v1/proxy/s/cma"
+    }
+  },
+  "config": {
+    "paused": false,
+    "kinds": {
+      "mathesis": true
+    },
+    "max_active": 4,
+    "agent_template": {},
+    "mathesis": {
+      "mode": "deliver"
+    }
+  },
+  "initial_rows": {
+    "control_events": {
+      "columns": [
+        "id",
+        "payload"
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "rows": [
+        {
+          "id": "70d93adf5b226f4e0590ca711f63e0dafa376e1336e5719117aa0f2f92594956",
+          "payload": {
+            "binding": {
+              "result_hash": "eb55f6d290ecc66d1bc3e4c1ada0fa99eb5877489a4f2fa4dc5557ea965c5e30",
+              "task_id": "mathesis-1",
+              "task_revision": 2,
+              "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+            },
+            "evidence_ref": "test:synthetic-review",
+            "reason": "Fixture review",
+            "reviewer": "local-claude-loop",
+            "signature": "bb3ac5c82ba679861ffbd50ddf85e3400e477678284425a2f3237660de219bd4",
+            "verdict": "PASS"
+          }
+        }
+      ]
+    },
+    "input_asset_receipts": {
+      "columns": [
+        "identity",
+        "generation"
+      ],
+      "primary_key": [
+        "identity"
+      ],
+      "rows": []
+    },
+    "pipeline_sources": {
+      "columns": [
+        "result_id",
+        "identity",
+        "payload",
+        "baseline",
+        "task_id"
+      ],
+      "primary_key": [
+        "result_id"
+      ],
+      "rows": []
+    },
+    "pipeline_state": {
+      "columns": [
+        "key",
+        "payload"
+      ],
+      "primary_key": [
+        "key"
+      ],
+      "rows": [
+        {
+          "key": "sandbox_pool",
+          "payload": []
+        },
+        {
+          "key": "sandbox_pool_cleanup",
+          "payload": []
+        },
+        {
+          "key": "sandbox_pool_errors",
+          "payload": []
+        }
+      ]
+    },
+    "sqlite_sequence": {
+      "columns": [
+        "name",
+        "seq"
+      ],
+      "primary_key": [
+        "name"
+      ],
+      "rows": [
+        {
+          "name": "task_events",
+          "seq": 5
+        }
+      ]
+    },
+    "task_events": {
+      "columns": [
+        "seq",
+        "id",
+        "state",
+        "revision",
+        "at",
+        "data"
+      ],
+      "primary_key": [
+        "seq"
+      ],
+      "rows": [
+        {
+          "seq": 1,
+          "id": "mathesis-1",
+          "state": "queued",
+          "revision": 1,
+          "at": 1999999900.0,
+          "data": {}
+        },
+        {
+          "seq": 2,
+          "id": "mathesis-1",
+          "state": "awaiting-review",
+          "revision": 2,
+          "at": 1999999900.0,
+          "data": {}
+        },
+        {
+          "seq": 3,
+          "id": "mathesis-1",
+          "state": "approved",
+          "revision": 3,
+          "at": 1999999900.0,
+          "data": {
+            "review": "70d93adf5b226f4e0590ca711f63e0dafa376e1336e5719117aa0f2f92594956"
+          }
+        },
+        {
+          "seq": 4,
+          "id": "mathesis-1",
+          "state": "approved",
+          "revision": 4,
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          }
+        },
+        {
+          "seq": 5,
+          "id": "mathesis-1",
+          "state": "handoff-ready",
+          "revision": 5,
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          }
+        }
+      ]
+    },
+    "task_migrations": {
+      "columns": [
+        "name",
+        "phase"
+      ],
+      "primary_key": [
+        "name"
+      ],
+      "rows": [
+        {
+          "name": "compact-task-events-v1",
+          "phase": "done"
+        }
+      ]
+    },
+    "tasks": {
+      "columns": [
+        "id",
+        "request",
+        "request_hash",
+        "owner",
+        "kind",
+        "state",
+        "revision",
+        "data",
+        "updated"
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "rows": [
+        {
+          "id": "mathesis-1",
+          "request": {
+            "id": "mathesis-1",
+            "inputs": {},
+            "kind": "mathesis",
+            "owner": "scholar-a",
+            "schema_version": 1,
+            "source_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          },
+          "request_hash": "3ac17e5772b4cb79cd45b520af5a4040969e08d75f7345978b829b8bb8c7e6d4",
+          "owner": "scholar-a",
+          "kind": "mathesis",
+          "state": "handoff-ready",
+          "revision": 5,
+          "data": {
+            "mathesis_delivery": {
+              "envelope": {
+                "decision_ref": "actual-author-decision",
+                "metadata": {
+                  "origin": {
+                    "evidence": [],
+                    "license": "CC0-1.0",
+                    "problem_ids": [
+                      "outreach-infrastructure-test"
+                    ],
+                    "source_url": "https://example.invalid/source/runtime.py"
+                  },
+                  "paper": {
+                    "abstract_text": "A synthetic private test of the classical sum of consecutive integers; no novelty is claimed.",
+                    "ai_disclosure": {
+                      "level": "primarily",
+                      "statement": "This synthetic infrastructure fixture was generated by Codex with gpt-6.1-sol. It states and proves a classical identity and makes no novel research claim."
+                    },
+                    "authors": [
+                      {
+                        "name": "Outreach workflow test fixture"
+                      }
+                    ],
+                    "kind": "note",
+                    "make_public_after_acceptance": false,
+                    "open_to_contributors": false,
+                    "processing_consent": "ai-review-2026-10-11",
+                    "purpose": "review_only",
+                    "review_scope": "Private infrastructure acceptance only: check source extraction, exact source identity and the elementary induction. No publication or human correspondence.",
+                    "title": "Infrastructure test: an elementary summation identity"
+                  },
+                  "previous_version": null,
+                  "producer": "trureturing-outreach",
+                  "schema": "mathesis.manuscript-delivery.v1",
+                  "version": "1",
+                  "work_id": "original-result"
+                },
+                "result_hash": "eb55f6d290ecc66d1bc3e4c1ada0fa99eb5877489a4f2fa4dc5557ea965c5e30",
+                "reviewer": "local-claude-loop",
+                "schema_version": 1,
+                "signature": "ba8cb10260ba4b44efac6016270009d3437e5177238c54bab3524d3bead8ed6c",
+                "source": {
+                  "bytes": 1076,
+                  "name": "fixture.tex",
+                  "release_tag": "outreach-task-mathesis-1",
+                  "role": "note-tex",
+                  "sha256": "1a07d345c39df2081ca4796666afb1f2a5628388c3e3e675bffce6d4813c17c2"
+                },
+                "task_id": "mathesis-1",
+                "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              },
+              "phase": "ready"
+            },
+            "result": {
+              "artifacts": [
+                {
+                  "bytes": 1076,
+                  "name": "fixture.tex",
+                  "release_tag": "outreach-task-mathesis-1",
+                  "role": "note-tex",
+                  "sha256": "1a07d345c39df2081ca4796666afb1f2a5628388c3e3e675bffce6d4813c17c2"
+                }
+              ],
+              "outcome": "completed",
+              "packet": null,
+              "report": "Synthetic result",
+              "schema_version": 1,
+              "task_id": "mathesis-1"
+            },
+            "review": {
+              "binding": {
+                "result_hash": "eb55f6d290ecc66d1bc3e4c1ada0fa99eb5877489a4f2fa4dc5557ea965c5e30",
+                "task_id": "mathesis-1",
+                "task_revision": 2,
+                "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              },
+              "evidence_ref": "test:synthetic-review",
+              "reason": "Fixture review",
+              "reviewer": "local-claude-loop",
+              "signature": "bb3ac5c82ba679861ffbd50ddf85e3400e477678284425a2f3237660de219bd4",
+              "verdict": "PASS"
+            }
+          },
+          "updated": 1999999900.0
+        }
+      ]
+    }
+  },
+  "initial_files": {},
+  "adapter_attributes": {
+    "releases": {
+      "repo": "fixture/repo",
+      "tag": "outreach-control"
+    }
+  },
+  "script": [
+    {
+      "adapter": "mathesis",
+      "method": "verify_owner",
+      "args": [],
+      "kwargs": {},
+      "result": "verified-owner"
+    },
+    {
+      "adapter": "releases",
+      "method": "run",
+      "args": [
+        "release",
+        "download",
+        "outreach-task-mathesis-1",
+        "--repo",
+        "fixture/repo",
+        "--pattern",
+        "fixture.tex",
+        "--dir",
+        {
+          "$directory": true
+        }
+      ],
+      "kwargs": {},
+      "result": null,
+      "download": {
+        "name": "fixture.tex",
+        "base64": "XGRvY3VtZW50Y2xhc3NbMTFwdF17YXJ0aWNsZX0KXHVzZXBhY2thZ2V7YW1zbWF0aCxhbXN0aG0sYW1zc3ltYn0KXHVzZXBhY2thZ2VbbWFyZ2luPTFpbl17Z2VvbWV0cnl9ClxuZXd0aGVvcmVte3RoZW9yZW19e1RoZW9yZW19Clx0aXRsZXtJbmZyYXN0cnVjdHVyZSB0ZXN0OiBhbiBlbGVtZW50YXJ5IHN1bW1hdGlvbiBpZGVudGl0eX0KXGF1dGhvcntPdXRyZWFjaCB3b3JrZmxvdyB0ZXN0IGZpeHR1cmV9ClxkYXRlezMxIE9jdG9iZXIgMjAyNn0KXGJlZ2lue2RvY3VtZW50fQpcbWFrZXRpdGxlClxiZWdpbnthYnN0cmFjdH0KVGhpcyBzeW50aGV0aWMgbWFudXNjcmlwdCB0ZXN0cyBzb3VyY2UgZGVsaXZlcnksIFBERiBjb21waWxhdGlvbiBhbmQgcHJpdmF0ZQpyZXZpZXcuIFRoZSBpZGVudGl0eSBiZWxvdyBpcyBjbGFzc2ljYWw7IG5vIG5vdmVsdHkgb3IgcmVzZWFyY2ggY29udHJpYnV0aW9uIGlzCmNsYWltZWQuIFRoaXMgZG9jdW1lbnQgaXMgbm90IGludGVuZGVkIGZvciBwdWJsaWMgcHVibGljYXRpb24uClxlbmR7YWJzdHJhY3R9ClxiZWdpbnt0aGVvcmVtfVxsYWJlbHt0aG06dGVzdH0KRm9yIGV2ZXJ5IGludGVnZXIgJG5cZ2VxIDEkLApcWwogIFxzdW1fe2s9MX1ee259IGsgPSBcZnJhY3tuKG4rMSl9ezJ9LgpcXQpcZW5ke3RoZW9yZW19ClxiZWdpbntwcm9vZn0KRm9yICRuPTEkLCBib3RoIHNpZGVzIGVxdWFsICQxJC4gSWYgdGhlIGlkZW50aXR5IGhvbGRzIGZvciBhbiBpbnRlZ2VyICRuXGdlcTEkLAp0aGVuClxbClxzdW1fe2s9MX1ee24rMX0gawo9XGZyYWN7bihuKzEpfTIrKG4rMSkKPVxmcmFjeyhuKzEpKG4rMil9Mi4KXF0KSW5kdWN0aW9uIHByb3ZlcyB0aGUgc3RhdGVkIGlkZW50aXR5LgpcZW5ke3Byb29mfQpccGFyYWdyYXBoe1Rlc3QgcHJvdmVuYW5jZS59ClRoaXMgc291cmNlIHdhcyBnZW5lcmF0ZWQgYnkgQ29kZXggZm9yIGFuIGV4cGxpY2l0bHkgYXV0aG9yaXplZCBpbmZyYXN0cnVjdHVyZQp0ZXN0LiBJdCBjb250YWlucyBubyBwcml2YXRlIGNvcnJlc3BvbmRlbmNlIGFuZCBpcyByZXN0cmljdGVkIHRvIHByaXZhdGUgcmV2aWV3LgpcZW5ke2RvY3VtZW50fQo="
+      }
+    },
+    {
+      "adapter": "ledger",
+      "method": "save",
+      "args": [],
+      "kwargs": {
+        "force": true
+      },
+      "result": true
+    },
+    {
+      "adapter": "mathesis",
+      "method": "deliver",
+      "args": [
+        {
+          "origin": {
+            "evidence": [],
+            "license": "CC0-1.0",
+            "problem_ids": [
+              "outreach-infrastructure-test"
+            ],
+            "source_url": "https://example.invalid/source/runtime.py"
+          },
+          "paper": {
+            "abstract_text": "A synthetic private test of the classical sum of consecutive integers; no novelty is claimed.",
+            "ai_disclosure": {
+              "level": "primarily",
+              "statement": "This synthetic infrastructure fixture was generated by Codex with gpt-6.1-sol. It states and proves a classical identity and makes no novel research claim."
+            },
+            "authors": [
+              {
+                "name": "Outreach workflow test fixture"
+              }
+            ],
+            "kind": "note",
+            "make_public_after_acceptance": false,
+            "open_to_contributors": false,
+            "processing_consent": "ai-review-2026-10-11",
+            "purpose": "review_only",
+            "review_scope": "Private infrastructure acceptance only: check source extraction, exact source identity and the elementary induction. No publication or human correspondence.",
+            "title": "Infrastructure test: an elementary summation identity"
+          },
+          "previous_version": null,
+          "producer": "trureturing-outreach",
+          "schema": "mathesis.manuscript-delivery.v1",
+          "version": "1",
+          "work_id": "original-result"
+        },
+        {
+          "$file": "fixture.tex",
+          "base64": "XGRvY3VtZW50Y2xhc3NbMTFwdF17YXJ0aWNsZX0KXHVzZXBhY2thZ2V7YW1zbWF0aCxhbXN0aG0sYW1zc3ltYn0KXHVzZXBhY2thZ2VbbWFyZ2luPTFpbl17Z2VvbWV0cnl9ClxuZXd0aGVvcmVte3RoZW9yZW19e1RoZW9yZW19Clx0aXRsZXtJbmZyYXN0cnVjdHVyZSB0ZXN0OiBhbiBlbGVtZW50YXJ5IHN1bW1hdGlvbiBpZGVudGl0eX0KXGF1dGhvcntPdXRyZWFjaCB3b3JrZmxvdyB0ZXN0IGZpeHR1cmV9ClxkYXRlezMxIE9jdG9iZXIgMjAyNn0KXGJlZ2lue2RvY3VtZW50fQpcbWFrZXRpdGxlClxiZWdpbnthYnN0cmFjdH0KVGhpcyBzeW50aGV0aWMgbWFudXNjcmlwdCB0ZXN0cyBzb3VyY2UgZGVsaXZlcnksIFBERiBjb21waWxhdGlvbiBhbmQgcHJpdmF0ZQpyZXZpZXcuIFRoZSBpZGVudGl0eSBiZWxvdyBpcyBjbGFzc2ljYWw7IG5vIG5vdmVsdHkgb3IgcmVzZWFyY2ggY29udHJpYnV0aW9uIGlzCmNsYWltZWQuIFRoaXMgZG9jdW1lbnQgaXMgbm90IGludGVuZGVkIGZvciBwdWJsaWMgcHVibGljYXRpb24uClxlbmR7YWJzdHJhY3R9ClxiZWdpbnt0aGVvcmVtfVxsYWJlbHt0aG06dGVzdH0KRm9yIGV2ZXJ5IGludGVnZXIgJG5cZ2VxIDEkLApcWwogIFxzdW1fe2s9MX1ee259IGsgPSBcZnJhY3tuKG4rMSl9ezJ9LgpcXQpcZW5ke3RoZW9yZW19ClxiZWdpbntwcm9vZn0KRm9yICRuPTEkLCBib3RoIHNpZGVzIGVxdWFsICQxJC4gSWYgdGhlIGlkZW50aXR5IGhvbGRzIGZvciBhbiBpbnRlZ2VyICRuXGdlcTEkLAp0aGVuClxbClxzdW1fe2s9MX1ee24rMX0gawo9XGZyYWN7bihuKzEpfTIrKG4rMSkKPVxmcmFjeyhuKzEpKG4rMil9Mi4KXF0KSW5kdWN0aW9uIHByb3ZlcyB0aGUgc3RhdGVkIGlkZW50aXR5LgpcZW5ke3Byb29mfQpccGFyYWdyYXBoe1Rlc3QgcHJvdmVuYW5jZS59ClRoaXMgc291cmNlIHdhcyBnZW5lcmF0ZWQgYnkgQ29kZXggZm9yIGFuIGV4cGxpY2l0bHkgYXV0aG9yaXplZCBpbmZyYXN0cnVjdHVyZQp0ZXN0LiBJdCBjb250YWlucyBubyBwcml2YXRlIGNvcnJlc3BvbmRlbmNlIGFuZCBpcyByZXN0cmljdGVkIHRvIHByaXZhdGUgcmV2aWV3LgpcZW5ke2RvY3VtZW50fQo="
+        }
+      ],
+      "kwargs": {},
+      "error": {
+        "type": "HTTPError",
+        "message": "HTTP Error 409: Conflict",
+        "status": 409,
+        "body": "eyJjb2RlIjogImNvbmZsaWN0IiwgInRpdGxlIjogImNvbmZsaWN0IiwgImRldGFpbCI6ICJQUklWQVRFIFJFUVVFU1QgRUNITyIsICJtZXRhZGF0YSI6IHsib3JpZ2luIjogeyJldmlkZW5jZSI6IFtdLCAibGljZW5zZSI6ICJDQzAtMS4wIiwgInByb2JsZW1faWRzIjogWyJvdXRyZWFjaC1pbmZyYXN0cnVjdHVyZS10ZXN0Il0sICJzb3VyY2VfdXJsIjogImh0dHBzOi8vZXhhbXBsZS5pbnZhbGlkL3NvdXJjZS9ydW50aW1lLnB5In0sICJwYXBlciI6IHsiYWJzdHJhY3RfdGV4dCI6ICJBIHN5bnRoZXRpYyBwcml2YXRlIHRlc3Qgb2YgdGhlIGNsYXNzaWNhbCBzdW0gb2YgY29uc2VjdXRpdmUgaW50ZWdlcnM7IG5vIG5vdmVsdHkgaXMgY2xhaW1lZC4iLCAiYWlfZGlzY2xvc3VyZSI6IHsibGV2ZWwiOiAicHJpbWFyaWx5IiwgInN0YXRlbWVudCI6ICJUaGlzIHN5bnRoZXRpYyBpbmZyYXN0cnVjdHVyZSBmaXh0dXJlIHdhcyBnZW5lcmF0ZWQgYnkgQ29kZXggd2l0aCBncHQtNi4xLXNvbC4gSXQgc3RhdGVzIGFuZCBwcm92ZXMgYSBjbGFzc2ljYWwgaWRlbnRpdHkgYW5kIG1ha2VzIG5vIG5vdmVsIHJlc2VhcmNoIGNsYWltLiJ9LCAiYXV0aG9ycyI6IFt7Im5hbWUiOiAiT3V0cmVhY2ggd29ya2Zsb3cgdGVzdCBmaXh0dXJlIn1dLCAia2luZCI6ICJub3RlIiwgIm1ha2VfcHVibGljX2FmdGVyX2FjY2VwdGFuY2UiOiBmYWxzZSwgIm9wZW5fdG9fY29udHJpYnV0b3JzIjogZmFsc2UsICJwcm9jZXNzaW5nX2NvbnNlbnQiOiAiYWktcmV2aWV3LTIwMjYtMTAtMTEiLCAicHVycG9zZSI6ICJyZXZpZXdfb25seSIsICJyZXZpZXdfc2NvcGUiOiAiUHJpdmF0ZSBpbmZyYXN0cnVjdHVyZSBhY2NlcHRhbmNlIG9ubHk6IGNoZWNrIHNvdXJjZSBleHRyYWN0aW9uLCBleGFjdCBzb3VyY2UgaWRlbnRpdHkgYW5kIHRoZSBlbGVtZW50YXJ5IGluZHVjdGlvbi4gTm8gcHVibGljYXRpb24gb3IgaHVtYW4gY29ycmVzcG9uZGVuY2UuIiwgInRpdGxlIjogIkluZnJhc3RydWN0dXJlIHRlc3Q6IGFuIGVsZW1lbnRhcnkgc3VtbWF0aW9uIGlkZW50aXR5In0sICJwcmV2aW91c192ZXJzaW9uIjogbnVsbCwgInByb2R1Y2VyIjogInRydXJldHVyaW5nLW91dHJlYWNoIiwgInNjaGVtYSI6ICJtYXRoZXNpcy5tYW51c2NyaXB0LWRlbGl2ZXJ5LnYxIiwgInZlcnNpb24iOiAiMSIsICJ3b3JrX2lkIjogIm9yaWdpbmFsLXJlc3VsdCJ9fQ=="
+      }
+    },
+    {
+      "adapter": "ledger",
+      "method": "save",
+      "args": [],
+      "kwargs": {},
+      "result": false
+    }
+  ],
+  "expected_final_rows": {
+    "control_events": {
+      "columns": [
+        "id",
+        "payload"
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "rows": [
+        {
+          "id": "70d93adf5b226f4e0590ca711f63e0dafa376e1336e5719117aa0f2f92594956",
+          "payload": {
+            "binding": {
+              "result_hash": "eb55f6d290ecc66d1bc3e4c1ada0fa99eb5877489a4f2fa4dc5557ea965c5e30",
+              "task_id": "mathesis-1",
+              "task_revision": 2,
+              "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+            },
+            "evidence_ref": "test:synthetic-review",
+            "reason": "Fixture review",
+            "reviewer": "local-claude-loop",
+            "signature": "bb3ac5c82ba679861ffbd50ddf85e3400e477678284425a2f3237660de219bd4",
+            "verdict": "PASS"
+          }
+        }
+      ]
+    },
+    "input_asset_receipts": {
+      "columns": [
+        "identity",
+        "generation"
+      ],
+      "primary_key": [
+        "identity"
+      ],
+      "rows": []
+    },
+    "pipeline_sources": {
+      "columns": [
+        "result_id",
+        "identity",
+        "payload",
+        "baseline",
+        "task_id"
+      ],
+      "primary_key": [
+        "result_id"
+      ],
+      "rows": []
+    },
+    "pipeline_state": {
+      "columns": [
+        "key",
+        "payload"
+      ],
+      "primary_key": [
+        "key"
+      ],
+      "rows": [
+        {
+          "key": "mathesis:31b2b9f67a88e608d48550a55a8da43564855790d37fffae7c4c8e1732daefb4",
+          "payload": {
+            "request_hash": "53b44cdfac8174285f616bb6666bca06cea7161ad18f18c6549919a7b67ac2ac",
+            "task_id": "mathesis-1"
+          }
+        },
+        {
+          "key": "sandbox_pool",
+          "payload": []
+        },
+        {
+          "key": "sandbox_pool_cleanup",
+          "payload": []
+        },
+        {
+          "key": "sandbox_pool_errors",
+          "payload": []
+        }
+      ]
+    },
+    "sqlite_sequence": {
+      "columns": [
+        "name",
+        "seq"
+      ],
+      "primary_key": [
+        "name"
+      ],
+      "rows": [
+        {
+          "name": "task_events",
+          "seq": 7
+        }
+      ]
+    },
+    "task_events": {
+      "columns": [
+        "seq",
+        "id",
+        "state",
+        "revision",
+        "at",
+        "data"
+      ],
+      "primary_key": [
+        "seq"
+      ],
+      "rows": [
+        {
+          "at": 1999999900.0,
+          "data": {},
+          "id": "mathesis-1",
+          "revision": 1,
+          "seq": 1,
+          "state": "queued"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {},
+          "id": "mathesis-1",
+          "revision": 2,
+          "seq": 2,
+          "state": "awaiting-review"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "review": "70d93adf5b226f4e0590ca711f63e0dafa376e1336e5719117aa0f2f92594956"
+          },
+          "id": "mathesis-1",
+          "revision": 3,
+          "seq": 3,
+          "state": "approved"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "mathesis-1",
+          "revision": 4,
+          "seq": 4,
+          "state": "approved"
+        },
+        {
+          "at": 1999999900.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "mathesis-1",
+          "revision": 5,
+          "seq": 5,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 2000000000.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "mathesis-1",
+          "revision": 6,
+          "seq": 6,
+          "state": "handoff-ready"
+        },
+        {
+          "at": 2000000000.0,
+          "data": {
+            "verdict": "PASS"
+          },
+          "id": "mathesis-1",
+          "revision": 7,
+          "seq": 7,
+          "state": "handoff-ready"
+        }
+      ]
+    },
+    "task_migrations": {
+      "columns": [
+        "name",
+        "phase"
+      ],
+      "primary_key": [
+        "name"
+      ],
+      "rows": [
+        {
+          "name": "compact-task-events-v1",
+          "phase": "done"
+        }
+      ]
+    },
+    "tasks": {
+      "columns": [
+        "id",
+        "request",
+        "request_hash",
+        "owner",
+        "kind",
+        "state",
+        "revision",
+        "data",
+        "updated"
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "rows": [
+        {
+          "data": {
+            "mathesis_delivery": {
+              "envelope": {
+                "decision_ref": "actual-author-decision",
+                "metadata": {
+                  "origin": {
+                    "evidence": [],
+                    "license": "CC0-1.0",
+                    "problem_ids": [
+                      "outreach-infrastructure-test"
+                    ],
+                    "source_url": "https://example.invalid/source/runtime.py"
+                  },
+                  "paper": {
+                    "abstract_text": "A synthetic private test of the classical sum of consecutive integers; no novelty is claimed.",
+                    "ai_disclosure": {
+                      "level": "primarily",
+                      "statement": "This synthetic infrastructure fixture was generated by Codex with gpt-6.1-sol. It states and proves a classical identity and makes no novel research claim."
+                    },
+                    "authors": [
+                      {
+                        "name": "Outreach workflow test fixture"
+                      }
+                    ],
+                    "kind": "note",
+                    "make_public_after_acceptance": false,
+                    "open_to_contributors": false,
+                    "processing_consent": "ai-review-2026-10-11",
+                    "purpose": "review_only",
+                    "review_scope": "Private infrastructure acceptance only: check source extraction, exact source identity and the elementary induction. No publication or human correspondence.",
+                    "title": "Infrastructure test: an elementary summation identity"
+                  },
+                  "previous_version": null,
+                  "producer": "trureturing-outreach",
+                  "schema": "mathesis.manuscript-delivery.v1",
+                  "version": "1",
+                  "work_id": "original-result"
+                },
+                "result_hash": "eb55f6d290ecc66d1bc3e4c1ada0fa99eb5877489a4f2fa4dc5557ea965c5e30",
+                "reviewer": "local-claude-loop",
+                "schema_version": 1,
+                "signature": "ba8cb10260ba4b44efac6016270009d3437e5177238c54bab3524d3bead8ed6c",
+                "source": {
+                  "bytes": 1076,
+                  "name": "fixture.tex",
+                  "release_tag": "outreach-task-mathesis-1",
+                  "role": "note-tex",
+                  "sha256": "1a07d345c39df2081ca4796666afb1f2a5628388c3e3e675bffce6d4813c17c2"
+                },
+                "task_id": "mathesis-1",
+                "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              },
+              "last_error": {
+                "code": "conflict",
+                "http_status": 409,
+                "title": "conflict",
+                "type": "HTTPError"
+              },
+              "phase": "conflict",
+              "request_hash": "53b44cdfac8174285f616bb6666bca06cea7161ad18f18c6549919a7b67ac2ac"
+            },
+            "result": {
+              "artifacts": [
+                {
+                  "bytes": 1076,
+                  "name": "fixture.tex",
+                  "release_tag": "outreach-task-mathesis-1",
+                  "role": "note-tex",
+                  "sha256": "1a07d345c39df2081ca4796666afb1f2a5628388c3e3e675bffce6d4813c17c2"
+                }
+              ],
+              "outcome": "completed",
+              "packet": null,
+              "report": "Synthetic result",
+              "schema_version": 1,
+              "task_id": "mathesis-1"
+            },
+            "review": {
+              "binding": {
+                "result_hash": "eb55f6d290ecc66d1bc3e4c1ada0fa99eb5877489a4f2fa4dc5557ea965c5e30",
+                "task_id": "mathesis-1",
+                "task_revision": 2,
+                "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              },
+              "evidence_ref": "test:synthetic-review",
+              "reason": "Fixture review",
+              "reviewer": "local-claude-loop",
+              "signature": "bb3ac5c82ba679861ffbd50ddf85e3400e477678284425a2f3237660de219bd4",
+              "verdict": "PASS"
+            }
+          },
+          "id": "mathesis-1",
+          "kind": "mathesis",
+          "owner": "scholar-a",
+          "request": {
+            "id": "mathesis-1",
+            "inputs": {},
+            "kind": "mathesis",
+            "owner": "scholar-a",
+            "schema_version": 1,
+            "source_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "workflow_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          },
+          "request_hash": "3ac17e5772b4cb79cd45b520af5a4040969e08d75f7345978b829b8bb8c7e6d4",
+          "revision": 7,
+          "state": "handoff-ready",
+          "updated": 2000000000.0
+        }
+      ]
+    }
+  },
+  "expected_final_files": {},
+  "expected_writes": [
+    {
+      "adapter": "mathesis",
+      "method": "deliver",
+      "args": [
+        {
+          "origin": {
+            "evidence": [],
+            "license": "CC0-1.0",
+            "problem_ids": [
+              "outreach-infrastructure-test"
+            ],
+            "source_url": "https://example.invalid/source/runtime.py"
+          },
+          "paper": {
+            "abstract_text": "A synthetic private test of the classical sum of consecutive integers; no novelty is claimed.",
+            "ai_disclosure": {
+              "level": "primarily",
+              "statement": "This synthetic infrastructure fixture was generated by Codex with gpt-6.1-sol. It states and proves a classical identity and makes no novel research claim."
+            },
+            "authors": [
+              {
+                "name": "Outreach workflow test fixture"
+              }
+            ],
+            "kind": "note",
+            "make_public_after_acceptance": false,
+            "open_to_contributors": false,
+            "processing_consent": "ai-review-2026-10-11",
+            "purpose": "review_only",
+            "review_scope": "Private infrastructure acceptance only: check source extraction, exact source identity and the elementary induction. No publication or human correspondence.",
+            "title": "Infrastructure test: an elementary summation identity"
+          },
+          "previous_version": null,
+          "producer": "trureturing-outreach",
+          "schema": "mathesis.manuscript-delivery.v1",
+          "version": "1",
+          "work_id": "original-result"
+        },
+        {
+          "$file": "fixture.tex",
+          "base64": "XGRvY3VtZW50Y2xhc3NbMTFwdF17YXJ0aWNsZX0KXHVzZXBhY2thZ2V7YW1zbWF0aCxhbXN0aG0sYW1zc3ltYn0KXHVzZXBhY2thZ2VbbWFyZ2luPTFpbl17Z2VvbWV0cnl9ClxuZXd0aGVvcmVte3RoZW9yZW19e1RoZW9yZW19Clx0aXRsZXtJbmZyYXN0cnVjdHVyZSB0ZXN0OiBhbiBlbGVtZW50YXJ5IHN1bW1hdGlvbiBpZGVudGl0eX0KXGF1dGhvcntPdXRyZWFjaCB3b3JrZmxvdyB0ZXN0IGZpeHR1cmV9ClxkYXRlezMxIE9jdG9iZXIgMjAyNn0KXGJlZ2lue2RvY3VtZW50fQpcbWFrZXRpdGxlClxiZWdpbnthYnN0cmFjdH0KVGhpcyBzeW50aGV0aWMgbWFudXNjcmlwdCB0ZXN0cyBzb3VyY2UgZGVsaXZlcnksIFBERiBjb21waWxhdGlvbiBhbmQgcHJpdmF0ZQpyZXZpZXcuIFRoZSBpZGVudGl0eSBiZWxvdyBpcyBjbGFzc2ljYWw7IG5vIG5vdmVsdHkgb3IgcmVzZWFyY2ggY29udHJpYnV0aW9uIGlzCmNsYWltZWQuIFRoaXMgZG9jdW1lbnQgaXMgbm90IGludGVuZGVkIGZvciBwdWJsaWMgcHVibGljYXRpb24uClxlbmR7YWJzdHJhY3R9ClxiZWdpbnt0aGVvcmVtfVxsYWJlbHt0aG06dGVzdH0KRm9yIGV2ZXJ5IGludGVnZXIgJG5cZ2VxIDEkLApcWwogIFxzdW1fe2s9MX1ee259IGsgPSBcZnJhY3tuKG4rMSl9ezJ9LgpcXQpcZW5ke3RoZW9yZW19ClxiZWdpbntwcm9vZn0KRm9yICRuPTEkLCBib3RoIHNpZGVzIGVxdWFsICQxJC4gSWYgdGhlIGlkZW50aXR5IGhvbGRzIGZvciBhbiBpbnRlZ2VyICRuXGdlcTEkLAp0aGVuClxbClxzdW1fe2s9MX1ee24rMX0gawo9XGZyYWN7bihuKzEpfTIrKG4rMSkKPVxmcmFjeyhuKzEpKG4rMil9Mi4KXF0KSW5kdWN0aW9uIHByb3ZlcyB0aGUgc3RhdGVkIGlkZW50aXR5LgpcZW5ke3Byb29mfQpccGFyYWdyYXBoe1Rlc3QgcHJvdmVuYW5jZS59ClRoaXMgc291cmNlIHdhcyBnZW5lcmF0ZWQgYnkgQ29kZXggZm9yIGFuIGV4cGxpY2l0bHkgYXV0aG9yaXplZCBpbmZyYXN0cnVjdHVyZQp0ZXN0LiBJdCBjb250YWlucyBubyBwcml2YXRlIGNvcnJlc3BvbmRlbmNlIGFuZCBpcyByZXN0cmljdGVkIHRvIHByaXZhdGUgcmV2aWV3LgpcZW5ke2RvY3VtZW50fQo="
+        }
+      ],
+      "kwargs": {}
+    }
+  ]
+}

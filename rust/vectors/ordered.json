@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "seed": 55345352842547491,
+  "vectors": [
+    {
+      "input": " {\"z\":1,\"a\":2,\"z\":3,\"middle\":{\"b\":0,\"a\":1,\"b\":2}} ",
+      "expected": "{\n  \"z\": 3,\n  \"a\": 2,\n  \"middle\": {\n    \"b\": 2,\n    \"a\": 1\n  }\n}"
+    },
+    {
+      "input": "{\"\ud83d\ude00\":1,\"a\":[],\"\ud83d\ude00\":{\"z\":1,\"a\":2}}",
+      "expected": "{\n  \"\ud83d\ude00\": {\n    \"z\": 1,\n    \"a\": 2\n  },\n  \"a\": []\n}"
+    },
+    {
+      "input": "{\"$serde_json::private::Number\":\"123\",\"z\":1,\"$serde_json::private::Number\":\"last\"}",
+      "expected": "{\n  \"$serde_json::private::Number\": \"last\",\n  \"z\": 1\n}"
+    }
+  ]
+}

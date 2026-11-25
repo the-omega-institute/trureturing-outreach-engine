@@ -14,6 +14,8 @@ from uuid import uuid4
 
 from .location import hosted
 
+SECRET_ENV_KEYS = frozenset({'GH_TOKEN', 'GITHUB_TOKEN', 'OUTREACH_DATA_TOKEN', 'CMA_ACCESS_TOKEN', 'OUTREACH_GRAPH_ACCESS_TOKEN', 'MATHESIS_ACCESS_TOKEN', 'OUTREACH_REVIEW_KEY', 'OUTREACH_NYX_SESSION', 'OUTREACH_GRAPH_CACHE', 'OUTREACH_NOTE_REQUEST', 'ZENODO_TOKEN', 'PAGES_TOKEN'})
+
 OUTPUT = ContextVar('public_output', default=None)
 SECRETS = ContextVar('private_secrets', default=None)
 PRIVATE_LOG_BYTES = 2 * 1024 * 1024
@@ -164,12 +166,7 @@ def public_run(entry, action, *, tick=False, persist=True):
             stack.enter_context(redirect_stdout(log))
             stack.enter_context(redirect_stderr(log))
             stack.callback(OUTPUT.reset, OUTPUT.set(emit))
-            secrets = {value for key, value in os.environ.items()
-                       if value and key in {'GH_TOKEN', 'GITHUB_TOKEN', 'OUTREACH_DATA_TOKEN',
-                                            'CMA_ACCESS_TOKEN', 'OUTREACH_GRAPH_ACCESS_TOKEN',
-                                            'MATHESIS_ACCESS_TOKEN', 'OUTREACH_REVIEW_KEY',
-                                            'OUTREACH_NYX_SESSION', 'OUTREACH_GRAPH_CACHE',
-                                            'OUTREACH_NOTE_REQUEST', 'ZENODO_TOKEN', 'PAGES_TOKEN'}}
+            secrets = {value for key, value in os.environ.items() if value and key in SECRET_ENV_KEYS}
             stack.callback(SECRETS.reset, SECRETS.set(secrets))
             try:
                 result = entry() or 0

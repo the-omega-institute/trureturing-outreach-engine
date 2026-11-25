@@ -1,4 +1,6 @@
 """Locations shared by the engine, private data checkout and GitHub clients."""
+from . import recording
+
 import json
 import os
 from pathlib import Path
@@ -46,7 +48,7 @@ def load_config(root=DATA_ROOT, *, production=None):
 
 
 def source_head(root=None):
-    return subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=root or ENGINE_ROOT, text=True).strip()
+    return recording.check_output(['git', 'rev-parse', 'HEAD'], cwd=root or ENGINE_ROOT, text=True).strip()
 
 
 def example_config():

@@ -1,5 +1,6 @@
 """Standing-decision publication through real selectors and offline transports."""
 import base64
+import contextlib
 import copy
 import hashlib
 import io
@@ -257,6 +258,324 @@ class PublicationTests(unittest.TestCase):
         register.assert_not_called(); enqueue.assert_not_called()
         self.assertEqual(self.row(duplicate['id']), duplicate)
         self.assertEqual(self.gh.uploads, uploads)
+
+    def queued_source_note(self):
+        """A source note that queued its revision before any Mathesis child existed."""
+        note, inputs = self.note_with_mathesis_inputs()
+        self.run_publication()
+        loop = self.row(note['id'])['data']['publication_loop']
+        self.assertEqual((loop['phase'], loop['note_id'], loop['revision']), ('queued', 'alpha', 1))
+        return self.row(note['id']), inputs
+
+    @contextlib.contextmanager
+    def publication_writes(self):
+        """Observe every submission write and the Mathesis ingest."""
+        with patch.object(self.gh, 'register_note', wraps=self.gh.register_note) as register, \
+                patch.object(p.notes.w, 'stage', wraps=p.notes.w.stage) as stage, \
+                patch.object(p.notes, 'enqueue', wraps=p.notes.enqueue) as enqueue, \
+                patch.object(mathesis_delivery, 'ingest', wraps=mathesis_delivery.ingest) as ingest:
+            yield {'register': register, 'stage': stage, 'enqueue': enqueue, 'ingest': ingest}
+
+    def assert_single_alpha_request(self):
+        queue = p.notes.queue(self.gh.catalog, self.gh)
+        self.assertEqual([(q['operation']['id'], q['operation']['revision']) for q in queue], [('alpha', 1)])
+
+    def test_mathesis_child_of_an_already_queued_source_note_gets_its_delivery(self):
+        note, inputs = self.queued_source_note()
+        child = self.prepared(inputs=inputs)
+        # A stale exclusion recorded while a hold applied; the hold is gone now.
+        self.table['holds'].append({'task_id': child['id'], 'decision': 'HOLD'}); self.write_decisions()
+        self.run_publication()
+        self.assertEqual(self.row()['data']['publication_loop']['phase'], 'excluded')
+        self.table['holds'].pop(); self.write_decisions()
+        uploads, registrations = list(self.gh.uploads), self.gh.registrations
+        with patch.object(self.gh, 'download', wraps=self.gh.download) as download, \
+                self.publication_writes() as writes:
+            self.run_publication()
+        for name in ('register', 'stage', 'enqueue'):
+            writes[name].assert_not_called()
+        writes['ingest'].assert_called_once()
+        self.assertFalse([c for c in download.call_args_list if c.args[1].startswith('request-')])
+        self.assertEqual((self.gh.uploads, self.gh.registrations), (uploads, registrations))
+        row = self.row()
+        mathesis_delivery.validate(row['data']['mathesis_delivery']['envelope'], 'secret')
+        loop = row['data']['publication_loop']
+        self.assertEqual((loop['phase'], loop['note_id'], loop['revision']), ('queued', 'alpha', 1))
+        self.assertEqual(loop['result_hash'], digest(row['data']['result']))
+        self.assertEqual(loop['decision_hash'], digest(self.table['short_note_publication']))
+        self.assertEqual(self.row(note['id']), note)
+        self.assert_single_alpha_request()
+
+    def test_two_mathesis_children_of_a_queued_source_note_take_one_delivery(self):
+        note, inputs = self.queued_source_note()
+        first, second = self.prepared(inputs=inputs), self.prepared('mathesis-2', inputs=inputs)
+        for ingested in (1, 0):  # this tick, then the next
+            with self.publication_writes() as writes:
+                self.run_publication()
+            self.assertEqual(writes['ingest'].call_count, ingested)
+            for name in ('register', 'stage', 'enqueue'):
+                writes[name].assert_not_called()
+            self.assertEqual(self.row(first['id'])['data']['publication_loop']['phase'], 'queued')
+            self.assertIn('mathesis_delivery', self.row(first['id'])['data'])
+            self.assertEqual(self.row(second['id']), second)
+        self.assertEqual(self.row(note['id']), note)
+        self.assert_single_alpha_request()
+
+    def test_queued_source_note_does_not_bypass_exclusions_for_its_child(self):
+        _, inputs = self.queued_source_note()
+        self.prepared(inputs=inputs)
+        self.table['holds'].append({'note_id': 'alpha', 'decision': 'HOLD'}); self.write_decisions()
+        with self.publication_writes() as writes:
+            self.run_publication()
+            loop = self.row()['data']['publication_loop']
+            self.assertEqual((loop['phase'], loop['reason']), ('excluded', 'held in tables/decisions.json'))
+            # The metadata-aware check still applies after packaging.
+            self.table['holds'].pop()
+            self.table['short_note_publication']['independent_authors'] = ['Avery Reed']; self.write_decisions()
+            self.run_publication()
+        loop = self.row()['data']['publication_loop']
+        self.assertEqual((loop['phase'], loop['reason']), ('excluded', 'joint work needs its own publication decision'))
+        self.assertEqual(loop['exclusion_note'], {'id': 'alpha', 'problem_ids': ['problem-alpha']})
+        for write in writes.values():
+            write.assert_not_called()
+        self.assertNotIn('mathesis_delivery', self.row()['data'])
+        self.assert_single_alpha_request()
+
+    def test_mathesis_child_of_a_queued_source_note_fails_and_retries_without_submitting(self):
+        note, inputs = self.queued_source_note()
+        self.prepared(inputs=inputs)
+        now = self.ledger.tasks.clock()
+        self.ledger.tasks.clock = lambda: now
+        failures = {'source-gate': patch.object(p, 'source_gate', side_effect=ValueError('Source changed')),
+                    'select': patch('managed.pre_reviewed.select', side_effect=ValueError('Selection refused')),
+                    'ingest': patch.object(mathesis_delivery, 'ingest', side_effect=TimeoutError('Ingest lost'))}
+        with self.publication_writes() as writes:
+            for count, (step, failure) in enumerate(failures.items(), 1):
+                with failure:
+                    self.run_publication()
+                loop = self.row()['data']['publication_loop']
+                self.assertEqual((loop['phase'], loop['step'], loop['consecutive_failures']), ('pending', step, count))
+                self.assertEqual(loop['next_retry_at'], now + p.FAILURE_BACKOFF[count - 1])
+                self.assertNotIn('mathesis_delivery', self.row()['data'])
+                waiting = self.row()
+                self.run_publication()  # Backoff: untouched before its retry time.
+                self.assertEqual(self.row(), waiting)
+                now = loop['next_retry_at']
+            self.run_publication()
+        self.assertEqual(self.row()['data']['publication_loop']['phase'], 'queued')
+        self.assertIn('mathesis_delivery', self.row()['data'])
+        for name in ('register', 'stage', 'enqueue'):
+            writes[name].assert_not_called()
+        self.assertEqual(self.row(note['id']), note)
+        self.assert_single_alpha_request()
+
+    def test_mathesis_child_of_a_queued_source_note_is_idempotent(self):
+        _, inputs = self.queued_source_note()
+        self.prepared(inputs=inputs)
+        self.run_publication()
+        queued = self.row()
+        self.assertEqual(queued['data']['publication_loop']['phase'], 'queued')
+        with self.publication_writes() as writes:
+            self.run_publication()
+        for write in writes.values():
+            write.assert_not_called()
+        self.assertEqual(self.row(), queued)
+        self.assert_single_alpha_request()
+
+    def test_mathesis_row_with_a_delivery_and_a_queued_revision_is_unchanged(self):
+        _, inputs = self.queued_source_note()
+        self.prepared(inputs=inputs)
+        self.run_publication()
+        row = self.row()
+        data = copy.deepcopy(row['data']); del data['publication_loop']
+        delivered = self.ledger.tasks.update(row['id'], row['revision'], row['state'], data)
+        self.assertIn('mathesis_delivery', delivered['data'])
+        with self.publication_writes() as writes:
+            self.run_publication()
+        for write in writes.values():
+            write.assert_not_called()
+        self.assertEqual(self.row(), delivered)
+
+    def test_mathesis_child_of_a_queued_source_note_uses_a_publication_slot(self):
+        _, inputs = self.queued_source_note()
+        self.prepared(inputs=inputs)
+        beta = self.prepared('beta', metadata={**self.metadata, 'id': 'beta', 'problem_ids': ['problem-beta']})
+        self.config['mathesis']['max_publications_per_tick'] = 1
+        self.run_publication()
+        self.assertEqual(self.row()['data']['publication_loop']['phase'], 'queued')
+        self.assertIn('mathesis_delivery', self.row()['data'])
+        self.assertEqual(self.row('beta'), beta)
+        self.run_publication()
+        self.assertEqual(self.row('beta')['data']['publication_loop']['phase'], 'queued')
+
+    def assert_lost_record_completes(self):
+        """The next advance records 'queued' for the already ingested selection, then nothing changes."""
+        delivery = self.row()['data']['mathesis_delivery']
+        with self.publication_writes() as writes:
+            self.run_publication()
+            row = self.row()
+            self.run_publication()
+        for write in writes.values():
+            write.assert_not_called()
+        self.assertEqual(self.row(), row)
+        loop = row['data']['publication_loop']
+        self.assertEqual((loop['phase'], loop['note_id'], loop['revision']), ('queued', 'alpha', 1))
+        self.assertEqual(loop['result_hash'], digest(row['data']['result']))
+        self.assertEqual(loop['decision_hash'], digest(self.table['short_note_publication']))
+        self.assertNotIn('last_error', loop)
+        self.assertEqual(row['data']['mathesis_delivery'], delivery)
+        self.assert_single_alpha_request()
+
+    def test_lost_save_after_delivery_only_ingest_completes_the_queued_record(self):
+        _, inputs = self.queued_source_note()
+        self.prepared(inputs=inputs)
+        ingest, save = mathesis_delivery.ingest, self.ledger.save
+        failing = []
+
+        def ingest_then_lose_save(*args, **kwargs):
+            row = ingest(*args, **kwargs)
+            failing.append(True)
+            return row
+
+        def save_once_failing(*args, **kwargs):
+            if failing:
+                failing.clear()
+                raise OSError('Snapshot upload failed')
+            return save(*args, **kwargs)
+
+        with patch.object(mathesis_delivery, 'ingest', side_effect=ingest_then_lose_save), \
+                patch.object(self.ledger, 'save', side_effect=save_once_failing):
+            self.run_publication()
+        loop = self.row()['data']['publication_loop']
+        self.assertEqual((loop['phase'], loop['step'], loop['last_error']), ('pending', 'ingest', 'OSError'))
+        self.assertIn('mathesis_delivery', self.row()['data'])
+        waiting = self.row()
+        self.run_publication()  # Backoff: untouched before its retry time.
+        self.assertEqual(self.row(), waiting)
+        with patch.object(self.ledger.tasks, 'clock', return_value=loop['next_retry_at']):
+            self.assert_lost_record_completes()
+
+    def test_run_stopped_after_delivery_only_ingest_completes_the_queued_record(self):
+        _, inputs = self.queued_source_note()
+        self.prepared(inputs=inputs)
+        record = p.record
+
+        class Stopped(BaseException):
+            pass
+
+        def stop_before_final_record(ledger, task_id, value, force=False):
+            if value['phase'] == 'queued':
+                raise Stopped()
+            return record(ledger, task_id, value, force)
+
+        with patch.object(p, 'record', side_effect=stop_before_final_record), self.assertRaises(Stopped):
+            self.run_publication()
+        row = self.row()
+        self.assertEqual(row['data']['mathesis_delivery']['phase'], 'ready')
+        loop = row['data']['publication_loop']
+        self.assertEqual((loop['phase'], loop['note_id'], loop['revision']), ('preparing', 'alpha', 1))
+        self.assert_lost_record_completes()
+
+    def test_shortnote_with_an_already_queued_revision_stays_untouched(self):
+        self.prepared('note-1', kind='shortnote', handoff=False)
+        self.run_publication()
+        self.assertEqual(self.row('note-1')['data']['publication_loop']['phase'], 'queued')
+        duplicate = self.prepared('note-2', kind='shortnote', handoff=False)
+        beta = {**self.metadata, 'id': 'beta', 'problem_ids': ['problem-beta']}
+        self.prepared('note-beta', kind='shortnote', handoff=False, metadata=beta)
+        self.config['mathesis']['max_publications_per_tick'] = 1
+        with self.publication_writes() as writes:
+            self.run_publication()
+        self.assertEqual(self.row('note-2'), duplicate)
+        # The duplicate used no slot: the next row took the only one.
+        self.assertEqual(self.row('note-beta')['data']['publication_loop']['phase'], 'queued')
+        self.assertEqual([c.args[0]['id'] for c in writes['register'].call_args_list], ['beta'])
+        self.assertEqual((writes['stage'].call_count, writes['enqueue'].call_count), (1, 1))
+        writes['ingest'].assert_not_called()
+
+    def test_mathesis_row_takes_delivery_after_a_shortnote_queues_its_revision_in_the_same_tick(self):
+        note = self.prepared('note-1', kind='shortnote', handoff=False, inputs={'owner_ids': ['contact-1']})
+        self.prepared()  # The same revision, without explicit lineage.
+        with self.publication_writes() as writes:
+            self.run_publication()
+        for name in ('register', 'stage', 'enqueue', 'ingest'):
+            self.assertEqual(writes[name].call_count, 1, name)
+        self.assertEqual(writes['register'].call_args.args[0]['id'], 'alpha')
+        self.assertEqual(self.row(note['id'])['data']['publication_loop']['phase'], 'queued')
+        loop = self.row()['data']['publication_loop']
+        self.assertEqual((loop['phase'], loop['note_id'], loop['revision']), ('queued', 'alpha', 1))
+        self.assertNotIn('request', loop)
+        self.assertIn('mathesis_delivery', self.row()['data'])
+        self.assert_single_alpha_request()
+
+    def stop_before_final_record(self):
+        """One advance that stops after ingest and its save, before the final 'queued' record."""
+        record = p.record
+
+        class Stopped(BaseException):
+            pass
+
+        def stop(ledger, task_id, value, force=False):
+            if value['phase'] == 'queued':
+                raise Stopped()
+            return record(ledger, task_id, value, force)
+
+        with patch.object(p, 'record', side_effect=stop), self.assertRaises(Stopped):
+            self.run_publication()
+        self.assertEqual(self.row()['data']['mathesis_delivery']['phase'], 'ready')
+        self.assertEqual(self.row()['data']['publication_loop']['phase'], 'preparing')
+
+    def test_delivered_row_completes_its_queued_record_after_a_hold_is_removed(self):
+        _, inputs = self.queued_source_note()
+        self.prepared(inputs=inputs)
+        self.stop_before_final_record()
+        delivery = self.row()['data']['mathesis_delivery']
+        self.table['holds'].append({'note_id': 'alpha', 'decision': 'HOLD'}); self.write_decisions()
+        with self.publication_writes() as writes:
+            self.run_publication()
+        for write in writes.values():
+            write.assert_not_called()
+        loop = self.row()['data']['publication_loop']
+        self.assertEqual((loop['phase'], loop['reason']), ('excluded', 'held in tables/decisions.json'))
+        self.assertNotIn('note_id', loop)  # The exclusion record replaced the checkpoint.
+        self.assertEqual(self.row()['data']['mathesis_delivery'], delivery)
+        self.table['holds'].pop(); self.write_decisions()
+        self.assert_lost_record_completes()
+
+    def test_normal_path_delivery_completes_after_a_shortnote_queues_its_revision(self):
+        self.prepared()  # No lineage: the normal path registers, stages and enqueues.
+        self.stop_before_final_record()
+        self.assertNotEqual(self.row()['data']['publication_loop']['phase'], 'queued')
+        note = self.prepared('note-1', kind='shortnote', handoff=False, inputs={'owner_ids': ['contact-1']})
+        self.config['mathesis']['max_publications_per_tick'] = 1
+        self.run_publication()  # The short note takes the only slot first.
+        self.assertEqual(self.row(note['id'])['data']['publication_loop']['phase'], 'queued')
+        self.assertEqual(self.row()['data']['publication_loop']['phase'], 'preparing')
+        self.assert_lost_record_completes()
+
+    def test_delivered_row_with_another_selection_stays_untouched(self):
+        _, inputs = self.queued_source_note()
+        self.prepared(inputs=inputs)
+        self.stop_before_final_record()
+        original = copy.deepcopy(self.row()['data'])
+        changes = {'another version': ('version', 2), 'legacy string version': ('version', '1'),
+                   'another result': ('result_hash', 'f' * 64)}
+        for label, (field, value) in changes.items():
+            with self.subTest(label):
+                data = copy.deepcopy(original)
+                envelope = data['mathesis_delivery']['envelope']
+                (envelope['metadata'] if field == 'version' else envelope)[field] = value
+                current = self.row()
+                changed = self.ledger.tasks.update(current['id'], current['revision'], current['state'], data)
+                with self.publication_writes() as writes:
+                    self.run_publication()
+                for write in writes.values():
+                    write.assert_not_called()
+                self.assertEqual(self.row(), changed)
+        # The exact selection completes once restored.
+        current = self.row()
+        self.ledger.tasks.update(current['id'], current['revision'], current['state'], original)
+        self.assert_lost_record_completes()
 
     def test_default_cap_defers_untouched_rows_and_next_call_continues(self):
         rows = []

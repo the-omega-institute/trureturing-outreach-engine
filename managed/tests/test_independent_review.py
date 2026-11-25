@@ -714,12 +714,12 @@ class HostedReviewTests(unittest.TestCase):
         config = {'max_sandboxes':1, 'agents_per_sandbox':6,
                   'groups':[{'name':'mail','kinds':['reply'],'max_sandboxes':1}]}
         pool = SandboxPool(self.ledger, config, {'reply':True}, reserve_review_slots=1)
-        entry = pool.entries[0]
-        self.assertFalse(pool.awaited(entry, [self.row()]))
+        group = pool.entries[0]['group']
+        self.assertFalse(pool.busy(group, [self.row()]))
         with patch('managed.control.workflow', return_value='c'*64):
-            self.assertTrue(pool.awaited(entry, [self.row()]))
+            self.assertTrue(pool.busy(group, [self.row()]))
         row = self.row()
         self.tasks.update(row['id'], row['revision'], 'handoff-ready', {
             **row['data'], 'publication_loop':{'phase':'queued','request':'immutable-publication.json'}})
         with patch('managed.control.workflow', return_value='c'*64):
-            self.assertFalse(pool.awaited(entry, [self.row()]))
+            self.assertFalse(pool.busy(group, [self.row()]))

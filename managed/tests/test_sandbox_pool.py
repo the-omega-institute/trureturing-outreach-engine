@@ -458,49 +458,59 @@ class PoolTests(PoolFixture,unittest.TestCase):
 
 
 class PoolRotationTests(PoolFixture,unittest.TestCase):
-    def draining_pool(self,agents_placed=24):
+    def used_pool(self,agents_placed=24,live=2):
+        """Two healthy Sandboxes that have hosted many Agents and still run some."""
         entries=self.seed_pool(2)
         for entry in entries:
             entry['agents_placed']=agents_placed
-            for number in range(2):self.occupy(entry,number)
+            for number in range(live):self.occupy(entry,number)
         self.ledger.tasks.db.execute('UPDATE pipeline_state SET payload=? WHERE key=?',
                                      (canonical(entries),'sandbox_pool'))
         pool=SandboxPool(self.ledger,self.cfg['sandbox_pool']);pool.health(self.cma)
         return pool
 
-    def test_draining_slots_remain_available_after_capacity_failure_without_inflight_creation(self):
-        pool=self.draining_pool();pool.record_capacity_failure()
+    def test_used_slots_remain_available_after_capacity_failure_without_inflight_creation(self):
+        pool=self.used_pool();pool.record_capacity_failure()
         self.ledger.save(force=True);self.restore();self.now+=60
         pool=SandboxPool(self.ledger,self.cfg['sandbox_pool']);pool.health(self.cma)
         available,chosen=pool.slot()
         self.assertTrue(available)
         self.assertEqual(chosen['sandbox_id'],pool.entries[0]['sandbox_id'])
-        self.assertTrue(chosen['draining'])
+        self.assertNotIn('draining',chosen)
 
-    def test_draining_slots_without_capacity_failure_request_new_sandbox(self):
-        pool=self.draining_pool()
-        self.assertEqual(pool.slot(),(True,None))
+    def test_used_slots_without_capacity_failure_are_reused_without_new_sandbox(self):
+        for count in (24,60,200):
+            with self.subTest(agents_placed=count):
+                pool=self.used_pool(agents_placed=count,live=0)
+                self.assertEqual(pool.slot(),(True,pool.entries[0]))
 
-    def test_capacity_fallback_uses_default_96_placement_ceiling(self):
-        pool=self.draining_pool(agents_placed=96);pool.record_capacity_failure()
-        self.assertEqual(pool.slot(),(True,None))
-        # The same hard cap also binds the original in-flight retry fallback.
+    def test_capacity_block_admits_at_any_placement_count_until_sandboxes_are_full(self):
+        pool=self.used_pool(agents_placed=200);pool.record_capacity_failure()
+        self.assertIs(pool.slot()[1],pool.entries[0])
+        # An in-flight retry neither blocks free slots nor opens another Sandbox.
         row=self.queue('replacement')
         self.ledger.tasks.update(row['id'],row['revision'],'provisioning',
             {'pool_create':True,'operation_id':'op_x','capacity_retries':2})
-        self.assertEqual(pool.slot(),(False,None))
-        pool.entries[0]['agents_placed']=95
-        available,chosen=pool.slot()
-        self.assertTrue(available);self.assertIs(chosen,pool.entries[0])
-        pool.assigned(chosen)
+        self.assertIs(pool.slot()[1],pool.entries[0])
+        for entry in pool.entries:
+            for number in range(2,6):self.occupy(entry,number)
         self.assertEqual(pool.slot(),(False,None))
 
-    def test_capacity_fallback_ceiling_is_configurable_and_validated(self):
-        self.cfg['sandbox_pool']['quota_blocked_max_agents_placed']=60
-        pool=self.draining_pool(agents_placed=59);pool.record_capacity_failure()
-        self.assertIsNotNone(pool.slot()[1])
-        for entry in pool.entries:pool.assigned(entry)
+    def test_full_used_sandboxes_open_another_only_below_max_sandboxes(self):
+        self.cfg['sandbox_pool']['max_sandboxes']=2
+        pool=self.used_pool(agents_placed=200,live=6)
+        self.assertEqual(pool.slot(),(False,None))
+        self.cfg['sandbox_pool']['max_sandboxes']=3
+        pool=SandboxPool(self.ledger,self.cfg['sandbox_pool']);pool.health(self.cma)
         self.assertEqual(pool.slot(),(True,None))
+
+    def test_former_capacity_ceiling_has_no_effect_but_still_validates(self):
+        self.cfg['sandbox_pool']['quota_blocked_max_agents_placed']=60
+        pool=self.used_pool(agents_placed=59);pool.record_capacity_failure()
+        self.assertIsNotNone(pool.slot()[1])
+        for entry in pool.entries:pool.assigned(entry);pool.assigned(entry)
+        self.assertEqual([e['agents_placed'] for e in pool.entries],[61,61])
+        self.assertIs(pool.slot()[1],pool.entries[0])
         for value in (0,-1,True,96.5,'96'):
             with self.subTest(value=value):
                 self.cfg['sandbox_pool']['quota_blocked_max_agents_placed']=value
@@ -530,7 +540,7 @@ class PoolRotationTests(PoolFixture,unittest.TestCase):
         self.restore();self.tick()
         self.assertEqual(len(self.cma.creates),5)
 
-    def test_empty_healthy_draining_sandbox_survives_quota_block_and_idle_grace(self):
+    def test_empty_healthy_used_sandbox_survives_quota_block_and_idle_grace(self):
         entry=self.seed_pool()[0];entry['agents_placed']=24
         self.ledger.tasks.db.execute('UPDATE pipeline_state SET payload=? WHERE key=?',
                                      (canonical([entry]),'sandbox_pool'))
@@ -543,15 +553,18 @@ class PoolRotationTests(PoolFixture,unittest.TestCase):
         self.assertEqual(next(iter(self.cma.creates.values()))['workspace_id'],entry['workspace_id'])
         self.assertFalse(any(method=='DELETE' for _,method,_ in self.cma.calls))
 
-    def test_empty_sandbox_at_quota_ceiling_retires_without_reporting_failure(self):
-        entry=self.seed_pool()[0];entry['agents_placed']=96
+    def test_empty_sandbox_at_any_placement_count_survives_quota_block_then_retires_idle(self):
+        entry=self.seed_pool()[0];entry['agents_placed']=200
         self.ledger.tasks.db.execute('UPDATE pipeline_state SET payload=? WHERE key=?',
                                      (canonical([entry]),'sandbox_pool'))
         SandboxPool(self.ledger,self.cfg['sandbox_pool']).record_capacity_failure()
-        self.tick()
+        self.now+=600;self.tick()
+        self.assertEqual(self.state()[0]['sandbox_id'],entry['sandbox_id'])
+        self.assertFalse(self.state('sandbox_pool_cleanup'))
+        self.now+=CAPACITY_BLOCK_SECONDS;self.tick()
         self.assertEqual(self.state(),[])
         self.assertEqual(self.state('sandbox_pool_cleanup')[0]['state'],'retiring')
-        self.assertEqual(self.state('sandbox_pool_cleanup')[0]['rotated'],'draining')
+        self.assertEqual(self.state('sandbox_pool_cleanup')[0]['rotated'],'idle')
 
     def test_soft_rotation_without_quota_block_is_retirement_not_failure(self):
         self.cfg['sandbox_pool']['rotate_after_agents']=1
@@ -561,8 +574,11 @@ class PoolRotationTests(PoolFixture,unittest.TestCase):
         self.ledger.tasks.db.execute('UPDATE pipeline_state SET payload=? WHERE key=?',
                                      (canonical([entry]),'sandbox_pool'))
         self.tick()
+        self.assertEqual(self.state()[0]['sandbox_id'],entry['sandbox_id'])  # No count-based rotation.
+        self.now+=600;self.tick()
         self.assertEqual(self.state(),[])
         self.assertEqual(self.state('sandbox_pool_cleanup')[0]['state'],'retiring')
+        self.assertEqual(self.state('sandbox_pool_cleanup')[0]['rotated'],'idle')
 
     def test_pending_creation_timeout_requeues_with_evidence_and_a_fresh_key(self):
         self.cma.create_status='queued';self.queue('pending');self.tick()
@@ -604,25 +620,33 @@ class PoolRotationTests(PoolFixture,unittest.TestCase):
         self.assertEqual(self.ledger.tasks.get('pending')['data']['sandbox_failure_history'][0]['failure']['started_at'],1000)
 
     def test_stalled_creation_is_capacity_evidence_before_reconciliation(self):
-        pool=self.draining_pool()
+        pool=self.used_pool()
         row=self.queue('pending')
         self.ledger.tasks.update(row['id'],row['revision'],'provisioning',
             {'pool_create':True,'pool_create_started_at':self.now})
         self.now+=POOL_WAIT_SECONDS-1
-        self.assertEqual(pool.slot(),(False,None))
+        self.assertFalse(pool.capacity_blocked(self.ledger.tasks.all()))
+        self.assertIs(pool.slot()[1],pool.entries[0])
         self.now+=1
-        self.assertIsNotNone(pool.slot()[1])
+        self.assertTrue(pool.capacity_blocked(self.ledger.tasks.all()))
+        self.assertIs(pool.slot()[1],pool.entries[0])
         # An unreconciled creation remains evidence beyond the cached quota TTL.
         self.now+=CAPACITY_BLOCK_SECONDS
-        self.assertIsNotNone(pool.slot()[1])
+        self.assertTrue(pool.capacity_blocked(self.ledger.tasks.all()))
+        self.assertIs(pool.slot()[1],pool.entries[0])
 
-    def test_stuck_provisioning_sandbox_requeues_and_fills_draining_free_slots(self):
+    def test_stuck_provisioning_sandbox_requeues_and_fills_free_slots(self):
         entry=self.seed_pool()[0];entry['agents_placed']=24
         self.ledger.tasks.db.execute('UPDATE pipeline_state SET payload=? WHERE key=?',
                                      (canonical([entry]),'sandbox_pool'))
-        self.occupy(entry,0,state='running')
+        # A full Sandbox makes the first task open another one.
+        occupants=[self.occupy(entry,number,state='running') for number in range(6)]
         self.cma.create_status='queued';self.queue('pending');self.tick()
         pending=self.ledger.tasks.get('pending')
+        self.assertNotIn('workspace_id',next(iter(self.cma.creates.values())))
+        for row in occupants[1:]:
+            row=self.ledger.tasks.get(row['id'])
+            self.ledger.tasks.update(row['id'],row['revision'],'held',{**row['data'],'cleanup':{'deleted':True}})
         self.cma.statuses['sbx_1']={'status':'provisioning'}
         self.cma.foreign_agents=[{'id':'agt_foreign','status':'active'}]
         for i in range(6):self.queue('waiting-'+str(i))
@@ -692,7 +716,7 @@ class PoolRotationTests(PoolFixture,unittest.TestCase):
         self.assertFalse(self.cma.retire_calls)
 
     def test_admission_unknown_blocks_new_sandbox_only_without_workspace_and_before_timeout(self):
-        pool=self.draining_pool(agents_placed=48)
+        pool=self.used_pool(agents_placed=48,live=6)  # Both Sandboxes are full.
         row=self.queue('conflict')
         data={'pool_create':True,'agent_id':'agt_conflict',
               'last_error':'HTTPError: HTTP Error 409: Conflict'}
@@ -701,11 +725,14 @@ class PoolRotationTests(PoolFixture,unittest.TestCase):
         row=self.ledger.tasks.update(row['id'],row['revision'],row['state'],{**data,'workspace_id':'wks_known'})
         self.assertEqual(pool.slot(),(True,None))
         self.ledger.tasks.update(row['id'],row['revision'],row['state'],data)
+        finished=self.ledger.tasks.get(pool.entries[1]['sandbox_id']+'-0')
+        self.ledger.tasks.update(finished['id'],finished['revision'],'held',
+                                 {**finished['data'],'cleanup':{'deleted':True}})
         pool.record_capacity_failure()
         # An unknown creation never blocks healthy existing slots in a quota block.
-        self.assertIsNotNone(pool.slot()[1])
+        self.assertIs(pool.slot()[1],pool.entries[1])
         pool.clear_capacity_failure();self.now+=POOL_WAIT_SECONDS
-        self.assertIsNotNone(pool.slot()[1])
+        self.assertIs(pool.slot()[1],pool.entries[1])
 
     def test_admission_409_wait_is_bounded_then_requeues_only_after_deletion(self):
         self.queue('conflict')
@@ -745,25 +772,33 @@ class PoolRotationTests(PoolFixture,unittest.TestCase):
         self.assertEqual(row['data']['admission_history'][0]['admission_conflict_since'],1000)
         self.assertFalse(self.cma.creates)
 
-    def test_capacity_failure_fallback_expires_after_two_hours(self):
-        pool=self.draining_pool();pool.record_capacity_failure()
+    def test_capacity_failure_evidence_expires_after_two_hours_and_used_slots_stay_open(self):
+        pool=self.used_pool();pool.record_capacity_failure()
         self.now+=CAPACITY_BLOCK_SECONDS-1
-        self.assertIsNotNone(pool.slot()[1])
+        self.assertTrue(pool.capacity_blocked([]))
+        self.assertIs(pool.slot()[1],pool.entries[0])
         self.now+=1
-        self.assertEqual(pool.slot(),(True,None))
+        self.assertFalse(pool.capacity_blocked([]))
+        self.assertIs(pool.slot()[1],pool.entries[0])
 
-    def test_capacity_fallback_requires_observed_active_status_and_no_intent(self):
-        pool=self.draining_pool();pool.record_capacity_failure()
-        for status,intent in [(None,None),('paused',None),('active',{'action':'pause'})]:
+    def test_admission_requires_observed_active_status_and_no_intent_at_any_count(self):
+        for status,intent in [(None,None),('paused',None),('active',{'action':'pause','key':'k'})]:
             with self.subTest(status=status,intent=intent):
-                for entry in pool.entries:
-                    pool.observed[entry['sandbox_id']]={'status':status}
-                    entry['intent']=intent
+                entries=self.seed_pool(2)
+                for entry in entries:
+                    entry['agents_placed']=200
+                    if intent:entry['intent']=intent
+                    self.cma.statuses[entry['sandbox_id']]={'status':status}
+                self.ledger.tasks.db.execute('UPDATE pipeline_state SET payload=? WHERE key=?',
+                                             (canonical(entries),'sandbox_pool'))
+                pool=SandboxPool(self.ledger,self.cfg['sandbox_pool']);pool.health(self.cma)
+                pool.record_capacity_failure()
+                self.assertFalse(pool.available)
                 self.assertIsNone(pool.slot()[1])
 
-    def test_quota_failure_at_retry_limit_keeps_draining_capacity_across_ticks(self):
+    def test_quota_failure_at_retry_limit_keeps_used_capacity_across_ticks(self):
         from managed.control import CAPACITY_RETRIES
-        self.draining_pool()
+        self.used_pool()
         row=self.queue('replacement')
         self.ledger.tasks.update(row['id'],row['revision'],'provisioning',
             {'pool_create':True,'operation_id':'op_quota','capacity_retries':CAPACITY_RETRIES})
@@ -780,7 +815,7 @@ class PoolRotationTests(PoolFixture,unittest.TestCase):
         self.assertEqual(self.state('sandbox_pool_capacity'),{'capacity_blocked_at':1000})
 
     def test_failed_pool_creation_recheck_records_capacity_failure(self):
-        self.draining_pool()
+        self.used_pool()
         row=self.queue('replacement')
         self.ledger.tasks.update(row['id'],row['revision'],'failed',
             {'pool_create':True,'operation_id':'op_quota',
@@ -819,56 +854,74 @@ class PoolRotationTests(PoolFixture,unittest.TestCase):
         self.assertEqual(self.ledger.tasks.get('uncertain')['data']['create_key'],before['data']['create_key'])
         self.assertEqual(self.state()[0]['agents_placed'],1)
 
-    def test_threshold_stops_same_tick_admission_and_opens_fresh_under_limit(self):
+    def test_configured_rotation_threshold_no_longer_stops_admission(self):
         self.cfg['sandbox_pool'].update(rotate_after_agents=1,max_sandboxes=2)
         for name in ('first','second','waiting'):self.queue(name)
         self.tick()
-        self.assertEqual([b.get('workspace_id') for b in self.cma.creates.values()],[None,None])
-        self.assertEqual([e['agents_placed'] for e in self.state()],[1,1])
-        self.assertTrue(all(e['draining'] for e in self.state()))
-        self.assertEqual(self.ledger.tasks.get('waiting')['state'],'queued')
-        self.restore();self.tick();self.assertEqual(len(self.cma.creates),2)
+        self.assertEqual([b.get('workspace_id') for b in self.cma.creates.values()],[None,'wks_sbx_1','wks_sbx_1'])
+        self.assertEqual([e['agents_placed'] for e in self.state()],[3])
+        self.assertNotIn('draining',self.state()[0])
+        self.assertEqual(self.ledger.tasks.get('waiting')['state'],'running')
 
-    def test_draining_existing_active_or_paused_capacity_is_never_reused(self):
+    def test_paused_capacity_is_revived_whatever_its_placement_count(self):
         self.cfg['sandbox_pool']['rotate_after_agents']=1
         entry=self.seed_pool()[0];self.occupy(entry,0)
         self.cma.statuses[entry['sandbox_id']]={'status':'paused'}
         self.queue('fresh');self.tick()
-        self.assertTrue(self.state()[0]['draining'])
-        self.assertNotIn('workspace_id',next(iter(self.cma.creates.values())))
-        self.assertFalse(any(method=='POST' for _,method,_ in self.cma.calls))
+        self.assertNotIn('draining',self.state()[0])
+        self.assertFalse(self.cma.creates)
+        self.assertEqual([(path,method) for path,method,_ in self.cma.calls if method=='POST'],
+                         [('/api/v1/sandboxes/'+entry['sandbox_id']+'/revive','POST')])
 
-    def test_existing_entry_reaches_default_threshold_and_next_task_opens_fresh(self):
+    def test_existing_entry_passes_former_default_threshold_and_keeps_admitting(self):
         entry=self.seed_pool()[0];entry['agents_placed']=23
         self.ledger.tasks.db.execute('UPDATE pipeline_state SET payload=? WHERE key=?',
                                      (canonical([entry]),'sandbox_pool'))
         self.queue('last-placement');self.queue('fresh');self.tick()
         self.assertEqual([b.get('workspace_id') for b in self.cma.creates.values()],
-                         [entry['workspace_id'],None])
-        self.assertEqual(self.state()[0]['agents_placed'],24)
-        self.assertTrue(self.state()[0]['draining'])
+                         [entry['workspace_id']]*2)
+        self.assertEqual(self.state()[0]['agents_placed'],25)
+        self.assertNotIn('draining',self.state()[0])
         self.restore();self.tick()
-        self.assertEqual(self.state()[0]['agents_placed'],24)
-        self.assertTrue(self.state()[0]['draining'])
+        self.assertEqual(self.state()[0]['agents_placed'],25)
 
-    def test_draining_entry_waits_for_live_agent_then_retires_with_stable_key(self):
+    def test_saved_draining_flag_and_high_count_stay_admissible_and_keep_counting(self):
+        entry=self.seed_pool()[0];entry.update(agents_placed=60,draining=True)
+        self.ledger.tasks.db.execute('UPDATE pipeline_state SET payload=? WHERE key=?',
+                                     (canonical([entry]),'sandbox_pool'))
+        pool=SandboxPool(self.ledger,self.cfg['sandbox_pool']);pool.health(self.cma)
+        self.assertNotIn('draining',self.state()[0])
+        self.assertEqual(pool.slot(),(True,pool.entries[0]))
+        self.queue('first');self.tick()
+        self.assertEqual([b.get('workspace_id') for b in self.cma.creates.values()],[entry['workspace_id']])
+        self.assertEqual(self.state()[0]['agents_placed'],61)
+        self.restore();self.queue('second');self.tick()
+        self.assertEqual([b.get('workspace_id') for b in self.cma.creates.values()],[entry['workspace_id']]*2)
+        self.assertEqual(self.state()[0]['agents_placed'],62)
+
+    def test_entry_waits_for_live_agent_and_idle_period_then_retires_with_stable_key(self):
         self.cfg['sandbox_pool']['rotate_after_agents']=1;self.cfg['paused']=True
-        entry=self.seed_pool()[0];row=self.occupy(entry,0);self.tick()
-        self.assertTrue(self.state()[0]['draining'])
+        entry=self.seed_pool()[0];entry['agents_placed']=200
+        self.ledger.tasks.db.execute('UPDATE pipeline_state SET payload=? WHERE key=?',
+                                     (canonical([entry]),'sandbox_pool'))
+        row=self.occupy(entry,0);self.now+=6000;self.tick()
+        self.assertEqual(self.state()[0]['idle_since'],self.now)
         self.assertFalse(self.state('sandbox_pool_cleanup'))
         self.assertFalse(any(method=='DELETE' for _,method,_ in self.cma.calls))
         self.restore();row=self.ledger.tasks.get(row['id'])
         self.ledger.tasks.update(row['id'],row['revision'],'held',{**row['data'],'cleanup':{'deleted':True}})
-        self.cma.retire_errors=[TimeoutError('No response')];self.tick()
+        self.now+=599;self.tick()
+        self.assertEqual(self.state()[0]['sandbox_id'],entry['sandbox_id'])
+        self.now+=1;self.cma.retire_errors=[TimeoutError('No response')];self.tick()
         self.assertEqual(self.state(),[])
-        self.assertEqual(self.state('sandbox_pool_cleanup')[0]['rotated'],'draining')
+        self.assertEqual(self.state('sandbox_pool_cleanup')[0]['rotated'],'idle')
         self.restore();self.tick()
         deletes=[c for c in self.cma.calls if c[1]=='DELETE']
         self.assertEqual([c[2] for c in deletes],['outreach-pool-retire-'+entry['sandbox_id']+'-sandbox-delete']*2)
         self.cma.statuses[entry['sandbox_id']]={'status':'retired'};self.tick()
         self.assertEqual(self.state('sandbox_pool_cleanup'),[])
 
-    def test_last_agent_completed_this_tick_rotates_without_idle_grace(self):
+    def test_last_agent_completed_this_tick_retires_only_after_idle_period(self):
         self.cfg['sandbox_pool']['rotate_after_agents']=1
         row=self.queue('complete')
         result={'schema_version':1,'task_id':row['id'],'outcome':'completed',
@@ -877,8 +930,11 @@ class PoolRotationTests(PoolFixture,unittest.TestCase):
             'content':[{'type':'output_text','text':json.dumps(result)}]}]}
         self.tick()
         self.assertTrue(self.ledger.tasks.get(row['id'])['data']['cleanup']['deleted'])
+        self.assertEqual(len(self.state()),1)
+        self.assertFalse(any(method=='DELETE' for _,method,_ in self.cma.calls))
+        self.now+=600;self.tick()
         self.assertEqual(self.state(),[])
-        self.assertEqual(self.state('sandbox_pool_cleanup')[0]['rotated'],'draining')
+        self.assertEqual(self.state('sandbox_pool_cleanup')[0]['rotated'],'idle')
         self.assertTrue(any(method=='DELETE' for _,method,_ in self.cma.calls))
 
     def test_legacy_usage_includes_nested_execution_and_sandbox_failure_history(self):
@@ -903,26 +959,26 @@ class PoolRotationTests(PoolFixture,unittest.TestCase):
         pool=SandboxPool(self.ledger,self.cfg['sandbox_pool']);pool.health(self.cma)
         self.ledger.save(force=True)
         self.assertEqual(self.state()[0]['agents_placed'],5)
-        self.assertTrue(self.state()[0]['draining'])
+        self.assertNotIn('draining',self.state()[0])
         self.restore()
         # The persisted count survives task/history removal and is never reset.
         self.ledger.tasks.db.execute('DELETE FROM tasks')
         pool=SandboxPool(self.ledger,self.cfg['sandbox_pool'])
         self.assertEqual(pool.entries[0]['agents_placed'],5)
-        self.assertTrue(pool.entries[0]['draining'])
+        self.assertNotIn('draining',pool.entries[0])
 
-    def test_draining_sandbox_accepts_work_while_replacement_is_capacity_blocked(self):
+    def test_used_sandbox_accepts_work_while_replacement_creation_is_in_flight(self):
         entry=self.seed_pool()[0];entry['agents_placed']=24
         self.ledger.tasks.db.execute('UPDATE pipeline_state SET payload=? WHERE key=?',
                                      (canonical([entry]),'sandbox_pool'))
-        self.occupy(entry,0)  # A live Agent keeps the draining Sandbox in the pool.
+        self.occupy(entry,0)
         row=self.queue('replacement')
         self.ledger.tasks.update(row['id'],row['revision'],'provisioning',
                                  {'pool_create':True,'operation_id':'op_x'})
         pool=SandboxPool(self.ledger,self.cfg['sandbox_pool']);pool.health(self.cma)
-        self.assertTrue(pool.entries[0]['draining'])
-        # A first creation attempt in flight still waits for its Workspace.
-        self.assertEqual(pool.slot(),(False,None))
+        self.assertNotIn('draining',pool.entries[0])
+        # A creation attempt in flight never holds back free existing slots.
+        self.assertEqual(pool.slot(),(True,pool.entries[0]))
         row=self.ledger.tasks.get('replacement')
         self.ledger.tasks.update(row['id'],row['revision'],'provisioning',
                                  {'pool_create':True,'operation_id':'op_x','capacity_retries':2})
@@ -948,14 +1004,18 @@ class PoolRotationTests(PoolFixture,unittest.TestCase):
         self.cma.statuses[entry['sandbox_id']]={'status':'retired'};self.tick()
         self.assertEqual(self.state('sandbox_pool_cleanup'),[])
 
-    def test_rotation_config_requires_positive_integer_and_defaults_to_24(self):
+    def test_former_rotation_keys_are_optional_unused_and_still_validated(self):
         config=self.cfg['sandbox_pool']
-        self.assertEqual(SandboxPool(self.ledger,config).rotate_after_agents,24)
-        for value in (None,True,False,0,-1,1.5,'24',[],{}):
-            with self.subTest(value=value),self.assertRaisesRegex(ValueError,'rotate_after_agents'):
-                SandboxPool(self.ledger,{**config,'rotate_after_agents':value})
-        for value in (1,24,100):
-            self.assertEqual(SandboxPool(self.ledger,{**config,'rotate_after_agents':value}).rotate_after_agents,value)
+        for extra in ({},{'rotate_after_agents':24,'quota_blocked_max_agents_placed':192}):
+            pool=SandboxPool(self.ledger,{**config,**extra})
+            self.assertFalse(hasattr(pool,'rotate_after_agents'))
+            self.assertFalse(hasattr(pool,'quota_blocked_max_agents_placed'))
+        for key in ('rotate_after_agents','quota_blocked_max_agents_placed'):
+            for value in (None,True,False,0,-1,1.5,'24',[],{}):
+                with self.subTest(key=key,value=value),self.assertRaisesRegex(ValueError,key):
+                    SandboxPool(self.ledger,{**config,key:value})
+            for value in (1,24,100,192):
+                SandboxPool(self.ledger,{**config,key:value})
 
 
 class PoolLifecycleTests(PoolFixture,unittest.TestCase):
@@ -1059,14 +1119,28 @@ class PoolLifecycleTests(PoolFixture,unittest.TestCase):
         self.cma.statuses[entry['sandbox_id']]={'status':'paused'};self.tick()
         self.assertEqual(len(self.lifecycle_calls('revive')),1);self.assertFalse(self.cma.creates)
 
-    def test_legacy_paused_empty_entry_retires_instead_of_reviving(self):
-        entry=self.seed_pool()[0];self.cma.statuses[entry['sandbox_id']]={'status':'paused'}
-        self.queue('new-work');self.tick()
-        self.assertFalse(self.lifecycle_calls())
+    def test_paused_empty_entry_revives_for_waiting_work_instead_of_retiring(self):
+        entry=self.seed_pool()[0];entry['agents_placed']=200
+        self.ledger.tasks.db.execute('UPDATE pipeline_state SET payload=? WHERE key=?',
+                                     (canonical([entry]),'sandbox_pool'))
+        self.cma.statuses[entry['sandbox_id']]={'status':'paused'}
+        self.queue('new-work');self.now+=6000;self.tick()
+        # Its group has work: the paused Sandbox is revived, not retired or replaced.
+        self.assertEqual(len(self.lifecycle_calls('revive')),1)
+        self.assertFalse(self.retirement_calls());self.assertFalse(self.cma.creates)
+        self.assertEqual(self.state()[0]['sandbox_id'],entry['sandbox_id'])
+        self.assertFalse(self.state('sandbox_pool_cleanup'))
+
+    def test_paused_empty_entry_retires_once_its_group_has_been_idle(self):
+        entry=self.seed_pool()[0];entry['agents_placed']=200
+        self.ledger.tasks.db.execute('UPDATE pipeline_state SET payload=? WHERE key=?',
+                                     (canonical([entry]),'sandbox_pool'))
+        self.cma.statuses[entry['sandbox_id']]={'status':'paused'}
+        self.now+=599;self.tick();self.assertFalse(self.retirement_calls())
+        self.now+=1;self.tick()
         self.assertEqual(self.state('sandbox_pool_cleanup')[0]['rotated'],'paused')
         self.assertEqual(len(self.retirement_calls()),1)
-        self.assertNotIn('workspace_id',next(iter(self.cma.creates.values())))
-        self.assertNotEqual(self.state()[0]['sandbox_id'],entry['sandbox_id'])
+        self.assertFalse(self.lifecycle_calls());self.assertFalse(self.cma.creates)
 
     def test_available_active_capacity_precedes_paused_capacity(self):
         entries=self.seed_pool(2);self.cma.statuses[entries[0]['sandbox_id']]={'status':'paused'}

@@ -32,7 +32,11 @@ class Remote(Releases):
         tag = args[2]
         name = args[args.index('--pattern') + 1]
         folder = Path(args[args.index('--dir') + 1])
-        (folder / name).write_bytes(self.files[tag, name])
+        target = folder / name
+        # Like gh: an existing file is never overwritten without --clobber.
+        if target.exists() and '--clobber' not in args:
+            raise RuntimeError('gh release download operation failed: ' + name + ' already exists')
+        target.write_bytes(self.files[tag, name])
 
 
 class Client:

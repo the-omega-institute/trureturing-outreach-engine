@@ -251,12 +251,20 @@ def download(row, name, directory, releases):
     require(artifact['release_tag'] == 'outreach-task-' + row['id'], 'Preserve the task source identity')
     require(type(artifact['bytes']) is int and 0 < artifact['bytes'] <= notes.w.MAX_FILE,
             'Invalid scientific artifact size')
-    releases.run('release', 'download', artifact['release_tag'], '--repo', releases.repo,
-                 '--pattern', name, '--dir', str(directory))
     path = Path(directory) / name
-    require(not path.is_symlink() and path.stat().st_size == artifact['bytes']
-            and hashlib.sha256(path.read_bytes()).hexdigest() == artifact['sha256'],
-            'The preserved artifact differs from the exact PASS')
+
+    def exact():
+        return (path.exists() and not path.is_symlink() and path.stat().st_size == artifact['bytes']
+                and hashlib.sha256(path.read_bytes()).hexdigest() == artifact['sha256'])
+
+    # gh refuses to overwrite an existing file, so a second read of the same
+    # evidence in one directory failed every attempt (2026-11-23..25). Reuse an
+    # exact copy; replace anything else explicitly.
+    if exact():
+        return path
+    releases.run('release', 'download', artifact['release_tag'], '--repo', releases.repo,
+                 '--pattern', name, '--dir', str(directory), *(['--clobber'] if path.exists() or path.is_symlink() else []))
+    require(exact(), 'The preserved artifact differs from the exact PASS')
     return path
 
 

@@ -374,17 +374,17 @@ def delivery_choices(ledger, gh, decision, metadata, prepared, selected):
     return selected
 
 
-def ingested_here(row, old, key):
-    """True when this loop ingested the row's current result for this revision.
+def delivers(row, key):
+    """True when the row's own Mathesis selection binds this revision and its current result.
 
-    The checkpoint naming the revision precedes every ingest. A selection whose
-    final 'queued' record was lost (a failed save or a stopped run) completes
-    that record; other existing deliveries keep their current handling.
+    The signed selection is durable evidence; publication_loop is replaced by
+    later failure and exclusion records. Every envelope is built for, and
+    stored on, its own task, so the task identity needs no separate check.
     """
     envelope = row['data']['mathesis_delivery'].get('envelope', {})
-    selection = (envelope.get('metadata', {}).get('work_id'), envelope.get('metadata', {}).get('version'))
-    return ((old.get('note_id'), old.get('revision')) == key and selection == key
-            and envelope.get('task_id') == row['id'] and envelope.get('result_hash') == digest(row['data']['result']))
+    metadata = envelope.get('metadata', {})
+    return ((metadata.get('work_id'), metadata.get('version')) == key
+            and envelope.get('result_hash') == digest(row['data']['result']))
 
 
 def advance(ledger, config, root, folder, gh=None, secret=None):
@@ -488,11 +488,13 @@ def advance(ledger, config, root, folder, gh=None, secret=None):
                 # A revision queued by any non-Mathesis row, including one
                 # queued earlier in this tick, is already submitted. A Mathesis
                 # row still owes its own selection unless a Mathesis row took
-                # it, or completes the record of a selection this loop already
-                # ingested. Every other row with a queued revision is skipped.
+                # it. A recorded row whose selection already binds this
+                # revision and result completes its 'queued' record, whatever
+                # record replaced it. Every other row with a queued revision,
+                # including a delivered row without any record, is skipped.
                 submitted = key in queued
                 if submitted and (row['kind'] != 'mathesis' or key in taken or (
-                        row['data'].get('mathesis_delivery') and not ingested_here(row, old, key))):
+                        row['data'].get('mathesis_delivery') and not (old and delivers(row, key)))):
                     continue
                 step = 'exclusion'
                 reason, inputs = check_exclusion(row, ledger.tasks, table, decision, metadata)

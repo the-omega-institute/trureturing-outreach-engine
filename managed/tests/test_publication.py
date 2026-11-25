@@ -508,6 +508,75 @@ class PublicationTests(unittest.TestCase):
         self.assertIn('mathesis_delivery', self.row()['data'])
         self.assert_single_alpha_request()
 
+    def stop_before_final_record(self):
+        """One advance that stops after ingest and its save, before the final 'queued' record."""
+        record = p.record
+
+        class Stopped(BaseException):
+            pass
+
+        def stop(ledger, task_id, value, force=False):
+            if value['phase'] == 'queued':
+                raise Stopped()
+            return record(ledger, task_id, value, force)
+
+        with patch.object(p, 'record', side_effect=stop), self.assertRaises(Stopped):
+            self.run_publication()
+        self.assertEqual(self.row()['data']['mathesis_delivery']['phase'], 'ready')
+        self.assertEqual(self.row()['data']['publication_loop']['phase'], 'preparing')
+
+    def test_delivered_row_completes_its_queued_record_after_a_hold_is_removed(self):
+        _, inputs = self.queued_source_note()
+        self.prepared(inputs=inputs)
+        self.stop_before_final_record()
+        delivery = self.row()['data']['mathesis_delivery']
+        self.table['holds'].append({'note_id': 'alpha', 'decision': 'HOLD'}); self.write_decisions()
+        with self.publication_writes() as writes:
+            self.run_publication()
+        for write in writes.values():
+            write.assert_not_called()
+        loop = self.row()['data']['publication_loop']
+        self.assertEqual((loop['phase'], loop['reason']), ('excluded', 'held in tables/decisions.json'))
+        self.assertNotIn('note_id', loop)  # The exclusion record replaced the checkpoint.
+        self.assertEqual(self.row()['data']['mathesis_delivery'], delivery)
+        self.table['holds'].pop(); self.write_decisions()
+        self.assert_lost_record_completes()
+
+    def test_normal_path_delivery_completes_after_a_shortnote_queues_its_revision(self):
+        self.prepared()  # No lineage: the normal path registers, stages and enqueues.
+        self.stop_before_final_record()
+        self.assertNotEqual(self.row()['data']['publication_loop']['phase'], 'queued')
+        note = self.prepared('note-1', kind='shortnote', handoff=False, inputs={'owner_ids': ['contact-1']})
+        self.config['mathesis']['max_publications_per_tick'] = 1
+        self.run_publication()  # The short note takes the only slot first.
+        self.assertEqual(self.row(note['id'])['data']['publication_loop']['phase'], 'queued')
+        self.assertEqual(self.row()['data']['publication_loop']['phase'], 'preparing')
+        self.assert_lost_record_completes()
+
+    def test_delivered_row_with_another_selection_stays_untouched(self):
+        _, inputs = self.queued_source_note()
+        self.prepared(inputs=inputs)
+        self.stop_before_final_record()
+        original = copy.deepcopy(self.row()['data'])
+        changes = {'another version': ('version', 2), 'legacy string version': ('version', '1'),
+                   'another result': ('result_hash', 'f' * 64)}
+        for label, (field, value) in changes.items():
+            with self.subTest(label):
+                data = copy.deepcopy(original)
+                envelope = data['mathesis_delivery']['envelope']
+                (envelope['metadata'] if field == 'version' else envelope)[field] = value
+                current = self.row()
+                changed = self.ledger.tasks.update(current['id'], current['revision'], current['state'], data)
+                with self.publication_writes() as writes:
+                    self.run_publication()
+                for write in writes.values():
+                    write.assert_not_called()
+                self.assertEqual(self.row(), changed)
+        # The exact selection completes once restored.
+        current = self.row()
+        self.ledger.tasks.update(current['id'], current['revision'], current['state'], original)
+        self.assert_lost_record_completes()
+
     def test_default_cap_defers_untouched_rows_and_next_call_continues(self):
         rows = []
         for index in range(5):

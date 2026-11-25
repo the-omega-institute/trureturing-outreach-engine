@@ -348,7 +348,7 @@ class ThroughputTests(unittest.TestCase):
         self.ledger.tasks.update(row['id'], row['revision'], 'verified', {
             'execution_history': [{'agent_id': 'agt_old_' + str(i)} for i in range(8)]})
         calls = []
-        def retire(agent, *args):
+        def retire(agent, *args, **kwargs):
             calls.append(agent)
             return {'status': 'deleting'}
         self.cma.retire = retire
@@ -404,7 +404,7 @@ class ThroughputTests(unittest.TestCase):
         self.ledger.tasks.update(row['id'], row['revision'], 'awaiting-review', {
             **row['data'], 'result': {'report': 'Checked'}})
         calls = []
-        def retire(*args):
+        def retire(*args,**kwargs):
             calls.append(args); self.clock.advance(30)
             return {'stopped': True, 'deleted': False, 'status': 'deleting'}
         self.cma.retire = retire

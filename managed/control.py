@@ -1634,8 +1634,8 @@ TRANSPORT_RETRIES=2
 RETIRE_HISTORY_PER_TICK=6
 # A task cleanup refusal must remain visible without issuing an endless stream
 # of stop/delete requests. CMA lifecycle calls retain their original keys, so
-# three observations are enough before handing the unresolved object to an
-# operator.
+# three refusals are enough before handing the unresolved object to an
+# operator. Accepted operations use a separate observation deadline.
 RETIRE_TASK_RETRIES=3
 CREDIT_RETRIES=50
 CREDIT_PROBE_ACCEPT=15*60
@@ -1787,7 +1787,12 @@ def clear_sandbox_operator_check(ledger,value,secret):
         for entry in cleanup:
             if entry.get('sandbox_id')==value['sandbox_id']:
                 entry.pop('operator_check',None)
-                if isinstance(entry.get('cleanup'),dict):entry['cleanup'].pop('operator_check',None)
+                if isinstance(entry.get('cleanup'),dict):
+                    entry['cleanup'].pop('operator_check',None)
+                    for outcome in entry['cleanup'].get('agent_cleanup',[]):
+                        outcome.pop('operator_check',None)
+                        outcome['cleanup_attempts']=0
+                        outcome.pop('cleanup_started_at',None)
                 # A later identical check is still a new acknowledgement, even
                 # if the clock and the other entry contents have not changed.
                 entry['operator_check_acknowledged']=event
@@ -1821,6 +1826,8 @@ def clear_task_operator_check(ledger,value,secret):
         for field in ('operator_check','transport_retries','next_at','transport_error','transport_error_class'):
             cleanup.pop(field,None)
         cleanup['cleanup_attempts']=0
+        cleanup['operator_check_acknowledged']=event
+        cleanup.pop('cleanup_started_at',None)
         data['cleanup']=cleanup
         recheck.clear(ledger.tasks,'retire',row['id'])
         ledger.tasks._update(row['id'],row['revision'],row['state'],data)
@@ -1941,7 +1948,7 @@ def admission_rejected(ledger,cma,row,exc):
     if data['admission_rejection_ticks']<3:return row
     data['cleanup']=cma.retire(data['agent_id'],
         'outreach-admission-retire-'+row['request_hash']+'-'+str(data.get('admission_rejections',0)),
-        data.get('owned_sandbox_id'))
+        data.get('owned_sandbox_id'),previous=data.get('cleanup'),now=ledger.tasks.clock())
     if not data['cleanup'].get('deleted'):
         return ledger.tasks.update(row['id'],row['revision'],row['state'],data)
     count=data.get('admission_rejections',0)
@@ -2860,7 +2867,8 @@ def advance(ledger,cma,config,folder,revision=None,mailbox=None,oracle_capacity=
             history_retired+=1
             try:
                 entry['cleanup']=cma.retire(entry['agent_id'],
-                    'outreach-retire-history-'+row['request_hash']+'-'+str(index),None)
+                    'outreach-retire-history-'+row['request_hash']+'-'+str(index),None,
+                    previous=entry.get('cleanup'),now=tasks.clock())
                 entry.pop('cleanup_error',None)
             except Exception as exc:
                 entry['cleanup_error']=type(exc).__name__+': '+str(exc)[:300]
@@ -3374,8 +3382,10 @@ def advance(ledger,cma,config,folder,revision=None,mailbox=None,oracle_capacity=
                             and 'result' not in data and not exhausted)
             owned_sandbox=pool.owned_sandbox(data) if pool else data.get('owned_sandbox_id')
             if data.get('pool_sandbox_id'):owned_sandbox=None
+            agent_inflight=not cleanup.get('deleted') and cleanup.get('delete_outcome')=='accepted'
             if row['state'] not in ACTIVE and not repair_pending and data.get('agent_id') and \
-                    not cleanup.get('operator_check') and cleanup.get('cleanup_attempts',0)<RETIRE_TASK_RETRIES and \
+                    (not cleanup.get('operator_check') or agent_inflight) and \
+                    (cleanup.get('cleanup_attempts',0)<RETIRE_TASK_RETRIES or agent_inflight) and \
                     tasks.clock()>=cleanup.get('next_at',0) and \
                     (not cleanup.get('deleted') or (owned_sandbox and not cleanup.get('sandbox_retired'))) and \
                     recheck.due(tasks,'retire',row['id'],data['agent_id']):
@@ -3389,9 +3399,12 @@ def advance(ledger,cma,config,folder,revision=None,mailbox=None,oracle_capacity=
                     retire_key='outreach-retire-'+row['request_hash']
                     if data.get('execution_restart'):retire_key+='-execution-'+data['execution_restart']
                     prior_attempts=cleanup.get('cleanup_attempts',0)
+                    acknowledgement=cleanup.get('operator_check_acknowledged')
+                    if acknowledgement:retire_key+='-ack-'+acknowledgement
                     if prior_attempts:retire_key+='-retry-'+str(prior_attempts)
                     try:
-                        result=cma.retire(data['agent_id'],retire_key,owned_sandbox)
+                        result=cma.retire(data['agent_id'],retire_key,owned_sandbox,
+                                          previous=cleanup,now=tasks.clock())
                     except Exception as exc:
                         # A lost transport response is an observation failure;
                         # recover it under the original handle/key instead of
@@ -3411,18 +3424,20 @@ def advance(ledger,cma,config,folder,revision=None,mailbox=None,oracle_capacity=
                         # budget. In-flight stopping/deleting observations are
                         # normal progress and must be revisited with the same
                         # lifecycle key.
-                        failed=(not result.get('deleted') and
+                        unfinished=(not result.get('deleted') or
+                                    (owned_sandbox and not result.get('sandbox_retired')))
+                        failed=(unfinished and
                                 bool(result.get('errors') or result.get('cleanup_error') or
                                      result.get('sandbox_delete_error')))
                         attempts=prior_attempts+(1 if failed else 0)
                         result={**result,'cleanup_attempts':attempts}
-                        unfinished=(not result.get('deleted') or
-                                    (owned_sandbox and not result.get('sandbox_retired')))
                         if (unfinished and attempts>=RETIRE_TASK_RETRIES and
+                                not (not result.get('deleted') and result.get('delete_outcome')=='accepted') and
                                 not result.get('operator_check')):
                             result['operator_check']={'kind':'cma-agent-cleanup',
                                 'agent_id':data['agent_id'],
                                 'reason':'Agent or owned Sandbox retirement did not complete after three bounded attempts'}
+                    if acknowledgement:result['operator_check_acknowledged']=acknowledgement
                     data['cleanup']=result
                     row=tasks.update(row['id'],row['revision'],row['state'],data);ledger.save()
         except Exception as exc:

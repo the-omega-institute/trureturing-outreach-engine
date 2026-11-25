@@ -152,6 +152,50 @@ class HostedReviewTests(unittest.TestCase):
         self.assertEqual(rules['AGENTS.md'], 'operative AGENTS')
         self.policy.start()
 
+    def test_completed_review_retires_its_agent_and_preserves_other_agents(self):
+        from managed.cma import CMA as Adapter
+        self.advance()
+        run = self.row()['data']['hosted_review']
+        self.assertEqual(run['phase'], 'completed')
+        self.assertIn('agt_review', ledger_agents([self.row()]))
+        calls = []
+        agents = {
+            'agt_review': {'id':'agt_review', 'status':'ready', 'sandbox':{'id':'sbx_mail'}},
+            'agt_other': {'id':'agt_other', 'name':'human-debug', 'status':'working'},
+        }
+
+        def request(path, method='GET', body=None, key=None):
+            calls.append((path, method, key))
+            if path == '/api/v1/agents/agt_review/stop' and method == 'POST':
+                agents['agt_review']['status'] = 'stopped'
+                return dict(agents['agt_review'])
+            if path == '/api/v1/agents/agt_review':
+                if method == 'DELETE':
+                    agents['agt_review']['status'] = 'deleted'
+                return dict(agents['agt_review'])
+            if path == '/api/v1/sandboxes/sbx_mail' and method == 'GET':
+                return {'status':'active'}
+            if path.startswith('/api/v1/agents?') and method == 'GET':
+                return {'items':[dict(agent) for agent in agents.values()], 'next':None}
+            raise AssertionError((path, method))
+
+        adapter = Adapter(token='fake')
+        adapter.request = request
+        self.cma.retire = adapter.retire
+        self.advance()
+        completed = self.row()['data']['hosted_review']
+        self.assertTrue(completed['cleanup_complete'])
+        self.assertEqual(completed['cleanup']['foreign_agents'], ['agt_other'])
+        self.assertFalse(completed['cleanup']['sandbox_retired'])
+        self.assertEqual([(path, method, key) for path, method, key in calls if method != 'GET'], [
+            ('/api/v1/agents/agt_review/stop', 'POST', run['create_key'] + '-cleanup-stop'),
+            ('/api/v1/agents/agt_review', 'DELETE', run['create_key'] + '-cleanup-delete'),
+        ])
+        self.assertEqual(agents['agt_other']['status'], 'working')
+        before = len(calls)
+        self.advance()
+        self.assertEqual(len(calls), before)
+
     def test_lost_admission_reuses_original_agent_prompt_and_key(self):
         self.cma.lose_admission = True
         self.advance()

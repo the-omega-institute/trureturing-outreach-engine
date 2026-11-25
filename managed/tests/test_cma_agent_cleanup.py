@@ -9,9 +9,11 @@ from managed.sandbox_pool import ledger_agents
 class CMAAgentCleanupTests(unittest.TestCase):
     def test_hosted_review_agent_is_owned_by_ledger_cleanup_only(self):
         rows=[{'data':{'hosted_review':{
-            'agent_id':'agt_review', 'phase':'completed', 'cleanup_complete':False}}}]
+            'agent_id':'agt_review', 'phase':'completed', 'cleanup_complete':False},
+            'hosted_review_history':[{'agent_id':'agt_old_review',
+                                      'cleanup':{'agent_id':'agt_old_cleanup'}}]}}]
         owned=ledger_agents(rows)
-        self.assertEqual(owned, {'agt_review'})
+        self.assertEqual(owned, {'agt_review', 'agt_old_review', 'agt_old_cleanup'})
         calls=[]
         agents={
             'agt_review':{'id':'agt_review','name':'independent-review-abc','status':'failed'},

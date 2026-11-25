@@ -385,6 +385,12 @@ class SandboxFailureTests(PoolFixture, unittest.TestCase):
                 if '/agents?' in path:
                     return pages['agt_dead' if 'cursor=agt_dead' in path else None]
                 if path.endswith('/workspaces'):return {'items':[{}]}
+                if method=='GET' and path.startswith('/api/v1/agents/'):
+                    # Individual reads report the Agent's own status, as CMA does.
+                    agent=path.rsplit('/',1)[-1]
+                    for page in pages.values():
+                        for item in page['items']:
+                            if item['id']==agent:return dict(item)
                 return {'status':'active'}
             cma.request=request;calls.clear()
             cma.retire_sandbox(None,'sbx_corrupt','key',{},dead_ok=True,finished=finished)

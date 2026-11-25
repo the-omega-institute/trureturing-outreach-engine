@@ -300,8 +300,11 @@ class CMA:
         try:
             # Inventory can be stale or omit an Agent whose DELETE is pending.
             # An individual GET is required to reconcile that original handle.
-            agent=self.request('/api/v1/agents/'+agent_id) if observing else (
-                agent or self.request('/api/v1/agents/'+agent_id))
+            # A listing that says ready/stopped would lead straight to DELETE;
+            # confirm that with a fresh GET so a stale listing never deletes an
+            # Agent that has started working since.
+            if observing or not agent or agent.get('status') in {'ready','stopped'}:
+                agent=self.request('/api/v1/agents/'+agent_id)
         except Exception as exc:
             if CMA._gone(exc):
                 result.update(stopped=True,deleted=True,status='gone',gone=True)

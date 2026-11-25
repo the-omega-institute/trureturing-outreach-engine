@@ -270,8 +270,17 @@ class CMAAgentCleanupTests(unittest.TestCase):
 
     def test_accepted_delete_read_failures_keep_acceptance_and_bound_observation(self):
         cma=LifecycleCMA({'agt_idle':'ready'},accepted=True)
-        cma.get_error=TimeoutError('lost readback')
+        # The pre-DELETE confirmation GET succeeds; the readback after the
+        # accepted DELETE is lost.
+        original=cma.request; reads={'n':0}
+        def request(path,method='GET',body=None,key=None):
+            if method=='GET' and path=='/api/v1/agents/agt_idle':
+                reads['n']+=1
+                if reads['n']>1:raise TimeoutError('lost readback')
+            return original(path,method,body,key)
+        cma.request=request
         first=cma._retire_agent('agt_idle','key',agent=cma.agents['agt_idle'],now=1000)
+        cma.request=original
         self.assertEqual(first['delete_outcome'],'accepted')
         for error in (TimeoutError('lost read'),CMARequestError(503,{'code':'unavailable'})):
             cma.get_error=error
@@ -281,6 +290,13 @@ class CMAAgentCleanupTests(unittest.TestCase):
         result=cma.retire('agt_idle','key',previous=result,now=1000+AGENT_CLEANUP_WAIT_SECONDS)
         self.assertIn('operator_check',result)
         self.assertEqual(sum(method=='DELETE' for _,method,_ in cma.calls),1)
+
+    def test_failed_confirmation_get_never_deletes(self):
+        cma=LifecycleCMA({'agt_idle':'ready'},accepted=True)
+        cma.get_error=TimeoutError('lost read')
+        with self.assertRaises(TimeoutError):
+            cma._retire_agent('agt_idle','key',agent=copy.deepcopy(cma.agents['agt_idle']),now=1000)
+        self.assertEqual(sum(method=='DELETE' for _,method,_ in cma.calls),0)
 
     def test_accepted_delete_terminal_get_refusal_is_not_deletion(self):
         for error in (CMARequestError(403,{'code':'forbidden'}),CMARequestError(404,{'status':404}),
@@ -314,6 +330,16 @@ class CMAAgentCleanupTests(unittest.TestCase):
         second=cma.retire('agt_working','key',previous=first,now=1001)
         cma.retire('agt_working','key',previous=second,now=1002)
         self.assertEqual([method for _,method,_ in cma.calls if method!='GET'],['POST','DELETE'])
+
+    def test_stale_ready_listing_is_confirmed_before_delete(self):
+        cma=LifecycleCMA({'agt_r':'working'})
+        cma.stop_error=None
+        listed={'id':'agt_r','name':'outreach-r','status':'ready'}
+        cma._retire_agent('agt_r','outreach-retire-r',agent=listed)
+        methods=[(path.rsplit('/',1)[-1],method) for path,method,_ in cma.calls]
+        self.assertEqual(methods[0],('agt_r','GET'))
+        self.assertNotEqual(methods[1],('agt_r','DELETE'))
+        self.assertIn(('stop','POST'),methods)
 
     def test_four_ready_agents_retire_sandbox_within_budget(self):
         for budget in (2,4):

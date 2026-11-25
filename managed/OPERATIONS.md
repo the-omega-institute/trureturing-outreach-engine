@@ -57,11 +57,12 @@ through the corrupt, stalled, failed and removed-group paths, and the group's
 next task creates its replacement. A surplus healthy Sandbox beyond the group's
 last one retires after its group has had no queued, provisioning or running
 work, no pending review and no creation in flight for the idle period
-(`OUTREACH_POOL_IDLE_PAUSE_SECONDS`, default 600). A pool without configured
-groups retires idle Sandboxes the same way. Running Agents are never stopped or
-moved. The former `rotate_after_agents` and `quota_blocked_max_agents_placed`
-keys are unused; they remain optional and are still validated as positive
-integers.
+(`OUTREACH_POOL_IDLE_PAUSE_SECONDS`, default 600). Every row of the group
+counts, whatever the coordinator pause, kind enablement or hosted-review switch
+says; those switches govern admission only. A pool without configured groups
+retires idle Sandboxes the same way. Running Agents are never stopped or moved.
+The former `rotate_after_agents` and `quota_blocked_max_agents_placed` keys are
+unused; they remain optional and are still validated as positive integers.
 
 ## CMA cleanup observations
 

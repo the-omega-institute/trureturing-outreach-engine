@@ -23,7 +23,8 @@ STALLED_SECONDS=2*3600
 # pool can open a working replacement.
 RETIRE_STALLED_SECONDS=12*3600
 # Retain account-quota evidence across ticks after the failed creation leaves
-# ACTIVE, but let normal rotation resume if no fresh failure is observed.
+# ACTIVE. While it lasts, an empty surplus Sandbox of the group is kept; it
+# expires unless a fresh failure is observed.
 CAPACITY_BLOCK_SECONDS=2*3600
 # A lost/blocked creation must not reserve the next Sandbox indefinitely.
 # After this bound, missing first-Workspace identity is quota evidence and the
@@ -186,10 +187,8 @@ def summary(tasks, rows=None):
 
 
 class SandboxPool:
-    def __init__(self, ledger, config, kinds=None, *, paused=False, correspondence=(), rows=None, reserve_review_slots=0):
+    def __init__(self, ledger, config, kinds=None, *, correspondence=(), rows=None, reserve_review_slots=0):
         self.ledger=ledger
-        self.kinds = kinds or {}
-        self.paused = paused
         self.correspondence = correspondence
         self.max_sandboxes=config['max_sandboxes']
         self.agents_per_sandbox=config['agents_per_sandbox']
@@ -198,13 +197,14 @@ class SandboxPool:
                 'sandbox_pool.max_sandboxes must be positive')
         require(type(self.agents_per_sandbox) is int and 0<self.agents_per_sandbox<=16,
                 'sandbox_pool.agents_per_sandbox must be between 1 and 16')
-        # Unused: a Sandbox is retired once its group is idle, never for the
-        # number of Agents it has hosted (owner decision 2026-11-26). Existing
+        # Unused: the number of Agents a Sandbox has hosted never affects
+        # admission or retirement (owner decision 2026-11-26). Existing
         # configurations that still set these former thresholds validate.
         for key in ('rotate_after_agents','quota_blocked_max_agents_placed'):
             require(type(config.get(key,1)) is int and config.get(key,1)>0,
                     'sandbox_pool.'+key+' must be a positive integer')
-        self.group_limits, self.kind_groups = group_config(config, self.kinds)
+        # Enabled kinds only validate group coverage; retirement never reads them.
+        self.group_limits, self.kind_groups = group_config(config, kinds or {})
         self.idle_seconds=float(os.environ.get('OUTREACH_POOL_IDLE_PAUSE_SECONDS','600'))
         require(math.isfinite(self.idle_seconds) and self.idle_seconds>=0,
                 'Invalid pool idle pause seconds')
@@ -377,33 +377,31 @@ class SandboxPool:
         return True
 
     def busy(self, group, rows):
-        """Whether the group has work for which all its Sandboxes stay.
+        """Whether the group has work, whatever the admission switches say.
 
-        Every provisioning, admitting or running row of the group counts,
-        including a creation still waiting for its first Workspace. Unless
-        the coordinator is paused, queued work and pending reviews of an
-        enabled kind count too.
+        Any queued, provisioning, admitting or running row of the group counts,
+        including a creation still waiting for its first Workspace, and so does
+        a pending review. The coordinator pause, kind enablement and the hosted
+        review switch govern admission only; they never make a group idle.
         Placement can fall behind for longer than the idle grace (2026-11-23: the
         advance stage ran out of tick budget). Once the quota evidence expired,
         the notes group's only Sandbox was rotated 'idle' beside 258 queued
         tasks and the account could not create a replacement.
         """
         mine=[r for r in rows if self.group(r)==group]
-        if any(r['state'] in ACTIVE for r in mine):return True
-        if self.paused:return False
+        if any(r['state']=='queued' or r['state'] in ACTIVE for r in mine):return True
         from .control import workflow
         from .independent_review import effect_started, pending_effect
         from .tasks import reviewable, review_current, matches_workflow
         current_hashes = {}
         def review_pending(row):
-            if not self.reserve_review_slots:return False
             if reviewable(row):return not effect_started(row, self.ledger.tasks)
             if not pending_effect(row, self.ledger.tasks) or not review_current(row, row['request']['workflow_hash']):
                 return False
             kind = row['kind']
             if kind not in current_hashes:current_hashes[kind] = workflow(kind)
             return not matches_workflow(row, current_hashes[kind])
-        return any(self.kinds.get(r['kind']) and (r['state']=='queued' or review_pending(r)) for r in mine)
+        return any(review_pending(r) for r in mine)
 
     def cleanup_entry(self, cma, entry, status, rows, now):
         sandbox_id=entry['sandbox_id']

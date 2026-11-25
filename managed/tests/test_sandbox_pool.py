@@ -118,6 +118,11 @@ class PoolFixture:
              'sandbox_id':entry['sandbox_id'],'workspace_id':entry['workspace_id'],
              'cleanup':{'deleted':deleted}})
 
+    def finish_review(self,row):
+        row=self.ledger.tasks.get(row['id'])
+        self.assertEqual(row['state'],'awaiting-review')
+        self.ledger.tasks.update(row['id'],row['revision'],'verified',row['data'])
+
     def restore(self):
         self.ledger.tasks.close();self.folder=self.folder/'restore';self.folder.mkdir()
         self.ledger=Ledger(self.remote,self.folder)
@@ -159,7 +164,7 @@ class PoolTests(PoolFixture,unittest.TestCase):
                 if path==f'/api/v1/agents/agt_stuck':return dict(agent)
                 if path==f'/api/v1/sandboxes/{sid}/workspaces':return {'items':[{'id':wid}]}
                 raise AssertionError((path,method))
-        pool=SandboxPool(self.ledger,self.cfg['sandbox_pool'],self.cfg['kinds'],paused=True)
+        pool=SandboxPool(self.ledger,self.cfg['sandbox_pool'],self.cfg['kinds'])
         pool.health(SweepCMA(),rows=self.ledger.tasks.all())
         self.assertTrue(any(path.startswith('/api/v1/agents?') for path,_,_ in calls))
         self.assertTrue(any(path.endswith('/agt_stuck') and method=='DELETE' for path,method,_ in calls))
@@ -932,6 +937,7 @@ class PoolRotationTests(PoolFixture,unittest.TestCase):
         self.assertTrue(self.ledger.tasks.get(row['id'])['data']['cleanup']['deleted'])
         self.assertEqual(len(self.state()),1)
         self.assertFalse(any(method=='DELETE' for _,method,_ in self.cma.calls))
+        self.finish_review(row)  # A result awaiting review is still pool work.
         self.now+=600;self.tick()
         self.assertEqual(self.state(),[])
         self.assertEqual(self.state('sandbox_pool_cleanup')[0]['rotated'],'idle')
@@ -1287,6 +1293,7 @@ class PoolLifecycleTests(PoolFixture,unittest.TestCase):
         self.cma.response=response;self.tick()
         self.assertTrue(self.ledger.tasks.get(row['id'])['data']['cleanup']['deleted'])
         self.assertEqual(self.state()[0]['idle_since'],self.now);self.assertFalse(self.lifecycle_calls())
+        self.finish_review(row)  # A result awaiting review is still pool work.
         self.now+=599;self.tick();self.assertFalse(self.lifecycle_calls())
         self.now+=1;self.tick();self.assertEqual(len(self.retirement_calls()),1)
 
@@ -1301,9 +1308,13 @@ class PoolLifecycleTests(PoolFixture,unittest.TestCase):
             {'sandbox_id':entries[1]['sandbox_id'],'state':'paused','live_agents':1,'idle_since':1000}])
         self.assertFalse(any('sbx_not_ours' in path for path,_,_ in self.cma.calls))
 
-    def test_production_pause_allows_idle_retirement_but_never_demand_revival(self):
+    def test_production_pause_keeps_sandbox_for_queued_work_but_never_demand_revives(self):
         entry=self.seed_pool()[0];self.cfg['paused']=True;self.now+=600
-        self.queue('waiting');self.tick();self.assertEqual(len(self.retirement_calls()),1)
+        waiting=self.queue('waiting');self.tick();self.assertFalse(self.retirement_calls())
+        self.assertFalse(self.lifecycle_calls('revive'));self.assertFalse(self.cma.creates)
+        # Once no work remains, the paused coordinator still retires the idle Sandbox.
+        self.ledger.tasks.update(waiting['id'],self.ledger.tasks.get(waiting['id'])['revision'],'failed',{})
+        self.now+=600;self.tick();self.assertEqual(len(self.retirement_calls()),1)
         self.cma.statuses[entry['sandbox_id']]={'status':'retired'};self.tick()
         self.assertFalse(self.lifecycle_calls('revive'));self.assertFalse(self.cma.creates)
         self.assertEqual(self.state('sandbox_pool_cleanup'),[])

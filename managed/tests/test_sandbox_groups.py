@@ -387,9 +387,13 @@ class SandboxGroupTests(GroupFixture, unittest.TestCase):
             'sandbox_pool_capacity', canonical({'groups': {'notes': self.now, 'mail': self.now}})))
         # Placement fell behind (advance ran out of tick budget); only health runs.
         self.now += CAPACITY_BLOCK_SECONDS + 600
-        pool = SandboxPool(self.ledger, self.cfg['sandbox_pool'], self.cfg['kinds'], paused=paused)
-        pool.health(self.cma)
-        pool.idle(self.cma)
+        pool = SandboxPool(self.ledger, self.cfg['sandbox_pool'], self.cfg['kinds'])
+        if paused:  # A paused coordinator still runs pool health and idle passes.
+            self.cfg['paused'] = True
+            self.tick()
+        else:
+            pool.health(self.cma)
+            pool.idle(self.cma)
         rotated = {e['sandbox_id']: e.get('rotated') for e in self.state('sandbox_pool_cleanup')}
         return pool, entries, rotated
 
@@ -480,7 +484,6 @@ class IdleOnlyRetirementTests(GroupFixture, unittest.TestCase):
     def test_idle_surplus_sandbox_retires_through_cleanup_with_a_stable_key(self):
         keeper, surplus, mail = self.surplus_entries()
         self.occupy(surplus, 0, deleted=True)  # Finished; its Agent is deleted.
-        self.queue('disabled-kind', 'mathesis')  # Queued work of a disabled kind does not count.
         lost = []
 
         def lose_first_surplus_delete(sandbox_id, key):
@@ -508,6 +511,61 @@ class IdleOnlyRetirementTests(GroupFixture, unittest.TestCase):
         self.assertEqual(deletes, ['outreach-pool-retire-' + surplus['sandbox_id'] + '-sandbox-delete'] * 2)
         self.assertEqual(lost, deletes[:1])
         self.assertEqual([e['sandbox_id'] for e in self.state()], [keeper['sandbox_id'], mail['sandbox_id']])
+
+    def surplus_kept_until_the_group_has_no_work(self, add_work):
+        """Admission switches never make a group idle; the surplus retires once work ends."""
+        keeper, surplus, mail = self.surplus_entries()
+        row = add_work()
+        self.now += 10 * 24 * 3600  # Far beyond the idle period.
+        original, retired = SandboxPool.failed_entry, []
+
+        def recorded(pool, sandbox_id, *args, **kwargs):
+            retired.append(sandbox_id)
+            return original(pool, sandbox_id, *args, **kwargs)
+
+        with patch.object(SandboxPool, 'failed_entry', recorded):
+            self.tick()
+            self.now += 10 * 24 * 3600
+            self.tick()
+        self.assertEqual(retired, [])
+        self.assertEqual([e['sandbox_id'] for e in self.state()],
+                         [keeper['sandbox_id'], mail['sandbox_id'], surplus['sandbox_id']])
+        self.assertEqual(self.state('sandbox_pool_cleanup'), [])
+        self.assertFalse([path for path, method, _ in self.cma.calls if method == 'DELETE'])
+        # The work was not admitted or changed; the group's work then ends and
+        # the surplus retires after the idle period.
+        self.assertEqual(self.ledger.tasks.get(row['id'])['state'], row['state'])
+        row = self.ledger.tasks.get(row['id'])
+        self.ledger.tasks.update(row['id'], row['revision'], 'failed', row['data'])
+        self.tick()
+        self.assertIn(surplus['sandbox_id'], [e['sandbox_id'] for e in self.state()])
+        self.now += 600
+        self.tick()
+        [cleanup] = self.state('sandbox_pool_cleanup')
+        self.assertEqual((cleanup['sandbox_id'], cleanup['rotated'], cleanup['cleanup_intent']),
+                         (surplus['sandbox_id'], 'idle', {'key': 'outreach-pool-retire-' + surplus['sandbox_id']}))
+        self.assertEqual([e['sandbox_id'] for e in self.state()], [keeper['sandbox_id'], mail['sandbox_id']])
+        self.assertEqual([key for _, method, key in self.cma.calls if method == 'DELETE'],
+                         ['outreach-pool-retire-' + surplus['sandbox_id'] + '-sandbox-delete'])
+
+    def test_paused_coordinator_keeps_a_surplus_sandbox_for_queued_group_work(self):
+        self.cfg['paused'] = True
+        self.surplus_kept_until_the_group_has_no_work(lambda: self.queue('waiting', 'shortnote'))
+
+    def test_disabled_kind_queued_work_keeps_a_surplus_sandbox(self):
+        # The notes group's mathesis kind is not enabled.
+        self.surplus_kept_until_the_group_has_no_work(lambda: self.queue('disabled', 'mathesis'))
+
+    def test_paused_coordinator_keeps_a_surplus_sandbox_for_a_pending_review(self):
+        self.cfg['paused'] = True
+        self.cfg['kinds']['mathesis'] = True
+
+        def pending_review():
+            row = self.queue('reviewable', 'mathesis')
+            return self.ledger.tasks.update(row['id'], row['revision'], 'awaiting-review',
+                                            {'result': {'outcome': 'completed'}})
+
+        self.surplus_kept_until_the_group_has_no_work(pending_review)
 
     def test_unobserved_peer_does_not_make_the_last_sandbox_surplus(self):
         keeper, surplus, mail = self.surplus_entries()

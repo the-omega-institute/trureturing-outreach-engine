@@ -321,7 +321,9 @@ class CMA:
             return CMA._cleanup_observation(result,now,sandbox_id)
 
         original_status=status
-        if status not in {'ready','stopped','stopping'}:
+        # Live CMA refuses DELETE of a ready Agent (409 agent_not_stopped), so an
+        # idle Agent is stopped first like a working one (2026-11-25).
+        if status not in {'stopped','stopping'}:
             try:
                 stopped=self.request('/api/v1/agents/'+agent_id+'/stop','POST',{},key+'-stop')
                 agent=stopped if isinstance(stopped,dict) and stopped.get('status') else None
@@ -359,7 +361,7 @@ class CMA:
         status=agent.get('status')
         result.update(status=status,stopped=status in {'stopped','stopping','deleting','deleted'},
                       deleted=status=='deleted')
-        if status not in {'ready','stopped','deleted'} and original_status not in {
+        if status not in {'stopped','deleted'} and original_status not in {
                 'failed','terminal','completed','cancelled','canceled'}:
             return CMA._cleanup_observation(result,now,sandbox_id)
         if status=='deleted':return CMA._cleanup_observation(result,now,sandbox_id)

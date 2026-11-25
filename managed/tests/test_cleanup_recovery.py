@@ -210,7 +210,8 @@ class CleanupRecoveryTests(PoolFixture,unittest.TestCase):
         self.assertTrue(entry['cleanup']['sandbox_retired'])
         self.assertEqual(sum(method=='DELETE' and '/agents/' in path for path,method,_ in cma.calls),4)
         self.assertEqual(pool.agent_cleanup_remaining,4)
-        self.assertFalse(any(method=='POST' for _,method,_ in cma.calls))
+        # Live CMA requires a stop before DELETE, also for idle Agents.
+        self.assertEqual(sum(method=='POST' and path.endswith('/stop') for path,method,_ in cma.calls),4)
 
     def test_task_clear_never_repeats_lifecycle_key(self):
         self.cma=LifecycleCMA({'agt_finished':'ready'})

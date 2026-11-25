@@ -78,28 +78,59 @@ def files(root):
 
 
 
-def table_digests(tasks):
-    """Canonical logical table hashes with bounded row-at-a-time memory."""
+def capture_tables(tasks, baseline=None, limit=512 * 1024):
+    """Stream logical hashes and a bounded delta from a prior row-hash index.
+
+    The index retains hashes/rowids, never historical row payloads. Delta entries
+    retain SQL arrival order for new/replaced rows; unchanged rows come from the
+    caller's original snapshot or a preceding replay frame.
+    """
     import hashlib
-    result = {}
+    result, index, delta, size, overflow = {}, {}, {}, 0, False
+    previous = (baseline or {}).get('tables', {})
     for (name,) in tasks.db.execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"):
         info = list(tasks.db.execute('PRAGMA table_info("' + name + '")'))
         columns = [r[1] for r in info]
         keys = [r[1] for r in sorted(info, key=lambda r: r[5]) if r[5]] or ['name']
+        schema = {'columns': columns, 'primary_key': keys}
+        rows, changes = {}, []
+        old = previous.get(name, {}).get('rows', {})
         h = hashlib.sha256()
-        prefix = canonical({'columns': columns, 'primary_key': keys, 'rows': []})
-        h.update(prefix[:-2].encode())
+        h.update(canonical({**schema, 'rows': []})[:-2].encode())
         first = True
         order = ','.join('"' + k + '"' for k in keys)
-        for row in tasks.db.execute('SELECT * FROM "' + name + '" ORDER BY ' + order):
+        for raw_row in tasks.db.execute('SELECT rowid,* FROM "' + name + '" ORDER BY ' + order):
+            rowid, *row = raw_row
             item = dict(zip(columns, row))
             for column, value in item.items():
                 if column in JSON_COLUMNS and isinstance(value, str):
                     try: item[column] = json.loads(value)
                     except ValueError: pass
+            raw = canonical(item).encode()
             if not first: h.update(b',')
-            first = False
-            h.update(canonical(item).encode())
-        h.update(b']}')
-        result[name] = h.hexdigest()
-    return result
+            first = False; h.update(raw)
+            key = canonical([item[k] for k in keys])
+            fingerprint = [hashlib.sha256(raw).hexdigest(), rowid]
+            rows[key] = fingerprint
+            if baseline is not None and old.get(key) != fingerprint:
+                size += len(raw) + len(key.encode()) + 128
+                if size > limit: overflow = True
+                elif not overflow:
+                    changes.append({'key': key, 'row': item, 'append': key not in old or old[key][1] != rowid, '_rowid': rowid})
+        h.update(b']}'); result[name] = h.hexdigest()
+        index[name] = {**schema, 'rows': rows}
+        if baseline is not None:
+            deleted = sorted(set(old) - set(rows))
+            size += sum(len(k.encode()) + 8 for k in deleted)
+            if size > limit: overflow = True
+            if changes or deleted or name not in previous:
+                changes.sort(key=lambda c: c['_rowid'])
+                for change in changes: change.pop('_rowid')
+                delta[name] = {**schema, 'changes': changes, 'deleted': deleted}
+    if baseline is not None:
+        for name in set(previous) - set(index): delta[name] = {'drop': True}
+    return result, {'digests': result, 'tables': index}, delta, overflow
+
+
+def table_digests(tasks):
+    return capture_tables(tasks)[0]

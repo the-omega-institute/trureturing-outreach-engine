@@ -434,11 +434,23 @@ fn run(case: &Value, previous: &mut Option<Value>) -> Result<bool> {
         workflow: &workflow,
     };
     let resource = |_: &Value| Ok(vec![]);
-    let initial_rows = case
+    let mut initial_rows = case
         .get("initial_rows")
         .cloned()
         .or_else(|| previous.clone())
         .unwrap_or(Value::Null);
+    if let Some(expected) = case.get("base_digests") {
+        let mut logical = initial_rows.clone();
+        sort_tables(&mut logical);
+        let mut actual = object([]);
+        for (name, table) in logical.as_object().into_iter().flatten() {
+            actual[name] = string(outreach_canon::digest(table)?);
+        }
+        if actual != *expected {
+            return Ok(false);
+        }
+    }
+    apply_boundary_delta(&mut initial_rows, &case["initial_delta"])?;
     if let Some(expected) = case.get("initial_digests") {
         let mut actual = object([]);
         let mut logical = initial_rows.clone();
@@ -609,6 +621,64 @@ fn run(case: &Value, previous: &mut Option<Value>) -> Result<bool> {
         *previous = Some(replay.tables);
     }
     Ok(equal)
+}
+fn apply_boundary_delta(tables: &mut Value, delta: &Value) -> Result<()> {
+    for (name, patch) in delta.as_object().into_iter().flatten() {
+        if patch["drop"] == true {
+            if let Some(tables) = tables.as_object_mut() {
+                tables.shift_remove(name);
+            }
+            continue;
+        }
+        if tables.get(name).is_none() {
+            tables[name] = object([
+                ("columns", patch["columns"].clone()),
+                ("primary_key", patch["primary_key"].clone()),
+                ("rows", Value::Array(vec![])),
+            ]);
+        }
+        let keys = array(&patch["primary_key"]);
+        let key = |row: &Value| {
+            outreach_canon::canonical(&Value::Array(
+                keys.iter().map(|k| row[s(k)].clone()).collect(),
+            ))
+        };
+        let rows = tables[name]["rows"]
+            .as_array_mut()
+            .ok_or_else(|| outreach_canon::Error::new("Missing boundary rows"))?;
+        for deleted in array(&patch["deleted"]) {
+            let mut retained = Vec::new();
+            for row in rows.drain(..) {
+                if key(&row)? != s(deleted) {
+                    retained.push(row);
+                }
+            }
+            *rows = retained;
+        }
+        for change in array(&patch["changes"]) {
+            if key(&change["row"])? != s(&change["key"]) {
+                return Err(outreach_canon::Error::new("Boundary key mismatch"));
+            }
+            let mut found = None;
+            for (index, row) in rows.iter().enumerate() {
+                if key(row)? == s(&change["key"]) {
+                    found = Some(index);
+                    break;
+                }
+            }
+            if let Some(index) = found {
+                if change["append"] == true {
+                    rows.remove(index);
+                    rows.push(change["row"].clone());
+                } else {
+                    rows[index] = change["row"].clone();
+                }
+            } else {
+                rows.push(change["row"].clone());
+            }
+        }
+    }
+    Ok(())
 }
 fn sort_tables(final_tables: &mut Value) {
     if let Some(tables) = final_tables.as_object_mut() {

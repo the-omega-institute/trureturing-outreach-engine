@@ -90,6 +90,7 @@ def execute(case):
         stack.callback(tasks.close); load(tasks, case['initial_rows'])
         script = Script(case['script'], root)
         ledger = SimpleNamespace(clock=lambda: case['now'], tasks=tasks, releases=script.adapter('releases', case['adapter_attributes'].get('releases')), save=lambda *a, **kw: script.call('ledger', 'save', a, kw))
+        if '_recording_baseline' in case: ledger._recording_baseline = case['_recording_baseline']
         for target, value in case.get('constants', {}).items(): stack.enter_context(patch(target, value))
         stack.enter_context(patch('managed.control.workflow', return_value=case['workflow']))
         stack.enter_context(patch('managed.sent_events.commit_tables', lambda *a, **kw: script.call('registry', 'commit_tables', (), {})))

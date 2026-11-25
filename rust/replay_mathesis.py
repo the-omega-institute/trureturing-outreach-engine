@@ -46,7 +46,7 @@ def replay(directory, snapshot, binary, key=None):
         elif cases:
             if 'initial_rows' in cases[0]:
                 if canonical(logical_initial) != canonical(logical(cases[0]['initial_rows'])): raise ValueError('fixture start mismatch')
-            elif {k: hashlib.sha256(canonical(v).encode()).hexdigest() for k,v in logical_initial.items()} != cases[0]['initial_digests']:
+            elif {k: hashlib.sha256(canonical(v).encode()).hexdigest() for k,v in logical_initial.items()} != cases[0].get('base_digests', cases[0]['initial_digests']):
                 raise ValueError('fixture start mismatch')
         eligible = []
         for case in cases:

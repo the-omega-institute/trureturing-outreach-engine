@@ -37,7 +37,7 @@ rebase-on-push-failure. All nine have empty entries in the map.
 Each fixture supplies initial SQLite tables, configuration, a clock, data/policy
 files, ordered adapter responses or exceptions, the expected external-write
 sequence and final logical tables/files. JSON-valued columns contain JSON values.
-Initial rows retain SQLite arrival order; final comparisons sort by primary key.
+Initial rows and boundary deltas retain SQLite arrival order; final comparisons sort by primary key.
 `sqlite_sequence` uses the table name as its logical key. Canonical byte comparison
 preserves distinctions between booleans, integers and floats, including an
 integer-valued injected clock in retry records.

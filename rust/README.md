@@ -571,7 +571,11 @@ the random MIME boundary. There is no automatic upload or retention job;
 
 Version-2 stage frames never embed a ledger dump. They contain streaming canonical
 logical table digests, timestamps/admissions, the ordered service observations,
-and only opened data/policy files. They do not traverse `tables/` or `managed/`.
+bounded row deltas and only opened data/policy files. A row-hash index of the
+closed start snapshot supplies unchanged rows; each boundary delta observes
+changes by earlier unported stages. After a supported frame, the next delta
+is relative to that frame's final rows. Hashes verify both the delta's base and
+its complete resulting logical state. They do not traverse `tables/` or `managed/`.
 Only the rendering service's three table output files are captured. Each complete
 stage event, including its JSONL newline, is limited to **1 MiB**; an individual
 opened file is limited to **512 KiB**. A larger or incomplete capture emits a small
@@ -598,9 +602,10 @@ The historical command name remains compatible. The closed snapshot is opened
 read-only/immutable and hashed before and after. Its start pointer and logical
 digests must match; no key or input is discovered automatically. The key travels
 to the local runner in memory. Sent replay needs no signing key. Consecutive
-supported frames can use the preceding replay's owned logical rows; observations
-from intervening unported stages must still match the supplied snapshot boundary.
-Run-wide reconstruction across unported stages remains phase 3c/later work.
+supported frames use the preceding replay's owned logical rows plus the recorded
+boundary delta. Unported stages are observations at those boundaries; their own
+logic and external calls are not executed by Rust. Full tick execution and live
+replay coverage remain phase 3c/later work.
 Subprocess output is captured, so only `equal`/`different`/`skipped` counts escape.
 Missing keys, redaction and unavailable captures are skipped; malformed evidence,
 snapshot mismatches and unequal outcomes fail with `different`. No dump, upload,

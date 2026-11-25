@@ -437,15 +437,19 @@ def stage_frame(name):
         @functools.wraps(stage)
         def wrapped(ledger, config, root, *args, **kwargs):
             if not enabled(): return stage(ledger, config, root, *args, **kwargs)
-            from .scenario_contract import table_digests
+            from .scenario_contract import table_digests, capture_tables
             from .location import example_config
             from .control import workflow
             global _AUDIT_INSTALLED
             try:
                 if not _AUDIT_INSTALLED:
                     sys.addaudithook(_stage_file_open); _AUDIT_INSTALLED = True
+                baseline = getattr(ledger, '_recording_baseline', None)
+                initial, initial_index, delta, overflow = capture_tables(ledger.tasks, baseline)
                 frame = {'schema_version': 2, 'id': 'recorded-' + name, 'stage': name,
-                         'initial_digests': table_digests(ledger.tasks), 'initial_files': {},
+                         'initial_digests': initial, 'initial_files': {},
+                         'base_digests': (baseline or initial_index)['digests'], 'initial_delta': delta,
+                         'incomplete': overflow,
                          'config': config, 'installation': example_config(), 'workflow': workflow('mathesis'),
                          'now': ledger.tasks.clock(), 'script': [], 'update_times': [], 'admissions': [],
                          '_errors': {}, '_root': Path(root).resolve(), '_touched_files': set(),
@@ -499,7 +503,8 @@ def stage_frame(name):
                 ledger.save, ledger.releases, ledger.tasks.update = original_save, original_releases, original_update
                 _STAGE.reset(token)
                 try:
-                    frame['expected_final_digests'] = table_digests(ledger.tasks)
+                    final_digests, final_index, _, _ = capture_tables(ledger.tasks)
+                    frame['expected_final_digests'] = final_digests
                     frame['now_end'] = ledger.tasks.clock()
                     touched = frame['_touched_files']
                     frame['expected_final_files'] = {p: base64.b64encode((Path(root) / p).read_bytes()).decode()
@@ -511,7 +516,9 @@ def stage_frame(name):
                     if frame.get('incomplete') or len((canonical({'schema_version': 1, **event}) + '\n').encode()) > MAX_STAGE_FRAME_BYTES:
                         emit({'event': name + '_stage_unavailable', 'reason': 'frame-size-or-capture',
                               'initial_digests': frame['initial_digests'], 'final_digests': frame['expected_final_digests']})
-                    else: emit(event)
+                    else:
+                        emit(event)
+                        ledger._recording_baseline = final_index
                 except Exception as error: emit({'event': name + '_stage_unavailable', 'error': type(error).__name__})
         return wrapped
     return decorate
@@ -555,6 +562,20 @@ def contact_render(root, function):
 def contact_commit(function):
     if not enabled() or _STAGE.get() is None: return function()
     return _capture('registry', 'commit_tables', function, (), {})
+
+
+def snapshot_index(path):
+    if not enabled() or not Path(path).is_file(): return None
+    try:
+        import sqlite3
+        from types import SimpleNamespace
+        from .scenario_contract import capture_tables
+        db = sqlite3.connect(Path(path).resolve().as_uri() + '?mode=ro&immutable=1', uri=True)
+        try: return capture_tables(SimpleNamespace(db=db))[1]
+        finally: db.close()
+    except Exception as error:
+        emit({'event': 'snapshot_index_unavailable', 'error': type(error).__name__})
+        return None
 
 
 def observed_error(error, summary):

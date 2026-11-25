@@ -524,8 +524,8 @@ service traits. No Rust network adapter, production replay, uploader or cutover
 is enabled. Sandbox-pool work, including the #26 last-healthy-Sandbox behavior,
 is explicitly deferred to phase 3c.
 
-`../scenarios/README.md` describes the **242 Python-first scenarios** and their
-source-test map. Rust matches **234**, with eight intake cases skipped. Run:
+`../scenarios/README.md` describes the **244 Python-first scenarios** and their
+source-test map. Rust matches **236**, with eight intake cases skipped. Run:
 
 ```sh
 python3.12 ../scenarios/runner.py
@@ -555,10 +555,16 @@ Live Rust implementations of these adapter contracts remain later work.
 
 Sent events use a typed metadata-only mailbox and a contact-rendering/persistence
 port. Matching uses exact receipt IDs, never subjects or bodies. Paging, aliases,
-manual-event tolerance and deduplication run in core. A forced-save
-`sent-events-pending` intent binds the page handle and contact-table digest before
-the table commit. A failed commit resumes that handle; the cursor advances only
-after success. The coordinator entry point retains a content-free status.
+manual-event tolerance and deduplication run in core. After rendering, a page with
+new events, scoped table changes or unpushed local commits gets a forced-save
+`sent-events-pending` intent before the table commit. Clean pages use only the
+ordinary debounced cursor save. The intent's contact-table digest binds Rust's
+typed permit for parity; Python recovery reads only the cursor and deduplicates
+against the actual contact rows. Recovery reuses the frozen `until`, including a
+retried first page without a pagination link. A changed `live_since` immediately
+deletes the stale intent, even if page admission or fetching fails. The cursor
+advances only after persistence succeeds or no push is needed. The coordinator
+entry point retains a content-free status.
 
 Recording is off unless `OUTREACH_RECORD_DIR` names a private directory outside
 the engine checkout. Use a new directory per run. Python writes locked canonical

@@ -190,6 +190,7 @@ class TickBudgetTests(unittest.TestCase):
                 patch('managed.mathesis_delivery.advance',side_effect=drain), \
                 patch('managed.sent_events.record_page',return_value=0), \
                 patch('managed.sent_events.registry.render'), \
+                patch('managed.sent_events.tables_need_push',return_value=True), \
                 patch('managed.sent_events.commit_tables') as commit:
             for i in range(2):
                 log,_=self.run_tick(600,mail=drain,mailbox=box)
@@ -262,6 +263,32 @@ class TickBudgetTests(unittest.TestCase):
         self.assertIn('"status": "error"',log)
         self.assertIn('tick-phase final-save',log)
         self.assertIn({'connector':'sent-events','error':'RuntimeError'},status['connector_errors'])
+
+    def test_sent_forced_save_failure_prevents_commit_and_later_tick_stages_run(self):
+        self.seed([])
+        calls=[];save=Ledger.save;failed=[]
+        box=Mock(settings={'reconciled':True,'live_since':'2026-11-01T00:00:00Z'})
+        box.verify_owner.return_value='owner@example.invalid'
+        box.sent_events_page.return_value=([],None)
+        def fail_intent(ledger,force=False):
+            if force and not failed and ledger.tasks.db.execute(
+                    "SELECT 1 FROM pipeline_state WHERE key='sent-events-pending'").fetchone():
+                failed.append(True)
+                raise TimeoutError('Synthetic checkpoint failure')
+            return save(ledger,force)
+        with patch.object(Ledger,'save',fail_intent), \
+                patch('managed.mailbox.intake'), \
+                patch('managed.sent_events.record_page',return_value=1), \
+                patch('managed.sent_events.registry.render'), \
+                patch('managed.sent_events.commit_tables') as commit, \
+                patch('managed.mathesis_delivery.advance',side_effect=lambda *args,again=False,**kwargs:
+                      calls.append('mathesis-again' if again else 'mathesis')):
+            log,status=self.run_tick(mail=lambda *args:calls.append('delivery'),mailbox=box)
+        self.assertEqual(failed,[True])
+        commit.assert_not_called()
+        self.assertEqual(calls,['delivery','mathesis','mathesis-again'])
+        self.assertIn('tick-phase final-save',log)
+        self.assertIn({'connector':'sent-events','error':'TimeoutError'},status['connector_errors'])
 
     def test_exhaustion_finishes_result_preservation_then_saves_and_succeeds(self):
         self.seed(['a','b']);self.cma.cost=2;self.cma.completed=True;self.cma.artifacts=True

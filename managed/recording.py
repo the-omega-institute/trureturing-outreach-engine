@@ -40,6 +40,7 @@ def scrub(value, extra=()):
     values = secrets() | {s for s in extra if isinstance(s, str) and s}
     variants = set()
     hex_patterns = {item.encode().hex() for item in values}
+    hex_patterns.update(item for item in values if re.fullmatch(r'[0-9a-fA-F]+', item))
     for item in values:
         variants.update((item, quote(item, safe=''), quote_plus(item),
                          base64.b64encode(item.encode()).decode(), json.dumps(item)[1:-1],
@@ -53,6 +54,14 @@ def scrub(value, extra=()):
             try: return clean(json.loads(v))
             except (ValueError, UnicodeError): return clean(v.decode('utf-8', errors='replace'))
         if isinstance(v, str):
+            # Read adapters can return JSON as text rather than decoded objects.
+            # Apply the same credential-key rules inside those string values.
+            try:
+                parsed = json.loads(v)
+                if isinstance(parsed, (dict, list)):
+                    filtered = clean(parsed)
+                    if parsed != filtered: return canonical(filtered)
+            except (ValueError, UnicodeError): pass
             # Files in scenario frames are base64 read responses. Redact inside
             # them as well, retaining original bytes when nothing was masked.
             if len(v) >= 4 and len(v) % 4 == 0:
@@ -294,10 +303,14 @@ def command_secrets(args):
         header = arg.split('=', 1)[-1] if arg.startswith(('--header=', '-H=')) else arg
         key, separator, value = header.partition(':')
         if separator and SECRET_KEYS.search(key.strip()):
-            values.append(value.strip())
-            values.append(value.strip().split(' ', 1)[-1])
             if key.strip().lower() in {'cookie', 'set-cookie'}:
-                values.extend(part.split('=', 1)[-1].strip() for part in value.split(';') if '=' in part)
+                # Register the complete header value, never individual cookie
+                # values such as "1" that also occur throughout valid evidence.
+                values.append(header)
+                if '=' in value: values.append(value.strip())
+            else:
+                values.append(value.strip())
+                values.append(value.strip().split(' ', 1)[-1])
     return [value for value in values if value]
 
 
@@ -562,6 +575,11 @@ def contact_render(root, function):
 def contact_commit(function):
     if not enabled() or _STAGE.get() is None: return function()
     return _capture('registry', 'commit_tables', function, (), {})
+
+
+def contact_needs_push(function):
+    if not enabled() or _STAGE.get() is None: return function()
+    return _capture('registry', 'needs_push', function, (), {})
 
 
 def snapshot_index(path):

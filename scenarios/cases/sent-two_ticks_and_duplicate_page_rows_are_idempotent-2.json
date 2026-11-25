@@ -462,6 +462,13 @@
       }
     },
     {
+      "adapter": "registry",
+      "method": "needs_push",
+      "args": [],
+      "kwargs": {},
+      "result": true
+    },
+    {
       "adapter": "ledger",
       "method": "save",
       "args": [],

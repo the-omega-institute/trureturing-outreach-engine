@@ -20,6 +20,7 @@ pub trait Mailbox {
 }
 pub struct ContactIntent {
     pub cursor: Value,
+    /// Typed-permit parity binding; Python recovery reads only the cursor.
     pub contacts_digest: String,
 }
 pub trait ContactTables {
@@ -27,6 +28,8 @@ pub trait ContactTables {
     /// The adapter must retain the current page on failure; the cursor is saved
     /// only after commit succeeds. Repeated calls repair partial view writes.
     fn render(&mut self, contacts: &Value) -> StageResult<()>;
+    /// Local scoped Git status or commits ahead of the published data branch.
+    fn needs_push(&mut self) -> StageResult<bool>;
     fn commit_tables(&mut self, intent: Persisted<ContactIntent>) -> StageResult<()>;
 }
 fn check(ok: bool, message: &str) -> StageResult<()> {
@@ -264,8 +267,13 @@ pub fn reconcile(
         "Invalid Sent live window",
     )?;
     let mut cursor = replay.state("sent-events");
-    let pending = replay.state("sent-events-pending");
+    let mut pending = replay.state("sent-events-pending");
+    if truth(&pending) && pending["cursor"]["since"] != since {
+        replay.clear_state("sent-events-pending")?;
+        pending = Value::Null;
+    }
     if pending["cursor"]["since"] == since {
+        // Preserve the frozen until even when retrying the first page.
         cursor = pending["cursor"].clone();
     } else if cursor["since"] != since || !truth(&cursor["next_link"]) {
         cursor = object([("since", string(&since)), ("until", string(until))]);
@@ -288,7 +296,7 @@ pub fn reconcile(
             break;
         }
         let page = mailbox.sent_events_page(&since, s(&cursor["until"]), &cursor["next_link"])?;
-        events += record_page(
+        let added = record_page(
             contacts,
             &replay.environment.tables,
             &page.messages,
@@ -300,24 +308,27 @@ pub fn reconcile(
             ),
             &account,
         )?;
+        events += added;
         store.render(contacts)?;
-        let contacts_digest = outreach_canon::digest(contacts)?;
-        replay.set_state(
-            "sent-events-pending",
-            object([
-                ("cursor", cursor.clone()),
-                ("contacts_digest", string(&contacts_digest)),
-            ]),
-        )?;
-        port.save_forced(&replay.tables)?;
-        store.commit_tables(Persisted::saved(
-            ContactIntent {
-                cursor: cursor.clone(),
-                contacts_digest,
-            },
-            port,
-            &replay.tables,
-        )?)?;
+        if added > 0 || store.needs_push()? {
+            let contacts_digest = outreach_canon::digest(contacts)?;
+            replay.set_state(
+                "sent-events-pending",
+                object([
+                    ("cursor", cursor.clone()),
+                    ("contacts_digest", string(&contacts_digest)),
+                ]),
+            )?;
+            port.save_forced(&replay.tables)?;
+            store.commit_tables(Persisted::saved(
+                ContactIntent {
+                    cursor: cursor.clone(),
+                    contacts_digest,
+                },
+                port,
+                &replay.tables,
+            )?)?;
+        }
         replay.clear_state("sent-events-pending")?;
         cursor["next_link"] = page.next_link.clone();
         replay.set_state("sent-events", cursor.clone())?;

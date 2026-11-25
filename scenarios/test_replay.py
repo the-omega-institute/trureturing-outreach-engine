@@ -25,6 +25,7 @@ class ReplayTests(unittest.TestCase):
             'publication-exact_pass_enqueues_durable_request_and_signs_decision-1',
             'publication-equal_priority_notes_preserve_arrival_order-1',
             'sent-owner_draft_sent_uses_exact_sent_receipt_and_reviewed_headline-1',
+            'sent-two_clean_pages_skip_commit_and_forced_save-1',
         ]
         binary = ROOT / 'rust/target/debug/examples/scenarios'
         self.assertTrue(binary.is_file(), 'Build the local Rust scenario runner first')

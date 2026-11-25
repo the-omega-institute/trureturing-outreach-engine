@@ -157,13 +157,55 @@ class RecordingTests(unittest.TestCase):
             recording.emit({'value': [token.encode().hex(), token.encode().hex().upper(), ''.join(c.upper() if i % 2 else c for i,c in enumerate(token.encode().hex()))]})
         headers = ['Authorization: synthetic-auth', 'X-Api-Key: synthetic-key',
                    'Cookie: session=synthetic-cookie', 'X-Access-Token: synthetic-access']
-        result = subprocess.CompletedProcess(['gh'], 0, b'synthetic-auth synthetic-key synthetic-cookie synthetic-access', b'')
+        result = subprocess.CompletedProcess(['gh'], 0, b'synthetic-auth synthetic-key session=synthetic-cookie synthetic-access', b'')
         with patch.object(subprocess, 'run', return_value=result):
             recording.run(['gh', 'api', 'repos/fixture/repo', *sum((['-H', h] for h in headers), [])])
         raw = next(self.path.glob('*.jsonl')).read_text()
         for value in [token.encode().hex(), token.encode().hex().upper(),
                       'synthetic-auth', 'synthetic-key', 'synthetic-cookie', 'synthetic-access']:
             self.assertNotIn(value, raw)
+
+    def test_known_hex_secret_masks_uppercase_and_mixed_case(self):
+        token = 'a0b1c2d3e4f56789abcdef0123456789ab'
+        mixed = ''.join(c.upper() if i % 2 else c for i, c in enumerate(token))
+        secret_context = run_log.SECRETS.set({token})
+        self.addCleanup(run_log.SECRETS.reset, secret_context)
+        recording.emit({'value': [token, token.upper(), mixed]})
+        row, = self.records()
+        self.assertEqual(row['value'], ['[redacted]'] * 3)
+
+    def test_unregistered_credentials_in_json_string_values_are_masked(self):
+        values = [
+            '{"Authorization":"token github_pat_synthetic_unregistered"}',
+            '{"token":"synthetic-unregistered-token"}',
+            json.dumps({'nested': ['{"api_key":"synthetic-unregistered-key"}'], 'count': 1}),
+        ]
+        recording.emit({'response': values, 'unchanged': '{ "count" : 1 }'})
+        row, = self.records()
+        self.assertEqual(json.loads(row['response'][0]), {'Authorization': '[redacted]'})
+        self.assertEqual(json.loads(row['response'][1]), {'token': '[redacted]'})
+        self.assertEqual(json.loads(json.loads(row['response'][2])['nested'][0]), {'api_key': '[redacted]'})
+        self.assertEqual(row['unchanged'], '{ "count" : 1 }')
+        raw = next(self.path.glob('*.jsonl')).read_text()
+        for token in ('github_pat_synthetic_unregistered', 'synthetic-unregistered-token', 'synthetic-unregistered-key'):
+            self.assertNotIn(token, raw)
+
+    def test_short_cookie_values_do_not_mask_counts_or_digests(self):
+        digest = 'a1' * 32
+        for header in ('Cookie: session=1; flag=1', 'Set-Cookie: flag=1; Path=/', 'Cookie: 1'):
+            with self.subTest(header=header):
+                result = subprocess.CompletedProcess(['gh'], 0, json.dumps({
+                    'count': 1, 'version': '1', 'digest': digest, 'echo': header}).encode(), b'')
+                with patch.object(subprocess, 'run', return_value=result):
+                    self.assertIs(recording.run(['gh', 'api', 'repos/fixture/repo', '-H', header]), result)
+                row = self.records()[-1]
+                self.assertEqual(row['schema_version'], 1)
+                self.assertEqual(row['response_body']['count'], 1)
+                self.assertEqual(row['response_body']['version'], '1')
+                self.assertEqual(row['response_body']['digest'], digest)
+                self.assertNotIn(header, json.dumps(row))
+                self.assertIn('[redacted]', row['response_body']['echo'])
+                self.assertNotIn('1', recording.command_secrets(['gh', '-H', header]))
 
     def test_large_ledger_frame_uses_digests_and_only_opened_files(self):
         from types import SimpleNamespace

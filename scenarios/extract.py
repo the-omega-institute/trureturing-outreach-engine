@@ -177,10 +177,14 @@ def main():
                         return {k:v for k,v in files(root).items() if k in {'tables/contacts.json', 'tables/CONTACTS.md', 'tables/POSITIVE.md'}}
                     capture.call('registry', 'render', perform, (contacts,), {})
                 old_commit = sent_events.commit_tables
+                old_needs_push = sent_events.tables_need_push
                 def commit(*a, **kw):
                     return capture.call('registry', 'commit_tables', lambda: old_commit(*a, **kw), (), {})
+                def needs_push(*a, **kw):
+                    return capture.call('registry', 'needs_push', lambda: old_needs_push(*a, **kw), (), {})
                 with ExitStack() as hooks:
                     hooks.enter_context(patch('managed.sent_events.commit_tables', commit))
+                    hooks.enter_context(patch('managed.sent_events.tables_need_push', needs_push))
                     if stage == 'publication':
                         hooks.enter_context(patch.object(publication, 'package', package))
                         from managed import pre_reviewed
@@ -242,7 +246,8 @@ def main():
                 if result.errors or result.failures:
                     raise AssertionError(identity + '\n' + str(result.errors + result.failures))
     # Adapter and coordinator integration tests keep their native assertions.
-    for module_name, class_name in [('test_publication', 'PublicationTests'), ('test_sent_events', 'SentEventsTests'), ('test_sent_events', 'CommitTablesTests')]:
+    for module_name, class_name in [('test_publication', 'PublicationTests'), ('test_sent_events', 'SentEventsTests'),
+                                   ('test_sent_events', 'SentEventsRecoveryTests'), ('test_sent_events', 'CommitTablesTests')]:
         cls = getattr(importlib.import_module(module_name), class_name)
         for name in dir(cls):
             if name.startswith('test_'):

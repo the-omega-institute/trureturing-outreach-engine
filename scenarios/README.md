@@ -13,8 +13,8 @@ python3.12 rust/scenarios.py
 python3.12 -m unittest discover -s scenarios -p 'test_*.py'
 ```
 
-There are **242 scenarios from 112 converted tests**. Python runs all 242; Rust
-matches all **234 Mathesis, publication and sent-event scenarios**, and skips the
+There are **244 scenarios from 114 converted tests**. Python runs all 244; Rust
+matches all **236 Mathesis, publication and sent-event scenarios**, and skips the
 eight intake scenarios. The counts by source suite are:
 
 | Source tests | Converted tests | Scenarios |
@@ -22,7 +22,7 @@ eight intake scenarios. The counts by source suite are:
 | `test_mathesis_delivery.DeliveryTests` | 17 | 34 |
 | `test_pre_reviewed.PreReviewedTests` | 13 | 21 |
 | `test_publication.PublicationTests` | 48 | 142 |
-| `test_sent_events.SentEventsTests` | 26 | 37 |
+| `test_sent_events.SentEventsTests` | 28 | 39 |
 | `test_mailbox_triage.TriageTests` | 8 | 8 |
 
 The publication count includes one new equal-priority arrival-order regression.
@@ -30,9 +30,11 @@ Original tests remain, including assertions about restart recovery and operator
 views. Seven publication tests retain native coverage: the six coordinator or
 Mathesis multi-pass scheduling tests and
 `test_registration_uses_current_table_sha_and_preserves_existing_pause`, which
-exercises the Contents API adapter. The two `CommitTablesTests` in
-`test_sent_events` retain their real temporary-Git tests for scoped commits and
-rebase-on-push-failure. All nine have empty entries in the map.
+exercises the Contents API adapter. The three `CommitTablesTests` in
+`test_sent_events` retain their real temporary-Git tests for scoped commits,
+rebase-on-push-failure and local persistence detection. Seven
+`SentEventsRecoveryTests` retain native snapshot-upload and crash/restart checks.
+All 17 native tests have empty entries in the map.
 
 Each fixture supplies initial SQLite tables, configuration, a clock, data/policy
 files, ordered adapter responses or exceptions, the expected external-write
@@ -87,9 +89,12 @@ The extraction made these Python contracts explicit:
 - A repeated evidence read in one publication attempt reuses the exact local
   file, including when the prior-work check found no labeled section.
 - Sent-event commit failures retain the original sweep/page handle. A saved
-  `sent-events-pending` intent binds the contact-table digest before the table
-  commit; the cursor advances only after success. Replayed pages still render
-  and commit when deduplication adds no events.
+  `sent-events-pending` intent precedes a table commit when a page adds events,
+  the scoped paths have Git changes, or local commits await pushing. Clean pages
+  render and use a debounced cursor save without a forced snapshot or commit.
+  The contact-table digest binds Rust's typed permit for parity; Python recovery
+  reads only the cursor, retaining its frozen `until` even for the first page.
+  A changed `live_since` deletes the stale intent before admission or page reads.
 - Legacy/manual sent events use an inclusive ten-minute tolerance; exact events
   from this stage distinguish separate messages. Aliases share a person, but
   explicit recipient evidence remains address-specific.

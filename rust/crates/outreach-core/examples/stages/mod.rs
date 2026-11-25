@@ -135,6 +135,9 @@ pub struct Store {
     pub files: Value,
 }
 impl sent::ContactTables for Store {
+    fn needs_push(&mut self) -> StageResult<bool> {
+        Ok(self.fake.call("needs_push", vec![], object([]))? == true)
+    }
     fn render(&mut self, contacts: &Value) -> StageResult<()> {
         let files = self
             .fake

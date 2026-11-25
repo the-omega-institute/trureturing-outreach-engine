@@ -94,6 +94,7 @@ def execute(case):
         for target, value in case.get('constants', {}).items(): stack.enter_context(patch(target, value))
         stack.enter_context(patch('managed.control.workflow', return_value=case['workflow']))
         stack.enter_context(patch('managed.sent_events.commit_tables', lambda *a, **kw: script.call('registry', 'commit_tables', (), {})))
+        stack.enter_context(patch('managed.sent_events.tables_need_push', lambda *a, **kw: script.call('registry', 'needs_push', (), {})))
         # Network/process calls are forbidden even if the script is incomplete.
         stack.enter_context(patch('urllib.request.OpenerDirector.open', side_effect=AssertionError('network forbidden')))
         stack.enter_context(patch('subprocess.run', side_effect=AssertionError('process forbidden')))

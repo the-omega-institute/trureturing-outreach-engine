@@ -52,7 +52,10 @@ recovery implementation. Select `note_action=status` and set `note_id` to inspec
 one note; leave the revision and recovery fields empty for status. The coordinator
 runs a status read before delivery, within the existing single-writer concurrency
 group. Detailed note status is captured in the private control Release run log;
-public note-delivery output contains only counts, including warning annotations
+when the mounted Zenodo credential is available, an uncertain creation status
+also lists account-owned records matching the exact note keyword and revision.
+This bounded inspection uses GET requests only and never retries a creation.
+Public note-delivery output contains only counts, including warning annotations
 when notes need attention. Dispatch selections are read from `GITHUB_EVENT_PATH`
 inside the captured process, keeping note IDs, revisions and draft IDs out of
 the step environment printed by Actions. Manual `action=notes` inputs

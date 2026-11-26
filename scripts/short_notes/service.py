@@ -15,6 +15,7 @@ import sys
 import tempfile
 import time
 from urllib.request import Request, urlopen
+from urllib.parse import urlencode
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -895,16 +896,43 @@ def verify_feed(catalog, gh, site=SITE, fetch=None, submissions=None, *, expecte
         return {'status': 'verification_pending', 'index_url': target, 'error': str(error)[:500]}
 
 
-def note_status(catalog, note_id, gh):
+def inspect_uncertain_creations(state, note_id, zenodo):
+    """Inspect account-owned records without retrying an uncertain POST."""
+    revisions = [number for number, entry in (state or {}).get('versions', {}).items()
+                 if entry.get('phase') == 'creating' and not entry.get('record_id')]
+    if not revisions:
+        return {}
+    marker = 'trureturing-note:' + note_id
+    candidates = {number: [] for number in revisions}
+    for page in range(1, 21):
+        query = urlencode({'q': 'keywords:"' + marker + '"', 'size': 100, 'page': page})
+        rows = zenodo.request('GET', '/deposit/depositions?' + query)
+        if not isinstance(rows, list):
+            raise ValueError('Unexpected Zenodo account listing; no creation was retried')
+        for row in rows:
+            metadata = row.get('metadata', {})
+            version = str(metadata.get('version', ''))
+            if marker in metadata.get('keywords', []) and version in candidates:
+                candidates[version].append({'record_id': row['id'], 'submitted': bool(row.get('submitted')),
+                                            'metadata': metadata, 'files': row.get('files', [])})
+        if len(rows) < 100:
+            return {'account_scan_complete': True, 'candidates_by_revision': candidates}
+    raise ValueError('Zenodo account listing exceeds inspection limit; no creation was retried')
+
+
+def note_status(catalog, note_id, gh, zenodo=None):
     note = catalog_note(catalog, note_id)
     release = gh.release(w.tag_for(note_id))
     state = w.release_state(release, note_id) if release else None
     scoped = {**catalog, 'notes': [note]}
     pending = [{k: v for k, v in row.items() if k not in ('operation', 'order')} for row in queue(scoped, gh)]
-    return {'id': note_id, 'paused': note['paused'], 'staged': release is not None,
+    result = {'id': note_id, 'paused': note['paused'], 'staged': release is not None,
             'versions': state.get('versions', {}) if state else {},
             'preferred_publication': state.get('publication') if state else None,
             'pages': state.get('pages') if state else None, 'requests': pending}
+    if zenodo is not None:
+        result['creation_inspection'] = inspect_uncertain_creations(state, note_id, zenodo)
+    return result
 
 
 def doctor(catalog, gh, pages=None, zenodo=None, remote=False):
@@ -1083,7 +1111,7 @@ def execute(args):
     elif args.command == 'verify':
         result = verify_deployment(catalog, args.id, gh, args.site)
     elif args.command == 'status':
-        result = note_status(catalog, args.id, gh)
+        result = note_status(catalog, args.id, gh, zenodo if getattr(args, 'remote', False) else None)
     else:
         result = doctor(catalog, gh, pages, zenodo, args.remote)
     return result

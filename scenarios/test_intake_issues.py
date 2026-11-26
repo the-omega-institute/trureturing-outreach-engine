@@ -71,6 +71,14 @@ class IntakeIssuesReplayTests(unittest.TestCase):
                     text=self.roundtrip(case,{'equal':1,'different':0,'skipped':0})
                     self.assertIn('bases',text)
 
+    def test_evidence_subclass_errors_replay_with_recorded_ancestry(self):
+        paths=sorted((ROOT/'scenarios/cases').glob('prior-work-review-round3-*.json'))
+        self.assertEqual(len(paths),4)
+        for path in paths:
+            with self.subTest(case=path.stem):
+                text=self.roundtrip(json.loads(path.read_text()),{'equal':1,'different':0,'skipped':0})
+                self.assertIn('bases',text)
+
     def test_new_intake_frames_omit_mail_bodies(self):
         case=json.loads(next((ROOT/'scenarios/cases').glob('intake-test_mailbox_triage-TriageTests-test_hello_stranger_stays_in_attention-*.json')).read_text())
         marker='SYNTHETIC MAIL CONTENT THAT MUST NOT BE RECORDED'

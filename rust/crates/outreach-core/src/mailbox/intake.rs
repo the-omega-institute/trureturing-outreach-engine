@@ -291,7 +291,7 @@ impl Intake {
                 }
             }
             Ok(false) => uploads.push((m.clone(), latest.clone(), request)),
-            Err(error) if error.summary["type"] == "UnsupportedThreadAttachments" => {
+            Err(error) if error.is_a("UnsupportedThreadAttachments") => {
                 let hold = object([
                     ("checked_at", self.clock.clone()),
                     ("attachment_issues", error.summary["attachments"].clone()),
@@ -815,7 +815,7 @@ pub fn advance(
         }
         let thread = match box_.read(Read::Thread(conversation.clone())) {
             Ok(v) => v,
-            Err(e) if e.summary["type"] == "UnsupportedThreadAttachments" => {
+            Err(e) if e.is_a("UnsupportedThreadAttachments") => {
                 let hold = object([
                     ("checked_at", r.clock_value.clone()),
                     ("attachment_issues", e.summary["attachments"].clone()),
@@ -910,7 +910,7 @@ pub fn advance(
                         person = Some(linked["person"].clone());
                     }
                 }
-                Err(e) if e.summary["type"] == "SentSubjectsDeferred" => {
+                Err(e) if e.is_a("SentSubjectsDeferred") => {
                     state.remember(
                         &latest,
                         s(&e.summary["intake_reason"]),

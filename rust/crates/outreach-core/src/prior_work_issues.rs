@@ -461,7 +461,7 @@ fn candidates(
 }
 fn read_failure(error: &StageError) -> String {
     let kind = s(&error.summary["type"]);
-    if ["GateError", "UnparseableEvidence"].contains(&kind) {
+    if error.is_a("GateError") || error.is_a("UnparseableEvidence") {
         s(fallback(&[
             &error.summary["reason"],
             &error.summary["message"],
@@ -469,7 +469,7 @@ fn read_failure(error: &StageError) -> String {
         .into()
     } else if let Some(status) = error.status() {
         format!("Prior-work evidence download failed (HTTP {status})")
-    } else if kind == "RuntimeError" {
+    } else if error.is_a("RuntimeError") {
         let message = s(&error.summary["message"]);
         let status = crate::regex(r"\bHTTP [45]\d\d\b")
             .ok()
@@ -543,11 +543,15 @@ pub fn advance(
         let mut progress = match outcome {
             Ok(value) if !value.is_null() || index + 1 == files.len() => object([("check", value)]),
             Ok(_) => object([("next_file", (index + 1).into())]),
-            Err(error) if error.summary["type"] == "UnparseableEvidence" => object([
+            Err(error) if error.is_a("UnparseableEvidence") => object([
                 ("check", Value::Null),
                 ("reason", string(read_failure(&error))),
             ]),
-            Err(error) if f::catchable(&error) || error.summary["type"] == "RuntimeError" => {
+            Err(error)
+                if ["OSError", "RuntimeError", "ValueError"]
+                    .iter()
+                    .any(|class| error.is_a(class)) =>
+            {
                 let failures = saved["failures"].as_i64().unwrap_or(0) + 1;
                 f::defer(
                     r,

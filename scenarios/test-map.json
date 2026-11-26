@@ -3384,5 +3384,18 @@
     "prior-work-review-round2-post-interruption",
     "intake-review-round2-folder-move-reuses-current-release",
     "inbound-review-round2-equal-sent-times-keep-first"
+  ],
+  "test_review_round3.ReviewRound3.test_python_first_cases": [
+    "prior-work-review-round3-evidence-runtime-subclass",
+    "prior-work-review-round3-evidence-runtime-subclass-http",
+    "prior-work-review-round3-evidence-gate-subclass",
+    "prior-work-review-round3-evidence-unparseable-subclass",
+    "intake-review-round3-match-sent-base-only",
+    "intake-review-round3-bounce-enrichment-base-only",
+    "intake-review-round3-prior-context-base-only",
+    "intake-review-round3-attachment-preservation-base-only",
+    "intake-review-round3-thread-unsupported-subclass",
+    "intake-review-round3-attachment-unsupported-subclass",
+    "intake-review-round3-sent-deferred-subclass"
   ]
 }

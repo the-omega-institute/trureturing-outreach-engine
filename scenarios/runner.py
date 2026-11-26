@@ -61,8 +61,15 @@ def raise_error(value):
                'SystemExit': SystemExit, 'KeyboardInterrupt': KeyboardInterrupt, 'TypeError': TypeError, 'ConnectionError': ConnectionError, 'KeyError': KeyError, 'NotSent': __import__('managed.transports', fromlist=['NotSent']).NotSent, 'DefiniteRejection': __import__('managed.transports', fromlist=['DefiniteRejection']).DefiniteRejection, 'ProcessDeath': type('ProcessDeath', (BaseException,), {}), 'RuntimeError': RuntimeError, 'OSError': OSError, 'AssertionError': AssertionError, 'Stopped': type('Stopped', (BaseException,), {})}
     if value['type'] not in classes and value.get('bases'):
         import builtins
-        parent = next(getattr(builtins, name) for name in value['bases'] if hasattr(builtins, name))
-        error = type(value['type'], (parent,), {})(value['message'])
+        parents = {**vars(builtins), **classes,
+                   'UnparseableEvidence': __import__('managed.prior_work_evidence', fromlist=['UnparseableEvidence']).UnparseableEvidence,
+                   'UnsupportedThreadAttachments': mailbox.UnsupportedThreadAttachments,
+                   'SentSubjectsDeferred': mailbox.SentSubjectsDeferred}
+        parent = next(parents[name] for name in value['bases'] if name in parents)
+        custom = type(value['type'], (parent,), {})
+        if issubclass(custom, mailbox.UnsupportedThreadAttachments): error = custom(value['attachments'])
+        elif issubclass(custom, mailbox.SentSubjectsDeferred): error = custom(value['intake_reason'], value['message'])
+        else: error = custom(value['message'])
         raise error
     error = classes[value['type']](value['message'])
     if value.get('diagnostic'): error.github_diagnostic = value['diagnostic']

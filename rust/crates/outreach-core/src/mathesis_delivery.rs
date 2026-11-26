@@ -144,28 +144,58 @@ impl StageError {
                 | "ConnectionAbortedError"
                 | "ConnectionRefusedError"
                 | "ConnectionResetError" => "ConnectionError",
+                "UnsupportedThreadAttachments" | "_UploadRequestError" => "GateError",
                 "JSONDecodeError" | "UnicodeError" | "GateError" | "UnparseableEvidence" => {
                     "ValueError"
                 }
                 "UnicodeDecodeError" | "UnicodeEncodeError" | "UnicodeTranslateError" => {
                     "UnicodeError"
                 }
-                "OSError" | "ValueError" | "RuntimeError" => "Exception",
-                "Exception" | "Stopped" | "ProcessDeath" | "KeyboardInterrupt" | "SystemExit" => {
-                    "BaseException"
-                }
+                "NotImplementedError" | "RecursionError" | "CMARequestError" => "RuntimeError",
+                "KeyError" | "IndexError" => "LookupError",
+                "FloatingPointError" | "OverflowError" | "ZeroDivisionError" => "ArithmeticError",
+                "ModuleNotFoundError" => "ImportError",
+                "IndentationError" => "SyntaxError",
+                "TabError" => "IndentationError",
+                "UnboundLocalError" => "NameError",
+                "OSError"
+                | "ValueError"
+                | "RuntimeError"
+                | "ArithmeticError"
+                | "AssertionError"
+                | "AttributeError"
+                | "BufferError"
+                | "EOFError"
+                | "ImportError"
+                | "LookupError"
+                | "MemoryError"
+                | "NameError"
+                | "ReferenceError"
+                | "StopAsyncIteration"
+                | "StopIteration"
+                | "SyntaxError"
+                | "SystemError"
+                | "TypeError"
+                | "ExceptionGroup"
+                | "Warning"
+                | "NotSent"
+                | "DefiniteRejection"
+                | "SentSubjectsDeferred"
+                | "DraftsScanDeferred" => "Exception",
+                "Exception" | "BaseExceptionGroup" | "Stopped" | "ProcessDeath"
+                | "GeneratorExit" | "KeyboardInterrupt" | "SystemExit" => "BaseException",
                 _ => return false,
             };
         }
     }
     pub fn is_interruption(&self) -> bool {
-        ["Stopped", "ProcessDeath", "KeyboardInterrupt", "SystemExit"]
-            .contains(&s(&self.summary["type"]))
+        !self.is_a("Exception")
     }
     pub fn status(&self) -> Option<i64> {
         self.summary["http_status"].as_i64()
     }
 }
+
 fn check(condition: bool, message: &str) -> StageResult<()> {
     Ok(require(condition, message)?)
 }
@@ -993,4 +1023,52 @@ fn checked_artifact(
         "The preserved artifact differs from the exact PASS",
     )?;
     Ok(source)
+}
+
+#[cfg(test)]
+mod exception_tests {
+    use super::*;
+
+    #[test]
+    fn legacy_errors_without_bases_keep_exception_semantics() {
+        for kind in [
+            "RuntimeError",
+            "NotImplementedError",
+            "KeyError",
+            "TypeError",
+            "AssertionError",
+            "UnsupportedThreadAttachments",
+            "SentSubjectsDeferred",
+            "NotSent",
+            "DefiniteRejection",
+            "CMARequestError",
+        ] {
+            let error = StageError {
+                summary: object([("type", string(kind))]),
+            };
+            assert!(!error.is_interruption(), "{kind}");
+        }
+        for kind in ["Stopped", "ProcessDeath", "KeyboardInterrupt", "SystemExit"] {
+            let error = StageError {
+                summary: object([("type", string(kind))]),
+            };
+            assert!(error.is_interruption(), "{kind}");
+        }
+    }
+
+    #[test]
+    fn recorded_custom_ancestry_distinguishes_exceptions_from_interruptions() {
+        for (bases, interrupted) in [
+            (vec![string("BaseException")], true),
+            (vec![string("Exception"), string("BaseException")], false),
+        ] {
+            let error = StageError {
+                summary: object([
+                    ("type", string("SyntheticCustom")),
+                    ("bases", Value::Array(bases)),
+                ]),
+            };
+            assert_eq!(error.is_interruption(), interrupted);
+        }
+    }
 }

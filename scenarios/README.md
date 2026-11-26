@@ -13,9 +13,9 @@ python3.12 rust/scenarios.py
 python3.12 -m unittest discover -s scenarios -p 'test_*.py'
 ```
 
-There are **2,192 scenarios from 540 mapped tests** (539 original converted tests
-and one independent-review scenario group). Python runs all 2,192;
-Rust matches all **2,192**, including mailbox intake, staged inbound hydration,
+There are **2,203 scenarios from 541 mapped tests** (539 original converted tests
+and two independent-review scenario groups). Python runs all 2,203;
+Rust matches all **2,203**, including mailbox intake, staged inbound hydration,
 formalization requests and prior-work issues. The counts by source suite are:
 
 | Source tests | Converted tests | Scenarios |
@@ -41,7 +41,7 @@ formalization requests and prior-work issues. The counts by source suite are:
 | `test_thread_recipients` | 5 | 5 |
 | `test_reviewer_edit` | 1 | 5 |
 | `test_engine_split.MathesisOnceTest` | 2 | 5 |
-| Independent-review regressions | 1 | 34 |
+| Independent-review regressions | 2 | 45 |
 
 The publication count includes one new equal-priority arrival-order regression.
 Original tests remain, including assertions about restart recovery and operator
@@ -257,3 +257,19 @@ test alters only each stage's expected message and requires both runners to
 reject it. Recording tests verify Graph body, unique-body, preview and attachment
 content omission, standalone attachment responses, disabled hooks and replay of
 issue exception ancestry.
+
+Round-three review adds **11 Python-first regression scenarios** in
+`test_review_round3.py`: four prior-work evidence cases and seven intake cases.
+Each expected result was captured and replayed in Python, then independently
+confirmed to differ on the round-two Rust before the fixes. The evidence cases
+cover `NotImplementedError` with and without an HTTP status, a `GateError`
+subclass, and an `UnparseableEvidence` subclass. Intake covers a custom exception
+derived only from `BaseException` at Sent matching, bounce enrichment, prior
+context, and attachment preservation, plus subclasses of both attachment holds
+and Sent-subject deferral. Refresh only these cases with
+`python3.12 scenarios/test_review_round3.py --extract`.
+
+Rust uses recorded ancestry for these exception catches and propagates errors
+outside Python's `Exception` hierarchy. Standard errors and the four original
+interruption names retain their semantics when older fixtures omit ancestry.
+Recording replay also verifies all four new evidence cases.

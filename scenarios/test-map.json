@@ -3301,7 +3301,9 @@
     "prior-work-test_prior_work_issues-FilingTests-test_source_wording_variants_and_addresses_in_urls_stay_out-8",
     "prior-work-test_prior_work_issues-FilingTests-test_source_wording_variants_and_addresses_in_urls_stay_out-9",
     "prior-work-test_prior_work_issues-FilingTests-test_source_wording_variants_and_addresses_in_urls_stay_out-10",
-    "prior-work-test_prior_work_issues-FilingTests-test_source_wording_variants_and_addresses_in_urls_stay_out-11"
+    "prior-work-test_prior_work_issues-FilingTests-test_source_wording_variants_and_addresses_in_urls_stay_out-11",
+    "prior-work-test_prior_work_issues-FilingTests-test_source_wording_variants_and_addresses_in_urls_stay_out-12",
+    "prior-work-test_prior_work_issues-FilingTests-test_source_wording_variants_and_addresses_in_urls_stay_out-13"
   ],
   "test_prior_work_issues.FilingTests.test_tick_is_paused_and_bounded_with_one_issue_per_result": [
     "prior-work-test_prior_work_issues-FilingTests-test_tick_is_paused_and_bounded_with_one_issue_per_result-1",

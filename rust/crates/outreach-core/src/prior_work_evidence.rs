@@ -183,7 +183,7 @@ pub fn project(check_value: &Value, data_repo: &str) -> StageResult<Value> {
         let proves = line(fallback(&[&item["proves"], &item["what_it_proves"]]));
         if (item
             .get("private")
-            .is_some_and(|v| !v.is_null() && *v != false))
+            .is_some_and(|v| !v.is_null() && !outreach_canon::python_eq(v, &Value::Bool(false))))
             || [
                 &authors,
                 &locator,

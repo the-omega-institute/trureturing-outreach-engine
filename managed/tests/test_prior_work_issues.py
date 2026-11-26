@@ -236,6 +236,8 @@ class FilingTests(unittest.TestCase):
                 self.assertFalse(evidence.PRIVATE.search(text))
         self.assertEqual(evidence.project({**CHECK, 'items': [{**ITEM, 'private': 'true'}]})['items'],
                          [{'private': True}])
+        self.assertEqual(evidence.project({**CHECK, 'items': [{**ITEM, 'private': 0}]})['items'],
+                         evidence.project({**CHECK, 'items': [ITEM]})['items'])
         self.assertEqual(evidence.public_url('https://sample.example.invalid/e.pdf?contact=a.example@example.invalid'), '')
         self.note(check={**CHECK, 'items': [{**ITEM, 'url': 'https://sample.example.invalid/e.pdf?contact=a.example@example.invalid'}]})
         note, = filing.plan(self.snapshot(), self.root)['notes']

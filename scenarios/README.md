@@ -13,8 +13,8 @@ python3.12 rust/scenarios.py
 python3.12 -m unittest discover -s scenarios -p 'test_*.py'
 ```
 
-There are **2,156 scenarios from 539 converted tests**. Python runs all 2,156;
-Rust matches all **2,156**, including mailbox intake, staged inbound hydration,
+There are **2,158 scenarios from 539 converted tests**. Python runs all 2,158;
+Rust matches all **2,158**, including mailbox intake, staged inbound hydration,
 formalization requests and prior-work issues. The counts by source suite are:
 
 | Source tests | Converted tests | Scenarios |
@@ -27,7 +27,7 @@ formalization requests and prior-work issues. The counts by source suite are:
 | `test_bounces` | 7 | 10 |
 | `test_mailbox_attachments` | 12 | 21 |
 | `test_formalization_requests` | 11 | 37 |
-| `test_prior_work_issues` | 16 | 53 |
+| `test_prior_work_issues` | 16 | 55 |
 | `test_sandbox_pool` | 97 | 888 |
 | `test_sandbox_groups` | 45 | 313 |
 | `test_pool_adopt` | 2 | 5 |
@@ -176,9 +176,9 @@ per-document size limit. Normal runner and local replay output remains counts
 only; `OUTREACH_SCENARIO_DEBUG=1` is an explicit local diagnostic mode.
 
 
-Phase 3d adds **260 scenarios from 137 source tests** (including eight replaced
+Phase 3d adds **262 scenarios from 137 source tests** (including eight replaced
 phase-3a intake fixtures and seven new issue-boundary regressions). The net increase
-is 252 fixtures and 127 converted tests. `extract_intake_issues.py` refreshes only
+is 254 fixtures and 127 converted tests. `extract_intake_issues.py` refreshes only
 these stages, retaining every original assertion. It captures request building,
 coverage gates, hydration, scientific projections and previews as well as stage
 invocations. Test IDs and operation IDs remain in `test-map.json`; the remaining
@@ -188,7 +188,7 @@ execution, preserving distinct registrable domains and the source assertions.
 
 The new stage counts are 111 intake; 59 inbound (38 hydration, 10 request
 builders, 11 coverage gates); 37 formalization (12 advances and 25 helper calls);
-and 53 prior-work (22 advances, 13 previews and 18 evidence projections/parses).
+and 55 prior-work (22 advances, 13 previews and 20 evidence projections/parses).
 The six new native formalization tests cover failed checkpoints, incomplete or
 malformed inventory, uncertain POSTs, invalid receipts, pause, the candidate
 bound and same-tick deduplication. A seventh regression verifies that public
@@ -219,7 +219,8 @@ them:
   every related note for the same result, including holds pinned to a sibling ID.
 - Earlier public evidence must end strictly before the resolution date range.
   Overlap, missing context, private-source wording and unsigned legacy evidence
-  remain visible pending work. A private `Kind:` introduced after public citation
+  remain visible pending work. Historical `private: 0` has the same public
+  projection as Python's `False`; other truthy private markers stay private. A private `Kind:` introduced after public citation
   fields is an ambiguous evidence entry and raises `UnparseableEvidence`.
 - Signed prior-work backfills store JSON string payloads. The offline loader now
   preserves those strings while retaining the queue's historical raw empty

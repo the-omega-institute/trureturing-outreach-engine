@@ -675,8 +675,8 @@ backoff, bounded/deferred work and exact reviewed evidence all run in core.
 Scientific evidence projection and local previews are independent Rust logic;
 Python remains the production writer and service adapter.
 
-All **2,156 scenarios** pass through Python before Rust, with equal ordered
-external writes and final logical tables/files. This includes 260 phase-3d cases
+All **2,158 scenarios** pass through Python before Rust, with equal ordered
+external writes and final logical tables/files. This includes 262 phase-3d cases
 from 137 source tests. See `../scenarios/README.md` and `test-map.json` for exact
 conversion counts and native coverage retained by design. The Rust CI job runs
 all stages and the local recording replay tests.

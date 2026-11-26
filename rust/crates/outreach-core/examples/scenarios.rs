@@ -2,7 +2,11 @@
 mod stages;
 use outreach_canon::{Result, Value, canonical, parse};
 use outreach_core::{Environment, array, ingest::Replay, mathesis_delivery::*, object, s, string};
-use std::{cell::RefCell, io::Read, rc::Rc};
+use std::{
+    cell::RefCell,
+    io::{BufRead, Read},
+    rc::Rc,
+};
 fn bytes(value: &Value) -> Vec<u8> {
     let alphabet = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     let (mut bits, mut count, mut output) = (0_u32, 0, Vec::new());
@@ -36,6 +40,7 @@ fn file(source: &SourceFile) -> Value {
     object([("$file", string(&source.name)), ("base64", string(output))])
 }
 struct Script {
+    detailed_errors: bool,
     entries: Vec<Value>,
     index: usize,
     failure: bool,
@@ -117,6 +122,14 @@ impl Script {
                 });
             }
             let mut summary = object([("type", error["type"].clone())]);
+            if self.detailed_errors {
+                summary["message"] = error["message"].clone();
+                summary["body_text"] =
+                    string(String::from_utf8_lossy(&bytes(&error["body"])).into_owned());
+                if let Some(status) = error.get("status") {
+                    summary["http_status"] = status.clone();
+                }
+            }
             if error["type"] == "HTTPError" {
                 summary["http_status"] = error["status"].clone();
                 if let Ok(body) = parse(&String::from_utf8_lossy(&bytes(&error["body"]))) {
@@ -207,6 +220,7 @@ impl MathesisClient for Fake {
     }
 }
 struct Ports {
+    restored: Option<(SavedSnapshot, String)>,
     script: Rc<RefCell<Script>>,
     repo: Value,
     tag: String,
@@ -216,6 +230,9 @@ struct Ports {
     cache_sources: bool,
 }
 impl DeliveryServices for Ports {
+    fn restored_snapshot(&mut self) -> StageResult<Option<(SavedSnapshot, String)>> {
+        Ok(self.restored.take())
+    }
     fn ledger_tag(&self) -> &str {
         &self.tag
     }
@@ -423,7 +440,12 @@ fn run(case: &Value, previous: &mut Option<Value>) -> Result<bool> {
             }
         }
     }
-    let workflow = |_: &str| Ok(case["workflow"].clone());
+    let workflow = |kind: &str| {
+        Ok(case["workflows"]
+            .get(kind)
+            .unwrap_or(&case["workflow"])
+            .clone())
+    };
     let mut config = case["config"].clone();
     if config.get("identity").is_none() {
         config["identity"] = case["installation"]["identity"].clone();
@@ -474,7 +496,16 @@ fn run(case: &Value, previous: &mut Option<Value>) -> Result<bool> {
         .iter()
         .map(|v| (v[0].as_f64().unwrap_or(0.0), v[1].as_f64().unwrap_or(0.0)))
         .collect();
+    replay.queue_clock_values = array(&case["queue_clock_values"])
+        .iter()
+        .filter_map(Value::as_f64)
+        .collect();
+    replay.queue_event_times = array(&case["queue_event_times"])
+        .iter()
+        .filter_map(Value::as_f64)
+        .collect();
     let script = Rc::new(RefCell::new(Script {
+        detailed_errors: ["pool", "delivery"].contains(&s(&case["stage"])),
         entries: array(&case["script"]).to_vec(),
         index: 0,
         failure: false,
@@ -484,7 +515,21 @@ fn run(case: &Value, previous: &mut Option<Value>) -> Result<bool> {
         dependencies: vec![],
     }));
     let mut client = Fake(script.clone(), "mathesis".into());
+    let restored = case.get("saved_input").map(|v| {
+        (
+            SavedSnapshot {
+                generation: v["generation"].as_u64().unwrap_or(0),
+                digest: s(&v["digest"]).into(),
+            },
+            s(&v["logical_digest"]).into(),
+        )
+    });
+    if let Some((receipt, _)) = &restored {
+        script.borrow_mut().generation = receipt.generation;
+        script.borrow_mut().saved_digest = receipt.digest.clone();
+    }
     let mut ports = Ledger::new(Ports {
+        restored,
         script: script.clone(),
         repo: case["adapter_attributes"]["releases"]["repo"].clone(),
         tag: s(&case["adapter_attributes"]["releases"]["tag"]).into(),
@@ -493,6 +538,9 @@ fn run(case: &Value, previous: &mut Option<Value>) -> Result<bool> {
         source_cache: Default::default(),
         cache_sources: case["stage"] == "publication",
     });
+    ports
+        .restore()
+        .map_err(|_| outreach_canon::Error::new("Snapshot restoration failed"))?;
     let mut options = StageOptions {
         attempted: case["options"]
             .get("attempted")
@@ -505,7 +553,59 @@ fn run(case: &Value, previous: &mut Option<Value>) -> Result<bool> {
             .collect(),
     };
     let mut files = case["initial_files"].clone();
-    let outcome = if case["stage"] == "mathesis" {
+    let outcome = if case["stage"] == "pool" {
+        stages::pool::execute(
+            case,
+            &mut replay,
+            &mut ports,
+            &mut Fake(script.clone(), "cma".into()),
+        )
+    } else if case["stage"] == "delivery" {
+        let mut registry = stages::mail::Registry {
+            fake: Fake(script.clone(), "registry".into()),
+            files: files.clone(),
+        };
+        let mut mailbox = stages::mail::Mailbox {
+            fake: Fake(script.clone(), "mailbox".into()),
+            features: case["adapter_attributes"]["mailbox"].clone(),
+        };
+        let result = if case["operation"] == "mathesis-once" {
+            outreach_core::delivery::mathesis::require_once(
+                &mut mailbox,
+                &case["arguments"][0],
+                &case["arguments"][1],
+                s(&case["arguments"][2]),
+                &case["adapter_attributes"]["mailbox"]["settings"]["team_addresses"],
+            )
+        } else if case["operation"] == "mathesis-introduced" {
+            let result = outreach_core::delivery::mathesis::introduced(
+                &case["arguments"][0],
+                s(&case["arguments"][1]),
+            );
+            if result == case["expected_result"] {
+                Ok(())
+            } else {
+                Err(outreach_canon::Error::new("Mathesis policy differs").into())
+            }
+        } else {
+            outreach_core::delivery::advance(
+                &mut replay,
+                &mut stages::mail::Mailbox {
+                    fake: Fake(script.clone(), "mailbox".into()),
+                    features: case["adapter_attributes"]["mailbox"].clone(),
+                },
+                &mut registry,
+                &mut ports,
+                &outreach_core::delivery::Options {
+                    absent: case["options"]["mailbox"] == false,
+                    previous: options.previous.clone(),
+                    queue_now: case["queue_now"].as_f64().unwrap_or(2_000_000_000.),
+                },
+            )
+        };
+        files = registry.files;
+        result
+    } else if case["stage"] == "mathesis" {
         advance_with_options(
             &mut replay,
             &mut client,
@@ -557,7 +657,12 @@ fn run(case: &Value, previous: &mut Option<Value>) -> Result<bool> {
     };
     let error_equal = match outcome {
         Ok(()) => case["error"].is_null(),
-        Err(e) => e.summary["type"] == case["error"]["type"],
+        Err(e) => {
+            if std::env::var_os("OUTREACH_SCENARIO_DEBUG").is_some() {
+                eprintln!("stage-error {}", canonical(&e.summary)?);
+            }
+            e.summary["type"] == case["error"]["type"]
+        }
     };
     let script = script.borrow();
     let mut final_tables = replay.tables.clone();
@@ -583,11 +688,25 @@ fn run(case: &Value, previous: &mut Option<Value>) -> Result<bool> {
         "save_state",
         "delete_asset",
         "commit_tables",
+        "retire_sandbox",
+        "save_draft",
+        "submit",
+        "submit_tracked",
+        "discard_draft",
+        "delete_draft",
+        "move_draft_to_deleted",
+        "create_draft",
     ];
     let writes: Vec<_> = script
         .observed
         .iter()
-        .filter(|e| write_methods.contains(&s(&e["method"])))
+        .filter(|e| {
+            write_methods.contains(&s(&e["method"]))
+                || (e["adapter"] == "cma"
+                    && e["method"] == "request"
+                    && array(&e["args"]).len() > 1
+                    && e["args"][1] != "GET")
+        })
         .map(|e| {
             object([
                 ("adapter", e["adapter"].clone()),
@@ -606,8 +725,21 @@ fn run(case: &Value, previous: &mut Option<Value>) -> Result<bool> {
         && rows_equal
         && files_equal
         && replay.stage_update_times.is_empty()
+        && replay.queue_event_times.is_empty()
+        && replay.queue_clock_values.is_empty()
         && ports.services().admitted == ports.services().admissions.len();
-    if !equal {
+    if !equal && std::env::var_os("OUTREACH_SCENARIO_DEBUG").is_some() {
+        for (name, table) in final_tables.as_object().into_iter().flatten() {
+            if let Some(expected) = case["expected_final_rows"].get(name)
+                && table != expected
+            {
+                eprintln!(
+                    "table {name} actual={} expected={}",
+                    canonical(table)?,
+                    canonical(expected)?
+                );
+            }
+        }
         eprintln!(
             "scenario-failed {} script={}/{} mismatch={} rows={}",
             s(&case["id"]),
@@ -704,20 +836,30 @@ fn sort_tables(final_tables: &mut Value) {
     }
 }
 fn main() -> Result<()> {
-    let mut input = Vec::new();
-    std::io::stdin()
-        .read_to_end(&mut input)
-        .map_err(|e| outreach_canon::Error::new(e.to_string()))?;
-    let cases = parse(&String::from_utf8_lossy(&input))?;
     let (mut equal, mut different, mut skipped) = (0, 0, 0);
     let mut previous = None;
-    for case in array(&cases) {
-        if !["mathesis", "publication", "sent"].contains(&s(&case["stage"])) {
+    let mut execute = |case: &Value| -> Result<()> {
+        if !["mathesis", "publication", "sent", "pool", "delivery"].contains(&s(&case["stage"])) {
             skipped += 1;
         } else if run(case, &mut previous)? {
             equal += 1;
         } else {
             different += 1;
+        }
+        Ok(())
+    };
+    if std::env::args().any(|arg| arg == "--jsonl") {
+        for line in std::io::stdin().lock().lines() {
+            let line = line.map_err(|e| outreach_canon::Error::new(e.to_string()))?;
+            execute(&parse(&line)?)?;
+        }
+    } else {
+        let mut input = Vec::new();
+        std::io::stdin()
+            .read_to_end(&mut input)
+            .map_err(|e| outreach_canon::Error::new(e.to_string()))?;
+        for case in array(&parse(&String::from_utf8_lossy(&input))?) {
+            execute(case)?;
         }
     }
     println!(

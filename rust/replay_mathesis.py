@@ -38,7 +38,7 @@ def replay(directory, snapshot, binary, key=None):
         for path in sorted(directory.glob('calls-*.jsonl')):
             for line in path.read_text().splitlines(): events.append(json.loads(line))
         starts = [e['pointer'] for e in events if e.get('event') == 'release_pointer' and e.get('boundary') == 'start' and (e.get('pointer') or {}).get('snapshot')]
-        stages = {'mathesis', 'publication', 'sent'}
+        stages = {'mathesis', 'publication', 'sent', 'pool', 'delivery'}
         cases = [e['case'] for e in events if e.get('event') in {s + '_stage' for s in stages}]
         counts['skipped'] += sum(e.get('event') in {s + '_stage_unavailable' for s in stages} for e in events)
         if starts:
@@ -50,17 +50,17 @@ def replay(directory, snapshot, binary, key=None):
                 raise ValueError('fixture start mismatch')
         eligible = []
         for case in cases:
-            if (not key and case['stage'] != 'sent') or case.get('redacted') or case.get('incomplete'):
+            if (not key and case['stage'] in {'mathesis', 'publication'}) or case.get('redacted') or case.get('incomplete'):
                 counts['skipped'] += 1; continue
             # Ordering and window checks are independent of the Rust replay.
             times = [t for pair in case.get('update_times', []) for t in pair]
-            if any(t < case['now'] or t > case['now_end'] for t in times) or times != sorted(times):
+            if any(t < case['now'] or t > case.get('now_end', max([case['now'], *times])) for t in times) or times != sorted(times):
                 counts['different'] += 1; continue
             case['review_key'] = key or ''
             if not eligible and 'initial_rows' not in case: case['initial_rows'] = initial
             eligible.append(case)
         if eligible:
-            result = subprocess.run([str(binary)], input=json.dumps(eligible), text=True, capture_output=True)
+            result = subprocess.run([str(binary), '--jsonl'], input=''.join(json.dumps(c, ensure_ascii=False) + '\n' for c in eligible), text=True, capture_output=True)
             value = json.loads(result.stdout)
             if set(value) != set(counts) or any(type(v) is not int or v < 0 for v in value.values()): raise ValueError('invalid replay counts')
             for k in counts: counts[k] += value[k]

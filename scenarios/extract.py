@@ -256,4 +256,7 @@ def main():
     print(canonical({'converted_tests': sum(bool(v) for v in mapping.values()), 'native_tests': sum(not v for v in mapping.values()), 'scenarios': total}))
 
 
-if __name__ == '__main__': main()
+if __name__ == '__main__':
+    main()
+    from extract_pool_delivery import main as pool_delivery
+    pool_delivery()

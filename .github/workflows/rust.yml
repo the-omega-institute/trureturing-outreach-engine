@@ -63,7 +63,7 @@ jobs:
         run: |
           python3 scenarios/runner.py
           python3 -m unittest discover -s managed/tests -p 'test_recording*.py'
-      - name: Rust Mathesis, publication and sent-event scenarios
+      - name: Rust Mathesis, publication, sent-event, CMA pool and mail delivery scenarios
         run: |
           python3 scenarios.py
           python3 -m unittest discover -s ../scenarios -p 'test_*.py'

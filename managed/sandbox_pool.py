@@ -6,6 +6,7 @@ import os
 from .tick import units, unit
 from .queue import canonical, require
 from .tasks import ACTIVE, KINDS
+from . import recording
 
 HEALTHY={'active','paused','pausing','reviving'}
 # A failed Sandbox retained because other Agents remain is rechecked at most
@@ -187,6 +188,7 @@ def summary(tasks, rows=None):
 
 
 class SandboxPool:
+    @recording.pool_operation
     def __init__(self, ledger, config, kinds=None, *, correspondence=(), rows=None, reserve_review_slots=0):
         self.ledger=ledger
         self.correspondence = correspondence
@@ -259,6 +261,7 @@ class SandboxPool:
             self.write('sandbox_pool_capacity',
                        {'groups': dict.fromkeys(self.group_limits, capacity['capacity_blocked_at'])})
 
+    @recording.pool_operation
     def record_capacity_failure(self, row=None):
         blocked_at = self.ledger.tasks.clock()
         if not self.group_limits:
@@ -268,6 +271,7 @@ class SandboxPool:
             capacity.setdefault('groups', {})[group] = blocked_at
             self.write('sandbox_pool_capacity', capacity)
 
+    @recording.pool_operation
     def clear_capacity_failure(self, row=None):
         if not self.group_limits:
             self.write('sandbox_pool_capacity', {})
@@ -302,6 +306,7 @@ class SandboxPool:
         self.observed.pop(sandbox_id,None)
         self.write('sandbox_pool',self.entries)
 
+    @recording.pool_operation
     def failed_entry(self, sandbox_id, workspace_id=None, corrupt=None, rotated=None, stalled=None, group=None):
         entry=next((e for e in [*self.entries,*self.failed] if e['sandbox_id']==sandbox_id),
                    {'sandbox_id':sandbox_id,'workspace_id':workspace_id})
@@ -324,6 +329,7 @@ class SandboxPool:
             else:entry.setdefault('idle_since',now)  # Legacy entries start a full grace period.
         self.write('sandbox_pool',self.entries)
 
+    @recording.pool_operation
     def assigned(self, entry):
         # Called with the task's provisioning reservation in the same ledger
         # checkpoint, before CMA creation. Replaying that creation adds nothing.
@@ -461,6 +467,7 @@ class SandboxPool:
         self.errors.append({'sandbox_id':sandbox_id,'error':type(exc).__name__+': '+str(exc)[:300]})
         self.write('sandbox_pool_errors',self.errors)
 
+    @recording.pool_operation
     def health(self, cma, *, rows=None):
         self.available.clear();self.observed.clear();self.errors=[]
         self.agent_cleanup_remaining=AGENT_CLEANUP_PER_TICK
@@ -530,6 +537,7 @@ class SandboxPool:
         self.write('sandbox_pool_errors',self.errors)
         self.ledger.save()
 
+    @recording.pool_operation
     def transition(self, cma, entry, action):
         sandbox_id=entry['sandbox_id'];sandbox=self.observed[sandbox_id]
         if sandbox_id in self.attempted:return
@@ -572,6 +580,7 @@ class SandboxPool:
             self.write('sandbox_pool',self.entries)
             self.ledger.save()
 
+    @recording.pool_operation
     def idle(self, cma, *, rows=None):
         rows=self.ledger.tasks.all() if rows is None else rows
         self.observe_live(rows)
@@ -593,6 +602,7 @@ class SandboxPool:
         return min(self.agents_per_sandbox,
                    self.agents_per_sandbox-self.reserve_review_slots+occupied)
 
+    @recording.pool_operation
     def slot(self, row=None, *, cma=None, rows=None):
         rows=self.ledger.tasks.all() if rows is None else rows
         group = self.group(row)
@@ -641,6 +651,7 @@ class SandboxPool:
         creating = sum(r['data'].get('sandbox_id') not in active_ids for r in pending)
         return len(self.entries) + len(legacy) + creating < self.max_sandboxes
 
+    @recording.pool_operation
     def remember(self, sandbox_id, workspace_id, row):
         entry={'sandbox_id':sandbox_id,'workspace_id':workspace_id,'created_by_task':row['id'],
                'state':'active','idle_since':self.ledger.tasks.clock(),'agents_placed':1}

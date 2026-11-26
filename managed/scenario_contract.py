@@ -44,6 +44,9 @@ def load(tasks, tables):
 
 
 def encode(value):
+    from dataclasses import is_dataclass, asdict
+    if is_dataclass(value): return {'$type': type(value).__name__, **asdict(value)}
+    if isinstance(value, (set, frozenset)): return sorted(encode(x) for x in value)
     if isinstance(value, Path):
         if value.is_file(): return {'$file': value.name, 'base64': base64.b64encode(value.read_bytes()).decode()}
         return {'$directory': True}
@@ -134,3 +137,31 @@ def capture_tables(tasks, baseline=None, limit=512 * 1024):
 
 def table_digests(tasks):
     return capture_tables(tasks)[0]
+
+
+def input_digest(tasks):
+    """Stream canon's complete input digest in SQLite arrival order.
+
+    This binds a restored capability without retaining another ledger dump.
+    capture_tables separately hashes final logical rows in primary-key order.
+    """
+    import hashlib
+    h = hashlib.sha256(); h.update(b'{'); first_table = True
+    for (name,) in tasks.db.execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"):
+        if not first_table: h.update(b',')
+        first_table = False
+        h.update(canonical(name).encode()); h.update(b':')
+        info = list(tasks.db.execute('PRAGMA table_info("' + name + '")'))
+        columns = [r[1] for r in info]
+        schema = {'columns': columns, 'primary_key': [r[1] for r in sorted(info, key=lambda r:r[5]) if r[5]] or ['name'], 'rows': []}
+        h.update(canonical(schema)[:-2].encode()); first_row = True
+        for raw in tasks.db.execute('SELECT * FROM "' + name + '" ORDER BY rowid'):
+            row = dict(zip(columns, raw))
+            for column, value in row.items():
+                if column in JSON_COLUMNS and isinstance(value, str):
+                    try: row[column] = json.loads(value)
+                    except ValueError: pass
+            if not first_row: h.update(b',')
+            first_row = False; h.update(canonical(row).encode())
+        h.update(b']}')
+    h.update(b'}'); return h.hexdigest()

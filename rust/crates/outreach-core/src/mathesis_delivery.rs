@@ -52,6 +52,11 @@ pub trait MathesisClient {
     fn collected_file(&mut self, work: &str, version: &Value, kind: &str) -> StageResult<Vec<u8>>;
 }
 pub trait DeliveryServices {
+    /// Receipt and logical digest from an independently verified closed snapshot.
+    /// Implementations must not infer this from the current mutable input.
+    fn restored_snapshot(&mut self) -> StageResult<Option<(SavedSnapshot, String)>> {
+        Ok(None)
+    }
     fn ledger_tag(&self) -> &str;
     /// Success means the intent and reservation are durable, including when the
     /// saver confirms an already committed identical generation.
@@ -101,6 +106,10 @@ impl From<outreach_canon::Error> for StageError {
     }
 }
 impl StageError {
+    pub fn is_interruption(&self) -> bool {
+        ["Stopped", "ProcessDeath", "KeyboardInterrupt", "SystemExit"]
+            .contains(&s(&self.summary["type"]))
+    }
     pub fn status(&self) -> Option<i64> {
         self.summary["http_status"].as_i64()
     }

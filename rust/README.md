@@ -521,11 +521,10 @@ not a CI timing gate.
 Python remains the only production ledger writer. Rust ports Mathesis delivery,
 publication `advance`, and sent-event reconciliation/status recording behind typed
 service traits. No Rust network adapter, production replay, uploader or cutover
-is enabled. Sandbox-pool work, including the #26 last-healthy-Sandbox behavior,
-is explicitly deferred to phase 3c.
+is enabled. Phase 3c adds the CMA pool and reviewed mail delivery; Python retains all production write authority.
 
-`../scenarios/README.md` describes the **244 Python-first scenarios** and their
-source-test map. Rust matches **236**, with eight intake cases skipped. Run:
+`../scenarios/README.md` describes the **1,904 Python-first scenarios** and their
+source-test map. Rust matches **1,896**, with eight intake cases skipped. Run:
 
 ```sh
 python3.12 ../scenarios/runner.py
@@ -597,7 +596,7 @@ stdout and encoded files. Signed receipt HMACs remain verification material.
 Redacted frames are skipped. Recordings remain private correspondence/research
 data after credential masking.
 
-The local command supports all three ported stages and prints **counts only**:
+The local command supports all five ported stages and prints **counts only**:
 
 ```sh
 cargo build --locked --offline -p outreach-core --example scenarios
@@ -610,9 +609,51 @@ digests must match; no key or input is discovered automatically. The key travels
 to the local runner in memory. Sent replay needs no signing key. Consecutive
 supported frames use the preceding replay's owned logical rows plus the recorded
 boundary delta. Unported stages are observations at those boundaries; their own
-logic and external calls are not executed by Rust. Full tick execution and live
-replay coverage remain phase 3c/later work.
+logic and external calls are not executed by Rust. Full tick execution remains phase 3d/later work.
 Subprocess output is captured, so only `equal`/`different`/`skipped` counts escape.
 Missing keys, redaction and unavailable captures are skipped; malformed evidence,
 snapshot mismatches and unequal outcomes fail with `different`. No dump, upload,
 coordinator tick or live service call is performed.
+
+
+## CMA pool and reviewed mail (phase 3c)
+
+`outreach-core::sandbox_pool` owns pool policy, lifecycle intent keys and group
+retention. Its typed CMA port requires snapshot-bound permits for lifecycle and
+retirement writes. Placement counts only accumulate as telemetry. A group's last
+healthy Sandbox remains available across empty or paused ticks; idle retirement
+of surplus capacity considers queued, active and pending-review work without
+reading admission switches. Cleanup retains quota evidence, ownership, the
+per-tick Agent allowance and operator checks. The existing CMA adapter owns the
+bounded stop-before-delete protocol; its native tests remain in the Python suite.
+
+`outreach-core::delivery` owns reviewed routing, owner gates, recipient conflicts,
+queue reservations, send boundaries, receipts, retries, owner-sent observation,
+draft replacement and stale-draft recovery. Draft and send permits have distinct
+intent types. The mailbox port supplies fresh Graph preflight and readback;
+`delivery::mathesis` also ports the once-per-correspondent policy for reuse by a
+future Graph adapter. Registry registration/rendering remains a separate service
+with checked evidence and compared files.
+
+The sealed ledger can restore a capability from an independently verified saved
+snapshot observation. Its stored logical digest is distinct from the immutable
+snapshot SHA; changed input cannot reuse that capability. An unsuccessful save
+cannot replace the earlier receipt. Compile-fail tests cover constructing or
+reusing permits and passing an owner-draft permit to automatic submission.
+
+There are 1,366 pool operation cases and 294 mail cases, extracted from 298
+additional native tests. See `../scenarios/test-map.json` for every invocation and
+`../scenarios/README.md` for native coverage and adapter boundaries. No expected
+ledger output drives an adapter. Python passes the cases before Rust comparison.
+
+Opt-in recording covers both stages with the existing 1 MiB frame ceiling and
+streaming logical fingerprints. Pool frames retain bounded runtime inputs and
+explicit group order; delivery frames retain task and queue clock observations.
+A restored receipt is bound to the independently fingerprinted saved input.
+The local replay command accepts both stages without a signing key and preserves
+consecutive frame state. Its public output is `equal`/`different`/`skipped`
+counts. No Rust network client, production ledger writer or cutover is enabled.
+
+Phase 3d still owns mailbox intake (including the eight deferred scenarios),
+advance/admission, pipeline and continuations, issue filing and maintenance.
+Production switch-over, live adapters and rollback acceptance remain later gates.

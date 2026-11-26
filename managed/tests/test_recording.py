@@ -104,6 +104,25 @@ class RecordingTests(unittest.TestCase):
         self.assertEqual([r['pointer']['generation'] for r in self.records()], [3, 3])
         self.assertEqual([r['boundary'] for r in self.records()], ['end', 'end'])
 
+    def test_capability_fingerprint_streams_the_saved_input_in_arrival_order(self):
+        import hashlib
+        from managed.tasks import Tasks
+        from managed.queue import canonical
+        from managed.scenario_contract import dump, input_digest, logical
+        tasks=Tasks(self.path/'state.sqlite3'); self.addCleanup(tasks.close)
+        tasks.db.execute("INSERT INTO pipeline_state VALUES('z',?)",(canonical({'unicode':'α','n':1.0}),))
+        tasks.db.execute("INSERT INTO pipeline_state VALUES('a','{}')")
+        self.assertEqual(input_digest(tasks),hashlib.sha256(canonical(dump(tasks)).encode()).hexdigest())
+        self.assertNotEqual(input_digest(tasks),hashlib.sha256(canonical(logical(dump(tasks))).encode()).hexdigest())
+
+    def test_fingerprint_failure_cannot_change_a_completed_save(self):
+        from types import SimpleNamespace
+        ledger=SimpleNamespace(snapshot={'name':'state-synthetic.sqlite3','sha256':'a'*64},
+            generation=4,published_run='synthetic',run_history=[],version=lambda:1,saved_version=1,tasks=None)
+        with patch('managed.scenario_contract.input_digest',side_effect=OSError('synthetic')),patch('sys.stderr',io.StringIO()):
+            self.assertTrue(recording.save_pointer(lambda _:True)(ledger))
+        self.assertEqual(self.records()[-1]['pointer']['generation'],4)
+
     def test_process_records_each_retry_and_preserves_failure(self):
         result = subprocess.CompletedProcess(['gh'], 1, b'', b'HTTP 503')
         with patch.object(subprocess, 'run', return_value=result):

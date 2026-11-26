@@ -96,6 +96,29 @@ impl<S> Ledger<S> {
         &mut self.services
     }
 }
+impl<S: DeliveryServices> Ledger<S> {
+    /// Restore the sealed capability from a verified saved snapshot observation.
+    /// The saved input digest is retained separately: subsequent mutations are
+    /// refused by Persisted::saved until another forced save acknowledges them.
+    pub fn restore(&mut self) -> StageResult<()> {
+        let saved = self.services.restored_snapshot()?;
+        if let Some((receipt, logical)) = &saved {
+            crate::validation::require(
+                [receipt.digest.as_str(), logical.as_str()]
+                    .iter()
+                    .all(|digest| {
+                        digest.len() == 64
+                            && digest
+                                .bytes()
+                                .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+                    }),
+                "Invalid restored snapshot digest",
+            )?;
+        }
+        self.saved = saved;
+        Ok(())
+    }
+}
 impl<S> sealed::Sealed for Ledger<S> {}
 impl<S: DeliveryServices> DeliveryServices for Ledger<S> {
     fn ledger_tag(&self) -> &str {
@@ -144,8 +167,20 @@ mod tests {
     use crate::{object, string};
     struct Saver {
         fail: bool,
+        restored: Option<String>,
     }
     impl DeliveryServices for Saver {
+        fn restored_snapshot(&mut self) -> StageResult<Option<(SavedSnapshot, String)>> {
+            Ok(self.restored.take().map(|logical| {
+                (
+                    SavedSnapshot {
+                        generation: 7,
+                        digest: logical.clone(),
+                    },
+                    logical,
+                )
+            }))
+        }
         fn ledger_tag(&self) -> &str {
             "synthetic"
         }
@@ -176,7 +211,10 @@ mod tests {
     }
     #[test]
     fn acknowledged_snapshot_is_bound_and_changed_state_is_refused() {
-        let mut ledger = Ledger::new(Saver { fail: false });
+        let mut ledger = Ledger::new(Saver {
+            fail: false,
+            restored: None,
+        });
         let snapshot = object([("intent", string("synthetic-write"))]);
         assert!(Persisted::saved((), &ledger, &snapshot).is_err());
         let permit = Persisted::save((), &mut ledger, &snapshot).expect("save acknowledged");
@@ -193,5 +231,17 @@ mod tests {
             ledger.saved_snapshot().expect("previous snapshot").0.digest,
             permit.snapshot_digest()
         );
+    }
+    #[test]
+    fn restored_receipt_permits_only_its_committed_logical_input() {
+        let input = object([("intent", string("synthetic-restored"))]);
+        let mut ledger = Ledger::new(Saver {
+            fail: false,
+            restored: Some(digest(&input).expect("digest")),
+        });
+        ledger.restore().expect("verified restore");
+        assert!(Persisted::saved((), &ledger, &input).is_ok());
+        let changed = object([("intent", string("unsaved-change"))]);
+        assert!(Persisted::saved((), &ledger, &changed).is_err());
     }
 }

@@ -1,3 +1,5 @@
+pub mod mail;
+pub mod pool;
 use super::*;
 use outreach_core::{publication as p, sent_events as sent};
 use std::collections::BTreeMap;

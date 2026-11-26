@@ -178,7 +178,7 @@ class MathesisOnceTest(unittest.TestCase):
         from managed.mailbox import mathesis_introduced
         quoted = self.sent('Dear Professor X,\n\nThanks.\n\nFrom: Owner\n' + self.PARAGRAPH)
         self.assertIsNone(mathesis_introduced([quoted], self.ACCOUNT))
-        incoming = {**self.sent(self.PARAGRAPH), 'from': {'emailAddress': {'address': 'x@example.org'}}}
+        incoming = {**self.sent(self.PARAGRAPH), 'from': {'emailAddress': {'address': 'x@example.invalid'}}}
         self.assertIsNone(mathesis_introduced([incoming], self.ACCOUNT))
         first = self.sent('<p>Dear X,</p><p>' + self.PARAGRAPH + '</p>', at='2026-11-18T00:00:00Z', mid='<first>', html=True)
         later = self.sent('Dear X,\n\n' + self.PARAGRAPH, at='2026-11-21T00:00:00Z', mid='<later>')
@@ -197,7 +197,7 @@ class MathesisOnceTest(unittest.TestCase):
         box.recipient_history = lambda recipient: [{'folder': 'sentitems', 'id': 'm1', 'isDraft': False,
                                                     'conversationId': 'other'}]
         box.message = lambda identity: earlier
-        packet = {'body': 'Dear X,\n\n' + self.PARAGRAPH, 'to': ['x@example.org'], 'cc': ['team@example.invalid'],
+        packet = {'body': 'Dear X,\n\n' + self.PARAGRAPH, 'to': ['x@example.invalid'], 'cc': ['team@example.invalid'],
                   'thread_id': 'current'}
         with self.assertRaisesRegex(GateError, 'Mathesis was already introduced'):
             box._require_mathesis_not_introduced(packet, [], self.ACCOUNT)

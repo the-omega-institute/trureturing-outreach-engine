@@ -28,6 +28,25 @@ def request(note_id, revision=1):
 
 
 class ServiceTests(unittest.TestCase):
+    def test_uncertain_creation_inspection_requires_exact_marker_version_and_never_writes(self):
+        state = {'versions': {'2': {'phase':'creating','package_id':'preserved'}}}
+        original = copy.deepcopy(state)
+        class Account:
+            def request(self, method, path):
+                self_method = method
+                assert self_method == 'GET' and path.startswith('/deposit/depositions?')
+                return [{'id':10,'metadata':{'keywords':['trureturing-note:alpha'],'version':'1'}},
+                        {'id':11,'metadata':{'keywords':['trureturing-note:other'],'version':'2'}},
+                        {'id':12,'submitted':False,'metadata':{'keywords':['trureturing-note:alpha'],'version':'2'}}]
+        result = s.inspect_uncertain_creations(state,'alpha',Account())
+        self.assertTrue(result['account_scan_complete'])
+        self.assertEqual([r['record_id'] for r in result['candidates_by_revision']['2']],[12])
+        self.assertEqual(state,original)
+        class Invalid:
+            def request(self,*args):return {'unexpected':'shape'}
+        with self.assertRaisesRegex(ValueError,'Unexpected Zenodo'):
+            s.inspect_uncertain_creations(state,'alpha',Invalid())
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)

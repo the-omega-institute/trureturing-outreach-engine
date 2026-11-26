@@ -7,7 +7,9 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: outreach-control-single-writer
+  # A cancelled/manual diagnostic Coordinator must not acquire the writer lock
+  # and replace a pending tick before this workflow's job can be skipped.
+  group: ${{ (github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'schedule')) && 'outreach-control-single-writer' || format('outreach-coverage-skipped-{0}', github.run_id) }}
   cancel-in-progress: false
 
 permissions:
@@ -23,6 +25,7 @@ env:
 
 jobs:
   coverage:
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'schedule') }}
     runs-on: ubuntu-latest
     timeout-minutes: 18
     steps:

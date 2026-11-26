@@ -293,6 +293,30 @@ def request_name(request):
     return REQUEST_PREFIX + hashlib.sha256(w.encode(request)).hexdigest()[:24] + '.json'
 
 
+def workflow_selection(environ):
+    """Explicit dispatch inputs replace the shared secret as a whole selection."""
+    if environ.get('NOTE_USE_INPUTS') != 'true':
+        return None
+    selection = {'schema_version': 'short-note-request.v1',
+                 'id': environ.get('INPUT_NOTE_ID', ''),
+                 'action': environ.get('INPUT_NOTE_ACTION', '')}
+    for key in ('revision', 'recover_record', 'reuse_draft_from'):
+        value = environ.get('INPUT_NOTE_' + key.upper(), '')
+        if value:
+            if not re.fullmatch(r'[1-9][0-9]*', value):
+                raise ValueError(key + ' must be a positive decimal integer')
+            selection[key] = int(value)
+    if selection['action'] == 'status':
+        w.slug(selection['id'])
+        if set(selection) != {'schema_version', 'id', 'action'}:
+            raise ValueError('Status needs only a note ID; leave revision and recovery fields empty')
+        return selection
+    # Operator recovery can only publish an existing staged package.
+    if selection['action'] != 'publish':
+        raise ValueError('Select publish or status for one note')
+    return validate_request(selection)
+
+
 def check_links(note, metadata):
     if note['id'] != metadata['id'] or set(note['problem_ids']) != set(metadata['problem_ids']):
         raise ValueError('Note and catalog must have the same explicit result mapping')
@@ -377,6 +401,11 @@ def queue(catalog, gh, retry_failed=False, *, releases=None):
             if (row['operation']['action'] == 'publish'
                     and state.get('versions', {}).get(str(row['operation']['revision']), {}).get('phase') == 'superseded'):
                 row.update(status='superseded', eligible=False)
+            if (row['operation']['action'] == 'publish' and row['status'] == 'failed'
+                    and state.get('versions', {}).get(str(row['operation']['revision']), {}).get('publication')):
+                # Preserve the failed historical receipt; a later request has
+                # already recovered this exact immutable revision.
+                row.update(status='recovered', eligible=False)
         rows.extend(note_rows)
     return sorted(rows, key=lambda row: (row['id'], row['operation'].get('revision', 10**9), row['order']))
 
@@ -649,11 +678,13 @@ def synchronize_if_changed(catalog, gh, pages, submissions=None, *, cache, relea
 
 
 def drain(catalog, gh, zenodo, pages, limit=10, retry_failed=False, budget_seconds=900, submissions=None,
-          *, cache=None, fetch=None):
+          *, cache=None, fetch=None, only_request=None):
     if not 1 <= limit <= 100 or budget_seconds <= 0:
         raise ValueError('Select a batch limit of 1..100 and a positive time budget')
     releases = note_releases(catalog, gh)
     planned = [row for row in queue(catalog, gh, retry_failed, releases=releases) if row['eligible']]
+    if only_request is not None:
+        planned = [row for row in planned if row['request'] == only_request]
     if any(row['operation']['action'] == 'publish' for row in planned) and zenodo is None:
         raise ValueError('ZENODO_TOKEN is required before processing queued publications')
     if planned and pages is None:
@@ -720,9 +751,12 @@ def drain(catalog, gh, zenodo, pages, limit=10, retry_failed=False, budget_secon
                     projection_changed = True
         except (ValueError, RuntimeError, OSError, KeyError) as error:
             failed.append({'id': 'pages', 'error': str(error)[:500]})
-    remaining = (sum(row['eligible'] for row in queue(catalog, gh)) if attempted else len(planned))
+    current = queue(catalog, gh, releases=None if attempted else releases)
+    remaining = sum(row['eligible'] for row in current)
+    attention = [{k: row[k] for k in ('id', 'request', 'status')} for row in current if row['status'] == 'failed']
     return {'processed': len(accepted), 'failed': failed, 'remaining': remaining,
-            'status': 'needs_attention' if failed else 'dispatch_accepted' if accepted or projection_changed else 'idle'}
+            'needs_attention': attention,
+            'status': 'needs_attention' if failed or attention else 'dispatch_accepted' if accepted or projection_changed else 'idle'}
 
 
 def handoff(catalog, gh):
@@ -1015,16 +1049,16 @@ def execute(args):
         request = {'schema_version': 'short-note-request.v1', 'id': args.id, 'action': action}
         if action == 'publish':
             request['revision'] = args.revision
-            if args.recover_record:
+            if args.recover_record is not None:
                 request['recover_record'] = args.recover_record
-            if args.reuse_draft_from:
+            if args.reuse_draft_from is not None:
                 request['reuse_draft_from'] = args.reuse_draft_from
         elif action == 'promote':
             request['publication'] = args.publication if isinstance(args.publication, dict) else w.read(args.publication)
         result = enqueue(catalog, request, gh)
         if args.command != 'enqueue':
             result = drain(catalog, gh, zenodo, pages, getattr(args, 'limit', 10),
-                           getattr(args, 'retry_failed', False), submissions=submission_board)
+                           True, submissions=submission_board, only_request=request_name(request))
     elif args.command == 'drain':
         result = drain(catalog, gh, zenodo, pages, args.limit, args.retry_failed,
                        submissions=submission_board, cache=cache)
@@ -1065,6 +1099,14 @@ def main(argv=None):
     if args.output:
         Path(args.output).write_bytes(raw)
     print(raw.decode(), end='')
+    if isinstance(result, dict) and 'needs_attention' in result:
+        # Hosted stdout is private. Emit counts through its public boundary,
+        # without note IDs, request handles, metadata or exception text.
+        from managed.run_log import OUTPUT
+        emit = OUTPUT.get()
+        if emit is not None:
+            emit(f"notes processed={result['processed']} failed={len(result['failed'])} "
+                 f"remaining={result['remaining']} needs_attention={len(result['needs_attention'])}")
     if isinstance(result, dict) and (result.get('failed') or result.get('ready') is False
                                     or result.get('status') in ('verification_pending', 'failed')):
         return 1

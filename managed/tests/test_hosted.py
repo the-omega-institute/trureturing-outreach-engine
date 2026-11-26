@@ -86,6 +86,46 @@ class HostedFeedTests(unittest.TestCase):
         self.remote.ensure.assert_not_called()
         self.remote.run.assert_not_called()
 
+    def test_explicit_note_inputs_ignore_the_entire_secret_and_stale_environment(self):
+        environment = {'NOTE_USE_INPUTS': 'true', 'INPUT_NOTE_ACTION': 'publish',
+                       'INPUT_NOTE_ID': 'alpha', 'INPUT_NOTE_REVISION': '3',
+                       'INPUT_NOTE_RECOVER_RECORD': '42', 'INPUT_NOTE_REUSE_DRAFT_FROM': '2',
+                       'OUTREACH_NOTE_REQUEST': 'unreadable secret is never parsed',
+                       'NOTE_ACTION': 'drain', 'PREFERRED_PUBLICATION': 'stale', 'BATCH_LIMIT': '99'}
+        with patch.dict(os.environ, environment), patch.object(service, 'main', return_value=0) as main:
+            self.assertEqual(hosted.command('notes'), 0)
+            self.assertEqual([os.environ[key] for key in ('NOTE_ACTION', 'NOTE_ID', 'NOTE_REVISION',
+                             'RECOVER_RECORD', 'REUSE_DRAFT_FROM')], ['publish', 'alpha', '3', '42', '2'])
+            self.assertNotIn('PREFERRED_PUBLICATION', os.environ)
+            self.assertNotIn('BATCH_LIMIT', os.environ)
+            main.assert_called_once_with(['ci'])
+
+    def test_invalid_explicit_input_cannot_fall_back_to_secret_or_execute(self):
+        with patch.dict(os.environ, {'NOTE_USE_INPUTS': 'true', 'INPUT_NOTE_ACTION': 'publish',
+                                    'INPUT_NOTE_ID': 'alpha', 'INPUT_NOTE_REVISION': '0',
+                                    'OUTREACH_NOTE_REQUEST': '{"id":"beta","revision":1}'}), \
+                patch.object(service, 'main') as main:
+            with self.assertRaises(ValueError):
+                hosted.command('notes')
+            main.assert_not_called()
+            self.remote.run.assert_not_called()
+
+    def test_status_input_and_scheduled_secret_path(self):
+        with patch.dict(os.environ, {'NOTE_USE_INPUTS': 'true', 'INPUT_NOTE_ACTION': 'status',
+                                    'INPUT_NOTE_ID': 'alpha', 'RECOVER_RECORD': '99',
+                                    'OUTREACH_NOTE_REQUEST': 'not parsed'}), \
+                patch.object(service, 'main', return_value=0):
+            self.assertEqual(hosted.command('notes'), 0)
+            self.assertEqual(os.environ['NOTE_ACTION'], 'status')
+            self.assertNotIn('RECOVER_RECORD', os.environ)
+        with patch.dict(os.environ, {'NOTE_USE_INPUTS': 'false', 'NOTE_ACTION': 'drain',
+                                    'OUTREACH_NOTE_REQUEST': '{"id":"beta","revision":2,"limit":5}'}), \
+                patch.object(service, 'main', return_value=0):
+            self.assertEqual(hosted.command('notes'), 0)
+            self.assertEqual(os.environ['NOTE_ACTION'], 'drain')
+            self.assertEqual(os.environ['NOTE_ID'], 'beta')
+            self.assertEqual(os.environ['BATCH_LIMIT'], '5')
+
     def test_warm_unchanged_cache_downloads_without_upload_or_git_writes(self):
         self.run_job(feed=self.feed())
         self.raw = self.uploads[0]

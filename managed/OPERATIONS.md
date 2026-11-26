@@ -45,6 +45,81 @@ For authorized local inspection, run `python3 -m managed.control status`,
 `python3 -m managed.control work`, or `python3 -m managed.control reviews`
 with the configured private data checkout and an authenticated GitHub CLI.
 
+## Recover one short-note Zenodo publication
+
+Use **Coordinator → Run workflow → action=notes** on a revision containing the
+recovery implementation. Select `note_action=status` and set `note_id` to inspect
+one note; leave the revision and recovery fields empty for status. The coordinator
+runs a status read before delivery, within the existing single-writer concurrency
+group. Detailed note status is captured in the private control Release run log;
+public workflow logs contain only delivery counts. Manual `action=notes` inputs
+replace the entire `OUTREACH_NOTE_REQUEST` selection, including optional fields.
+An invalid or incomplete selection fails rather than falling back to the secret.
+Scheduled runs continue to drain the ordinary queue.
+
+Inspect the `short-note-<id>` Release in the configured **private data repository**.
+Its JSON body is the retained state: check `versions["<revision>"]` for `phase`,
+`record_id`, `package_id`, and the corresponding `deliveries` entry. Download the
+immutable `note-v<revision>.json`, PDF, source ZIP and original `request-*.json`
+asset into a private directory. For example, these are read-only GitHub operations
+(the local files belong outside the public engine checkout):
+
+```sh
+gh release view short-note-alpha --repo "$OUTREACH_DATA_REPO" --json body --jq .body
+gh release download short-note-alpha --repo "$OUTREACH_DATA_REPO" \
+  --pattern 'note-v2.*' --pattern 'source-v2.zip' --pattern 'request-*.json' \
+  --dir /private/operator/alpha-v2
+```
+
+Check that the manifest hash matches `package_id`, and that both file SHA-256
+hashes match the immutable manifest. Inspect the original Zenodo draft through
+the account, checking its note keyword, version/concept, title, ordered creators,
+affiliations, identifiers, license, publication/preprint types, access right,
+file inventory and file checksums. A `creating` receipt without `record_id`
+means the creation outcome is uncertain: find the exact draft ID in the account
+before retrying. The creation fence prevents a second deposit. Never guess an ID,
+clear a receipt, restage a modified package as the same revision, or change its
+producer or Mathesis collection receipt.
+
+For `uploading`, reuse the retained `record_id`. For uncertain `creating`, supply
+the recovered exact ID. Dispatch one publication request with `action=notes`,
+`note_action=publish`, `note_id`, `note_revision`, and `recover_record`. For example:
+
+```sh
+gh workflow run outreach-control.yml \
+  --repo the-omega-institute/trureturing-outreach-engine --ref main \
+  -f action=notes -f note_action=publish -f note_id=alpha \
+  -f note_revision=2 -f recover_record=12345678
+```
+
+Leave `reuse_draft_from` empty when resuming the same revision. Set it only when
+an intentionally prepared **new artifact revision** must reuse a specific earlier
+unpublished revision's draft; it must be positive and less than `note_revision`.
+The selected package and creation fence remain authoritative. A supplied ID
+cannot replace a retained ID or trigger creation without a retained intent.
+Recovery executes only the selected immutable request, retries it if previously
+failed, and retains earlier request assets and delivery receipts. It uses the
+existing Zenodo concept/draft checks and never submits a manuscript to Mathesis.
+Existing collection links and producer identity stay in their original records.
+
+Title and creator-name presentation uses Unicode NFC followed by ASCII mapping
+of U+2018–U+201B apostrophes/single quotes, U+201C–U+201F double quotes and
+U+2010–U+2015 hyphens/dashes. Creation, metadata update and readback use the same
+rule. Accents, case, spacing, other metadata, immutable manifests and artifact
+bytes retain their existing checks. A substantive mismatch still needs inspection.
+
+After dispatch, inspect the new private log and retained state: the exact version
+must have `phase=published`, the original `record_id` and `package_id`, and its
+published DOI. Check that the selected request is `dispatched`. A new delivery
+failure fails that run and records `failed`; subsequent scheduled drains skip
+that receipt, report `status=needs_attention` and list its request in private
+JSON/status output. Public logs emit `processed`, `failed`, `remaining` and
+`needs_attention` counts. Previously recorded failures alone return success;
+new failures and feed/verification failures still fail. Successful recovery marks
+the old failed request `recovered` in the queue view while preserving its stored
+historical receipt and removing it from the attention count. Other notes continue
+through the scheduled queue independently.
+
 ## Sandbox pool retirement
 
 A healthy pool Sandbox admits its group's work up to `agents_per_sandbox`,

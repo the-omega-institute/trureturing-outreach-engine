@@ -5,6 +5,7 @@ import hashlib
 from datetime import datetime, timedelta, timezone
 import io
 import json
+import os
 from pathlib import Path
 import tempfile
 import unittest
@@ -109,7 +110,7 @@ class ServiceTests(unittest.TestCase):
                 patch.object(self.gh, 'download', side_effect=AssertionError('idle download')):
             result = s.drain(self.catalog, self.gh, None, self.pages,
                              cache=s.FeedCache(self.cache.path), fetch=lambda: index)
-        self.assertEqual(result, {'processed': 0, 'remaining': 0, 'failed': [], 'status': 'idle'})
+        self.assertEqual(result, {'processed': 0, 'remaining': 0, 'failed': [], 'needs_attention': [], 'status': 'idle'})
         self.assertEqual(listings.call_count, 1)
         self.assertEqual(len(self.pages.dispatches), dispatches)
 
@@ -431,6 +432,111 @@ class ServiceTests(unittest.TestCase):
         retried = s.drain(self.catalog, self.gh, self.zenodo, self.pages, retry_failed=True)
         self.assertEqual(retried['failed'], [])
         self.assertEqual(self.zenodo.calls.count(('POST', '/deposit/depositions/1/actions/publish')), 1)
+
+    def ci(self, dispatch=False, **environment):
+        path = self.root / 'ci-catalog.json'
+        path.write_bytes(w.encode(self.catalog))
+        output, public = io.StringIO(), []
+        from managed.run_log import OUTPUT
+        token = OUTPUT.set(public.append)
+        self.addCleanup(OUTPUT.reset, token)
+        with patch.dict(os.environ, {'NOTE_ACTION': 'drain', 'GITHUB_ACTIONS': 'true',
+                                     'PAGES_TOKEN': 'fake-pages', 'ZENODO_TOKEN': 'fake-zenodo',
+                                     **environment}, clear=True), \
+                patch.object(w, 'GitHub', side_effect=lambda repo, *args: self.gh if repo == w.OUTREACH else self.pages), \
+                patch.object(w, 'Zenodo', return_value=self.zenodo), \
+                patch.object(s, 'load_submission_board', return_value=None), \
+                contextlib.redirect_stdout(output):
+            if dispatch:
+                from managed import hosted
+                from scripts.short_notes import service as packaged
+                with patch.object(hosted, 'restore_credentials'), \
+                        patch.object(hosted, 'feed_cache', side_effect=contextlib.nullcontext), \
+                        patch.object(packaged, 'main', side_effect=lambda args: s.main(['--catalog', str(path), *args])):
+                    code = hosted.command('notes')
+            else:
+                code = s.main(['--catalog', str(path), 'ci'])
+        return code, json.loads(output.getvalue()), public
+
+    def test_recorded_failure_is_visible_but_does_not_fail_every_scheduled_run(self):
+        self.catalog = catalog('alpha', 'beta')
+        self.enqueue('alpha')
+        self.zenodo.fail_after = ('POST', '/deposit/depositions')
+        code, first, public = self.ci()
+        self.assertEqual(code, 1)
+        self.assertEqual(len(first['needs_attention']), 1)
+        self.assertIn('failed=1', public[0])
+        retained = copy.deepcopy(self.state())
+        self.enqueue('beta')
+        code, next_run, public = self.ci()
+        self.assertEqual(code, 0)
+        self.assertEqual(next_run['status'], 'needs_attention')
+        self.assertEqual(next_run['processed'], 1)
+        self.assertEqual(next_run['failed'], [])
+        self.assertEqual(next_run['needs_attention'][0]['id'], 'alpha')
+        self.assertEqual(self.state(), retained)
+        self.assertEqual(self.zenodo.calls.count(('POST', '/deposit/depositions')), 2)
+        self.assertIn('needs_attention=1', public[0])
+        self.assertNotIn('alpha', public[0])
+        code, idle, public = self.ci()
+        self.assertEqual((code, idle['processed'], len(idle['needs_attention'])), (0, 0, 1))
+        self.assertEqual(s.note_status(self.catalog, 'alpha', self.gh)['requests'][0]['status'], 'failed')
+
+    def test_ci_recovers_one_request_preserving_collection_package_and_history(self):
+        self.catalog = catalog('alpha', 'beta')
+        queued = self.enqueue('alpha')
+        collection, responses = self.collection()
+        with patch.object(s, 'public_mathesis', side_effect=responses.__getitem__):
+            s.record_mathesis(self.catalog, 'alpha', collection, self.gh, revision=1)
+        self.zenodo.fail_after = ('POST', '/deposit/depositions')
+        self.assertEqual(self.ci()[0], 1)
+        before = copy.deepcopy(self.state())
+        assets = copy.deepcopy(self.gh.releases[w.tag_for('alpha')])
+        self.enqueue('beta')
+        with patch.object(s, 'record_mathesis', side_effect=AssertionError('collected manuscript redelivered')):
+            code, result, _ = self.ci(dispatch=True, NOTE_USE_INPUTS='true', INPUT_NOTE_ACTION='publish',
+                                     INPUT_NOTE_ID='alpha', INPUT_NOTE_REVISION='1', INPUT_NOTE_RECOVER_RECORD='1',
+                                     OUTREACH_NOTE_REQUEST='must never be parsed')
+        self.assertEqual(code, 0)
+        self.assertEqual((result['processed'], result['remaining'], result['needs_attention']), (1, 1, []))
+        after = self.state()
+        self.assertEqual(after['versions']['1']['package_id'], before['versions']['1']['package_id'])
+        self.assertEqual(after['mathesis_publication'], before['mathesis_publication'])
+        self.assertEqual(after['deliveries'][queued['request']], before['deliveries'][queued['request']])
+        for name, raw in assets.items():
+            self.assertEqual(self.gh.releases[w.tag_for('alpha')][name], raw)
+        self.assertEqual(len(self.zenodo.records), 1)
+        self.assertEqual(self.zenodo.calls.count(('POST', '/deposit/depositions')), 1)
+        self.assertEqual(s.queue(self.catalog, self.gh)[0]['status'], 'recovered')
+        calls = list(self.zenodo.calls)
+        self.assertEqual(self.ci(NOTE_ACTION='publish', NOTE_ID='alpha', NOTE_REVISION='1', RECOVER_RECORD='1')[0], 0)
+        self.assertEqual(calls, self.zenodo.calls)
+
+    def test_ci_retry_without_recovered_id_keeps_creation_fence(self):
+        self.catalog = catalog('alpha')
+        self.enqueue()
+        self.zenodo.fail_after = ('POST', '/deposit/depositions')
+        self.assertEqual(self.ci()[0], 1)
+        code, result, _ = self.ci(NOTE_ACTION='publish', NOTE_ID='alpha', NOTE_REVISION='1')
+        self.assertEqual(code, 1)
+        self.assertIn('Uncertain Zenodo creation', result['failed'][0]['error'])
+        self.assertEqual(self.zenodo.calls.count(('POST', '/deposit/depositions')), 1)
+
+    def test_workflow_inputs_require_valid_complete_selection(self):
+        valid = {'NOTE_USE_INPUTS': 'true', 'INPUT_NOTE_ACTION': 'publish',
+                 'INPUT_NOTE_ID': 'alpha', 'INPUT_NOTE_REVISION': '3',
+                 'INPUT_NOTE_RECOVER_RECORD': '42', 'INPUT_NOTE_REUSE_DRAFT_FROM': '2'}
+        self.assertEqual(s.workflow_selection(valid), {**request('alpha', 3), 'recover_record': 42, 'reuse_draft_from': 2})
+        for changes in ({'INPUT_NOTE_ID': ''}, {'INPUT_NOTE_ID': '../alpha'},
+                        {'INPUT_NOTE_REVISION': ''}, {'INPUT_NOTE_REVISION': '0'},
+                        {'INPUT_NOTE_REVISION': 'true'}, {'INPUT_NOTE_RECOVER_RECORD': '-1'},
+                        {'INPUT_NOTE_RECOVER_RECORD': '1.0'}, {'INPUT_NOTE_REUSE_DRAFT_FROM': '3'},
+                        {'INPUT_NOTE_ACTION': 'promote'}, {'INPUT_NOTE_ACTION': 'drain'}):
+            with self.subTest(changes=changes), self.assertRaises(ValueError):
+                s.workflow_selection({**valid, **changes})
+        self.assertIsNone(s.workflow_selection({**valid, 'NOTE_USE_INPUTS': 'false'}))
+        with self.assertRaises(ValueError):
+            s.validate_request({**request('alpha'), 'recover_record': True})
 
     def test_pages_failure_is_automatically_resumable_without_another_doi(self):
         self.catalog = catalog('alpha')
@@ -834,7 +940,7 @@ class ServiceTests(unittest.TestCase):
 
     def test_idle_queue_needs_no_publication_credentials(self):
         result = s.drain(catalog(), self.gh, None, None)
-        self.assertEqual(result, {'processed': 0, 'failed': [], 'remaining': 0, 'status': 'idle'})
+        self.assertEqual(result, {'processed': 0, 'failed': [], 'remaining': 0, 'needs_attention': [], 'status': 'idle'})
         self.assertEqual(self.gh.releases, {})
 
     def test_doctor_missing_configuration_is_reported_without_mutations(self):

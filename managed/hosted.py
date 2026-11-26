@@ -109,7 +109,15 @@ def command(action):
     if action == 'pages':
         with feed_cache():
             return service.main(['sync'])
-    selection = json.loads(os.environ.get('OUTREACH_NOTE_REQUEST') or '{}')
+    selection = service.workflow_selection(os.environ)
+    if selection is None:
+        selection = json.loads(os.environ.get('OUTREACH_NOTE_REQUEST') or '{}')
+    else:
+        os.environ['NOTE_ACTION'] = selection['action']
+        # No stale secret or environment field may bleed into a manual selection.
+        for variable in ('NOTE_ID', 'NOTE_REVISION', 'RECOVER_RECORD', 'REUSE_DRAFT_FROM',
+                         'PREFERRED_PUBLICATION', 'BATCH_LIMIT'):
+            os.environ.pop(variable, None)
     for key, variable in (('id', 'NOTE_ID'), ('revision', 'NOTE_REVISION'),
                           ('recover_record', 'RECOVER_RECORD'), ('reuse_draft_from', 'REUSE_DRAFT_FROM'),
                           ('limit', 'BATCH_LIMIT'), ('publication', 'PREFERRED_PUBLICATION')):

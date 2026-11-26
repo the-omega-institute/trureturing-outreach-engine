@@ -16,6 +16,7 @@ import stat
 import subprocess
 import sys
 import tempfile
+import unicodedata
 from urllib.error import HTTPError
 from urllib.parse import quote, unquote, urlsplit, urlunsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
@@ -444,9 +445,23 @@ def zenodo_name(name):
     return name if ',' in name or len(parts) < 2 else parts[-1] + ', ' + ' '.join(parts[:-1])
 
 
+def zenodo_text(value):
+    """NFC, then ASCII equivalents of curly quotes/apostrophes and dashes.
+
+    Only title and creator-name presentation uses this equivalence. Preserve
+    accents, case, spacing and all other characters; never normalize artifacts
+    or the immutable package manifest.
+    """
+    return unicodedata.normalize('NFC', value).translate(str.maketrans({
+        **dict.fromkeys('\u2018\u2019\u201a\u201b', "'"),
+        **dict.fromkeys('\u201c\u201d\u201e\u201f', '"'),
+        **dict.fromkeys('\u2010\u2011\u2012\u2013\u2014\u2015', '-'),
+    }))
+
+
 def zenodo_metadata(note):
-    return {'title': note['title'], 'upload_type': 'publication', 'publication_type': 'preprint',
-            'creators': [{**c, 'name': zenodo_name(c['name'])} for c in note['creators']],
+    return {'title': zenodo_text(note['title']), 'upload_type': 'publication', 'publication_type': 'preprint',
+            'creators': [{**c, 'name': zenodo_name(zenodo_text(c['name']))} for c in note['creators']],
             'description': html.escape(note['abstract']),
             'access_right': 'open', 'license': note['license'], 'version': str(note['revision']),
             'publication_date': date.today().isoformat(),
@@ -469,10 +484,10 @@ def check_remote_metadata(record, note):
     actual = record['metadata']
     creators = actual.get('creators', [])
     creators_match = (len(creators) == len(note['creators'])
-                      and all(all((zenodo_name(found.get(k, '')) == zenodo_name(v) if k == 'name'
+                      and all(all((zenodo_name(zenodo_text(found.get(k, ''))) == zenodo_name(zenodo_text(v)) if k == 'name'
                                    else found.get(k) == v) for k, v in expected.items())
                               for found, expected in zip(creators, note['creators'])))
-    if (actual.get('version') != str(note['revision']) or actual.get('title') != note['title']
+    if (actual.get('version') != str(note['revision']) or zenodo_text(actual.get('title', '')) != zenodo_text(note['title'])
             or not creators_match or actual.get('upload_type') != 'publication'
             or actual.get('publication_type') != 'preprint'
             or actual.get('access_right') != 'open' or actual.get('license') != note['license']):
@@ -492,12 +507,17 @@ def publish(package, directory, state, save, zenodo, recover_record=None, reuse_
     entry = state['versions'].get(revision)
     if entry and entry['package_id'] != package_id:
         raise ValueError('A note revision is immutable; prepare a new revision')
+    if entry and entry.get('record_id') and recover_record is not None and str(entry['record_id']) != str(recover_record):
+        raise ValueError('Recovery must retain the recorded Zenodo draft ID')
     if entry and entry.get('publication'):
         return state
     published = [int(v) for v, value in state['versions'].items() if value.get('publication')]
     previous = state['versions'][str(max(published))] if published else None
     if any(int(v) > note['revision'] for v in state['versions']):
         raise ValueError('Cannot publish an older revision after a newer one')
+    if (recover_record is not None and reuse_draft_from is None
+            and (entry is None or entry['phase'] == 'creation_rejected')):
+        raise ValueError('Recovery needs a retained creation intent for this exact revision')
     metadata = zenodo_metadata(note)
     if entry is None or entry['phase'] == 'creation_rejected':
         if reuse_draft_from is not None and (type(reuse_draft_from) is not int or not 0 < reuse_draft_from < note['revision']):
@@ -512,6 +532,8 @@ def publish(package, directory, state, save, zenodo, recover_record=None, reuse_
             old = state['versions'].get(str(reuse_draft_from))
             if not old or old.get('publication') or old.get('phase') == 'superseded':
                 raise ValueError('Reuse must select an existing unpublished draft revision')
+            if old.get('record_id') and recover_record is not None and str(old['record_id']) != str(recover_record):
+                raise ValueError('Recovery must retain the recorded Zenodo draft ID')
             record_id = old.get('record_id') or recover_record
             if not record_id:
                 raise ValueError('Recover the uncertain draft ID before reusing it')

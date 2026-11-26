@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+import unicodedata
 from unittest.mock import patch
 from urllib.parse import urlsplit, unquote
 import zipfile
@@ -145,9 +146,9 @@ class WorkflowTests(unittest.TestCase):
         self.zenodo = FakeZenodo()
         self.saved = None
 
-    def package(self, revision=1):
+    def package(self, revision=1, **fields):
         meta = self.root / 'metadata.json'
-        meta.write_bytes(w.encode(metadata(revision)))
+        meta.write_bytes(w.encode({**metadata(revision), **fields}))
         pdf, source = self.root / 'note.pdf', self.root / 'source.zip'
         pdf.write_bytes(b'%PDF-1.4\nselected compiled example')
         with zipfile.ZipFile(source, 'w') as archive:
@@ -258,6 +259,88 @@ class WorkflowTests(unittest.TestCase):
             w.publish(package, folder, None, self.save, self.zenodo)
         w.publish(package, folder, self.saved, self.save, self.zenodo)
         self.assertEqual(len(self.zenodo.records), 1)
+
+    def test_metadata_normalizes_only_title_and_creator_punctuation_and_nfc(self):
+        note = {**metadata(), 'title': 'Döring’s “example” – café',
+                'creators': [{'name': 'O’Neil, Émilie', 'affiliation': 'Université – A', 'orcid': '0000-0001'}]}
+        original = copy.deepcopy(note)
+        expected = w.zenodo_metadata(note)
+        self.assertEqual(expected['title'], 'Döring\'s "example" - café')
+        self.assertEqual(expected['creators'][0]['name'], "O'Neil, Émilie")
+        for title, name in (("Döring's \"example\" - café", "O'Neil, Émilie"),
+                            (unicodedata.normalize('NFD', note['title']),
+                             unicodedata.normalize('NFD', note['creators'][0]['name']))):
+            with self.subTest(title=title):
+                actual = copy.deepcopy(expected)
+                actual['title'], actual['creators'][0]['name'] = title, name
+                w.check_remote_metadata({'metadata': actual}, note)
+        self.assertEqual(note, original)
+
+    def test_metadata_real_differences_remain_errors(self):
+        note = {**metadata(), 'title': 'An author’s café – theorem',
+                'creators': [{'name': 'O’Neil, Émilie', 'affiliation': 'Université – A', 'orcid': '0000-0001'}]}
+        for key, value in (('title', "An author's cafe - theorem"), ('version', '2'),
+                           ('license', 'cc0-1.0'), ('upload_type', 'dataset'),
+                           ('publication_type', 'article'), ('access_right', 'closed')):
+            with self.subTest(key=key):
+                actual = {**w.zenodo_metadata(note), key: value}
+                with self.assertRaisesRegex(ValueError, 'metadata differs'):
+                    w.check_remote_metadata({'metadata': actual}, note)
+        for key, value in (('name', "O'Neill, Émilie"), ('affiliation', 'Université - A'), ('orcid', '0000-0002')):
+            with self.subTest(creator=key):
+                actual = w.zenodo_metadata(note)
+                actual['creators'][0][key] = value
+                with self.assertRaisesRegex(ValueError, 'metadata differs'):
+                    w.check_remote_metadata({'metadata': actual}, note)
+
+    def test_creation_and_update_send_same_normalized_metadata_and_accept_remote_nfd(self):
+        package, folder = self.package(title='An author’s café – “theorem”',
+                                       creators=[{'name': 'O’Neil, Émilie'}])
+        sent = []
+        original = self.zenodo.request
+        def transformed(method, path, data=None):
+            if isinstance(data, dict) and 'metadata' in data:
+                sent.append(copy.deepcopy(data['metadata']))
+            result = original(method, path, data)
+            if method == 'GET':
+                result['metadata']['title'] = unicodedata.normalize('NFD', result['metadata']['title'])
+                result['metadata']['creators'][0]['name'] = unicodedata.normalize('NFD', result['metadata']['creators'][0]['name'])
+            return result
+        self.zenodo.request = transformed
+        state = w.publish(package, folder, None, self.save, self.zenodo)
+        self.assertEqual(state['versions']['1']['phase'], 'published')
+        self.assertEqual(len(sent), 2)
+        self.assertEqual(sent[0], sent[1])
+        self.assertEqual(sent[0]['title'], 'An author\'s café - "theorem"')
+        self.assertEqual(state['publication']['title'], package['metadata']['title'])
+
+    def test_recovery_cannot_override_a_retained_draft_id(self):
+        package, folder = self.package()
+        self.zenodo.fail_after = ('PUT', '/deposit/depositions/1')
+        with self.assertRaises(TimeoutError):
+            w.publish(package, folder, None, self.save, self.zenodo)
+        before = list(self.zenodo.calls)
+        with self.assertRaisesRegex(ValueError, 'retain the recorded'):
+            w.publish(package, folder, self.saved, self.save, self.zenodo, recover_record=99)
+        self.assertEqual(before, self.zenodo.calls)
+
+    def test_recovery_without_a_retained_intent_never_creates_a_deposit(self):
+        package, folder = self.package()
+        with self.assertRaisesRegex(ValueError, 'retained creation intent'):
+            w.publish(package, folder, None, self.save, self.zenodo, recover_record=42)
+        self.assertEqual(self.zenodo.calls, [])
+
+    def test_reuse_cannot_override_the_earlier_retained_draft_id(self):
+        package, folder = self.package()
+        self.zenodo.fail_after = ('PUT', '/deposit/depositions/1')
+        with self.assertRaises(TimeoutError):
+            w.publish(package, folder, None, self.save, self.zenodo)
+        corrected, corrected_folder = self.package(2)
+        before = list(self.zenodo.calls)
+        with self.assertRaisesRegex(ValueError, 'retain the recorded'):
+            w.publish(corrected, corrected_folder, self.saved, self.save, self.zenodo,
+                      recover_record=99, reuse_draft_from=1)
+        self.assertEqual(before, self.zenodo.calls)
 
     def test_corrected_artifacts_explicitly_reuse_the_unpublished_draft(self):
         package, folder = self.package()

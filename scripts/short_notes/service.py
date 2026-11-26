@@ -906,46 +906,56 @@ def inspect_uncertain_creations(state, note_id, zenodo):
     candidates = {number: [] for number in revisions}
     examined = set()
     pages = []
+    partitions = {}
     duplicates = []
     def result(complete, **diagnostics):
         return {'account_scan_complete': complete, 'account_records_examined': len(examined),
-                'page_sizes': pages, 'candidates_by_revision': candidates,
+                'page_sizes': pages, 'partition_page_sizes': partitions, 'candidates_by_revision': candidates,
                 **({'duplicate_record_ids':duplicates} if duplicates else {}), **diagnostics}
-    for page in range(1, 21):
-        # Search-index absence cannot establish account inventory. Enumerate
-        # the authenticated deposit listing and filter exact identities here.
-        # Zenodo hides earlier versions by default. Request all versions and
-        # an explicit chronological order so an older uncertain creation is
-        # not hidden behind its successor or relevance-ranked pagination.
-        query = urlencode({'size': 100, 'all_versions': 'true', 'sort': 'mostrecent', 'page': page})
-        try:
-            rows = zenodo.request('GET', '/deposit/depositions?' + query)
-        except (w.ZenodoHTTPError, OSError) as error:
-            return result(False, scan_error='provider_read_failed', attempted_page=page,
-                          response_code=getattr(error, 'code', None), provider_error=type(error).__name__)
-        if not isinstance(rows, list):
-            raise ValueError('Unexpected Zenodo account listing; no creation was retried')
-        pages.append(len(rows))
-        before_count = len(examined)
-        for row in rows:
-            record_id = row.get('id')
-            if record_id is None:
-                raise ValueError('Unexpected Zenodo record identity; no creation was retried')
-            if str(record_id) in examined:
-                if len(duplicates) < 20 and record_id not in duplicates:
-                    duplicates.append(record_id)
-                continue
-            examined.add(str(record_id))
-            metadata = row.get('metadata', {})
-            version = str(metadata.get('version', ''))
-            if marker in metadata.get('keywords', []) and version in candidates:
-                candidates[version].append({'record_id': row['id'], 'submitted': bool(row.get('submitted')),
-                                            'metadata': metadata, 'files': row.get('files', [])})
-        if rows and len(examined) == before_count:
-            return result(False, scan_error='unstable_pagination')
-        if len(rows) < 100:
-            return result(not duplicates, **({'scan_error':'unstable_pagination'} if duplicates else {}))
-    return result(False, scan_error='inspection_limit')
+    # An uncertain initial creation normally remains a draft. Inspect drafts
+    # before published history can consume the shared twenty-page budget.
+    # Both partitions must finish before the account scan can be complete.
+    for status in ('draft', 'published'):
+        partitions[status] = []
+        for page in range(1, 21):
+            if len(pages) >= 20:
+                return result(False, scan_error='inspection_limit', attempted_status=status)
+            # Enumerate account-owned versions and match exact identities
+            # locally; search-index absence cannot establish account inventory.
+            query = urlencode({'size': 100, 'status': status, 'all_versions': 'true',
+                               'sort': 'mostrecent', 'page': page})
+            try:
+                rows = zenodo.request('GET', '/deposit/depositions?' + query)
+            except (w.ZenodoHTTPError, OSError) as error:
+                return result(False, scan_error='provider_read_failed', attempted_page=page,
+                              attempted_status=status, response_code=getattr(error, 'code', None),
+                              provider_error=type(error).__name__)
+            if not isinstance(rows, list):
+                raise ValueError('Unexpected Zenodo account listing; no creation was retried')
+            pages.append(len(rows))
+            partitions[status].append(len(rows))
+            before_count = len(examined)
+            for row in rows:
+                record_id = row.get('id')
+                if record_id is None:
+                    raise ValueError('Unexpected Zenodo record identity; no creation was retried')
+                if str(record_id) in examined:
+                    if len(duplicates) < 20 and record_id not in duplicates:
+                        duplicates.append(record_id)
+                    continue
+                examined.add(str(record_id))
+                metadata = row.get('metadata', {})
+                version = str(metadata.get('version', ''))
+                if marker in metadata.get('keywords', []) and version in candidates:
+                    candidates[version].append({'record_id': row['id'], 'submitted': bool(row.get('submitted')),
+                                                'metadata': metadata, 'files': row.get('files', [])})
+            if rows and len(examined) == before_count:
+                return result(False, scan_error='unstable_pagination', attempted_status=status)
+            if len(rows) < 100:
+                break
+        else:
+            return result(False, scan_error='inspection_limit', attempted_status=status)
+    return result(not duplicates, **({'scan_error':'unstable_pagination'} if duplicates else {}))
 
 
 def note_status(catalog, note_id, gh, zenodo=None):

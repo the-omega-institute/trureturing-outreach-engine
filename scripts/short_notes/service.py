@@ -914,7 +914,10 @@ def inspect_uncertain_creations(state, note_id, zenodo):
     for page in range(1, 21):
         # Search-index absence cannot establish account inventory. Enumerate
         # the authenticated deposit listing and filter exact identities here.
-        query = urlencode({'size': 100, 'page': page})
+        # Zenodo hides earlier versions by default. Request all versions and
+        # an explicit chronological order so an older uncertain creation is
+        # not hidden behind its successor or relevance-ranked pagination.
+        query = urlencode({'size': 100, 'all_versions': 'true', 'sort': 'mostrecent', 'page': page})
         try:
             rows = zenodo.request('GET', '/deposit/depositions?' + query)
         except (w.ZenodoHTTPError, OSError) as error:

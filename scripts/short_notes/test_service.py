@@ -35,17 +35,37 @@ class ServiceTests(unittest.TestCase):
             def request(self, method, path):
                 self_method = method
                 assert self_method == 'GET' and path.startswith('/deposit/depositions?')
+                assert 'q=' not in path
                 return [{'id':10,'metadata':{'keywords':['trureturing-note:alpha'],'version':'1'}},
                         {'id':11,'metadata':{'keywords':['trureturing-note:other'],'version':'2'}},
                         {'id':12,'submitted':False,'metadata':{'keywords':['trureturing-note:alpha'],'version':'2'}}]
         result = s.inspect_uncertain_creations(state,'alpha',Account())
         self.assertTrue(result['account_scan_complete'])
+        self.assertEqual(result['account_records_examined'],3)
         self.assertEqual([r['record_id'] for r in result['candidates_by_revision']['2']],[12])
         self.assertEqual(state,original)
         class Invalid:
             def request(self,*args):return {'unexpected':'shape'}
         with self.assertRaisesRegex(ValueError,'Unexpected Zenodo'):
             s.inspect_uncertain_creations(state,'alpha',Invalid())
+
+    def test_uncertain_inspection_enumerates_later_pages_and_rejects_unstable_inventory(self):
+        state = {'versions': {'2': {'phase':'creating','package_id':'preserved'}}}
+        class Account:
+            def request(self, method, path):
+                assert method == 'GET' and 'q=' not in path
+                if path.endswith('page=1'):
+                    return [{'id':i,'metadata':{}} for i in range(100)]
+                assert path.endswith('page=2')
+                return [{'id':101,'metadata':{'keywords':['trureturing-note:alpha'],'version':'2'}}]
+        result = s.inspect_uncertain_creations(state,'alpha',Account())
+        self.assertEqual(result['account_records_examined'],101)
+        self.assertEqual([r['record_id'] for r in result['candidates_by_revision']['2']],[101])
+        class Unstable:
+            def request(self,*args):
+                return [{'id':i,'metadata':{}} for i in range(100)]
+        with self.assertRaisesRegex(ValueError,'Unstable Zenodo'):
+            s.inspect_uncertain_creations(state,'alpha',Unstable())
 
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()

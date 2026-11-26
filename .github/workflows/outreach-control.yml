@@ -7,7 +7,24 @@ on:
     inputs:
       action:
         type: choice
-        options: [tick, status, doctor, reviews, mathesis-test]
+        options: [tick, status, doctor, reviews, mathesis-test, notes]
+        default: status
+      note_id:
+        description: 'For action=notes: existing staged note ID'
+        type: string
+      note_revision:
+        description: 'For note_action=publish: exact staged revision'
+        type: string
+      recover_record:
+        description: 'Existing Zenodo draft ID after account/receipt inspection'
+        type: string
+      reuse_draft_from:
+        description: 'Earlier unpublished artifact revision, only for explicit reuse'
+        type: string
+      note_action:
+        description: 'For action=notes: inspect the receipt or recover publication'
+        type: choice
+        options: [status, publish]
         default: status
       refresh_credentials:
         type: boolean
@@ -53,7 +70,7 @@ jobs:
       - name: Run coordinator
         env:
           OUTREACH_REVIEW_KEY: ${{ secrets.OUTREACH_REVIEW_KEY }}
-          CONTROL_ACTION: ${{ inputs.action || 'tick' }}
+          CONTROL_ACTION: ${{ inputs.action == 'notes' && 'status' || inputs.action || 'tick' }}
         run: python3 -m managed.hosted control
       - name: Reconcile receipts
         if: ${{ (inputs.action || 'tick') == 'tick' }}
@@ -71,7 +88,7 @@ jobs:
   # the next scheduled tick, so queued publications never moved.
   delivery:
     needs: coordinator
-    if: ${{ (inputs.action || 'tick') == 'tick' }}
+    if: ${{ (inputs.action || 'tick') == 'tick' || inputs.action == 'notes' }}
     runs-on: ubuntu-latest
     timeout-minutes: 18
     steps:

@@ -122,7 +122,7 @@ impl Script {
                 });
             }
             let mut summary = object([("type", error["type"].clone())]);
-            for key in ["attachments", "intake_reason"] {
+            for key in ["attachments", "intake_reason", "bases"] {
                 if let Some(value) = error.get(key) {
                     summary[key] = value.clone();
                 }
@@ -835,6 +835,10 @@ fn run(case: &Value, previous: &mut Option<Value>) -> Result<bool> {
                 eprintln!("stage-error {}", canonical(&e.summary)?);
             }
             e.summary["type"] == case["error"]["type"]
+                && (!["intake", "inbound", "formalization", "prior-work"]
+                    .contains(&s(&case["stage"]))
+                    || e.summary.get("message").unwrap_or(&e.summary["reason"])
+                        == &case["error"]["message"])
         }
     };
     let script = script.borrow();

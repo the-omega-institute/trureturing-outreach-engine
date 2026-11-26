@@ -12,7 +12,7 @@ import sys
 import tempfile
 from types import SimpleNamespace
 from unittest.mock import patch
-from urllib.error import HTTPError
+from urllib.error import HTTPError, URLError
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -52,11 +52,18 @@ def raise_error(value):
         raise CMARequestError(value['status'], value.get('cma_body', value['message']))
     if value['type'] == 'HTTPError':
         raise HTTPError('https://service.example.invalid', value['status'], value['message'].removeprefix('HTTP Error ' + str(value['status']) + ': '), {}, io.BytesIO(base64.b64decode(value['body'])))
+    if value['type'] == 'URLError': raise URLError(value.get('reason', value['message'].removeprefix('<urlopen error ').removesuffix('>')))
+    if value['type'] == 'JSONDecodeError' and 'doc' in value: raise json.JSONDecodeError(value['msg'], value['doc'], value['pos'])
     if value['type'] == 'UnsupportedThreadAttachments': raise mailbox.UnsupportedThreadAttachments(value['attachments'])
     if value['type'] == 'SentSubjectsDeferred': raise mailbox.SentSubjectsDeferred(value['intake_reason'], value['message'])
     if value['type'] == 'UnparseableEvidence': raise __import__('managed.prior_work_evidence',fromlist=['UnparseableEvidence']).UnparseableEvidence(value['message'])
     classes = {'FileNotFoundError':FileNotFoundError, 'PermissionError':PermissionError, 'TimeoutError' : TimeoutError, 'ValueError': ValueError, 'GateError': GateError,
                'SystemExit': SystemExit, 'KeyboardInterrupt': KeyboardInterrupt, 'TypeError': TypeError, 'ConnectionError': ConnectionError, 'KeyError': KeyError, 'NotSent': __import__('managed.transports', fromlist=['NotSent']).NotSent, 'DefiniteRejection': __import__('managed.transports', fromlist=['DefiniteRejection']).DefiniteRejection, 'ProcessDeath': type('ProcessDeath', (BaseException,), {}), 'RuntimeError': RuntimeError, 'OSError': OSError, 'AssertionError': AssertionError, 'Stopped': type('Stopped', (BaseException,), {})}
+    if value['type'] not in classes and value.get('bases'):
+        import builtins
+        parent = next(getattr(builtins, name) for name in value['bases'] if hasattr(builtins, name))
+        error = type(value['type'], (parent,), {})(value['message'])
+        raise error
     error = classes[value['type']](value['message'])
     if value.get('diagnostic'): error.github_diagnostic = value['diagnostic']
     raise error
@@ -124,7 +131,8 @@ class Fake:
         return lambda *a, **kw: self.script.call(self.name, method, a, kw)
 
 
-def execute(case):
+def execute(case, *, capture=False):
+    """Replay checked fixtures; capture=True extracts observations from Python only."""
     with tempfile.TemporaryDirectory(prefix='outreach-scenario-') as temporary, ExitStack() as stack:
         root = Path(temporary).resolve(); folder = root / 'ledger'; folder.mkdir()
         for name, content in case['initial_files'].items():
@@ -136,10 +144,11 @@ def execute(case):
             from managed.queue import Queue
             Queue(tasks.path, {'reply': 'e'*64}).close()
         stack.callback(tasks.close); load(tasks, case['initial_rows'])
+        used_times = []
         if case['stage'] in {'pool', 'delivery', 'intake','inbound','formalization','prior-work'}:
             times = iter(case.get('update_times', [])); original_update = tasks.update
             def update(*a, **kw):
-                pair = next(times); clock = tasks.clock; points = iter(pair); tasks.clock = lambda: next(points)
+                pair = next(times); used_times.append(pair); clock = tasks.clock; points = iter(pair); tasks.clock = lambda: next(points)
                 try: return original_update(*a, **kw)
                 finally: tasks.clock = clock
             stack.enter_context(patch.object(tasks, 'update', update))
@@ -229,13 +238,14 @@ def execute(case):
                     return entry['allowed']
             ledger.tick = Budget()
         error = None
+        result = None
         try:
             with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
                 if case['stage']=='inbound' and case.get('operation') in {'coverage','build_inbound_request'}:
                     from managed import thread_staging
                     if case['operation']=='coverage':result=thread_staging.require_uncovered_inbound(case['arguments'][0],tasks)
                     else:result=thread_staging.build_inbound_request(*case['arguments'],root,revision=case.get('binding',{}).get('source_revision','b'*40))
-                    assert encode(result)==case['expected_result']
+                    if not capture: assert encode(result)==case['expected_result']
                 elif case['stage'] in {'formalization','prior-work'} and case.get('operation','advance')!='advance':
                     from managed import formalization_requests,prior_work_issues,prior_work_evidence
                     operation=case['operation']
@@ -249,14 +259,14 @@ def execute(case):
                     else:
                         target=formalization_requests if case['stage']=='formalization' else prior_work_evidence
                         result=getattr(target,operation)(*case['arguments'])
-                    assert encode(result)==case['expected_result']
+                    if not capture: assert encode(result)==case['expected_result']
                 elif case['stage'] == 'pool':
                     from pool_delivery import pool
                     pool(case, ledger, script)
                 elif case['stage'] == 'delivery' and case.get('operation') in {'mathesis-once','mathesis-introduced'}:
                     if case['operation'] == 'mathesis-once': result = mailbox.GraphMailbox._require_mathesis_not_introduced(box, *case['arguments'])
                     else: result = mailbox.mathesis_introduced(*case['arguments'])
-                    assert encode(result) == case.get('expected_result')
+                    if not capture: assert encode(result) == case.get('expected_result')
                 elif case['stage'] == 'delivery':
                     from managed import delivery
                     from managed.queue import Queue
@@ -268,7 +278,7 @@ def execute(case):
                 elif case['stage']=='inbound':
                     from managed import thread_staging
                     result=thread_staging.resolve(case['row'],box,ledger,root)
-                    assert encode(result)==case['expected_result']
+                    if not capture: assert encode(result)==case['expected_result']
                 elif case['stage']=='formalization':
                     from managed import formalization_requests
                     github=(lambda *a,**kw:script.call('github','request',a,kw)) if case['options']['github'] else None
@@ -294,6 +304,12 @@ def execute(case):
                 for name in ('attachments','intake_reason'):
                     if hasattr(exc,name):error[name]=getattr(exc,name)
             else: error = error_value(exc)
+        if capture:
+            assert not script.failure and script.index == len(script.entries)
+            if case.get('admissions'): assert next(admissions, None) is None, 'unused admissions'
+            return dict(update_times=used_times, error=error, expected_result=encode(result), expected_final_rows=logical(dump(tasks)),
+                        expected_final_files=files(root), expected_writes=writes(script.calls))
+        if case.get('admissions'): assert next(admissions, None) is None, 'unused admissions'
         assert error == case.get('error'), f"{case['id']}: stage error {error}"
         assert not script.failure and script.index == len(script.entries), f"{case['id']}: unused script entries"
         actual = logical(dump(tasks))

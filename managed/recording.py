@@ -373,6 +373,8 @@ def _capture(adapter_name, method, function, args, kwargs):
         # Do not read/seek HTTPError: observers must not change its body cursor.
         try:
             entry['error'] = {'type': type(error).__name__, 'message': str(error) if frame.get('stage') in {'pool', 'delivery', 'formalization', 'prior-work'} else ''}
+            if frame.get('stage') in {'formalization','prior-work'}:
+                entry['error']['bases'] = [base.__name__ for base in type(error).__mro__[1:] if base is not object]
             if adapter_name == 'boundary' and frame['script'][-1] is not entry:
                 entry.pop('error', None); entry['result'] = None
             if 'error' in entry: frame['_errors'][id(error)] = entry['error']
@@ -383,7 +385,7 @@ def _capture(adapter_name, method, function, args, kwargs):
             print('recording-error ' + type(recording_error).__name__, file=sys.stderr)
         raise
     try:
-        if frame.get('stage') in {'intake','inbound'} and mail_bodies(result):
+        if frame.get('stage') in {'intake','inbound'} and (mail_bodies(result) or (adapter_name == 'mailbox' and method == 'attachment_content' and result)):
             frame['incomplete'] = True
             entry['result'] = None
         else: entry['result'] = encode(result)
@@ -399,7 +401,8 @@ def _capture(adapter_name, method, function, args, kwargs):
 def mail_bodies(value):
     """New read stages must not expand the mail-content recording boundary."""
     if isinstance(value, dict):
-        if ('from' in value or 'internetMessageId' in value) and value.get('body'): return True
+        if any(value.get(key) for key in ('body','uniqueBody','bodyPreview','contentBytes','content_b64')): return True
+        if 'contentType' in value and value.get('content'): return True
         return any(mail_bodies(v) for v in value.values())
     if isinstance(value, (list,tuple)): return any(map(mail_bodies,value))
     return False

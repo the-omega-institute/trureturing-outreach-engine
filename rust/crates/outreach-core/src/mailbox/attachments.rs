@@ -181,6 +181,7 @@ pub fn preserve(
                         break;
                     }
                 }
+                let needs_upload = old.is_none();
                 let reference = old.unwrap_or_else(|| {
                     object([
                         ("release_tag", string(&tag)),
@@ -189,7 +190,7 @@ pub fn preserve(
                         ("sha256", string(&sha)),
                     ])
                 });
-                if reference["release_tag"] == tag {
+                if needs_upload {
                     files.push(InputFile {
                         file: SourceFile {
                             name: s(&reference["name"]).into(),

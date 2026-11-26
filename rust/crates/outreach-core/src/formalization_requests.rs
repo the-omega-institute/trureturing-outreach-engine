@@ -232,18 +232,7 @@ pub(crate) fn receipt(receipt: &Value) -> StageResult<String> {
     Ok(url.into())
 }
 pub(crate) fn catchable(e: &crate::mathesis_delivery::StageError) -> bool {
-    [
-        "OSError",
-        "TimeoutError",
-        "ConnectionError",
-        "HTTPError",
-        "ValueError",
-        "GateError",
-        "UnparseableEvidence",
-        "FileNotFoundError",
-        "PermissionError",
-    ]
-    .contains(&s(&e.summary["type"]))
+    e.is_a("OSError") || e.is_a("ValueError")
 }
 pub(crate) fn error_name(
     e: &crate::mathesis_delivery::StageError,
@@ -289,7 +278,7 @@ pub fn advance(
     });
     for (original, item) in candidates {
         if !ports.allow(LANE, &format!("{}-{}", s(&original["id"]), s(&item["key"]))) {
-            break;
+            continue;
         }
         let row = r.task(&original["id"])?;
         let mut saved = item.clone();

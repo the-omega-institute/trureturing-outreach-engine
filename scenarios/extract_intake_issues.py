@@ -65,7 +65,8 @@ class Capture(StageCapture):
                 self.entries[-1]['download']={'name':path.name,'base64':encode(path)['base64']}
             return result
         except BaseException as error:
-            if self.entries and 'error' in self.entries[-1]: self.entries[-1]['error']=error_value(error)
+            if self.entries and 'error' in self.entries[-1]:
+                self.entries[-1]['error']={**error_value(error), 'bases':[base.__name__ for base in type(error).__mro__[1:] if base is not object]}
             raise
 
 def synthetic_domains(code):
@@ -224,6 +225,8 @@ def main():
                 result=unittest.TestResult();test.run(result)
                 if result.errors or result.failures:raise AssertionError(identity+'\n'+str(result.errors+result.failures))
     mapping_path.write_text(json.dumps(mapping,indent=2)+'\n')
+    from test_review_regressions import extract as review_regressions
+    review_regressions()
     print(json.dumps({'new_scenarios':total,'converted_tests':sum(any(v.startswith(('intake-','inbound-','formalization-','prior-work-')) for v in values) for values in mapping.values())}))
 
 if __name__=='__main__':main()

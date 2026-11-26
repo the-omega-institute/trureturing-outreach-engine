@@ -13,8 +13,9 @@ python3.12 rust/scenarios.py
 python3.12 -m unittest discover -s scenarios -p 'test_*.py'
 ```
 
-There are **2,158 scenarios from 539 converted tests**. Python runs all 2,158;
-Rust matches all **2,158**, including mailbox intake, staged inbound hydration,
+There are **2,192 scenarios from 540 mapped tests** (539 original converted tests
+and one independent-review scenario group). Python runs all 2,192;
+Rust matches all **2,192**, including mailbox intake, staged inbound hydration,
 formalization requests and prior-work issues. The counts by source suite are:
 
 | Source tests | Converted tests | Scenarios |
@@ -40,6 +41,7 @@ formalization requests and prior-work issues. The counts by source suite are:
 | `test_thread_recipients` | 5 | 5 |
 | `test_reviewer_edit` | 1 | 5 |
 | `test_engine_split.MathesisOnceTest` | 2 | 5 |
+| Independent-review regressions | 1 | 34 |
 
 The publication count includes one new equal-priority arrival-order regression.
 Original tests remain, including assertions about restart recovery and operator
@@ -234,3 +236,24 @@ subject-cache observations. This does not broaden phases 3a–3c's existing mail
 content recording. Recording remains inert without `OUTREACH_RECORD_DIR` and
 adds no save, network call, or production tick work beyond the disabled hook
 checks. `test_intake_issues.py` checks this boundary and snapshot immutability.
+
+Round-two independent review adds **34 Python-first regression scenarios** in
+`test_review_regressions.py`, with 13 intake, one inbound, 10 formalization and
+10 prior-work cases. These are additional synthetic boundary cases derived from
+the converted source tests; the 539 original converted-test count is unchanged.
+Refresh only these cases with
+`python3.12 scenarios/test_review_regressions.py --extract`.
+
+The cases cover all four terminal interruptions at Sent matching, bounce
+hydration and prior-context reads; eight refused budget units in each issue
+stage; GET and uncertain POST failures from `URLError`, `JSONDecodeError`,
+`ConnectionResetError` and a custom `ValueError` subclass; issue POST
+interruptions; attachment ID changes that reuse the current immutable Release;
+and equal Sent timestamps in both current and historical conversations.
+Exception observations carry Python base classes so adapters can preserve
+subclass handling, including custom classes. Rust compares both exception type
+and exact message in intake, inbound and both issue stages. A separate negative
+test alters only each stage's expected message and requires both runners to
+reject it. Recording tests verify Graph body, unique-body, preview and attachment
+content omission, standalone attachment responses, disabled hooks and replay of
+issue exception ancestry.

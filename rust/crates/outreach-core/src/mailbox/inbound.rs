@@ -146,6 +146,7 @@ pub fn resolve(
     let latest_sent = sent
         .iter()
         .filter(|m| m["conversationId"] == conversation)
+        .rev()
         .max_by_key(|m| instant(&m["sentDateTime"]));
     let frozen = if i["thread_record"].is_null() && !inbound {
         record(r, &reference["thread_id"])?
@@ -224,7 +225,11 @@ pub fn resolve(
     } else {
         false.into()
     };
-    if let Some(evidence) = sent.iter().max_by_key(|m| instant(&m["sentDateTime"])) {
+    if let Some(evidence) = sent
+        .iter()
+        .rev()
+        .max_by_key(|m| instant(&m["sentDateTime"]))
+    {
         resolved["sent_evidence"] = object([
             ("thread_id", evidence["conversationId"].clone()),
             ("message_id", evidence["internetMessageId"].clone()),

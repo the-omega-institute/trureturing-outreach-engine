@@ -675,17 +675,17 @@ backoff, bounded/deferred work and exact reviewed evidence all run in core.
 Scientific evidence projection and local previews are independent Rust logic;
 Python remains the production writer and service adapter.
 
-All **2,158 scenarios** pass through Python before Rust, with equal ordered
+All **2,192 scenarios** pass through Python before Rust, with equal ordered
 external writes and final logical tables/files. This includes 262 phase-3d cases
-from 137 source tests. See `../scenarios/README.md` and `test-map.json` for exact
+from 137 source tests, plus 34 independent-review regression scenarios. See `../scenarios/README.md` and `test-map.json` for exact
 conversion counts and native coverage retained by design. The Rust CI job runs
 all stages and the local recording replay tests.
 
 The local `replay_mathesis.py` check now accepts intake, inbound, formalization
 and prior-work frames without a signing key. Its normal output remains counts
-only. To preserve the existing recording scope, new intake/inbound frames that
-would contain mail bodies emit a content-free unavailable record; body-free
-frames replay normally. No coordinator workflow or live replay was enabled.
+only. To preserve the existing recording scope, new intake/inbound frames containing Graph `body`, `uniqueBody`, `bodyPreview`,
+attachment `contentBytes`, encoded `content_b64`, or standalone body/attachment
+content emit a content-free unavailable record. Content-free frames replay normally. No coordinator workflow or live replay was enabled.
 
 Phase 3e still needs advance/admission orchestration, pipeline and continuations,
 maintenance, and the cutover switch with the remaining production composition

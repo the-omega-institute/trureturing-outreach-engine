@@ -237,21 +237,23 @@ impl Intake {
         v["original_recipient"] = recipient;
         self.bounces.push(v);
     }
-    fn enrich(&self, m: &Value, box_: &mut impl Mailbox) -> Value {
+    fn enrich(&self, m: &Value, box_: &mut impl Mailbox) -> StageResult<Value> {
         if m.get("body").is_some() || !box_.supports("research_thread") {
-            return m.clone();
+            return Ok(m.clone());
         }
-        let Ok(thread) = box_.read(Read::Thread(s(&m["conversationId"]).into())) else {
-            return m.clone();
+        let thread = match box_.read(Read::Thread(s(&m["conversationId"]).into())) {
+            Ok(thread) => thread,
+            Err(e) if !e.is_interruption() => return Ok(m.clone()),
+            Err(e) => return Err(e),
         };
-        array(&thread)
+        Ok(array(&thread)
             .iter()
             .find(|v| {
                 (truth(&m["internetMessageId"]) && v["internetMessageId"] == m["internetMessageId"])
                     || (truth(&m["id"]) && v["id"] == m["id"])
             })
             .cloned()
-            .unwrap_or(m.clone())
+            .unwrap_or(m.clone()))
     }
     fn stage(
         &mut self,
@@ -645,7 +647,7 @@ pub fn advance(
             let message = if truth(&m["original_recipient"]) || truth(&m["recipient"]) {
                 m.clone()
             } else {
-                state.enrich(m, box_)
+                state.enrich(m, box_)?
             };
             state.bounce(&message);
         } else {
@@ -701,7 +703,7 @@ pub fn advance(
             continue;
         }
         if failure(&m) {
-            let enriched = state.enrich(&m, box_);
+            let enriched = state.enrich(&m, box_)?;
             state.bounce(&enriched);
             continue;
         }
@@ -918,7 +920,8 @@ pub fn advance(
                     )?;
                     continue;
                 }
-                Err(_) => {}
+                Err(e) if !e.is_interruption() => {}
+                Err(e) => return Err(e),
             }
         }
         let known = person.as_ref().is_some_and(history) && sent.is_empty();
@@ -1086,8 +1089,11 @@ pub fn advance(
         );
         if known {
             let context = if box_.supports("sent_messages_to") {
-                box_.read(Read::SentTo(sender.clone()))
-                    .unwrap_or(Value::Null)
+                match box_.read(Read::SentTo(sender.clone())) {
+                    Ok(value) => value,
+                    Err(e) if !e.is_interruption() => Value::Null,
+                    Err(e) => return Err(e),
+                }
             } else {
                 Value::Null
             };

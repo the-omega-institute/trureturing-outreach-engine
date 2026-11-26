@@ -109,6 +109,55 @@ impl From<outreach_canon::Error> for StageError {
     }
 }
 impl StageError {
+    /// Python exception ancestry at the adapter boundary. `bases` is the MRO
+    /// supplied by Python recordings/custom adapters; the parent links preserve
+    /// the standard hierarchy for older fixtures without that metadata.
+    pub fn is_a(&self, class: &str) -> bool {
+        if crate::array(&self.summary["bases"])
+            .iter()
+            .any(|base| base == class)
+        {
+            return true;
+        }
+        let mut kind = s(&self.summary["type"]);
+        loop {
+            if kind == class {
+                return true;
+            }
+            kind = match kind {
+                "UnsupportedOperation" if class == "ValueError" => "ValueError",
+                "HTTPError" => "URLError",
+                "URLError"
+                | "BlockingIOError"
+                | "ChildProcessError"
+                | "ConnectionError"
+                | "FileExistsError"
+                | "FileNotFoundError"
+                | "InterruptedError"
+                | "IsADirectoryError"
+                | "NotADirectoryError"
+                | "PermissionError"
+                | "ProcessLookupError"
+                | "TimeoutError"
+                | "UnsupportedOperation" => "OSError",
+                "BrokenPipeError"
+                | "ConnectionAbortedError"
+                | "ConnectionRefusedError"
+                | "ConnectionResetError" => "ConnectionError",
+                "JSONDecodeError" | "UnicodeError" | "GateError" | "UnparseableEvidence" => {
+                    "ValueError"
+                }
+                "UnicodeDecodeError" | "UnicodeEncodeError" | "UnicodeTranslateError" => {
+                    "UnicodeError"
+                }
+                "OSError" | "ValueError" | "RuntimeError" => "Exception",
+                "Exception" | "Stopped" | "ProcessDeath" | "KeyboardInterrupt" | "SystemExit" => {
+                    "BaseException"
+                }
+                _ => return false,
+            };
+        }
+    }
     pub fn is_interruption(&self) -> bool {
         ["Stopped", "ProcessDeath", "KeyboardInterrupt", "SystemExit"]
             .contains(&s(&self.summary["type"]))

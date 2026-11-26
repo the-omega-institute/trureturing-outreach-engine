@@ -63,6 +63,14 @@ class IntakeIssuesReplayTests(unittest.TestCase):
                     metadata(case)
                     self.roundtrip(case,{'equal':1,'different':0,'skipped':0})
 
+    def test_issue_subclass_errors_replay_with_recorded_ancestry(self):
+        for stage in ('formalization','prior-work'):
+            for kind in ('URLError','JSONDecodeError','ConnectionResetError','SyntheticValueError'):
+                case=json.loads((ROOT/'scenarios/cases'/f'{stage}-review-round2-post-{kind}.json').read_text())
+                with self.subTest(stage=stage,kind=kind):
+                    text=self.roundtrip(case,{'equal':1,'different':0,'skipped':0})
+                    self.assertIn('bases',text)
+
     def test_new_intake_frames_omit_mail_bodies(self):
         case=json.loads(next((ROOT/'scenarios/cases').glob('intake-test_mailbox_triage-TriageTests-test_hello_stranger_stays_in_attention-*.json')).read_text())
         marker='SYNTHETIC MAIL CONTENT THAT MUST NOT BE RECORDED'
@@ -73,6 +81,37 @@ class IntakeIssuesReplayTests(unittest.TestCase):
         text=self.roundtrip(case,{'equal':0,'different':0,'skipped':1})
         self.assertNotIn(marker,text)
         self.assertIn('intake_stage_unavailable',text)
+
+    def test_graph_content_fields_emit_only_unavailable_frames(self):
+        import copy
+        original=json.loads(next((ROOT/'scenarios/cases').glob('intake-test_mailbox_triage-TriageTests-test_hello_stranger_stays_in_attention-*.json')).read_text())
+        marker='SYNTHETIC GRAPH CONTENT MUST NOT BE RECORDED'
+        for field in ('body','uniqueBody','bodyPreview','contentBytes','content_b64'):
+            for nested in (False, True):
+                with self.subTest(field=field,nested=nested):
+                    case=copy.deepcopy(original)
+                    for entry in case['script']:
+                        if entry['adapter']=='mailbox' and entry['method'] in {'messages','research_thread'}:
+                            for message in entry['result']:
+                                value={field:({'contentType':'text','content':marker} if field in {'body','uniqueBody'} else marker)}
+                                if nested:message['attachments']=[value]
+                                else:message.update(value)
+                    text=self.roundtrip(case,{'equal':0,'different':0,'skipped':1})
+                    self.assertNotIn(marker,text)
+                    self.assertIn('intake_stage_unavailable',text)
+        self.assertTrue(recording.mail_bodies({'contentType':'text','content':marker}))
+
+    def test_standalone_attachment_content_is_unavailable_in_both_read_stages(self):
+        marker='SYNTHETIC BASE64 ATTACHMENT'
+        for stage in ('intake','inbound'):
+            frame={'stage':stage,'script':[]}
+            token=recording._STAGE.set(frame)
+            try:
+                self.assertIs(recording._capture('mailbox','attachment_content',lambda:marker,(),{}),marker)
+            finally:recording._STAGE.reset(token)
+            with self.subTest(stage=stage):
+                self.assertTrue(frame.get('incomplete'))
+                self.assertNotIn(marker,json.dumps(frame))
 
     def test_recording_disabled_preserves_handles_and_performs_no_capture(self):
         from managed import formalization_requests,thread_staging,mailbox

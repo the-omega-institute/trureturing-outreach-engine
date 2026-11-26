@@ -1,4 +1,5 @@
 """Audit earlier resolutions through the serialized Outreach coordinator."""
+from . import recording
 import hashlib
 import hmac
 import json
@@ -420,6 +421,7 @@ def read_checks(ledger, rows, checks):
         ledger.save()
 
 
+@recording.stage_frame('prior-work')
 def advance(ledger, config, root, github=None):
     if config['paused']:
         return
@@ -456,6 +458,7 @@ def advance(ledger, config, root, github=None):
         from .credentials import SecretStore
         github = SecretStore(token).github
 
+    if recording.enabled() and github is not None: github = recording.adapter('github', github)
     issues = None
     connector_error = 'Coordinator GitHub connection unavailable' if github is None else None
     for item, entry in units(ledger, LANE, pending[:PER_TICK], key=lambda pair: issue_state_key(pair[1])):

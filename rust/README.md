@@ -657,3 +657,37 @@ counts. No Rust network client, production ledger writer or cutover is enabled.
 Phase 3d still owns mailbox intake (including the eight deferred scenarios),
 advance/admission, pipeline and continuations, issue filing and maintenance.
 Production switch-over, live adapters and rollback acceptance remain later gates.
+
+
+## Phase 3d: mailbox intake and scientific issues
+
+`outreach-core::mailbox` supplies a typed read port, Inbox intake, explicit
+inbound hydration, coverage checks, Sent-subject cache transitions, owner and
+refusal gates, and immutable attachment input preservation. Staged request
+building and coverage reuse phase 2; task insertion reuses its supersession and
+carried-answer transitions. The scenario adapters never open Graph or write a
+production ledger.
+
+`formalization_requests` and `prior_work_issues` share the typed `GitHubIssues`
+port. Every issue POST consumes a single-use permit bound to the acknowledged
+snapshot. Complete inventory, closed-issue reconciliation, uncertain outcomes,
+backoff, bounded/deferred work and exact reviewed evidence all run in core.
+Scientific evidence projection and local previews are independent Rust logic;
+Python remains the production writer and service adapter.
+
+All **2,156 scenarios** pass through Python before Rust, with equal ordered
+external writes and final logical tables/files. This includes 260 phase-3d cases
+from 137 source tests. See `../scenarios/README.md` and `test-map.json` for exact
+conversion counts and native coverage retained by design. The Rust CI job runs
+all stages and the local recording replay tests.
+
+The local `replay_mathesis.py` check now accepts intake, inbound, formalization
+and prior-work frames without a signing key. Its normal output remains counts
+only. To preserve the existing recording scope, new intake/inbound frames that
+would contain mail bodies emit a content-free unavailable record; body-free
+frames replay normally. No coordinator workflow or live replay was enabled.
+
+Phase 3e still needs advance/admission orchestration, pipeline and continuations,
+maintenance, and the cutover switch with the remaining production composition
+and rollback gates. Python remains the sole production ledger writer throughout
+this branch.

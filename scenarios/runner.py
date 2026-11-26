@@ -5,6 +5,7 @@ from contextlib import ExitStack, contextmanager, redirect_stderr, redirect_stdo
 from datetime import datetime
 import io
 import json
+import os
 from pathlib import Path
 import sqlite3
 import sys
@@ -19,12 +20,24 @@ from managed import mathesis_delivery, mailbox, publication, sent_events, contro
 from managed.tasks import Tasks
 from managed.queue import canonical, GateError
 
-from managed.scenario_contract import NOW, dump, logical, load, encode, decode, files
+from managed.scenario_contract import NOW, dump, logical, load as load_tables, encode, decode, files
 KEY = 'secret'
+
+
+def load(tasks, tables):
+    # pipeline_state.payload is JSON even when its logical value is a string
+    # (signed prior-work backfills store the exact result digest that way).
+    # Queue readback's historical empty SQL string remains a raw column value.
+    tables = json.loads(json.dumps(tables))
+    for row in tables.get('pipeline_state', {}).get('rows', []):
+        if isinstance(row['payload'], str): row['payload'] = canonical(row['payload'])
+    load_tables(tasks, tables)
 
 
 def error_value(error):
     value = {'type': type(error).__name__, 'message': str(error)}
+    for name in ('attachments','intake_reason'):
+        if hasattr(error,name): value[name]=getattr(error,name)
     diagnostic = getattr(error, 'github_diagnostic', None) or publication.github_failure(error)
     if diagnostic: value['diagnostic'] = diagnostic
     if isinstance(error, HTTPError):
@@ -39,7 +52,10 @@ def raise_error(value):
         raise CMARequestError(value['status'], value.get('cma_body', value['message']))
     if value['type'] == 'HTTPError':
         raise HTTPError('https://service.example.invalid', value['status'], value['message'].removeprefix('HTTP Error ' + str(value['status']) + ': '), {}, io.BytesIO(base64.b64decode(value['body'])))
-    classes = {'TimeoutError': TimeoutError, 'ValueError': ValueError, 'GateError': GateError,
+    if value['type'] == 'UnsupportedThreadAttachments': raise mailbox.UnsupportedThreadAttachments(value['attachments'])
+    if value['type'] == 'SentSubjectsDeferred': raise mailbox.SentSubjectsDeferred(value['intake_reason'], value['message'])
+    if value['type'] == 'UnparseableEvidence': raise __import__('managed.prior_work_evidence',fromlist=['UnparseableEvidence']).UnparseableEvidence(value['message'])
+    classes = {'FileNotFoundError':FileNotFoundError, 'PermissionError':PermissionError, 'TimeoutError' : TimeoutError, 'ValueError': ValueError, 'GateError': GateError,
                'SystemExit': SystemExit, 'KeyboardInterrupt': KeyboardInterrupt, 'TypeError': TypeError, 'ConnectionError': ConnectionError, 'KeyError': KeyError, 'NotSent': __import__('managed.transports', fromlist=['NotSent']).NotSent, 'DefiniteRejection': __import__('managed.transports', fromlist=['DefiniteRejection']).DefiniteRejection, 'ProcessDeath': type('ProcessDeath', (BaseException,), {}), 'RuntimeError': RuntimeError, 'OSError': OSError, 'AssertionError': AssertionError, 'Stopped': type('Stopped', (BaseException,), {})}
     error = classes[value['type']](value['message'])
     if value.get('diagnostic'): error.github_diagnostic = value['diagnostic']
@@ -48,9 +64,9 @@ def raise_error(value):
 
 
 def writes(script):
-    methods = {'retire_sandbox', 'save_draft', 'submit', 'submit_tracked', 'discard_draft', 'delete_draft', 'move_draft_to_deleted', 'create_draft', 'deliver', 'deliver_pre_reviewed', 'withdraw', 'upload', 'create', 'register_note', 'save_state', 'delete_asset', 'commit_tables'}
+    methods = {'upload_task_batch', 'retire_sandbox', 'save_draft', 'submit', 'submit_tracked', 'discard_draft', 'delete_draft', 'move_draft_to_deleted', 'create_draft', 'deliver', 'deliver_pre_reviewed', 'withdraw', 'upload', 'create', 'register_note', 'save_state', 'delete_asset', 'commit_tables'}
     return [{k: v for k, v in e.items() if k in {'adapter', 'method', 'args', 'kwargs'}}
-            for e in script if e['method'] in methods or (e['adapter'] == 'cma' and e['method'] == 'request' and len(e['args']) > 1 and e['args'][1] != 'GET')]
+            for e in script if e['method'] in methods or (e['adapter'] in {'cma','github'} and e['method'] == 'request' and len(e['args']) > 1 and e['args'][1] != 'GET')]
 
 
 class Script:
@@ -62,7 +78,8 @@ class Script:
             if isinstance(v, (set, frozenset)): return sorted(v)
             if isinstance(v, dict): return {k: normalized(x) for k,x in v.items()}
             return v
-        actual = {'adapter': adapter, 'method': method, 'args': encode(args), 'kwargs': encode(normalized(kwargs))}
+        encoded_args=encode(args) if method!='upload_task_batch' else [ [[encode(path),ref] for path,ref in args[0].items()], *encode(args[1:]) ]
+        actual = {'adapter': adapter, 'method': method, 'args': encoded_args, 'kwargs': encode(normalized(kwargs))}
         assert self.index < len(self.entries), f'unexpected {adapter}.{method}'
         expected = self.entries[self.index]; self.index += 1
         if actual != {k: expected[k] for k in actual}:
@@ -79,6 +96,8 @@ class Script:
                 args[2](entry['args'][0])
         if 'error' in expected: raise_error(expected['error'])
         value = decode(expected.get('result'), self.directory)
+        if method=='upload_task_batch':
+            args[2].clear();args[2].update(value['listings']); return None
         if adapter == 'mailbox':
             from pool_delivery import mail_value
             value = mail_value(value)
@@ -88,7 +107,13 @@ class Script:
 
 class Fake:
     def __init__(self, script, name, attrs): self.script, self.name, self.attrs = script, name, attrs
+    @property
+    def __class__(self):
+        return mailbox.GraphMailbox if self.name=='mailbox' and self.attrs.get('graph_mailbox') else type(self)
     def __getattr__(self, method):
+        if self.name=='mailbox' and self.attrs.get('native_matching') and method in {'match_inbound_sent','_refresh_sent_subjects'}:
+            return getattr(mailbox.GraphMailbox,method).__get__(self)
+        if self.name=='mailbox' and method=='_registered_recipient':return mailbox.GraphMailbox._registered_recipient
         if method in self.attrs:
             if self.name == 'mailbox' and type(self.attrs[method]) is bool:
                 if not self.attrs[method]: raise AttributeError(method)
@@ -111,7 +136,7 @@ def execute(case):
             from managed.queue import Queue
             Queue(tasks.path, {'reply': 'e'*64}).close()
         stack.callback(tasks.close); load(tasks, case['initial_rows'])
-        if case['stage'] in {'pool', 'delivery'}:
+        if case['stage'] in {'pool', 'delivery', 'intake','inbound','formalization','prior-work'}:
             times = iter(case.get('update_times', [])); original_update = tasks.update
             def update(*a, **kw):
                 pair = next(times); clock = tasks.clock; points = iter(pair); tasks.clock = lambda: next(points)
@@ -119,10 +144,12 @@ def execute(case):
                 finally: tasks.clock = clock
             stack.enter_context(patch.object(tasks, 'update', update))
         script = Script(case['script'], root)
-        ledger = SimpleNamespace(clock=lambda: case['now'], tasks=tasks, releases=script.adapter('releases', case['adapter_attributes'].get('releases')), save=lambda *a, **kw: script.call('ledger', 'save', a, kw))
+        ledger = SimpleNamespace(folder=folder, clock=lambda: case['now'], tasks=tasks, releases=script.adapter('releases', case['adapter_attributes'].get('releases')), save=lambda *a, **kw: script.call('ledger', 'save', a, kw))
         if 'saved_input' in case: ledger._recording_saved_input = case['saved_input']
         if '_recording_baseline' in case: ledger._recording_baseline = case['_recording_baseline']
         for target, value in case.get('constants', {}).items(): stack.enter_context(patch(target, value))
+        if case.get('binding'): stack.enter_context(patch('managed.control.request_binding',return_value=case['binding']))
+        if 'data_repo' in case: stack.enter_context(patch('managed.prior_work_evidence.DATA_REPO',case['data_repo']))
         stack.enter_context(patch('managed.control.workflow', side_effect=lambda k, *a, **kw: case.get('workflows', {}).get(k, case['workflow'])))
         stack.enter_context(patch('managed.sent_events.commit_tables', lambda *a, **kw: script.call('registry', 'commit_tables', (), {})))
         stack.enter_context(patch('managed.sent_events.tables_need_push', lambda *a, **kw: script.call('registry', 'needs_push', (), {})))
@@ -177,6 +204,12 @@ def execute(case):
                 for name, content in response.items():
                     target = root / name; target.parent.mkdir(parents=True, exist_ok=True); target.write_bytes(base64.b64decode(content))
             stack.enter_context(patch.object(delivery, '_register_reply_evidence', register))
+        if case['stage']=='prior-work':
+            def evidence_download(row,name,directory,releases):
+                from managed import recording
+                args=(row['id'],name,Path(directory))
+                return recording._capture('evidence','download',lambda *a:script.call('evidence','download',a,{}),args,{}) if recording.enabled() else script.call('evidence','download',args,{})
+            stack.enter_context(patch.object(publication,'download',evidence_download))
         box = script.adapter('mailbox', case['adapter_attributes'].get('mailbox')) if case.get('options', {}).get('mailbox', True) else None
         stack.enter_context(patch.object(sent_events, 'MAX_PAGES', case.get('options', {}).get('max_pages', 2)))
         if case.get('admissions'):
@@ -185,7 +218,7 @@ def execute(case):
                 pending = {}
                 count = 0
                 exhausted = False
-                previous = {case['stage']: case.get('options', {}).get('previous', [])}
+                previous = case.get('previous_units') or {{'intake':'mailbox-intake','formalization':'formalization-requests','prior-work':'prior-work-issues'}.get(case['stage'],case['stage']): case.get('options', {}).get('previous', [])}
                 clock = staticmethod(lambda: case['now'])
                 @contextmanager
                 def unit(self, lane, key, step=None):
@@ -198,7 +231,26 @@ def execute(case):
         error = None
         try:
             with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
-                if case['stage'] == 'pool':
+                if case['stage']=='inbound' and case.get('operation') in {'coverage','build_inbound_request'}:
+                    from managed import thread_staging
+                    if case['operation']=='coverage':result=thread_staging.require_uncovered_inbound(case['arguments'][0],tasks)
+                    else:result=thread_staging.build_inbound_request(*case['arguments'],root,revision=case.get('binding',{}).get('source_revision','b'*40))
+                    assert encode(result)==case['expected_result']
+                elif case['stage'] in {'formalization','prior-work'} and case.get('operation','advance')!='advance':
+                    from managed import formalization_requests,prior_work_issues,prior_work_evidence
+                    operation=case['operation']
+                    if operation=='plan':
+                        local=None
+                        if case.get('local_files') is not None:
+                            local=root/'evidence';local.mkdir()
+                            for name,data in case['local_files'].items():
+                                path=local/name;assert path.resolve().is_relative_to(local.resolve());path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(base64.b64decode(data))
+                        result=prior_work_issues.plan(case['arguments'][0],root,local)
+                    else:
+                        target=formalization_requests if case['stage']=='formalization' else prior_work_evidence
+                        result=getattr(target,operation)(*case['arguments'])
+                    assert encode(result)==case['expected_result']
+                elif case['stage'] == 'pool':
                     from pool_delivery import pool
                     pool(case, ledger, script)
                 elif case['stage'] == 'delivery' and case.get('operation') in {'mathesis-once','mathesis-introduced'}:
@@ -213,6 +265,18 @@ def execute(case):
                         delivery.advance(ledger, case['config'], root, box)
                 elif case['stage'] == 'mathesis': mathesis_delivery.advance(ledger, case['config'], root, folder, script.adapter('mathesis'), KEY, script.adapter('publication'), **{k: v for k,v in case.get('options', {}).items() if k in {'again', 'attempted'}})
                 elif case['stage'] == 'intake': mailbox.intake(ledger, case['config'], root, box, revision=case['revision'], now=datetime.fromisoformat(case['datetime']))
+                elif case['stage']=='inbound':
+                    from managed import thread_staging
+                    result=thread_staging.resolve(case['row'],box,ledger,root)
+                    assert encode(result)==case['expected_result']
+                elif case['stage']=='formalization':
+                    from managed import formalization_requests
+                    github=(lambda *a,**kw:script.call('github','request',a,kw)) if case['options']['github'] else None
+                    formalization_requests.advance(ledger,case['config'],github)
+                elif case['stage']=='prior-work':
+                    from managed import prior_work_issues
+                    github=(lambda *a,**kw:script.call('github','request',a,kw)) if case['options']['github'] else None
+                    prior_work_issues.advance(ledger,case['config'],root,github)
                 elif case['stage'] == 'sent':
                     if case.get('options', {}).get('advance'):
                         actual = sent_events.reconcile
@@ -223,9 +287,12 @@ def execute(case):
                 elif case['stage'] == 'publication': publication.advance(ledger, case['config'], root, folder, script.adapter('publication'), KEY)
                 else: raise AssertionError('unknown stage')
         except BaseException as exc:
+            if os.environ.get("OUTREACH_SCENARIO_DEBUG"): __import__("traceback").print_exc()
             if case['stage'] in {'pool','delivery'}:
                 from pool_delivery import error_value as stage_error_value
                 error = stage_error_value(exc)
+                for name in ('attachments','intake_reason'):
+                    if hasattr(exc,name):error[name]=getattr(exc,name)
             else: error = error_value(exc)
         assert error == case.get('error'), f"{case['id']}: stage error {error}"
         assert not script.failure and script.index == len(script.entries), f"{case['id']}: unused script entries"

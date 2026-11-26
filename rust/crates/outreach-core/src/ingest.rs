@@ -433,6 +433,9 @@ impl<'a> Replay<'a> {
         self.event(&row, object([]))?;
         self.supersede(&row)
     }
+    pub fn require_uncovered_inbound(&self, v: &Value) -> Result<()> {
+        self.uncovered(v)
+    }
     fn uncovered(&self, v: &Value) -> Result<()> {
         if v["kind"] != "reply" || v["inputs"]["thread_ref"]["inbound"] != true {
             return Ok(());

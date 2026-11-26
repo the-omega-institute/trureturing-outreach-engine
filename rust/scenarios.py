@@ -18,7 +18,7 @@ def main():
     sys.stdout.write(result.stdout)
     assert result.returncode == 0
     counts = json.loads(result.stdout)
-    assert counts['equal'] == sum(c['stage'] in {'mathesis','publication','sent','pool','delivery'} for c in cases) and counts['different'] == 0
+    assert counts['equal'] == sum(c['stage'] in {'mathesis','publication','sent','pool','delivery','intake','inbound','formalization','prior-work'} for c in cases) and counts['different'] == 0
 
 
 if __name__ == '__main__': main()

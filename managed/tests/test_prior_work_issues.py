@@ -339,6 +339,17 @@ class FilingTests(unittest.TestCase):
         self.assertIn('A. Example', text)
         self.assertIn(ITEM['proves'], text)
 
+    def test_phase3d_installation_data_repository_is_not_public_evidence(self):
+        repository = 'example/synthetic-private-data'
+        with patch.object(evidence, 'DATA_REPO', repository), patch('managed.location.DATA_REPO', repository):
+            private_url = 'https://github.com/' + repository + '/blob/' + 'a' * 40 + '/evidence.md'
+            check = {**CHECK, 'items': [{**ITEM, 'url': private_url}]}
+            self.assertEqual(evidence.project(check)['items'], [])
+            self.note(check=check)
+            preview = filing.plan(self.snapshot(), self.root)
+        self.assertEqual(preview['count'], 0)
+        self.assertEqual(preview['notes'][0]['reason'], 'Prior-exists evidence has no usable public citation')
+
     def test_result_contract_and_policy_cover_the_structured_check(self):
         policy = json.loads((Path(control.__file__).parent / 'research/workflow.json').read_text())
         self.assertEqual(set(policy['short_note']['prior_work_check']),

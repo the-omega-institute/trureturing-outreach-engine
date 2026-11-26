@@ -72,6 +72,9 @@ pub trait DeliveryServices {
     }
     fn source(&mut self, descriptor: &Value) -> StageResult<SourceFile>;
     fn allow(&mut self, lane: &str, key: &str) -> bool;
+    fn previous(&self, _lane: &str) -> Vec<String> {
+        Vec::new()
+    }
     fn queue_public_link(&mut self, intent: Persisted<LinkIntent>) -> StageResult<Value>;
 }
 

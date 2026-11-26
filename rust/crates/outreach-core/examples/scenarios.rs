@@ -122,6 +122,11 @@ impl Script {
                 });
             }
             let mut summary = object([("type", error["type"].clone())]);
+            for key in ["attachments", "intake_reason"] {
+                if let Some(value) = error.get(key) {
+                    summary[key] = value.clone();
+                }
+            }
             if self.detailed_errors {
                 summary["message"] = error["message"].clone();
                 summary["body_text"] =
@@ -220,6 +225,7 @@ impl MathesisClient for Fake {
     }
 }
 struct Ports {
+    previous_units: Value,
     restored: Option<(SavedSnapshot, String)>,
     script: Rc<RefCell<Script>>,
     repo: Value,
@@ -312,6 +318,12 @@ impl DeliveryServices for Ports {
             );
         }
         Ok(source)
+    }
+    fn previous(&self, lane: &str) -> Vec<String> {
+        array(&self.previous_units[lane])
+            .iter()
+            .map(|v| s(v).to_owned())
+            .collect()
     }
     fn allow(&mut self, lane: &str, key: &str) -> bool {
         if self.admissions.is_empty() {
@@ -440,6 +452,7 @@ fn run(case: &Value, previous: &mut Option<Value>) -> Result<bool> {
             }
         }
     }
+    tables["data_repo"] = case["data_repo"].clone();
     let workflow = |kind: &str| {
         Ok(case["workflows"]
             .get(kind)
@@ -505,7 +518,15 @@ fn run(case: &Value, previous: &mut Option<Value>) -> Result<bool> {
         .filter_map(Value::as_f64)
         .collect();
     let script = Rc::new(RefCell::new(Script {
-        detailed_errors: ["pool", "delivery"].contains(&s(&case["stage"])),
+        detailed_errors: [
+            "pool",
+            "delivery",
+            "intake",
+            "inbound",
+            "formalization",
+            "prior-work",
+        ]
+        .contains(&s(&case["stage"])),
         entries: array(&case["script"]).to_vec(),
         index: 0,
         failure: false,
@@ -529,6 +550,7 @@ fn run(case: &Value, previous: &mut Option<Value>) -> Result<bool> {
         script.borrow_mut().saved_digest = receipt.digest.clone();
     }
     let mut ports = Ledger::new(Ports {
+        previous_units: case["previous_units"].clone(),
         restored,
         script: script.clone(),
         repo: case["adapter_attributes"]["releases"]["repo"].clone(),
@@ -553,7 +575,158 @@ fn run(case: &Value, previous: &mut Option<Value>) -> Result<bool> {
             .collect(),
     };
     let mut files = case["initial_files"].clone();
-    let outcome = if case["stage"] == "pool" {
+    let outcome = if case["stage"] == "inbound"
+        && ["coverage", "build_inbound_request"].contains(&s(&case["operation"]))
+    {
+        let actual: StageResult<Value> = if case["operation"] == "coverage" {
+            replay
+                .require_uncovered_inbound(&case["arguments"][0])
+                .map(|_| Value::Null)
+                .map_err(|error| StageError {
+                    summary: object([
+                        ("type", string("ValueError")),
+                        ("reason", string(error.to_string())),
+                    ]),
+                })
+        } else {
+            outreach_core::builders::inbound(
+                s(&case["arguments"][0]),
+                case["arguments"][1].as_str(),
+                s(&case["arguments"][2]),
+                &case["binding"],
+                &env,
+            )
+            .map_err(Into::into)
+        };
+        actual.and_then(|value| {
+            if value == case["expected_result"] {
+                Ok(())
+            } else {
+                Err(outreach_canon::Error::new("Inbound staging differs").into())
+            }
+        })
+    } else if ["formalization", "prior-work"].contains(&s(&case["stage"]))
+        && case.get("operation").is_some_and(|v| v != "advance")
+    {
+        let actual: StageResult<Value> = match s(&case["operation"]) {
+            "pending_requests" => {
+                outreach_core::validation::pending_requests(&case["arguments"][0])
+                    .map_err(Into::into)
+            }
+            "issue_payload" => Ok(outreach_core::formalization_requests::payload(
+                &case["arguments"][0],
+            )),
+            "same_issue" => outreach_core::formalization_requests::same_issue(
+                &case["arguments"][0],
+                &case["arguments"][1],
+            )
+            .map(Value::Bool),
+            "project" => outreach_core::prior_work_evidence::project(
+                &case["arguments"][0],
+                s(&case["data_repo"]),
+            ),
+            "parse_text" => outreach_core::prior_work_evidence::parse_text(
+                s(&case["arguments"][0]),
+                s(&case["data_repo"]),
+            ),
+            "plan" => {
+                let local = case["local_files"]
+                    .as_object()
+                    .map(|files| files.iter().map(|(k, v)| (k.clone(), bytes(v))).collect());
+                outreach_core::prior_work_issues::plan(
+                    &case["arguments"][0],
+                    &env.tables,
+                    local.as_ref(),
+                )
+            }
+            _ => Err(outreach_canon::Error::new("Unknown scientific operation").into()),
+        };
+        actual.and_then(|value| {
+            if value == case["expected_result"] {
+                Ok(())
+            } else {
+                if std::env::var_os("OUTREACH_SCENARIO_DEBUG").is_some() {
+                    eprintln!(
+                        "pure actual={} expected={}",
+                        canonical(&value)?,
+                        canonical(&case["expected_result"])?
+                    );
+                }
+                Err(outreach_canon::Error::new("Scientific projection differs").into())
+            }
+        })
+    } else if ["intake", "inbound", "formalization", "prior-work"].contains(&s(&case["stage"])) {
+        let mut box_ = stages::intake_issues::Mailbox {
+            fake: Fake(script.clone(), "mailbox".into()),
+            attributes: case["adapter_attributes"]["mailbox"].clone(),
+        };
+        let mut inputs = stages::intake_issues::Inputs {
+            fake: Fake(script.clone(), "releases".into()),
+            repo: case["adapter_attributes"]["releases"]["repo"].clone(),
+        };
+        let mut issues = stages::intake_issues::Issues {
+            fake: Fake(script.clone(), "github".into()),
+            available: case["options"]["github"] != false,
+        };
+        match s(&case["stage"]) {
+            "formalization" => {
+                outreach_core::formalization_requests::advance(&mut replay, &mut issues, &mut ports)
+            }
+            "prior-work" => outreach_core::prior_work_issues::advance(
+                &mut replay,
+                &mut issues,
+                &mut Fake(script.clone(), "evidence".into()),
+                &mut ports,
+            ),
+            "inbound" => outreach_core::mailbox::resolve(
+                &case["row"],
+                &mut replay,
+                &mut box_,
+                &mut inputs,
+                case["options"]["mailbox"] == false,
+            )
+            .and_then(|value| {
+                if value == case["expected_result"] {
+                    Ok(())
+                } else {
+                    if std::env::var_os("OUTREACH_SCENARIO_DEBUG").is_some() {
+                        eprintln!(
+                            "resolved actual={} expected={}",
+                            canonical(&value)?,
+                            canonical(&case["expected_result"])?
+                        );
+                    }
+                    Err(outreach_canon::Error::new("Resolved inbound differs").into())
+                }
+            }),
+            _ => {
+                let binding = case.get("binding").cloned().unwrap_or_else(|| {
+                    object([
+                        ("source_revision", case["revision"].clone()),
+                        (
+                            "workflow_hash",
+                            case["workflows"]
+                                .get("reply")
+                                .unwrap_or(&case["workflow"])
+                                .clone(),
+                        ),
+                    ])
+                });
+                outreach_core::mailbox::advance(
+                    &mut replay,
+                    &mut box_,
+                    &mut inputs,
+                    &mut ports,
+                    &outreach_core::mailbox::Options {
+                        absent: case["options"]["mailbox"] == false,
+                        datetime: s(&case["datetime"]).into(),
+                        binding,
+                        previous: options.previous.clone(),
+                    },
+                )
+            }
+        }
+    } else if case["stage"] == "pool" {
         stages::pool::execute(
             case,
             &mut replay,
@@ -696,13 +869,14 @@ fn run(case: &Value, previous: &mut Option<Value>) -> Result<bool> {
         "delete_draft",
         "move_draft_to_deleted",
         "create_draft",
+        "upload_task_batch",
     ];
     let writes: Vec<_> = script
         .observed
         .iter()
         .filter(|e| {
             write_methods.contains(&s(&e["method"]))
-                || (e["adapter"] == "cma"
+                || ((e["adapter"] == "cma" || e["adapter"] == "github")
                     && e["method"] == "request"
                     && array(&e["args"]).len() > 1
                     && e["args"][1] != "GET")
@@ -839,7 +1013,19 @@ fn main() -> Result<()> {
     let (mut equal, mut different, mut skipped) = (0, 0, 0);
     let mut previous = None;
     let mut execute = |case: &Value| -> Result<()> {
-        if !["mathesis", "publication", "sent", "pool", "delivery"].contains(&s(&case["stage"])) {
+        if ![
+            "mathesis",
+            "publication",
+            "sent",
+            "pool",
+            "delivery",
+            "intake",
+            "inbound",
+            "formalization",
+            "prior-work",
+        ]
+        .contains(&s(&case["stage"]))
+        {
             skipped += 1;
         } else if run(case, &mut previous)? {
             equal += 1;

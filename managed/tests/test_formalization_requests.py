@@ -135,6 +135,80 @@ class FilingTests(unittest.TestCase):
         other, = filing.pending_requests({'formalization_gaps': [{**gap, 'source_arxiv': '2501.01235'}]})
         self.assertFalse(filing.same_issue(payload, other))
 
+    def test_phase3d_failed_checkpoint_prevents_issue_creation(self):
+        note = self.note('checkpoint-note')
+        calls = []
+        save = self.ledger.save
+        def checkpoint(force=False):
+            if force: raise OSError('Synthetic snapshot failure')
+            return save()
+        def github(path, method='GET', body=None):
+            calls.append(method)
+            self.assertEqual(method, 'GET')
+            return []
+        with patch.object(self.ledger, 'save', checkpoint):
+            filing.advance(self.ledger, self.config, github)
+        self.assertEqual(calls, ['GET'])
+        item = self.ledger.tasks.get(note['id'])['data']['formalization_requests'][0]
+        self.assertEqual((item['state'], item['last_error']), ('pending', 'OSError'))
+
+    def test_phase3d_partial_or_invalid_inventory_never_authorizes_post(self):
+        self.note('inventory-note')
+        for invalid in (False, True):
+            with self.subTest(invalid=invalid):
+                calls = []
+                self.ledger.tasks.db.execute("DELETE FROM pipeline_state WHERE key LIKE 'recheck:%'")
+                def github(path, method='GET', body=None):
+                    calls.append(method)
+                    self.assertEqual(method, 'GET')
+                    if invalid: return [{}]
+                    if path.endswith('page=1'): return [{'title': 'Other'}] * 100
+                    raise TimeoutError('Synthetic incomplete inventory')
+                filing.advance(self.ledger, self.config, github)
+                self.assertEqual(calls, ['GET'] if invalid else ['GET', 'GET'])
+
+    def test_phase3d_uncertain_post_stops_all_remaining_creations_this_tick(self):
+        from urllib.error import HTTPError
+        self.note('first-gap')
+        self.note('second-gap', gap={**GAP, 'statement': 'A second exact statement.'})
+        calls = []
+        def github(path, method='GET', body=None):
+            calls.append(method)
+            if method == 'GET': return []
+            raise HTTPError('https://service.example.invalid', 503, 'Synthetic unavailable', {}, None)
+        filing.advance(self.ledger, self.config, github)
+        self.assertEqual(calls, ['GET', 'POST'])
+        items = [r['data']['formalization_requests'][0] for r in self.ledger.tasks.all()]
+        self.assertEqual([i['state'] for i in items], ['pending', 'pending'])
+        self.assertEqual([i['last_error'] for i in items], ['GitHub HTTP 503', 'GitHub filing unavailable this tick'])
+
+    def test_phase3d_invalid_receipt_remains_pending(self):
+        note = self.note('receipt-note')
+        calls = []
+        def github(path, method='GET', body=None):
+            calls.append(method)
+            return [] if method == 'GET' else {'html_url': 'https://other.example.invalid/issues/1'}
+        filing.advance(self.ledger, self.config, github)
+        item = self.ledger.tasks.get(note['id'])['data']['formalization_requests'][0]
+        self.assertEqual((item['state'], item['last_error']), ('pending', 'GateError'))
+        self.assertEqual(calls, ['GET', 'POST'])
+
+    def test_phase3d_paused_stage_does_not_read_or_checkpoint(self):
+        self.note('paused-note')
+        with patch.object(self.ledger, 'save', side_effect=AssertionError('Unexpected save')):
+            filing.advance(self.ledger, {'paused': True}, lambda *a: self.fail('Unexpected GitHub read'))
+
+    def test_phase3d_eight_candidate_bound_and_same_tick_deduplication(self):
+        for index in range(9): self.note('bounded-' + str(index))
+        calls = []
+        def github(path, method='GET', body=None):
+            calls.append(method)
+            return [] if method == 'GET' else {'html_url': 'https://github.com/' + filing.REPO + '/issues/125'}
+        filing.advance(self.ledger, self.config, github)
+        states = [r['data']['formalization_requests'][0]['state'] for r in self.ledger.tasks.all()]
+        self.assertEqual(states, ['filed'] * 8 + ['pending'])
+        self.assertEqual(calls, ['GET', 'POST'])
+
 
 def setUpModule():
     use_cli_config()

@@ -38,7 +38,7 @@ def replay(directory, snapshot, binary, key=None):
         for path in sorted(directory.glob('calls-*.jsonl')):
             for line in path.read_text().splitlines(): events.append(json.loads(line))
         starts = [e['pointer'] for e in events if e.get('event') == 'release_pointer' and e.get('boundary') == 'start' and (e.get('pointer') or {}).get('snapshot')]
-        stages = {'mathesis', 'publication', 'sent', 'pool', 'delivery'}
+        stages = {'mathesis', 'publication', 'sent', 'pool', 'delivery', 'intake', 'inbound', 'formalization', 'prior-work'}
         cases = [e['case'] for e in events if e.get('event') in {s + '_stage' for s in stages}]
         counts['skipped'] += sum(e.get('event') in {s + '_stage_unavailable' for s in stages} for e in events)
         if starts:

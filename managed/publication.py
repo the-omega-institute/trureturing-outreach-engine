@@ -243,6 +243,7 @@ def source_gate(row, tasks, root):
             break
 
 
+@recording.evidence_download
 def download(row, name, directory, releases):
     require(re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]{0,199}', name) is not None,
             'Select a safe reviewed artifact name')

@@ -905,6 +905,10 @@ def inspect_uncertain_creations(state, note_id, zenodo):
     marker = 'trureturing-note:' + note_id
     candidates = {number: [] for number in revisions}
     examined = set()
+    pages = []
+    def result(complete, **diagnostics):
+        return {'account_scan_complete': complete, 'account_records_examined': len(examined),
+                'page_sizes': pages, 'candidates_by_revision': candidates, **diagnostics}
     for page in range(1, 21):
         # Search-index absence cannot establish account inventory. Enumerate
         # the authenticated deposit listing and filter exact identities here.
@@ -912,20 +916,26 @@ def inspect_uncertain_creations(state, note_id, zenodo):
         rows = zenodo.request('GET', '/deposit/depositions?' + query)
         if not isinstance(rows, list):
             raise ValueError('Unexpected Zenodo account listing; no creation was retried')
+        pages.append(len(rows))
+        repeated = []
         for row in rows:
             record_id = row.get('id')
-            if record_id is None or str(record_id) in examined:
-                raise ValueError('Unstable Zenodo account pagination; no creation was retried')
+            if record_id is None:
+                raise ValueError('Unexpected Zenodo record identity; no creation was retried')
+            if str(record_id) in examined:
+                repeated.append(record_id)
+                continue
             examined.add(str(record_id))
             metadata = row.get('metadata', {})
             version = str(metadata.get('version', ''))
             if marker in metadata.get('keywords', []) and version in candidates:
                 candidates[version].append({'record_id': row['id'], 'submitted': bool(row.get('submitted')),
                                             'metadata': metadata, 'files': row.get('files', [])})
+        if repeated:
+            return result(False, scan_error='unstable_pagination', duplicate_record_ids=repeated[:20])
         if len(rows) < 100:
-            return {'account_scan_complete': True, 'account_records_examined': len(examined),
-                    'candidates_by_revision': candidates}
-    raise ValueError('Zenodo account listing exceeds inspection limit; no creation was retried')
+            return result(True)
+    return result(False, scan_error='inspection_limit')
 
 
 def note_status(catalog, note_id, gh, zenodo=None):
@@ -939,7 +949,10 @@ def note_status(catalog, note_id, gh, zenodo=None):
             'preferred_publication': state.get('publication') if state else None,
             'pages': state.get('pages') if state else None, 'requests': pending}
     if zenodo is not None:
-        result['creation_inspection'] = inspect_uncertain_creations(state, note_id, zenodo)
+        inspection = inspect_uncertain_creations(state, note_id, zenodo)
+        result['creation_inspection'] = inspection
+        if inspection and not inspection['account_scan_complete']:
+            result['status'] = 'verification_pending'
     return result
 
 

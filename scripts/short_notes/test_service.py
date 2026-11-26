@@ -103,6 +103,22 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual(result['duplicate_record_ids'],[99])
         self.assertEqual([r['record_id'] for r in result['candidates_by_revision']['2']],[199])
 
+    def test_failed_account_read_retains_exact_candidates_from_completed_pages(self):
+        state={'versions':{'2':{'phase':'creating','package_id':'preserved'}}}
+        class Account:
+            def request(self,method,path):
+                assert method=='GET'
+                if path.endswith('page=1'):
+                    return [{'id':i,'metadata':{'keywords':['trureturing-note:alpha'],'version':'2'} if i==17 else {}}
+                            for i in range(100)]
+                raise w.ZenodoHTTPError('GET',502)
+        result=s.inspect_uncertain_creations(state,'alpha',Account())
+        self.assertFalse(result['account_scan_complete'])
+        self.assertEqual(result['scan_error'],'provider_read_failed')
+        self.assertEqual(result['response_code'],502)
+        self.assertEqual(result['account_records_examined'],100)
+        self.assertEqual([r['record_id'] for r in result['candidates_by_revision']['2']],[17])
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)

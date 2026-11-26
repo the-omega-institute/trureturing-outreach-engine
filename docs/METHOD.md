@@ -37,6 +37,8 @@ Review, dispatch, public availability and venue acceptance are recorded as separ
 
 For an uncertain Zenodo creation, note status enumerates the authenticated deposit inventory and filters the exact note marker and revision locally. Repeated pagination or the bounded inspection limit leaves verification pending; status retains exact candidates already found, page sizes and the number of distinct records examined. An empty search result or inventory does not authorize another creation; the original intent remains pending until a verified original record or an authoritative rejection is available.
 
+Zenodo GET requests retry transient server failures at most three times with a short backoff. A final account-read failure retains partial candidates and remains pending. Writes keep their original receipt and are submitted once per operation attempt.
+
 ## Engine and data
 
 The engine contains executable code, synthetic fixtures and reference policy. It contains no correspondence, no contact data and no installation-specific operating policy. The private data repository holds the operative policy, contact registry, decisions, task records and detailed logs. The operative policy is placed over the reference files at their original paths. The engine source and policy have independent revisions, and agents verify files against the respective Git trees before recomputing the workflow digest.

@@ -915,7 +915,11 @@ def inspect_uncertain_creations(state, note_id, zenodo):
         # Search-index absence cannot establish account inventory. Enumerate
         # the authenticated deposit listing and filter exact identities here.
         query = urlencode({'size': 100, 'page': page})
-        rows = zenodo.request('GET', '/deposit/depositions?' + query)
+        try:
+            rows = zenodo.request('GET', '/deposit/depositions?' + query)
+        except (w.ZenodoHTTPError, OSError) as error:
+            return result(False, scan_error='provider_read_failed', attempted_page=page,
+                          response_code=getattr(error, 'code', None), provider_error=type(error).__name__)
         if not isinstance(rows, list):
             raise ValueError('Unexpected Zenodo account listing; no creation was retried')
         pages.append(len(rows))

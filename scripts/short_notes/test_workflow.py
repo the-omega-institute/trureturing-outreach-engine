@@ -2,12 +2,14 @@
 import base64
 import copy
 import hashlib
+import io
 import json
 from pathlib import Path
 import tempfile
 import unittest
 import unicodedata
 from unittest.mock import patch
+from urllib.error import HTTPError
 from urllib.parse import urlsplit, unquote
 import zipfile
 
@@ -645,6 +647,26 @@ class WorkflowTests(unittest.TestCase):
             zenodo.request('PUT', 'https://attacker.example/api/file', b'file')
         with self.assertRaisesRegex(ValueError, 'redirect'):
             w.NoRedirect().redirect_request(None, None, 302, '', {}, 'https://attacker.example')
+
+    def test_transient_zenodo_reads_retry_with_the_original_request(self):
+        error=HTTPError('https://zenodo.org/api/deposit/depositions',502,'Bad Gateway',{},io.BytesIO())
+        with patch.object(w.recording,'open',side_effect=[error,io.BytesIO(b'[]')]) as opened, \
+                patch.object(w.time,'sleep') as pause:
+            self.assertEqual(w.Zenodo('synthetic-secret').request('GET','/deposit/depositions'),[])
+            self.assertEqual(opened.call_count,2)
+            self.assertIs(opened.call_args_list[0].args[2],opened.call_args_list[1].args[2])
+            pause.assert_called_once_with(1)
+
+    def test_uncertain_writes_and_permanent_read_refusals_are_never_retried(self):
+        for method,code in [('POST',502),('PUT',503),('DELETE',504),('GET',404)]:
+            with self.subTest(method=method):
+                error=HTTPError('https://zenodo.org/api/deposit/depositions',code,'Refused',{},io.BytesIO())
+                with patch.object(w.recording,'open',side_effect=error) as opened,patch.object(w.time,'sleep') as pause:
+                    with self.assertRaises(w.ZenodoHTTPError) as failure:
+                        w.Zenodo('synthetic-secret').request(method,'/deposit/depositions')
+                    self.assertEqual(failure.exception.code,code)
+                    opened.assert_called_once()
+                    pause.assert_not_called()
 
 if __name__ == '__main__':
     unittest.main()

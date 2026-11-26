@@ -906,9 +906,11 @@ def inspect_uncertain_creations(state, note_id, zenodo):
     candidates = {number: [] for number in revisions}
     examined = set()
     pages = []
+    duplicates = []
     def result(complete, **diagnostics):
         return {'account_scan_complete': complete, 'account_records_examined': len(examined),
-                'page_sizes': pages, 'candidates_by_revision': candidates, **diagnostics}
+                'page_sizes': pages, 'candidates_by_revision': candidates,
+                **({'duplicate_record_ids':duplicates} if duplicates else {}), **diagnostics}
     for page in range(1, 21):
         # Search-index absence cannot establish account inventory. Enumerate
         # the authenticated deposit listing and filter exact identities here.
@@ -917,13 +919,14 @@ def inspect_uncertain_creations(state, note_id, zenodo):
         if not isinstance(rows, list):
             raise ValueError('Unexpected Zenodo account listing; no creation was retried')
         pages.append(len(rows))
-        repeated = []
+        before_count = len(examined)
         for row in rows:
             record_id = row.get('id')
             if record_id is None:
                 raise ValueError('Unexpected Zenodo record identity; no creation was retried')
             if str(record_id) in examined:
-                repeated.append(record_id)
+                if len(duplicates) < 20 and record_id not in duplicates:
+                    duplicates.append(record_id)
                 continue
             examined.add(str(record_id))
             metadata = row.get('metadata', {})
@@ -931,10 +934,10 @@ def inspect_uncertain_creations(state, note_id, zenodo):
             if marker in metadata.get('keywords', []) and version in candidates:
                 candidates[version].append({'record_id': row['id'], 'submitted': bool(row.get('submitted')),
                                             'metadata': metadata, 'files': row.get('files', [])})
-        if repeated:
-            return result(False, scan_error='unstable_pagination', duplicate_record_ids=repeated[:20])
+        if rows and len(examined) == before_count:
+            return result(False, scan_error='unstable_pagination')
         if len(rows) < 100:
-            return result(True)
+            return result(not duplicates, **({'scan_error':'unstable_pagination'} if duplicates else {}))
     return result(False, scan_error='inspection_limit')
 
 

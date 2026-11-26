@@ -84,6 +84,25 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual(result['creation_inspection'],inspection)
         self.assertEqual(result['versions'],state['versions'])
 
+    def test_overlapping_pages_continue_to_older_candidates_without_asserting_absence(self):
+        state = {'versions':{'2':{'phase':'creating','package_id':'preserved'}}}
+        class Account:
+            def request(self,method,path):
+                assert method=='GET'
+                if path.endswith('page=1'):
+                    return [{'id':i,'metadata':{}} for i in range(100)]
+                if path.endswith('page=2'):
+                    return [{'id':i,'metadata':{}} for i in range(99,199)]
+                assert path.endswith('page=3')
+                return [{'id':199,'metadata':{'keywords':['trureturing-note:alpha'],'version':'2'}}]
+        result = s.inspect_uncertain_creations(state,'alpha',Account())
+        self.assertFalse(result['account_scan_complete'])
+        self.assertEqual(result['scan_error'],'unstable_pagination')
+        self.assertEqual(result['account_records_examined'],200)
+        self.assertEqual(result['page_sizes'],[100,100,1])
+        self.assertEqual(result['duplicate_record_ids'],[99])
+        self.assertEqual([r['record_id'] for r in result['candidates_by_revision']['2']],[199])
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)

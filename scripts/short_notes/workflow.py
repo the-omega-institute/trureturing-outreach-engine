@@ -16,6 +16,7 @@ import stat
 import subprocess
 import sys
 import tempfile
+import time
 import unicodedata
 from urllib.error import HTTPError
 from urllib.parse import quote, unquote, urlsplit, urlunsplit
@@ -431,12 +432,18 @@ class Zenodo:
         elif data is not None:
             headers['Content-Type'] = 'application/octet-stream'
         request = Request(target, method=method, data=data, headers=headers)
-        try:
-            with recording.open('zenodo', build_opener(NoRedirect), request, timeout=90) as response:
-                raw = response.read()
-        except HTTPError as error:
-            raise ZenodoHTTPError(method, error.code) from None
-        return json.loads(raw) if raw else None
+        for attempt in range(3):
+            try:
+                with recording.open('zenodo', build_opener(NoRedirect), request, timeout=90) as response:
+                    raw = response.read()
+                return json.loads(raw) if raw else None
+            except HTTPError as error:
+                code = error.code
+                error.close()
+                if method == 'GET' and code in (500, 502, 503, 504) and attempt < 2:
+                    time.sleep(attempt + 1)
+                    continue
+                raise ZenodoHTTPError(method, code) from None
 
 
 def zenodo_name(name):

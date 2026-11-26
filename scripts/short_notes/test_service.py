@@ -10,6 +10,7 @@ from pathlib import Path
 import tempfile
 import unittest
 from unittest.mock import patch
+from urllib.parse import parse_qs, urlsplit
 import zipfile
 
 import service as s
@@ -71,6 +72,24 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual(result['account_records_examined'],100)
         self.assertEqual(result['page_sizes'],[100,100])
         self.assertEqual([r['record_id'] for r in result['candidates_by_revision']['2']],[1])
+
+    def test_uncertain_inspection_includes_an_older_version_hidden_by_default_listing(self):
+        state = {'versions': {'2': {'phase': 'creating', 'package_id': 'preserved'}}}
+        calls = []
+        class Account:
+            def request(self, method, path):
+                calls.append((method, path))
+                query = parse_qs(urlsplit(path).query)
+                assert method == 'GET' and 'q' not in query
+                assert query['sort'] == ['mostrecent']
+                versions = [{'id': 42, 'metadata': {'keywords': ['trureturing-note:alpha'], 'version': '3'}}]
+                if query.get('all_versions') == ['true']:
+                    versions.append({'id': 41, 'metadata': {'keywords': ['trureturing-note:alpha'], 'version': '2'}})
+                return versions
+        result = s.inspect_uncertain_creations(state, 'alpha', Account())
+        self.assertTrue(result['account_scan_complete'])
+        self.assertEqual([r['record_id'] for r in result['candidates_by_revision']['2']], [41])
+        self.assertEqual(len(calls), 1)
 
     def test_incomplete_creation_inspection_remains_pending_without_losing_candidates(self):
         self.package()

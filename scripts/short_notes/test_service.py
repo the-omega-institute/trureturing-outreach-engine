@@ -33,6 +33,8 @@ class DraftOnlyInventory:
     def request(self, method, path):
         assert method == 'GET'
         query = parse_qs(urlsplit(path).query)
+        if 'q' in query:
+            return []
         if query['status'] == ['published']:
             return []
         assert query['status'] == ['draft']
@@ -74,14 +76,16 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual(result['account_records_examined'],101)
         self.assertEqual([r['record_id'] for r in result['candidates_by_revision']['2']],[101])
         class Unstable:
-            def request(self,*args):
+            def request(self,method,path):
+                if 'q=' in path:
+                    return []
                 return [{'id':i,'metadata':{'keywords':['trureturing-note:alpha'],'version':'2'} if i==1 else {}}
                         for i in range(100)]
         result = s.inspect_uncertain_creations(state,'alpha',Unstable())
         self.assertFalse(result['account_scan_complete'])
         self.assertEqual(result['scan_error'],'unstable_pagination')
         self.assertEqual(result['account_records_examined'],100)
-        self.assertEqual(result['page_sizes'],[100,100])
+        self.assertEqual(result['page_sizes'],[0,100,100])
         self.assertEqual([r['record_id'] for r in result['candidates_by_revision']['2']],[1])
 
     def test_uncertain_inspection_includes_an_older_version_hidden_by_default_listing(self):
@@ -102,6 +106,40 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual([r['record_id'] for r in result['candidates_by_revision']['2']], [41])
         self.assertEqual(len(calls), 1)
 
+    def test_scoped_search_finds_an_exact_older_version_without_claiming_complete_inventory(self):
+        state = {'versions': {'2': {'phase': 'creating', 'package_id': 'preserved'}}}
+        calls = []
+        class Account:
+            def request(self, method, path):
+                calls.append((method, path))
+                query = parse_qs(urlsplit(path).query)
+                assert method == 'GET' and query['q'] == ['"trureturing-note:alpha"']
+                assert query['all_versions'] == ['true']
+                return [{'id': 41, 'metadata': {'keywords': ['trureturing-note:alpha'], 'version': '2'}}]
+        result = s.inspect_uncertain_creations(state, 'alpha', Account())
+        self.assertEqual(len(calls), 1)
+        self.assertFalse(result['account_scan_complete'])
+        self.assertTrue(result['candidate_verification_required'])
+        self.assertEqual(result['search_records_examined'], 1)
+        self.assertEqual([r['record_id'] for r in result['candidates_by_revision']['2']], [41])
+
+    def test_scoped_search_wrong_revision_and_marker_do_not_prevent_account_inspection(self):
+        state = {'versions': {'2': {'phase': 'creating', 'package_id': 'preserved'}}}
+        class Account:
+            def request(self, method, path):
+                assert method == 'GET'
+                query = parse_qs(urlsplit(path).query)
+                if 'q' in query:
+                    return [{'id': 40, 'metadata': {'keywords': ['trureturing-note:alpha'], 'version': '3'}},
+                            {'id': 42, 'metadata': {'keywords': ['trureturing-note:other'], 'version': '2'}}]
+                if query['status'] == ['draft']:
+                    return [{'id': 41, 'metadata': {'keywords': ['trureturing-note:alpha'], 'version': '2'}}]
+                return []
+        result = s.inspect_uncertain_creations(state, 'alpha', Account())
+        self.assertTrue(result['account_scan_complete'])
+        self.assertEqual(result['partition_page_sizes'], {'search': [2], 'draft': [1], 'published': [0]})
+        self.assertEqual([r['record_id'] for r in result['candidates_by_revision']['2']], [41])
+
     def test_large_published_history_cannot_hide_draft_candidates_or_exceed_read_budget(self):
         state = {'versions': {'2': {'phase': 'creating', 'package_id': 'preserved'}}}
         calls = []
@@ -109,13 +147,15 @@ class ServiceTests(unittest.TestCase):
             def request(self, method, path):
                 assert method == 'GET'
                 query = parse_qs(urlsplit(path).query)
-                calls.append(query['status'][0])
+                calls.append(query.get('status', ['search'])[0])
+                if 'q' in query:
+                    return []
                 if query['status'] == ['draft']:
                     return [{'id': 41, 'metadata': {'keywords': ['trureturing-note:alpha'], 'version': '2'}}]
                 page = int(query['page'][0])
                 return [{'id': 1000 + page * 100 + i, 'metadata': {}} for i in range(100)]
         result = s.inspect_uncertain_creations(state, 'alpha', Account())
-        self.assertEqual(calls[0], 'draft')
+        self.assertEqual(calls[:2], ['search', 'draft'])
         self.assertEqual(len(calls), 20)
         self.assertFalse(result['account_scan_complete'])
         self.assertEqual(result['scan_error'], 'inspection_limit')
@@ -129,13 +169,15 @@ class ServiceTests(unittest.TestCase):
             def request(self, method, path):
                 assert method == 'GET'
                 query = parse_qs(urlsplit(path).query)
+                if 'q' in query:
+                    return []
                 if query['status'] == ['draft']:
                     return []
                 return [{'id': 42, 'submitted': True,
                          'metadata': {'keywords': ['trureturing-note:alpha'], 'version': '2'}}]
         result = s.inspect_uncertain_creations(state, 'alpha', Account())
         self.assertTrue(result['account_scan_complete'])
-        self.assertEqual(result['partition_page_sizes'], {'draft': [0], 'published': [1]})
+        self.assertEqual(result['partition_page_sizes'], {'search': [0], 'draft': [0], 'published': [1]})
         self.assertEqual([r['record_id'] for r in result['candidates_by_revision']['2']], [42])
 
     def test_incomplete_creation_inspection_remains_pending_without_losing_candidates(self):
@@ -165,7 +207,7 @@ class ServiceTests(unittest.TestCase):
         self.assertFalse(result['account_scan_complete'])
         self.assertEqual(result['scan_error'],'unstable_pagination')
         self.assertEqual(result['account_records_examined'],200)
-        self.assertEqual(result['page_sizes'],[100,100,1,0])
+        self.assertEqual(result['page_sizes'],[0,100,100,1,0])
         self.assertEqual(result['duplicate_record_ids'],[99])
         self.assertEqual([r['record_id'] for r in result['candidates_by_revision']['2']],[199])
 

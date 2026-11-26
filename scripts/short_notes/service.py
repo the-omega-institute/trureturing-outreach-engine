@@ -906,12 +906,40 @@ def inspect_uncertain_creations(state, note_id, zenodo):
     candidates = {number: [] for number in revisions}
     examined = set()
     pages = []
-    partitions = {}
+    partitions = {'search': []}
     duplicates = []
     def result(complete, **diagnostics):
         return {'account_scan_complete': complete, 'account_records_examined': len(examined),
+                'search_records_examined': sum(partitions['search']),
                 'page_sizes': pages, 'partition_page_sizes': partitions, 'candidates_by_revision': candidates,
                 **({'duplicate_record_ids':duplicates} if duplicates else {}), **diagnostics}
+    def consider(row):
+        record_id = row.get('id')
+        if record_id is None:
+            raise ValueError('Unexpected Zenodo record identity; no creation was retried')
+        metadata = row.get('metadata', {})
+        version = str(metadata.get('version', ''))
+        if (marker in metadata.get('keywords', []) and version in candidates
+                and not any(str(candidate['record_id']) == str(record_id) for candidate in candidates[version])):
+            candidates[version].append({'record_id': record_id, 'submitted': bool(row.get('submitted')),
+                                        'metadata': metadata, 'files': row.get('files', [])})
+    # A scoped search can supply positive evidence even when account history
+    # exceeds the inspection budget. It never establishes account-wide absence.
+    # Quote the marker without depending on a provider-specific field mapping.
+    query = urlencode({'q': '"' + marker + '"', 'all_versions': 'true', 'size': 100, 'page': 1})
+    try:
+        rows = zenodo.request('GET', '/deposit/depositions?' + query)
+    except (w.ZenodoHTTPError, OSError) as error:
+        return result(False, scan_error='provider_read_failed', attempted_status='search',
+                      response_code=getattr(error, 'code', None), provider_error=type(error).__name__)
+    if not isinstance(rows, list):
+        raise ValueError('Unexpected Zenodo account listing; no creation was retried')
+    pages.append(len(rows))
+    partitions['search'].append(len(rows))
+    for row in rows:
+        consider(row)
+    if all(candidates.values()):
+        return result(False, candidate_verification_required=True)
     # An uncertain initial creation normally remains a draft. Inspect drafts
     # before published history can consume the shared twenty-page budget.
     # Both partitions must finish before the account scan can be complete.
@@ -944,11 +972,7 @@ def inspect_uncertain_creations(state, note_id, zenodo):
                         duplicates.append(record_id)
                     continue
                 examined.add(str(record_id))
-                metadata = row.get('metadata', {})
-                version = str(metadata.get('version', ''))
-                if marker in metadata.get('keywords', []) and version in candidates:
-                    candidates[version].append({'record_id': row['id'], 'submitted': bool(row.get('submitted')),
-                                                'metadata': metadata, 'files': row.get('files', [])})
+                consider(row)
             if rows and len(examined) == before_count:
                 return result(False, scan_error='unstable_pagination', attempted_status=status)
             if len(rows) < 100:

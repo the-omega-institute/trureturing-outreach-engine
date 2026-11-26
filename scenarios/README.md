@@ -13,9 +13,9 @@ python3.12 rust/scenarios.py
 python3.12 -m unittest discover -s scenarios -p 'test_*.py'
 ```
 
-There are **244 scenarios from 114 converted tests**. Python runs all 244; Rust
-matches all **236 Mathesis, publication and sent-event scenarios**, and skips the
-eight intake scenarios. The counts by source suite are:
+There are **1,904 scenarios from 412 converted tests**. Python runs all 1,904; Rust
+matches all **1,896 Mathesis, publication, sent-event, CMA pool and mail delivery
+scenarios**, and skips the eight intake scenarios. The counts by source suite are:
 
 | Source tests | Converted tests | Scenarios |
 | --- | ---: | ---: |
@@ -24,6 +24,18 @@ eight intake scenarios. The counts by source suite are:
 | `test_publication.PublicationTests` | 48 | 142 |
 | `test_sent_events.SentEventsTests` | 28 | 39 |
 | `test_mailbox_triage.TriageTests` | 8 | 8 |
+| `test_sandbox_pool` | 97 | 888 |
+| `test_sandbox_groups` | 45 | 313 |
+| `test_pool_adopt` | 2 | 5 |
+| `test_cleanup_recovery` | 15 | 160 |
+| `test_automation` | 62 | 157 |
+| `test_owner_sent` | 37 | 54 |
+| `test_draft_revision` | 22 | 53 |
+| `test_stale_owner_draft` | 8 | 13 |
+| `test_thread_staging` | 2 | 2 |
+| `test_thread_recipients` | 5 | 5 |
+| `test_reviewer_edit` | 1 | 5 |
+| `test_engine_split.MathesisOnceTest` | 2 | 5 |
 
 The publication count includes one new equal-priority arrival-order regression.
 Original tests remain, including assertions about restart recovery and operator
@@ -34,7 +46,7 @@ exercises the Contents API adapter. The three `CommitTablesTests` in
 `test_sent_events` retain their real temporary-Git tests for scoped commits,
 rebase-on-push-failure and local persistence detection. Seven
 `SentEventsRecoveryTests` retain native snapshot-upload and crash/restart checks.
-All 17 native tests have empty entries in the map.
+Those 17 native tests have empty entries in the map.
 
 Each fixture supplies initial SQLite tables, configuration, a clock, data/policy
 files, ordered adapter responses or exceptions, the expected external-write
@@ -102,4 +114,59 @@ The extraction made these Python contracts explicit:
 Mathesis cases continue to cover ordinary and collection delivery, receipt
 recovery, version conflicts, revision pins, exact public-file readback, reading
 links, collection-before-withdrawal, checkpoint failure and legacy migration.
-The eight intake cases remain Python-only for phase 3c.
+The eight intake cases remain Python-only for phase 3d.
+
+
+Pool cases preserve the initial runtime as well as the ledger. A case executes
+one constructor, health, idle, placement, ownership or capacity operation. Entry
+arguments are rebound to the corresponding pool entry, preserving Python object
+identity. Group order and idle configuration are explicit inputs; the expected
+runtime is used only for comparison. Placement telemetry never governs admission
+or retirement. A configured group retains its first observed healthy Sandbox;
+surplus retirement waits for the whole group to be idle, independently of
+admission switches. Capacity blocks, pending reviews, stalled runtimes, removed
+groups, retained foreign work and operator acknowledgements are covered.
+
+`CmaPool::retire_sandbox` is the existing CMA adapter boundary: its checkpointed
+request includes previous cleanup state, known Agents, task ownership and the
+bounded cleanup allowance. The adapter's stop-before-delete and original-handle
+reconciliation remain covered by the native `test_sandbox_pool` and
+`test_cleanup_recovery` assertions. No Rust live CMA adapter is enabled. The
+five remaining adoption tests retain native signed-input/operator coverage;
+phase-2 signing/ingestion parity also checks `pool-adopt`.
+
+Mail cases execute the real task and transactional queue transitions. Mailbox
+preflight supplies fresh Graph evidence; core checks owner gates, review binding,
+routing, recipient reservations, draft conflicts, forced send-intent/send-call
+checkpoints, exact receipts and bounded retries. Direct Mathesis policy cases
+also check quoted text, incoming mail, earliest introduction and an earlier
+introduction in a different conversation. Owner-sent matching and draft revision
+or stale-draft recovery run independently in Rust. Contact registration/rendering
+stays at the registry service boundary, with its evidence input checked and its
+resulting files compared.
+
+The native test
+`test_owner_draft_receipts_intents_and_stale_conflicts_are_not_terminal` deliberately
+replaces revision recovery; it retains native coverage instead of encoding that
+replacement as a Rust transition. Pure validation, transport, CLI, intake and
+coordinator tests without a ported operation also keep native coverage. Runs with
+more than 40 tasks keep their native backlog assertions; smaller operations from
+the same test may still have mapped cases. Nonfinite constructor inputs remain
+native because the canonical scenario format rejects them.
+
+A restored revision can create from a previously committed intent without a new
+save in that invocation. `saved_input` records the generation, immutable snapshot
+SHA and independently verified input digest. The sealed ledger restores that
+observation and refuses a permit if the mutable input has changed. This makes
+Python's existing recovery contract explicit; no Python transition was changed.
+Queue clock observations and task-update clocks are separate. All mailbox writes
+and CMA lifecycle requests appear in the ordered write comparison, including
+writes whose responses were lost. Fatal interruptions propagate without being
+reclassified as ordinary retries.
+
+Refresh all phases with `python3.12 scenarios/extract.py`, or only these stages
+with `python3.12 scenarios/extract_pool_delivery.py`. Both retain the source test
+assertions. The Rust runner accepts streaming `--jsonl` input so the combined
+fixture set and consecutive bounded recording frames do not encounter canon's
+per-document size limit. Normal runner and local replay output remains counts
+only; `OUTREACH_SCENARIO_DEBUG=1` is an explicit local diagnostic mode.

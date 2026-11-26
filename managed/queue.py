@@ -165,7 +165,8 @@ class Queue:
                 and re.fullmatch(r"[0-9a-f]{64}", v) for k, v in workflows.items()), "Invalid workflow digest registry")
         self.workflows = dict(workflows)
         self.reviewer = reviewer
-        self.clock = clock
+        from . import recording
+        self.clock = recording.queue_clock(clock)
         # The coordinator supplies a FORCED remote save here. send-intent,
         # send-call and draft deletion proofs must never be debounced.
         self.checkpoint = checkpoint

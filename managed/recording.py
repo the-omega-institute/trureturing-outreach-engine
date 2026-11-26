@@ -16,6 +16,7 @@ import re
 import subprocess
 import sys
 import threading
+import time
 from urllib.parse import quote, quote_plus, urlsplit, parse_qsl, urlencode
 
 
@@ -343,7 +344,7 @@ def pending_uploads():
 # private recording data, never a production replay or a ledger save.
 from contextvars import ContextVar
 _STAGE = ContextVar('recorded_stage', default=None)
-_WRITE_METHODS = {'deliver', 'deliver_pre_reviewed', 'withdraw', 'upload', 'create', 'register_note', 'save_state', 'delete_asset', 'commit_tables'}
+_WRITE_METHODS = {'deliver', 'deliver_pre_reviewed', 'withdraw', 'upload', 'create', 'register_note', 'save_state', 'delete_asset', 'commit_tables', 'retire_sandbox', 'save_draft', 'submit', 'submit_tracked', 'discard_draft', 'create_draft', 'delete_draft', 'move_draft_to_deleted'}
 
 
 def _capture(adapter_name, method, function, args, kwargs):
@@ -353,7 +354,7 @@ def _capture(adapter_name, method, function, args, kwargs):
     # Capture failures must never prevent, repeat or alter the adapter call.
     try:
         entry = {'adapter': adapter_name, 'method': method, 'kwargs': encode(kwargs)}
-        if method in _WRITE_METHODS:
+        if method in _WRITE_METHODS or (adapter_name == 'cma' and method == 'request' and len(args) > 1 and args[1] != 'GET'):
             entry['saved_snapshot_digest'] = frame.get('_saved_snapshot_digest')
             entry['args_digest'] = hashlib.sha256(canonical(encode(args)).encode()).hexdigest()
         else: entry['args'] = encode(args)
@@ -363,13 +364,18 @@ def _capture(adapter_name, method, function, args, kwargs):
         frame['incomplete'] = True
         return function(*args, **kwargs)
     try:
-        result = function(*args, **kwargs)
-    except Exception as error:
+        if method == 'submit_tracked' and frame.get('stage') == 'delivery':
+            before = args[2]
+            result = function(*args[:2], lambda draft: _capture('boundary', 'send_call', before, (draft,), {}), **kwargs)
+        else: result = function(*args, **kwargs)
+    except BaseException as error:
         # Do not read/seek HTTPError: observers must not change its body cursor.
         try:
-            entry['error'] = {'type': type(error).__name__, 'message': ''}
-            frame['_errors'][id(error)] = entry['error']
-            if hasattr(error, 'code'): entry['error']['status'] = error.code
+            entry['error'] = {'type': type(error).__name__, 'message': str(error) if frame.get('stage') in {'pool', 'delivery'} else ''}
+            if adapter_name == 'boundary' and frame['script'][-1] is not entry:
+                entry.pop('error', None); entry['result'] = None
+            if 'error' in entry: frame['_errors'][id(error)] = entry['error']
+            if hasattr(error, 'code') and 'error' in entry: entry['error']['status'] = error.code
         except Exception as recording_error:
             print('recording-error ' + type(recording_error).__name__, file=sys.stderr)
         raise
@@ -385,7 +391,9 @@ def _capture(adapter_name, method, function, args, kwargs):
 
 
 class _StageAdapter:
-    def __init__(self, name, target): self.name, self.target = name, target
+    def __init__(self, name, target):
+        object.__setattr__(self, 'name', name); object.__setattr__(self, 'target', target)
+    def __setattr__(self, name, value): setattr(self.target, name, value)
     def __getattr__(self, name):
         value = getattr(self.target, name)
         return (lambda *a, **kw: _capture(self.name, name, value, a, kw)) if callable(value) else value
@@ -468,6 +476,14 @@ def stage_frame(name):
                          '_errors': {}, '_root': Path(root).resolve(), '_touched_files': set(),
                          'adapter_attributes': {'releases': {k: getattr(ledger.releases, k, '') for k in ('repo', 'tag')}},
                          'options': {'previous': list(getattr(getattr(ledger, 'tick', None), 'previous', {}).get(name, []))}}
+                if name in {'pool', 'delivery'}:
+                    if getattr(ledger, '_recording_saved_input', None): frame['saved_input'] = ledger._recording_saved_input
+                    frame['workflows'] = {kind: workflow(kind) for kind in {r['kind'] for r in ledger.tasks.all()}}
+                if name == 'delivery':
+                    box = args[0] if args else kwargs.get('mailbox')
+                    frame['adapter_attributes']['mailbox'] = {method: callable(getattr(box, method, None)) for method in MAILBOX_FEATURES}
+                    frame['options']['mailbox'] = box is not None
+                    frame['_queue_seq'] = ledger.tasks.db.execute("SELECT COALESCE(MAX(seq),0) FROM events").fetchone()[0] if ledger.tasks.db.execute("SELECT 1 FROM sqlite_master WHERE name='events'").fetchone() else 0
                 if name == 'mathesis':
                     frame['options'].update(again=kwargs.get('again', False), attempted=sorted(kwargs['attempted']) if kwargs.get('attempted') is not None else None)
                 if name == 'sent':
@@ -507,16 +523,18 @@ def stage_frame(name):
             elif name == 'publication':
                 if len(values) > 1 and values[1] is not None: values[1] = adapter('publication', values[1])
                 if len(values) > 2: secret = values[2]
-            elif name == 'sent' and values and values[0] is not None: values[0] = adapter('mailbox', values[0])
+            elif name in {'sent', 'delivery'} and values and values[0] is not None: values[0] = adapter('mailbox', values[0])
             try:
                 return stage(ledger, config, root, *values, **kwargs)
-            except Exception as error:
-                frame['error'] = {'type': type(error).__name__, 'message': ''}; raise
+            except BaseException as error:
+                frame['error'] = {'type': type(error).__name__, 'message': str(error) if name in {'pool','delivery'} else ''}; raise
             finally:
                 ledger.save, ledger.releases, ledger.tasks.update = original_save, original_releases, original_update
                 _STAGE.reset(token)
                 try:
                     final_digests, final_index, _, _ = capture_tables(ledger.tasks)
+                    if name == 'delivery' and ledger.tasks.db.execute("SELECT 1 FROM sqlite_master WHERE name='events'").fetchone():
+                        frame['queue_event_times'] = [r[0] for r in ledger.tasks.db.execute('SELECT at FROM events WHERE seq>? ORDER BY seq', (frame['_queue_seq'],))]
                     frame['expected_final_digests'] = final_digests
                     frame['now_end'] = ledger.tasks.clock()
                     touched = frame['_touched_files']
@@ -620,7 +638,16 @@ def save_pointer(save):
     @functools.wraps(save)
     def wrapped(self, *args, **kwargs):
         if not enabled(): return save(self, *args, **kwargs)
-        try: return save(self, *args, **kwargs)
+        try:
+            result = save(self, *args, **kwargs)
+            try:
+                if self.snapshot and callable(getattr(self, 'version', None)) and self.version() == self.saved_version:
+                    from .scenario_contract import input_digest
+                    self._recording_saved_input = {'generation': self.generation,
+                        'digest': self.snapshot['sha256'], 'logical_digest': input_digest(self.tasks)}
+            except Exception as error:
+                print('recording-error ' + type(error).__name__, file=sys.stderr)
+            return result
         finally:
             # Use the last committed local pointer, including a debounced/no-op
             # save or a failed new pointer write. Never issue an observing GET.
@@ -632,3 +659,95 @@ def save_pointer(save):
             except Exception as error:
                 print('recording-error ' + type(error).__name__, file=sys.stderr)
     return wrapped
+
+
+MAILBOX_FEATURES = ('submit_tracked', 'drafts_for', 'recipient_history', 'message', 'sent_items',
+    'drafts_folder_id', 'deleted_items_folder_id', 'verify_owner', 'matches', 'own_draft',
+    'thread', 'find', 'messages', 'create_draft', 'delete_draft', 'move_draft_to_deleted')
+POOL_FIELDS = ('correspondence', 'max_sandboxes', 'agents_per_sandbox', 'reserve_review_slots',
+    'group_limits', 'kind_groups', 'idle_seconds', 'entries', 'failed', 'available',
+    'observed', 'attempted', 'errors', 'agent_cleanup_remaining')
+
+
+def pool_operation(function):
+    """Opt-in bounded pool operation frames; nested operations share their frame."""
+    @functools.wraps(function)
+    def wrapped(pool, *args, **kwargs):
+        if not enabled() or _STAGE.get() is not None: return function(pool, *args, **kwargs)
+        from .scenario_contract import encode
+        ledger = args[0] if function.__name__ == '__init__' else pool.ledger
+        config = args[1] if function.__name__ == '__init__' else {}
+        from .control import ROOT
+        @stage_frame('pool')
+        def perform(ledger, config, root):
+            frame = _STAGE.get()
+            if frame is None: return function(pool, *args, **kwargs)
+            def runtime(): return {k: encode(getattr(pool, k)) for k in POOL_FIELDS if hasattr(pool, k)}
+            def argument(v):
+                if v is ledger: return {'$ledger': True}
+                if callable(getattr(v, 'request', None)): return {'$cma': True}
+                return encode(v)
+            try:
+                frame.update(operation=function.__name__, runtime=runtime(),
+                    arguments=[argument(v) for v in args], keywords={k: argument(v) for k,v in kwargs.items()})
+                frame['options'].update(idle_pause_seconds=os.environ.get('OUTREACH_POOL_IDLE_PAUSE_SECONDS','600'),
+                    group_order=list(getattr(pool, 'group_limits', {})))
+            except Exception: frame['incomplete'] = True
+            values = list(args); keywords = dict(kwargs)
+            if function.__name__ in {'health','idle','transition'} and values: values[0] = adapter('cma', values[0])
+            if keywords.get('cma') is not None: keywords['cma'] = adapter('cma', keywords['cma'])
+            try:
+                result = function(pool, *values, **keywords)
+                frame['expected_result'] = encode(result)
+                return result
+            finally:
+                try: frame['expected_runtime'] = runtime()
+                except Exception: frame['incomplete'] = True
+        return perform(ledger, config, ROOT)
+    return wrapped
+
+
+def mail_registration(function):
+    @functools.wraps(function)
+    def wrapped(policy, root):
+        if not enabled() or _STAGE.get() is None or _STAGE.get()['stage'] != 'delivery':
+            return function(policy, root)
+        paths = ('contacts.json','CONTACTS.md','POSITIVE.md','REFUSALS.md','ACTIONS.md','SUBMISSIONS.md')
+        def perform(evidence):
+            function(policy, root)
+            result = {}
+            for name in paths:
+                path = Path(root) / 'tables' / name
+                if path.is_file():
+                    if path.stat().st_size > MAX_STAGE_FILE_BYTES: _STAGE.get()['incomplete'] = True
+                    else: result['tables/'+name] = base64.b64encode(path.read_bytes()).decode()
+            return result
+        _capture('registry', 'register', perform, (policy.get('mail_thread_contacts', []),), {})
+    return wrapped
+
+
+def snapshot_receipt(path, snapshot):
+    """Read only the verified closed restore input; never infer from live rows."""
+    if not snapshot: return None
+    import sqlite3
+    from types import SimpleNamespace
+    from .scenario_contract import input_digest
+    try:
+        with Path(path).open('rb') as source:
+            if hashlib.file_digest(source, 'sha256').hexdigest() != snapshot['sha256']: return None
+        db = sqlite3.connect(Path(path).resolve().as_uri()+'?mode=ro&immutable=1',uri=True)
+        try: logical = input_digest(SimpleNamespace(db=db))
+        finally: db.close()
+        return {'generation': snapshot['generation'], 'digest': snapshot['sha256'], 'logical_digest': logical}
+    except Exception: return None
+
+
+def queue_clock(clock):
+    if not enabled() or _STAGE.get() is None or _STAGE.get().get('stage') != 'delivery': return clock
+    frame = _STAGE.get()
+    def observed():
+        value = clock()
+        try: frame.setdefault('queue_clock_values', []).append(value)
+        except Exception: frame['incomplete'] = True
+        return value
+    return observed

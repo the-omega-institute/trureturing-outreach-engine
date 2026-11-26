@@ -451,7 +451,9 @@ class Ledger:
                 self.published_run=pointer.get('run_id')
                 self.run_history=pointer.get('run_history',[])[:SNAPSHOTS_KEPT-1]
         if recording.enabled():recording.pointer('start', json.loads(rel.get('body') or '{}') if rel else None)
-        if recording.enabled():self._recording_baseline=recording.snapshot_index(self.folder/'state.sqlite3')
+        if recording.enabled():
+            self._recording_baseline=recording.snapshot_index(self.folder/'state.sqlite3')
+            self._recording_saved_input=recording.snapshot_receipt(self.folder/'state.sqlite3',self.snapshot)
         self.tasks=Tasks(self.folder/'state.sqlite3')
     def version(self):
         # Queue writes use a second connection to this same SQLite file.

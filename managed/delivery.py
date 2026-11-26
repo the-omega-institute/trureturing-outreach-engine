@@ -12,7 +12,7 @@ from .tick import allowed, units, unit
 from .queue import Authority, GateError, Queue, digest, require
 from .registry import preflight, register_mail_thread_contacts, render
 from .tasks import matches_workflow, review_current
-from . import recheck
+from . import recheck, recording
 
 
 SEND_GUARD_REASON = 'Unsent owner draft to the same recipient exists; consolidate before sending'
@@ -495,6 +495,7 @@ def _revision_recipient_preflight(packet, root):
         require(not check['refusal_ids'], 'Recipient has an active table-3 boundary')
 
 
+@recording.mail_registration
 def _register_reply_evidence(policy, root):
     if register_mail_thread_contacts(policy.get('mail_thread_contacts', []), root=root):
         render(root)
@@ -756,6 +757,7 @@ def _advance_draft_revision(ledger, config, root, mailbox, row):
     return ledger.tasks.get(row['id'])
 
 
+@recording.stage_frame('delivery')
 def advance(ledger, config, root, mailbox=None):
     if mailbox is None:return
     from .control import workflow

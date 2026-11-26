@@ -1,5 +1,6 @@
 //! Pure read-only operator views. Adapters supply data, configuration and time.
 pub mod builders;
+pub mod delivery;
 mod digest;
 pub mod envelopes;
 mod exceptions;
@@ -12,6 +13,7 @@ pub mod publication;
 mod registry;
 pub mod results;
 mod reviews;
+pub mod sandbox_pool;
 pub mod sent_events;
 mod status;
 mod text;

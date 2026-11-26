@@ -33,7 +33,9 @@
         "intake",
         "sent",
         "mathesis",
-        "publication"
+        "publication",
+        "pool",
+        "delivery"
       ]
     },
     "initial_rows": {
@@ -116,6 +118,42 @@
     "initial_delta": {
       "type": "object",
       "description": "Bounded row changes relative to base_digests; SQL arrival order is preserved."
+    },
+    "operation": {
+      "type": "string"
+    },
+    "runtime": {
+      "type": "object"
+    },
+    "expected_runtime": {
+      "type": "object"
+    },
+    "arguments": {
+      "type": "array"
+    },
+    "keywords": {
+      "type": "object"
+    },
+    "expected_result": {},
+    "saved_input": {
+      "type": "object",
+      "required": [
+        "generation",
+        "digest",
+        "logical_digest"
+      ]
+    },
+    "queue_clock_values": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "queue_event_times": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
     }
   },
   "$defs": {

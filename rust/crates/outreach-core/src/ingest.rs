@@ -33,6 +33,8 @@ pub struct Replay<'a> {
     pub tables: Value,
     undo: Option<Vec<Undo>>,
     pub stage_update_times: std::collections::VecDeque<(f64, f64)>,
+    pub queue_event_times: std::collections::VecDeque<f64>,
+    pub queue_clock_values: std::collections::VecDeque<f64>,
     pub generation: i64,
     pub now: f64,
     pub clock_value: Value,
@@ -63,6 +65,8 @@ impl<'a> Replay<'a> {
             resource,
             undo: None,
             stage_update_times: std::collections::VecDeque::new(),
+            queue_event_times: std::collections::VecDeque::new(),
+            queue_clock_values: std::collections::VecDeque::new(),
         }
     }
     fn push_row(&mut self, table: &'static str, value: Value) -> Result<()> {

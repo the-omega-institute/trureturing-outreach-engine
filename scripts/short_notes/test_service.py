@@ -63,9 +63,26 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual([r['record_id'] for r in result['candidates_by_revision']['2']],[101])
         class Unstable:
             def request(self,*args):
-                return [{'id':i,'metadata':{}} for i in range(100)]
-        with self.assertRaisesRegex(ValueError,'Unstable Zenodo'):
-            s.inspect_uncertain_creations(state,'alpha',Unstable())
+                return [{'id':i,'metadata':{'keywords':['trureturing-note:alpha'],'version':'2'} if i==1 else {}}
+                        for i in range(100)]
+        result = s.inspect_uncertain_creations(state,'alpha',Unstable())
+        self.assertFalse(result['account_scan_complete'])
+        self.assertEqual(result['scan_error'],'unstable_pagination')
+        self.assertEqual(result['account_records_examined'],100)
+        self.assertEqual(result['page_sizes'],[100,100])
+        self.assertEqual([r['record_id'] for r in result['candidates_by_revision']['2']],[1])
+
+    def test_incomplete_creation_inspection_remains_pending_without_losing_candidates(self):
+        self.package()
+        state = {'versions':{'1':{'phase':'creating','package_id':'preserved'}}}
+        inspection = {'account_scan_complete':False,'candidates_by_revision':{'1':[{'record_id':42}]}}
+        with patch.object(w,'release_state',return_value=state), \
+                patch.object(s,'queue',return_value=[]), \
+                patch.object(s,'inspect_uncertain_creations',return_value=inspection):
+            result = s.note_status(catalog('alpha'),'alpha',self.gh,self.zenodo)
+        self.assertEqual(result['status'],'verification_pending')
+        self.assertEqual(result['creation_inspection'],inspection)
+        self.assertEqual(result['versions'],state['versions'])
 
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()

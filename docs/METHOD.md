@@ -35,7 +35,7 @@ Before writing a short note, look for an existing note or reusable argument. Che
 
 Review, dispatch, public availability and venue acceptance are recorded as separate events. An uncertain outcome remains pending until it can be reconciled against evidence from the relevant service.
 
-For an uncertain Zenodo creation, note status enumerates the authenticated deposit inventory and filters the exact note marker and revision locally. It rejects repeated pagination and retains the number of records examined. An empty search result or inventory does not authorize another creation; the original intent remains pending until a verified original record or an authoritative rejection is available.
+For an uncertain Zenodo creation, note status enumerates the authenticated deposit inventory and filters the exact note marker and revision locally. Repeated pagination or the bounded inspection limit leaves verification pending; status retains exact candidates already found, page sizes and the number of distinct records examined. An empty search result or inventory does not authorize another creation; the original intent remains pending until a verified original record or an authoritative rejection is available.
 
 ## Engine and data
 

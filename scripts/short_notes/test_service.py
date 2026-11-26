@@ -433,9 +433,13 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual(retried['failed'], [])
         self.assertEqual(self.zenodo.calls.count(('POST', '/deposit/depositions/1/actions/publish')), 1)
 
-    def ci(self, dispatch=False, **environment):
+    def ci(self, dispatch=None, **environment):
         path = self.root / 'ci-catalog.json'
         path.write_bytes(w.encode(self.catalog))
+        if dispatch is not None:
+            event = self.root / 'event.json'
+            event.write_bytes(w.encode({'inputs': {'action': 'notes', **dispatch}}))
+            environment.update(GITHUB_EVENT_NAME='workflow_dispatch', GITHUB_EVENT_PATH=str(event))
         output, public = io.StringIO(), []
         from managed.run_log import OUTPUT
         token = OUTPUT.set(public.append)
@@ -447,7 +451,7 @@ class ServiceTests(unittest.TestCase):
                 patch.object(w, 'Zenodo', return_value=self.zenodo), \
                 patch.object(s, 'load_submission_board', return_value=None), \
                 contextlib.redirect_stdout(output):
-            if dispatch:
+            if dispatch is not None:
                 from managed import hosted
                 from scripts.short_notes import service as packaged
                 with patch.object(hosted, 'restore_credentials'), \
@@ -466,6 +470,7 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertEqual(len(first['needs_attention']), 1)
         self.assertIn('failed=1', public[0])
+        self.assertEqual(public[1:], ['::warning::notes needs_attention=1'])
         retained = copy.deepcopy(self.state())
         self.enqueue('beta')
         code, next_run, public = self.ci()
@@ -477,10 +482,44 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual(self.state(), retained)
         self.assertEqual(self.zenodo.calls.count(('POST', '/deposit/depositions')), 2)
         self.assertIn('needs_attention=1', public[0])
-        self.assertNotIn('alpha', public[0])
+        self.assertEqual(public[1:], ['::warning::notes needs_attention=1'])
+        self.assertNotIn('alpha', '\n'.join(public))
+        self.assertNotIn(next_run['needs_attention'][0]['request'], '\n'.join(public))
+        self.assertNotIn(first['failed'][0]['error'], '\n'.join(public))
         code, idle, public = self.ci()
         self.assertEqual((code, idle['processed'], len(idle['needs_attention'])), (0, 0, 1))
+        self.assertEqual(public[1:], ['::warning::notes needs_attention=1'])
         self.assertEqual(s.note_status(self.catalog, 'alpha', self.gh)['requests'][0]['status'], 'failed')
+
+    def test_null_remote_title_records_failure_and_scheduled_drain_does_not_reupload(self):
+        self.catalog = catalog('alpha')
+        self.enqueue()
+        original = self.zenodo.request
+        def null_title(method, path, data=None):
+            result = original(method, path, data)
+            if method == 'GET':
+                result['metadata']['title'] = None
+            return result
+        self.zenodo.request = null_title
+        code, first, _ = self.ci()
+        self.assertEqual(code, 1)
+        self.assertIn('metadata differs', first['failed'][0]['error'])
+        retained = copy.deepcopy(self.state())
+        self.assertEqual(retained['versions']['1']['phase'], 'uploading')
+        calls = list(self.zenodo.calls)
+        self.assertEqual(sum(method == 'PUT' and path.startswith('/files/') for method, path in calls), 2)
+        code, later, public = self.ci()
+        self.assertEqual((code, later['processed'], len(later['needs_attention'])), (0, 0, 1))
+        self.assertEqual(self.zenodo.calls, calls)
+        self.assertEqual(self.state(), retained)
+        self.assertEqual(public[1:], ['::warning::notes needs_attention=1'])
+
+    def test_no_attention_emits_counts_without_warning(self):
+        self.catalog = catalog('alpha')
+        self.enqueue()
+        code, result, public = self.ci()
+        self.assertEqual((code, result['needs_attention']), (0, []))
+        self.assertEqual(public, ['notes processed=1 failed=0 remaining=0 needs_attention=0'])
 
     def test_ci_recovers_one_request_preserving_collection_package_and_history(self):
         self.catalog = catalog('alpha', 'beta')
@@ -494,8 +533,8 @@ class ServiceTests(unittest.TestCase):
         assets = copy.deepcopy(self.gh.releases[w.tag_for('alpha')])
         self.enqueue('beta')
         with patch.object(s, 'record_mathesis', side_effect=AssertionError('collected manuscript redelivered')):
-            code, result, _ = self.ci(dispatch=True, NOTE_USE_INPUTS='true', INPUT_NOTE_ACTION='publish',
-                                     INPUT_NOTE_ID='alpha', INPUT_NOTE_REVISION='1', INPUT_NOTE_RECOVER_RECORD='1',
+            code, result, _ = self.ci(dispatch={'note_action': 'publish', 'note_id': 'alpha',
+                                              'note_revision': '1', 'recover_record': '1'},
                                      OUTREACH_NOTE_REQUEST='must never be parsed')
         self.assertEqual(code, 0)
         self.assertEqual((result['processed'], result['remaining'], result['needs_attention']), (1, 1, []))
@@ -522,19 +561,35 @@ class ServiceTests(unittest.TestCase):
         self.assertIn('Uncertain Zenodo creation', result['failed'][0]['error'])
         self.assertEqual(self.zenodo.calls.count(('POST', '/deposit/depositions')), 1)
 
+    def test_manual_publish_retries_only_the_selected_failed_request(self):
+        self.catalog = catalog('alpha', 'beta')
+        for note_id in ('alpha', 'beta'):
+            queued = self.enqueue(note_id)
+            s.mark_delivery(self.gh, {'id': note_id, 'request': queued['request'], 'operation': request(note_id)}, 'failed',
+                            ValueError('Synthetic earlier failure'))
+        before = copy.deepcopy(self.state('beta'))
+        code, result, public = self.ci(dispatch={'note_action': 'publish', 'note_id': 'alpha', 'note_revision': '1'})
+        self.assertEqual((code, result['processed']), (0, 1))
+        self.assertEqual(result['failed'], [])
+        self.assertEqual(result['needs_attention'][0]['id'], 'beta')
+        self.assertEqual(self.state('beta'), before)
+        self.assertEqual(len(self.zenodo.records), 1)
+        self.assertEqual(self.state('alpha')['versions']['1']['phase'], 'published')
+        self.assertEqual(public[1:], ['::warning::notes needs_attention=1'])
+
     def test_workflow_inputs_require_valid_complete_selection(self):
-        valid = {'NOTE_USE_INPUTS': 'true', 'INPUT_NOTE_ACTION': 'publish',
-                 'INPUT_NOTE_ID': 'alpha', 'INPUT_NOTE_REVISION': '3',
-                 'INPUT_NOTE_RECOVER_RECORD': '42', 'INPUT_NOTE_REUSE_DRAFT_FROM': '2'}
+        valid = {'action': 'notes', 'note_action': 'publish',
+                 'note_id': 'alpha', 'note_revision': '3',
+                 'recover_record': '42', 'reuse_draft_from': '2'}
         self.assertEqual(s.workflow_selection(valid), {**request('alpha', 3), 'recover_record': 42, 'reuse_draft_from': 2})
-        for changes in ({'INPUT_NOTE_ID': ''}, {'INPUT_NOTE_ID': '../alpha'},
-                        {'INPUT_NOTE_REVISION': ''}, {'INPUT_NOTE_REVISION': '0'},
-                        {'INPUT_NOTE_REVISION': 'true'}, {'INPUT_NOTE_RECOVER_RECORD': '-1'},
-                        {'INPUT_NOTE_RECOVER_RECORD': '1.0'}, {'INPUT_NOTE_REUSE_DRAFT_FROM': '3'},
-                        {'INPUT_NOTE_ACTION': 'promote'}, {'INPUT_NOTE_ACTION': 'drain'}):
+        for changes in ({'note_id': ''}, {'note_id': '../alpha'},
+                        {'note_revision': ''}, {'note_revision': '0'},
+                        {'note_revision': 'true'}, {'recover_record': '-1'},
+                        {'recover_record': '1.0'}, {'reuse_draft_from': '3'},
+                        {'note_action': 'promote'}, {'note_action': 'drain'}):
             with self.subTest(changes=changes), self.assertRaises(ValueError):
                 s.workflow_selection({**valid, **changes})
-        self.assertIsNone(s.workflow_selection({**valid, 'NOTE_USE_INPUTS': 'false'}))
+        self.assertIsNone(s.workflow_selection({**valid, 'action': 'tick'}))
         with self.assertRaises(ValueError):
             s.validate_request({**request('alpha'), 'recover_record': True})
 

@@ -293,15 +293,15 @@ def request_name(request):
     return REQUEST_PREFIX + hashlib.sha256(w.encode(request)).hexdigest()[:24] + '.json'
 
 
-def workflow_selection(environ):
+def workflow_selection(inputs):
     """Explicit dispatch inputs replace the shared secret as a whole selection."""
-    if environ.get('NOTE_USE_INPUTS') != 'true':
+    if inputs.get('action') != 'notes':
         return None
     selection = {'schema_version': 'short-note-request.v1',
-                 'id': environ.get('INPUT_NOTE_ID', ''),
-                 'action': environ.get('INPUT_NOTE_ACTION', '')}
+                 'id': inputs.get('note_id', ''),
+                 'action': inputs.get('note_action', '')}
     for key in ('revision', 'recover_record', 'reuse_draft_from'):
-        value = environ.get('INPUT_NOTE_' + key.upper(), '')
+        value = inputs.get('note_revision' if key == 'revision' else key, '')
         if value:
             if not re.fullmatch(r'[1-9][0-9]*', value):
                 raise ValueError(key + ' must be a positive decimal integer')
@@ -1107,6 +1107,8 @@ def main(argv=None):
         if emit is not None:
             emit(f"notes processed={result['processed']} failed={len(result['failed'])} "
                  f"remaining={result['remaining']} needs_attention={len(result['needs_attention'])}")
+            if result['needs_attention']:
+                emit(f"::warning::notes needs_attention={len(result['needs_attention'])}")
     if isinstance(result, dict) and (result.get('failed') or result.get('ready') is False
                                     or result.get('status') in ('verification_pending', 'failed')):
         return 1

@@ -265,8 +265,8 @@ class WorkflowTests(unittest.TestCase):
                 'creators': [{'name': 'O’Neil, Émilie', 'affiliation': 'Université – A', 'orcid': '0000-0001'}]}
         original = copy.deepcopy(note)
         expected = w.zenodo_metadata(note)
-        self.assertEqual(expected['title'], 'Döring\'s "example" - café')
-        self.assertEqual(expected['creators'][0]['name'], "O'Neil, Émilie")
+        self.assertEqual(expected['title'], note['title'])
+        self.assertEqual(expected['creators'], note['creators'])
         for title, name in (("Döring's \"example\" - café", "O'Neil, Émilie"),
                             (unicodedata.normalize('NFD', note['title']),
                              unicodedata.normalize('NFD', note['creators'][0]['name']))):
@@ -275,6 +275,12 @@ class WorkflowTests(unittest.TestCase):
                 actual['title'], actual['creators'][0]['name'] = title, name
                 w.check_remote_metadata({'metadata': actual}, note)
         self.assertEqual(note, original)
+
+    def test_null_remote_title_is_a_metadata_mismatch(self):
+        note = metadata()
+        actual = {**w.zenodo_metadata(note), 'title': None}
+        with self.assertRaisesRegex(ValueError, 'metadata differs'):
+            w.check_remote_metadata({'metadata': actual}, note)
 
     def test_metadata_real_differences_remain_errors(self):
         note = {**metadata(), 'title': 'An author’s café – theorem',
@@ -293,9 +299,10 @@ class WorkflowTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, 'metadata differs'):
                     w.check_remote_metadata({'metadata': actual}, note)
 
-    def test_creation_and_update_send_same_normalized_metadata_and_accept_remote_nfd(self):
-        package, folder = self.package(title='An author’s café – “theorem”',
-                                       creators=[{'name': 'O’Neil, Émilie'}])
+    def test_creation_and_update_preserve_metadata_and_accept_remote_nfd(self):
+        package, folder = self.package(title=unicodedata.normalize('NFD', 'An author’s café – “theorem”'),
+                                       creators=[{'name': unicodedata.normalize('NFD', 'O’Neil, Émilie')},
+                                                 {'name': 'Anne–Marie Example'}])
         sent = []
         original = self.zenodo.request
         def transformed(method, path, data=None):
@@ -311,8 +318,35 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(state['versions']['1']['phase'], 'published')
         self.assertEqual(len(sent), 2)
         self.assertEqual(sent[0], sent[1])
-        self.assertEqual(sent[0]['title'], 'An author\'s café - "theorem"')
+        self.assertEqual(sent[0]['title'], package['metadata']['title'])
+        self.assertEqual(sent[0]['creators'], [{'name': package['metadata']['creators'][0]['name']},
+                                              {'name': 'Example, Anne–Marie'}])
         self.assertEqual(state['publication']['title'], package['metadata']['title'])
+
+    def test_publication_preserves_en_dashes_when_zenodo_rewrites_only_apostrophe(self):
+        class ApostropheOnlyZenodo(FakeZenodo):
+            def request(self, method, path, data=None):
+                if isinstance(data, dict) and 'metadata' in data:
+                    data = copy.deepcopy(data)
+                    data['metadata']['title'] = data['metadata']['title'].replace('’', "'")
+                    for creator in data['metadata']['creators']:
+                        creator['name'] = creator['name'].replace('’', "'")
+                return super().request(method, path, data)
+
+        self.zenodo = ApostropheOnlyZenodo()
+        title = 'Example–O’Neil–Smith-Jones’s café theorem'
+        creators = [{'name': 'O’Neil, Émilie'}, {'name': 'Smith-Jones, Anne'}]
+        for revision in (1, 2):
+            with self.subTest(revision=revision):
+                package, folder = self.package(revision, title=title, creators=creators)
+                state = w.publish(package, folder, self.saved, self.save, self.zenodo)
+                self.assertEqual(state['versions'][str(revision)]['phase'], 'published')
+                stored = self.zenodo.records[revision]['metadata']
+                self.assertEqual(stored['title'], title.replace('’', "'"))
+                self.assertEqual(stored['title'].count('–'), 2)
+                self.assertEqual(stored['creators'], [{'name': "O'Neil, Émilie"}, creators[1]])
+                self.assertEqual(state['publication']['title'], title)
+                self.assertEqual(package['metadata']['title'], title)
 
     def test_recovery_cannot_override_a_retained_draft_id(self):
         package, folder = self.package()

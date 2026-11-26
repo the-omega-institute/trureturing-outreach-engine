@@ -1,5 +1,7 @@
 """Disposable feed cache transport never writes or commits private data files."""
 import copy
+from contextlib import redirect_stderr
+import io
 import json
 import os
 from pathlib import Path
@@ -8,7 +10,7 @@ import tempfile
 import unittest
 from unittest.mock import Mock, patch
 
-from managed import control, data_writes, hosted
+from managed import control, data_writes, hosted, run_log
 from scripts.short_notes import service
 
 
@@ -86,10 +88,17 @@ class HostedFeedTests(unittest.TestCase):
         self.remote.ensure.assert_not_called()
         self.remote.run.assert_not_called()
 
+    def dispatch_event(self, **inputs):
+        path = self.root.parent / 'event.json'
+        path.write_text(json.dumps({'inputs': {'action': 'notes', **inputs}}), encoding='utf-8')
+        return {'GITHUB_EVENT_NAME': 'workflow_dispatch', 'GITHUB_EVENT_PATH': str(path)}
+
     def test_explicit_note_inputs_ignore_the_entire_secret_and_stale_environment(self):
-        environment = {'NOTE_USE_INPUTS': 'true', 'INPUT_NOTE_ACTION': 'publish',
-                       'INPUT_NOTE_ID': 'alpha', 'INPUT_NOTE_REVISION': '3',
-                       'INPUT_NOTE_RECOVER_RECORD': '42', 'INPUT_NOTE_REUSE_DRAFT_FROM': '2',
+        environment = {**self.dispatch_event(note_action='publish', note_id='alpha', note_revision='3',
+                                             recover_record='42', reuse_draft_from='2'),
+                       'NOTE_USE_INPUTS': 'true', 'INPUT_NOTE_ID': 'stale-input',
+                       'NOTE_ID': 'stale-note', 'NOTE_REVISION': '99',
+                       'RECOVER_RECORD': '99', 'REUSE_DRAFT_FROM': '98',
                        'OUTREACH_NOTE_REQUEST': 'unreadable secret is never parsed',
                        'NOTE_ACTION': 'drain', 'PREFERRED_PUBLICATION': 'stale', 'BATCH_LIMIT': '99'}
         with patch.dict(os.environ, environment), patch.object(service, 'main', return_value=0) as main:
@@ -101,8 +110,7 @@ class HostedFeedTests(unittest.TestCase):
             main.assert_called_once_with(['ci'])
 
     def test_invalid_explicit_input_cannot_fall_back_to_secret_or_execute(self):
-        with patch.dict(os.environ, {'NOTE_USE_INPUTS': 'true', 'INPUT_NOTE_ACTION': 'publish',
-                                    'INPUT_NOTE_ID': 'alpha', 'INPUT_NOTE_REVISION': '0',
+        with patch.dict(os.environ, {**self.dispatch_event(note_action='publish', note_id='alpha', note_revision='0'),
                                     'OUTREACH_NOTE_REQUEST': '{"id":"beta","revision":1}'}), \
                 patch.object(service, 'main') as main:
             with self.assertRaises(ValueError):
@@ -111,20 +119,59 @@ class HostedFeedTests(unittest.TestCase):
             self.remote.run.assert_not_called()
 
     def test_status_input_and_scheduled_secret_path(self):
-        with patch.dict(os.environ, {'NOTE_USE_INPUTS': 'true', 'INPUT_NOTE_ACTION': 'status',
-                                    'INPUT_NOTE_ID': 'alpha', 'RECOVER_RECORD': '99',
+        event = self.dispatch_event(note_action='status', note_id='alpha')
+        with patch.dict(os.environ, {**event, 'RECOVER_RECORD': '99',
                                     'OUTREACH_NOTE_REQUEST': 'not parsed'}), \
                 patch.object(service, 'main', return_value=0):
             self.assertEqual(hosted.command('notes'), 0)
             self.assertEqual(os.environ['NOTE_ACTION'], 'status')
             self.assertNotIn('RECOVER_RECORD', os.environ)
-        with patch.dict(os.environ, {'NOTE_USE_INPUTS': 'false', 'NOTE_ACTION': 'drain',
+        with patch.dict(os.environ, {**event, 'GITHUB_EVENT_NAME': 'schedule', 'NOTE_ACTION': 'drain',
                                     'OUTREACH_NOTE_REQUEST': '{"id":"beta","revision":2,"limit":5}'}), \
                 patch.object(service, 'main', return_value=0):
             self.assertEqual(hosted.command('notes'), 0)
             self.assertEqual(os.environ['NOTE_ACTION'], 'drain')
             self.assertEqual(os.environ['NOTE_ID'], 'beta')
             self.assertEqual(os.environ['BATCH_LIMIT'], '5')
+
+    def test_missing_or_malformed_dispatch_event_cannot_execute_or_use_secret(self):
+        event = self.dispatch_event(note_action='publish', note_id='alpha', note_revision='1')
+        path = Path(event['GITHUB_EVENT_PATH'])
+        for raw, error in ((None, OSError), ('not json', ValueError)):
+            with self.subTest(raw=raw):
+                if raw is None:
+                    path.unlink()
+                else:
+                    path.write_text(raw, encoding='utf-8')
+                with patch.dict(os.environ, {**event, 'OUTREACH_NOTE_REQUEST': '{"id":"beta"}'}), \
+                        patch.object(service, 'main') as main:
+                    with self.assertRaises(error):
+                        hosted.command('notes')
+                    main.assert_not_called()
+
+    def test_workflow_keeps_note_selection_out_of_printed_step_env_and_commands(self):
+        workflow = (Path(__file__).resolve().parents[2] / '.github/workflows/outreach-control.yml').read_text()
+        for field in ('note_id', 'note_revision', 'recover_record', 'reuse_draft_from', 'note_action'):
+            with self.subTest(field=field):
+                self.assertNotIn('inputs.' + field, workflow)
+
+    def test_dispatch_details_stay_private_while_attention_warning_is_public(self):
+        event = self.dispatch_event(note_action='publish', note_id='alpha', note_revision='3', recover_record='42')
+        result = {'processed': 0, 'failed': [], 'remaining': 0, 'status': 'needs_attention',
+                  'needs_attention': [{'id': 'alpha', 'request': 'request-synthetic.json', 'status': 'failed'}]}
+        public, private = io.StringIO(), []
+        with patch.dict(os.environ, event), patch.object(service, 'execute', return_value=result), \
+                patch.object(run_log, '_upload', side_effect=lambda path, tick: private.append(path.read_text())), \
+                redirect_stderr(public):
+            code = run_log.public_run(lambda: hosted.command('notes'), 'notes')
+        self.assertEqual(code, 0)
+        self.assertIn('alpha', private[0])
+        self.assertIn('request-synthetic.json', private[0])
+        lines = public.getvalue().splitlines()
+        self.assertEqual(lines[:2], ['notes processed=0 failed=0 remaining=0 needs_attention=1',
+                                    '::warning::notes needs_attention=1'])
+        for detail in ('alpha', 'request-synthetic.json', 'note_revision', 'recover_record'):
+            self.assertNotIn(detail, public.getvalue())
 
     def test_warm_unchanged_cache_downloads_without_upload_or_git_writes(self):
         self.run_job(feed=self.feed())

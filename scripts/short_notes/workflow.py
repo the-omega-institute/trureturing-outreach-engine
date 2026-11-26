@@ -448,9 +448,9 @@ def zenodo_name(name):
 def zenodo_text(value):
     """NFC, then ASCII equivalents of curly quotes/apostrophes and dashes.
 
-    Only title and creator-name presentation uses this equivalence. Preserve
-    accents, case, spacing and all other characters; never normalize artifacts
-    or the immutable package manifest.
+    Only remote title and creator-name comparisons use this equivalence.
+    Preserve accents, case, spacing and all other characters; never normalize
+    outgoing metadata, artifacts or the immutable package manifest.
     """
     return unicodedata.normalize('NFC', value).translate(str.maketrans({
         **dict.fromkeys('\u2018\u2019\u201a\u201b', "'"),
@@ -460,8 +460,8 @@ def zenodo_text(value):
 
 
 def zenodo_metadata(note):
-    return {'title': zenodo_text(note['title']), 'upload_type': 'publication', 'publication_type': 'preprint',
-            'creators': [{**c, 'name': zenodo_name(zenodo_text(c['name']))} for c in note['creators']],
+    return {'title': note['title'], 'upload_type': 'publication', 'publication_type': 'preprint',
+            'creators': [{**c, 'name': zenodo_name(c['name'])} for c in note['creators']],
             'description': html.escape(note['abstract']),
             'access_right': 'open', 'license': note['license'], 'version': str(note['revision']),
             'publication_date': date.today().isoformat(),
@@ -487,7 +487,7 @@ def check_remote_metadata(record, note):
                       and all(all((zenodo_name(zenodo_text(found.get(k, ''))) == zenodo_name(zenodo_text(v)) if k == 'name'
                                    else found.get(k) == v) for k, v in expected.items())
                               for found, expected in zip(creators, note['creators'])))
-    if (actual.get('version') != str(note['revision']) or zenodo_text(actual.get('title', '')) != zenodo_text(note['title'])
+    if (actual.get('version') != str(note['revision']) or zenodo_text(actual.get('title') or '') != zenodo_text(note['title'])
             or not creators_match or actual.get('upload_type') != 'publication'
             or actual.get('publication_type') != 'preprint'
             or actual.get('access_right') != 'open' or actual.get('license') != note['license']):

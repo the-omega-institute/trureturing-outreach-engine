@@ -52,10 +52,17 @@ recovery implementation. Select `note_action=status` and set `note_id` to inspec
 one note; leave the revision and recovery fields empty for status. The coordinator
 runs a status read before delivery, within the existing single-writer concurrency
 group. Detailed note status is captured in the private control Release run log;
-public workflow logs contain only delivery counts. Manual `action=notes` inputs
+public note-delivery output contains only counts, including warning annotations
+when notes need attention. Dispatch selections are read from `GITHUB_EVENT_PATH`
+inside the captured process, keeping note IDs, revisions and draft IDs out of
+the step environment printed by Actions. Manual `action=notes` inputs
 replace the entire `OUTREACH_NOTE_REQUEST` selection, including optional fields.
 An invalid or incomplete selection fails rather than falling back to the secret.
 Scheduled runs continue to drain the ordinary queue.
+The single concurrency group permits only one pending run. Even with
+`cancel-in-progress: false`, the next scheduled run can cancel a pending manual
+dispatch. Confirm that the manual run was not cancelled and that delivery ran;
+if it was cancelled, redispatch the same selection.
 
 Inspect the `short-note-<id>` Release in the configured **private data repository**.
 Its JSON body is the retained state: check `versions["<revision>"]` for `phase`,
@@ -80,6 +87,10 @@ means the creation outcome is uncertain: find the exact draft ID in the account
 before retrying. The creation fence prevents a second deposit. Never guess an ID,
 clear a receipt, restage a modified package as the same revision, or change its
 producer or Mathesis collection receipt.
+If an HTTP 500 left `phase=creating` but account inspection confirms that no draft
+was created, recovery still needs an operator-attested transition out of that
+uncertain state. This change does not implement that transition; the creation
+fence remains in place.
 
 For `uploading`, reuse the retained `record_id`. For uncertain `creating`, supply
 the recovered exact ID. Dispatch one publication request with `action=notes`,
@@ -97,16 +108,23 @@ an intentionally prepared **new artifact revision** must reuse a specific earlie
 unpublished revision's draft; it must be positive and less than `note_revision`.
 The selected package and creation fence remain authoritative. A supplied ID
 cannot replace a retained ID or trigger creation without a retained intent.
-Recovery executes only the selected immutable request, retries it if previously
-failed, and retains earlier request assets and delivery receipts. It uses the
+`action=publish` executes only the selected immutable request, with `retry_failed`
+limited to that request. This applies to ordinary publication as well as recovery;
+other queued requests wait for their own dispatch or scheduled drain, and other
+failed requests still require explicit retry.
+Earlier request assets and delivery receipts are retained. Recovery uses the
 existing Zenodo concept/draft checks and never submits a manuscript to Mathesis.
 Existing collection links and producer identity stay in their original records.
 
-Title and creator-name presentation uses Unicode NFC followed by ASCII mapping
+Creation and metadata updates send the original title and creator-name punctuation,
+preserving en dashes and consistency with earlier versions and the Mathesis title.
+Creator names retain the existing family-name formatting. Only remote metadata
+comparisons use Unicode NFC followed by ASCII mapping
 of U+2018–U+201B apostrophes/single quotes, U+201C–U+201F double quotes and
-U+2010–U+2015 hyphens/dashes. Creation, metadata update and readback use the same
-rule. Accents, case, spacing, other metadata, immutable manifests and artifact
-bytes retain their existing checks. A substantive mismatch still needs inspection.
+U+2010–U+2015 hyphens/dashes. Thus Zenodo's U+2019 apostrophe rewrite is accepted
+without changing what is sent. Accents, case, spacing, other metadata, immutable
+manifests and artifact bytes retain their existing checks. A substantive mismatch
+still needs inspection.
 
 After dispatch, inspect the new private log and retained state: the exact version
 must have `phase=published`, the original `record_id` and `package_id`, and its
@@ -114,7 +132,8 @@ published DOI. Check that the selected request is `dispatched`. A new delivery
 failure fails that run and records `failed`; subsequent scheduled drains skip
 that receipt, report `status=needs_attention` and list its request in private
 JSON/status output. Public logs emit `processed`, `failed`, `remaining` and
-`needs_attention` counts. Previously recorded failures alone return success;
+`needs_attention` counts, with a count-only GitHub `::warning::` annotation when
+`needs_attention > 0`. Previously recorded failures alone return success;
 new failures and feed/verification failures still fail. Successful recovery marks
 the old failed request `recovered` in the queue view while preserving its stored
 historical receipt and removing it from the attention count. Other notes continue

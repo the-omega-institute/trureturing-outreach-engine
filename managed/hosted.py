@@ -109,7 +109,12 @@ def command(action):
     if action == 'pages':
         with feed_cache():
             return service.main(['sync'])
-    selection = service.workflow_selection(os.environ)
+    # Actions prints step env values. Read private selection fields from the
+    # event file inside the captured process instead of interpolating them in YAML.
+    selection = None
+    if os.environ.get('GITHUB_EVENT_NAME') == 'workflow_dispatch':
+        event = json.loads(Path(os.environ['GITHUB_EVENT_PATH']).read_text(encoding='utf-8'))
+        selection = service.workflow_selection(event.get('inputs') or {})
     if selection is None:
         selection = json.loads(os.environ.get('OUTREACH_NOTE_REQUEST') or '{}')
     else:

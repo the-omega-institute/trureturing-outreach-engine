@@ -106,10 +106,4 @@ jobs:
           PAGES_TOKEN: ${{ secrets.PAGES_TOKEN }}
           OUTREACH_NOTE_REQUEST: ${{ secrets.OUTREACH_NOTE_REQUEST }}
           NOTE_ACTION: drain
-          NOTE_USE_INPUTS: ${{ inputs.action == 'notes' && 'true' || 'false' }}
-          INPUT_NOTE_ACTION: ${{ inputs.note_action }}
-          INPUT_NOTE_ID: ${{ inputs.note_id }}
-          INPUT_NOTE_REVISION: ${{ inputs.note_revision }}
-          INPUT_NOTE_RECOVER_RECORD: ${{ inputs.recover_record }}
-          INPUT_NOTE_REUSE_DRAFT_FROM: ${{ inputs.reuse_draft_from }}
         run: python3 -m managed.hosted notes

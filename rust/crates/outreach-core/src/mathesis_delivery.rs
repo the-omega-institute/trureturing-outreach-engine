@@ -189,7 +189,15 @@ impl StageError {
         }
     }
     pub fn is_interruption(&self) -> bool {
-        !self.is_a("Exception")
+        if self.summary.get("bases").is_some() {
+            !self.is_a("Exception")
+        } else {
+            // Legacy observations cannot establish ancestry for unknown names.
+            matches!(
+                s(&self.summary["type"]),
+                "Stopped" | "ProcessDeath" | "KeyboardInterrupt" | "SystemExit"
+            )
+        }
     }
     pub fn status(&self) -> Option<i64> {
         self.summary["http_status"].as_i64()
@@ -1042,6 +1050,11 @@ mod exception_tests {
             "NotSent",
             "DefiniteRejection",
             "CMARequestError",
+            "RemoteDisconnected",
+            "IncompleteRead",
+            "SyntheticOrdinaryError",
+            "BaseException",
+            "GeneratorExit",
         ] {
             let error = StageError {
                 summary: object([("type", string(kind))]),
@@ -1070,5 +1083,16 @@ mod exception_tests {
             };
             assert_eq!(error.is_interruption(), interrupted);
         }
+    }
+
+    #[test]
+    fn recorded_empty_bases_differ_from_absent_bases() {
+        let error = StageError {
+            summary: object([
+                ("type", string("BaseException")),
+                ("bases", Value::Array(vec![])),
+            ]),
+        };
+        assert!(error.is_interruption());
     }
 }

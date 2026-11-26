@@ -373,8 +373,7 @@ def _capture(adapter_name, method, function, args, kwargs):
         # Do not read/seek HTTPError: observers must not change its body cursor.
         try:
             entry['error'] = {'type': type(error).__name__, 'message': str(error) if frame.get('stage') in {'pool', 'delivery', 'formalization', 'prior-work'} else ''}
-            if frame.get('stage') in {'formalization','prior-work'}:
-                entry['error']['bases'] = [base.__name__ for base in type(error).__mro__[1:] if base is not object]
+            entry['error']['bases'] = [base.__name__ for base in type(error).__mro__[1:] if base is not object]
             if adapter_name == 'boundary' and frame['script'][-1] is not entry:
                 entry.pop('error', None); entry['result'] = None
             if 'error' in entry: frame['_errors'][id(error)] = entry['error']
@@ -597,7 +596,8 @@ def stage_frame(name):
                     except Exception: frame['incomplete'] = True
                 return result
             except BaseException as error:
-                frame['error'] = {'type': type(error).__name__, 'message': str(error) if name in {'pool','delivery','formalization','prior-work'} else ''}; raise
+                frame['error'] = {'type': type(error).__name__, 'message': str(error) if name in {'pool','delivery','formalization','prior-work'} else '',
+                                  'bases': [base.__name__ for base in type(error).__mro__[1:] if base is not object]}; raise
             finally:
                 ledger.save, ledger.releases, ledger.tasks.update = original_save, original_releases, original_update
                 _STAGE.reset(token)

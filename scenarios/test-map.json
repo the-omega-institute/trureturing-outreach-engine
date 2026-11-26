@@ -3397,5 +3397,11 @@
     "intake-review-round3-thread-unsupported-subclass",
     "intake-review-round3-attachment-unsupported-subclass",
     "intake-review-round3-sent-deferred-subclass"
+  ],
+  "test_review_round4.ReviewRound4.test_python_first_cases": [
+    "intake-review-round4-match-sent-no-bases-RemoteDisconnected",
+    "intake-review-round4-match-sent-no-bases-IncompleteRead",
+    "delivery-review-round4-folder-lookup-no-bases-unknown",
+    "pool-review-round4-health-no-bases-unknown"
   ]
 }

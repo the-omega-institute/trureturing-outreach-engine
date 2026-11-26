@@ -13,9 +13,9 @@ python3.12 rust/scenarios.py
 python3.12 -m unittest discover -s scenarios -p 'test_*.py'
 ```
 
-There are **2,203 scenarios from 541 mapped tests** (539 original converted tests
-and two independent-review scenario groups). Python runs all 2,203;
-Rust matches all **2,203**, including mailbox intake, staged inbound hydration,
+There are **2,207 scenarios from 542 mapped tests** (539 original converted tests
+and three independent-review scenario groups). Python runs all 2,207;
+Rust matches all **2,207**, including mailbox intake, staged inbound hydration,
 formalization requests and prior-work issues. The counts by source suite are:
 
 | Source tests | Converted tests | Scenarios |
@@ -41,7 +41,7 @@ formalization requests and prior-work issues. The counts by source suite are:
 | `test_thread_recipients` | 5 | 5 |
 | `test_reviewer_edit` | 1 | 5 |
 | `test_engine_split.MathesisOnceTest` | 2 | 5 |
-| Independent-review regressions | 2 | 45 |
+| Independent-review regressions | 3 | 49 |
 
 The publication count includes one new equal-priority arrival-order regression.
 Original tests remain, including assertions about restart recovery and operator
@@ -270,6 +270,22 @@ and Sent-subject deferral. Refresh only these cases with
 `python3.12 scenarios/test_review_round3.py --extract`.
 
 Rust uses recorded ancestry for these exception catches and propagates errors
-outside Python's `Exception` hierarchy. Standard errors and the four original
-interruption names retain their semantics when older fixtures omit ancestry.
-Recording replay also verifies all four new evidence cases.
+outside Python's `Exception` hierarchy. Recording replay also verifies all four
+new evidence cases.
+
+Round-four review adds **four Python-first regression scenarios** in
+`test_review_round4.py`: ancestry-free `RemoteDisconnected` and `IncompleteRead`
+at intake Sent matching, an unknown ordinary exception during delivery folder
+lookup, and an unknown ordinary exception during pool health observation. All
+four were captured and replayed in Python, then confirmed to differ on Rust
+`34ad151` before the fix. Refresh only these cases with
+`python3.12 scenarios/test_review_round4.py --extract`.
+
+When `bases` is present, Rust classifies an interruption by the absence of
+`Exception` in its ancestry, including an empty recorded ancestry. Without
+`bases`, only `Stopped`, `ProcessDeath`, `KeyboardInterrupt`, and `SystemExit`
+are interruptions; every other name is an ordinary exception. This preserves
+older adapter observations without requiring an exhaustive hierarchy table.
+New error observations in every stage record their Python bases. Recording tests
+check all nine stages with hooks enabled and unset, and replay the four legacy
+cases with newly recorded ancestry plus the round-three BaseException-only case.

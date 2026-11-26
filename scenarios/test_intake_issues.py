@@ -79,6 +79,23 @@ class IntakeIssuesReplayTests(unittest.TestCase):
                 text=self.roundtrip(json.loads(path.read_text()),{'equal':1,'different':0,'skipped':0})
                 self.assertIn('bases',text)
 
+    def test_round4_legacy_errors_record_ancestry_and_replay(self):
+        paths=sorted((ROOT/'scenarios/cases').glob('*-review-round4-*.json'))
+        self.assertEqual(len(paths),4)
+        paths.append(ROOT/'scenarios/cases/intake-review-round3-match-sent-base-only.json')
+        for path in paths:
+            with self.subTest(case=path.stem):
+                text=self.roundtrip(json.loads(path.read_text()),{'equal':1,'different':0,'skipped':0})
+                frames=[json.loads(line)['case'] for line in text.splitlines() if 'case' in json.loads(line)]
+                self.assertEqual(len(frames),1)
+                errors=[e['error'] for e in frames[0]['script'] if 'error' in e]
+                self.assertTrue(errors)
+                for error in errors:
+                    self.assertIn('BaseException',error['bases'])
+                    self.assertEqual('Exception' in error['bases'],error['type']!='SyntheticBaseOnly')
+                if frames[0].get('error'):
+                    self.assertEqual(frames[0]['error']['bases'],['BaseException'])
+
     def test_new_intake_frames_omit_mail_bodies(self):
         case=json.loads(next((ROOT/'scenarios/cases').glob('intake-test_mailbox_triage-TriageTests-test_hello_stranger_stays_in_attention-*.json')).read_text())
         marker='SYNTHETIC MAIL CONTENT THAT MUST NOT BE RECORDED'

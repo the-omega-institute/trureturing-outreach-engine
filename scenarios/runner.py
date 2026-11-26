@@ -4,6 +4,7 @@ import base64
 from contextlib import ExitStack, contextmanager, redirect_stderr, redirect_stdout
 from datetime import datetime
 import io
+from http.client import IncompleteRead, RemoteDisconnected
 import json
 import os
 from pathlib import Path
@@ -47,6 +48,8 @@ def error_value(error):
 
 
 def raise_error(value):
+    if value['type'] == 'IncompleteRead':
+        raise IncompleteRead(base64.b64decode(value['partial']), value.get('expected'))
     if value['type'] == 'CMARequestError':
         from managed.cma import CMARequestError
         raise CMARequestError(value['status'], value.get('cma_body', value['message']))
@@ -58,7 +61,8 @@ def raise_error(value):
     if value['type'] == 'SentSubjectsDeferred': raise mailbox.SentSubjectsDeferred(value['intake_reason'], value['message'])
     if value['type'] == 'UnparseableEvidence': raise __import__('managed.prior_work_evidence',fromlist=['UnparseableEvidence']).UnparseableEvidence(value['message'])
     classes = {'FileNotFoundError':FileNotFoundError, 'PermissionError':PermissionError, 'TimeoutError' : TimeoutError, 'ValueError': ValueError, 'GateError': GateError,
-               'SystemExit': SystemExit, 'KeyboardInterrupt': KeyboardInterrupt, 'TypeError': TypeError, 'ConnectionError': ConnectionError, 'KeyError': KeyError, 'NotSent': __import__('managed.transports', fromlist=['NotSent']).NotSent, 'DefiniteRejection': __import__('managed.transports', fromlist=['DefiniteRejection']).DefiniteRejection, 'ProcessDeath': type('ProcessDeath', (BaseException,), {}), 'RuntimeError': RuntimeError, 'OSError': OSError, 'AssertionError': AssertionError, 'Stopped': type('Stopped', (BaseException,), {})}
+               'SystemExit': SystemExit, 'KeyboardInterrupt': KeyboardInterrupt, 'TypeError': TypeError, 'ConnectionError': ConnectionError, 'KeyError': KeyError, 'NotSent': __import__('managed.transports', fromlist=['NotSent']).NotSent, 'DefiniteRejection': __import__('managed.transports', fromlist=['DefiniteRejection']).DefiniteRejection, 'ProcessDeath': type('ProcessDeath', (BaseException,), {}), 'RuntimeError': RuntimeError, 'OSError': OSError, 'AssertionError': AssertionError, 'Stopped': type('Stopped', (BaseException,), {}), 'RemoteDisconnected': RemoteDisconnected,
+               'SyntheticOrdinaryError': type('SyntheticOrdinaryError', (Exception,), {})}
     if value['type'] not in classes and value.get('bases'):
         import builtins
         parents = {**vars(builtins), **classes,
@@ -269,7 +273,8 @@ def execute(case, *, capture=False):
                     if not capture: assert encode(result)==case['expected_result']
                 elif case['stage'] == 'pool':
                     from pool_delivery import pool
-                    pool(case, ledger, script)
+                    if capture: captured_runtime, result = pool(case, ledger, script, capture=True)
+                    else: pool(case, ledger, script)
                 elif case['stage'] == 'delivery' and case.get('operation') in {'mathesis-once','mathesis-introduced'}:
                     if case['operation'] == 'mathesis-once': result = mailbox.GraphMailbox._require_mathesis_not_introduced(box, *case['arguments'])
                     else: result = mailbox.mathesis_introduced(*case['arguments'])
@@ -314,7 +319,8 @@ def execute(case, *, capture=False):
         if capture:
             assert not script.failure and script.index == len(script.entries)
             if case.get('admissions'): assert next(admissions, None) is None, 'unused admissions'
-            return dict(update_times=used_times, error=error, expected_result=encode(result), expected_final_rows=logical(dump(tasks)),
+            return dict(**({'expected_runtime': captured_runtime} if case['stage'] == 'pool' and error is None else {}),
+                        update_times=used_times, error=error, expected_result=encode(result), expected_final_rows=logical(dump(tasks)),
                         expected_final_files=files(root), expected_writes=writes(script.calls))
         if case.get('admissions'): assert next(admissions, None) is None, 'unused admissions'
         assert error == case.get('error'), f"{case['id']}: stage error {error}"

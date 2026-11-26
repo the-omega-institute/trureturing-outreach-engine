@@ -1,5 +1,6 @@
 """Recording stays opt-in, preserves transport outcomes and never exposes tokens."""
 from contextlib import contextmanager
+from http.client import IncompleteRead, RemoteDisconnected
 import io
 import json
 import os
@@ -77,6 +78,39 @@ class RecordingTests(unittest.TestCase):
         with self.assertRaises(HTTPError) as caught: recording.open('test', opener, Request('https://service.example.invalid/me'))
         self.assertIs(caught.exception, error); self.assertEqual(error.read(), b'{"code":"conflict"}')
         self.assertEqual(self.records()[0]['status'], 409)
+
+    def test_every_stage_records_error_bases_only_when_enabled(self):
+        from types import SimpleNamespace
+        class SyntheticBaseOnly(BaseException): pass
+        class SyntheticOrdinaryError(Exception): pass
+        stages = ('mathesis', 'publication', 'sent', 'pool', 'delivery',
+                  'intake', 'inbound', 'formalization', 'prior-work')
+        for stage in stages:
+            for error in (RemoteDisconnected('Synthetic disconnect'), IncompleteRead(b'synthetic', 17),
+                          SyntheticBaseOnly('Synthetic interruption'), SyntheticOrdinaryError('Synthetic failure')):
+                for enabled in (True, False):
+                    with self.subTest(stage=stage, error=type(error).__name__, enabled=enabled):
+                        frame = {'stage': stage, 'script': [], '_errors': {}}
+                        target = SimpleNamespace(read=Mock(side_effect=error))
+                        token = recording._STAGE.set(frame)
+                        try:
+                            with patch.dict(os.environ, {}, clear=True):
+                                if enabled: os.environ['OUTREACH_RECORD_DIR'] = str(self.path)
+                                observed = recording.adapter('synthetic', target)
+                                with self.assertRaises(type(error)) as caught: observed.read()
+                        finally: recording._STAGE.reset(token)
+                        self.assertIs(caught.exception, error)
+                        target.read.assert_called_once_with()
+                        if enabled:
+                            entry, = frame['script']
+                            self.assertEqual(entry['error']['bases'],
+                                [base.__name__ for base in type(error).__mro__[1:] if base is not object])
+                            self.assertIs(frame['_errors'][id(error)], entry['error'])
+                        else:
+                            self.assertIs(observed, target)
+                            self.assertEqual(frame['script'], [])
+                            self.assertEqual(frame['_errors'], {})
+        self.assertEqual(list(self.path.iterdir()), [])
 
     def test_recording_failure_cannot_change_a_completed_effect(self):
         result = subprocess.CompletedProcess(['git', 'status'], 0, b'ok', b'')

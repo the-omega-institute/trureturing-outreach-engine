@@ -767,6 +767,57 @@ class ServiceTests(unittest.TestCase):
         state['versions']['1']['requested_at'] = (datetime.now(timezone.utc) - timedelta(seconds=seconds)).isoformat()
         self.gh.save_state(w.tag_for('alpha'), state)
 
+    def test_queue_grace_starts_at_later_creation_attempt(self):
+        self.catalog = catalog('alpha')
+        self.enqueue()
+        self.zenodo.fail_after = ('POST', '/deposit/depositions')
+        self.assertEqual(self.ci()[0], 1)
+        self.age_creation(7200)
+        state = self.state()
+        state['versions']['1']['creation_retry_attempted_at'] = w.now()
+        self.gh.save_state(w.tag_for('alpha'), state)
+        calls = list(self.zenodo.calls)
+        self.assertEqual(self.ci()[1]['processed'], 0)
+        self.assertEqual(self.zenodo.calls, calls)
+
+    def test_manual_and_retry_failed_empty_discovery_respect_creation_grace(self):
+        self.catalog = catalog('alpha')
+        self.enqueue()
+        self.zenodo.fail_after = ('POST', '/deposit/depositions')
+        self.assertEqual(self.ci()[0], 1)
+        # The remote create committed but has not reached the index.
+        original = self.zenodo.request
+        def unindexed(method, path, data=None):
+            if method == 'GET' and '?' in path:
+                self.zenodo.calls.append((method, path))
+                return []
+            return original(method, path, data)
+        self.zenodo.request = unindexed
+        for dispatch, environment in (({'note_action': 'publish', 'note_id': 'alpha', 'note_revision': '1'}, {}),
+                                      (None, {'RETRY_FAILED': 'true'})):
+            with self.subTest(dispatch=dispatch):
+                code, result, _ = self.ci(dispatch=dispatch, **environment)
+                self.assertEqual(code, 1)
+                self.assertEqual(len(result['needs_attention']), 1)
+                self.assertNotIn('record_id', self.state()['versions']['1'])
+                self.assertEqual(self.zenodo.calls.count(('POST', '/deposit/depositions')), 1)
+        self.assertFalse(self.zenodo.records[1]['submitted'])
+
+    def test_invalid_environment_threshold_reports_attention_without_effects(self):
+        self.catalog = catalog('alpha')
+        self.enqueue()
+        for value in ('0', '1799', '1800.5', 'invalid', 'true', ''):
+            with self.subTest(value=value):
+                code, result, public = self.ci(SHORT_NOTE_CREATION_RECOVERY_SECONDS=value)
+                self.assertEqual(code, 0)
+                self.assertEqual((result['processed'], result['failed']), (0, []))
+                self.assertEqual(self.zenodo.calls, [])
+                self.assertEqual(result['needs_attention'], [{'status': 'needs_attention'}])
+                self.assertEqual(public[-1], '::warning::notes needs_attention=1')
+        self.assertEqual(self.ci()[1]['processed'], 1)
+        self.assertEqual(self.state()['versions']['1']['phase'], 'published')
+        self.assertEqual(self.zenodo.calls.count(('POST', '/deposit/depositions')), 1)
+
     def test_scheduled_drain_recovers_stale_creation_without_retry_failed(self):
         self.catalog = catalog('alpha')
         self.enqueue()
@@ -784,11 +835,11 @@ class ServiceTests(unittest.TestCase):
         self.enqueue()
         self.zenodo.fail_after = ('POST', '/deposit/depositions')
         self.assertEqual(self.ci()[0], 1)
-        self.age_creation(120)
+        self.age_creation(1801)
         calls = list(self.zenodo.calls)
         self.assertEqual(self.ci()[1]['processed'], 0)
         self.assertEqual(calls, self.zenodo.calls)
-        code, result, _ = self.ci(SHORT_NOTE_CREATION_RECOVERY_SECONDS='60')
+        code, result, _ = self.ci(SHORT_NOTE_CREATION_RECOVERY_SECONDS='1800')
         self.assertEqual((code, result['processed']), (0, 1))
         self.assertEqual(self.state()['versions']['1']['phase'], 'published')
 
@@ -819,6 +870,16 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual(self.state()['versions']['1']['phase'], 'creating')
         self.zenodo.request = original
         self.age_creation(3601)
+        code, result, _ = self.ci()
+        self.assertEqual((code, result['processed']), (1, 0))
+        self.assertIn('discovery_empty_at', self.state()['versions']['1'])
+        self.assertNotIn('creation_retry_attempted_at', self.state()['versions']['1'])
+        calls = list(self.zenodo.calls)
+        self.assertEqual(self.ci()[1]['processed'], 0)
+        self.assertEqual(self.zenodo.calls, calls)
+        state = self.state()
+        state['versions']['1']['discovery_empty_at'] = state['versions']['1']['requested_at']
+        self.gh.save_state(w.tag_for('alpha'), state)
         code, result, _ = self.ci()
         self.assertEqual((code, result['processed']), (0, 1))
         self.assertIn('creation_retry_attempted_at', self.state()['versions']['1'])
@@ -853,7 +914,7 @@ class ServiceTests(unittest.TestCase):
         calls = list(self.zenodo.calls)
         self.assertEqual(self.ci()[1]['processed'], 0)
         self.assertEqual(self.zenodo.calls, calls)
-        for value in (-1, True, 0.5):
+        for value in (-1, 0, 1799, True, 0.5):
             with self.subTest(value=value), self.assertRaises(ValueError):
                 s.drain(self.catalog, self.gh, self.zenodo, self.pages, recovery_seconds=value)
 

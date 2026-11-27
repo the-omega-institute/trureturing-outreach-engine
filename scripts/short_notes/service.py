@@ -40,7 +40,7 @@ REQUEST_PREFIX = 'request-'
 FEED_CACHE_ASSET = 'pages-feed-cache.json'
 FEED_CACHE_ENV = 'OUTREACH_FEED_CACHE'
 CREATION_RECOVERY_ENV = 'SHORT_NOTE_CREATION_RECOVERY_SECONDS'
-DEFAULT_CREATION_RECOVERY_SECONDS = 3600
+DEFAULT_CREATION_RECOVERY_SECONDS = w.DEFAULT_CREATION_RECOVERY_SECONDS
 
 
 def feed_digest(feed):
@@ -364,11 +364,17 @@ def enqueue(catalog, request, gh):
 
 
 def stale_creation(entry, recovery_seconds):
-    if (recovery_seconds is None or entry.get('phase') != 'creating' or entry.get('record_id')):
+    pending = entry.get('phase') == 'needs_attention' and entry.get('discovery_pending') is True
+    if (recovery_seconds is None or (entry.get('phase') != 'creating' and not pending) or entry.get('record_id')):
         return False
     try:
-        requested = datetime.fromisoformat(entry['requested_at'].replace('Z', '+00:00'))
-        return requested.tzinfo is not None and (datetime.now(timezone.utc) - requested).total_seconds() >= recovery_seconds
+        requested = w.creation_observed_at(entry)
+        if pending and entry.get('discovery_empty_at'):
+            empty = datetime.fromisoformat(entry['discovery_empty_at'].replace('Z', '+00:00'))
+            if empty.tzinfo is None:
+                return False
+            requested = max(requested, empty)
+        return (datetime.now(timezone.utc) - requested).total_seconds() >= recovery_seconds
     except (KeyError, TypeError, ValueError, AttributeError):
         return False
 
@@ -409,7 +415,7 @@ def queue(catalog, gh, retry_failed=False, *, releases=None, recovery_seconds=No
             if (recovery_seconds is not None and not retry_failed and status not in ('paused', 'dispatched')
                     and request['action'] == 'publish'):
                 entry = state.get('versions', {}).get(str(request.get('revision')), {})
-                if entry.get('phase') == 'creating' and not entry.get('record_id'):
+                if (entry.get('phase') == 'creating' or entry.get('discovery_pending')) and not entry.get('record_id'):
                     # Also respect the grace period after process death before
                     # a failed delivery receipt could be written.
                     eligible = stale_creation(entry, recovery_seconds)
@@ -704,8 +710,7 @@ def drain(catalog, gh, zenodo, pages, limit=10, retry_failed=False, budget_secon
           *, cache=None, fetch=None, only_request=None, recovery_seconds=DEFAULT_CREATION_RECOVERY_SECONDS):
     if not 1 <= limit <= 100 or budget_seconds <= 0:
         raise ValueError('Select a batch limit of 1..100 and a positive time budget')
-    if type(recovery_seconds) is not int or recovery_seconds < 0:
-        raise ValueError('Creation recovery threshold must be a nonnegative number of seconds')
+    w.validate_recovery_seconds(recovery_seconds)
     releases = note_releases(catalog, gh)
     planned = [row for row in queue(catalog, gh, retry_failed, releases=releases,
                                    recovery_seconds=recovery_seconds) if row['eligible']]
@@ -736,7 +741,8 @@ def drain(catalog, gh, zenodo, pages, limit=10, retry_failed=False, budget_secon
             else:
                 w.operate(request['action'], row['id'], request.get('revision'), gh, zenodo,
                           request.get('publication'), request.get('recover_record'),
-                          reuse_draft_from=request.get('reuse_draft_from'), discover=True)
+                          reuse_draft_from=request.get('reuse_draft_from'), discover=True,
+                          recovery_seconds=recovery_seconds)
             mark_delivery(gh, row, 'archived')
             accepted.append(row)
         except (ValueError, RuntimeError, OSError, KeyError, zipfile.BadZipFile) as error:
@@ -1130,6 +1136,23 @@ def execute(args):
     pages = (w.GitHub(w.PAGES, os.environ['PAGES_TOKEN']) if os.environ.get('PAGES_TOKEN') else
              w.GitHub(w.PAGES) if os.environ.get('GITHUB_ACTIONS') != 'true' else None)
     zenodo = w.Zenodo(os.environ['ZENODO_TOKEN']) if os.environ.get('ZENODO_TOKEN') else None
+    recovery_seconds = DEFAULT_CREATION_RECOVERY_SECONDS
+    if args.command in ('publish', 'promote', 'drain'):
+        value = getattr(args, 'creation_recovery_seconds', None)
+        if value is None:
+            value = os.environ.get(CREATION_RECOVERY_ENV, str(DEFAULT_CREATION_RECOVERY_SECONDS))
+        try:
+            if isinstance(value, str):
+                if not re.fullmatch(r'[0-9]+', value):
+                    raise ValueError('Expected integer seconds')
+                value = int(value)
+            recovery_seconds = w.validate_recovery_seconds(value)
+        except ValueError:
+            # Reject unsafe configuration without a traceback or external
+            # effects. Never echo the variable value at the public boundary.
+            remaining = sum(row['eligible'] for row in queue(catalog, gh))
+            return {'processed': 0, 'failed': [], 'remaining': remaining,
+                    'needs_attention': [{'status': 'needs_attention'}], 'status': 'needs_attention'}
     if args.command == 'validate':
         result = {'catalog_valid': True, 'publications': len(catalog['publications']),
                   'collaborations': len(catalog['collaborations']), 'managed_notes': len(catalog['notes'])}
@@ -1177,11 +1200,9 @@ def execute(args):
         result = enqueue(catalog, request, gh)
         if args.command != 'enqueue':
             result = drain(catalog, gh, zenodo, pages, getattr(args, 'limit', 10),
-                           True, submissions=submission_board, only_request=request_name(request))
+                           True, submissions=submission_board, only_request=request_name(request),
+                           recovery_seconds=recovery_seconds)
     elif args.command == 'drain':
-        recovery_seconds = getattr(args, 'creation_recovery_seconds', None)
-        if recovery_seconds is None:
-            recovery_seconds = int(os.environ.get(CREATION_RECOVERY_ENV) or DEFAULT_CREATION_RECOVERY_SECONDS)
         result = drain(catalog, gh, zenodo, pages, args.limit, args.retry_failed,
                        submissions=submission_board, cache=cache, recovery_seconds=recovery_seconds)
     elif args.command == 'queue':

@@ -261,6 +261,191 @@ class WorkflowTests(unittest.TestCase):
         self.save(state)
         return copy.deepcopy(state)
 
+    def test_discovery_requires_note_keyword_for_drafts_and_publications(self):
+        package, folder = self.package()
+        for submitted in (False, True):
+            with self.subTest(submitted=submitted):
+                self.zenodo = FakeZenodo()
+                state = self.fence(package)
+                unrelated = self.published_candidate(package, folder) if submitted else self.zenodo.record(
+                    1, w.zenodo_metadata(package['metadata']))
+                unrelated['metadata']['keywords'] = ['trureturing-note:other-example']
+                before = copy.deepcopy(unrelated)
+                if submitted:
+                    self.published_candidate(package, folder, 2)
+                else:
+                    self.zenodo.record(2, w.zenodo_metadata(package['metadata']))
+                result = w.publish(package, folder, state, self.save, self.zenodo, discover=True)
+                self.assertEqual(result['versions']['1']['record_id'], 2)
+                self.assertEqual(self.zenodo.records[1], before)
+
+    def test_young_empty_discovery_cannot_recreate_even_with_old_empty_witness(self):
+        package, folder = self.package()
+        state = self.fence(package)
+        state['versions']['1'].update(requested_at=w.now(), discovery_empty_at='2026-01-01T00:00:00+00:00')
+        with self.assertRaisesRegex(RuntimeError, 'needs_attention'):
+            w.publish(package, folder, state, self.save, self.zenodo, discover=True)
+        self.assertEqual(self.saved['versions']['1']['phase'], 'needs_attention')
+        self.assertNotIn('creation_retry_attempted_at', self.saved['versions']['1'])
+        self.assertTrue(all(method == 'GET' for method, _ in self.zenodo.calls))
+
+    def test_discovery_threshold_rejects_below_floor_and_nonintegers(self):
+        package, folder = self.package()
+        for value in (0, 1799, True, 1800.5, '1800'):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                w.publish(package, folder, self.fence(package), self.save, self.zenodo,
+                          discover=True, recovery_seconds=value)
+        self.assertEqual(self.zenodo.calls, [])
+
+    def test_server_capped_pages_find_orphan_at_position_31(self):
+        package, folder = self.package()
+        state = self.fence(package)
+        for number in range(1, 32):
+            self.zenodo.record(number, w.zenodo_metadata(metadata(2) if number < 31 else package['metadata']))
+        original = self.zenodo.request
+        def capped(method, path, data=None):
+            if method == 'GET' and '?' in path:
+                path = path.replace('size=100', 'size=25')
+            return original(method, path, data)
+        self.zenodo.request = capped
+        result = w.publish(package, folder, state, self.save, self.zenodo, discover=True)
+        self.assertEqual(result['versions']['1']['record_id'], 31)
+        self.assertNotIn(('POST', '/deposit/depositions'), self.zenodo.calls)
+
+    def test_truncated_nonempty_page_must_continue_and_cap_is_incomplete(self):
+        package, folder = self.package()
+        for capped in (False, True):
+            with self.subTest(capped=capped):
+                self.zenodo = FakeZenodo()
+                state = self.fence(package)
+                original = self.zenodo.request
+                def truncated(method, path, data=None):
+                    if method == 'GET' and '?' in path:
+                        self.zenodo.calls.append((method, path))
+                        if parse_qs(urlsplit(path).query)['status'] == ['published']:
+                            return []
+                        page = int(parse_qs(urlsplit(path).query)['page'][0])
+                        if page == 1 or capped:
+                            return [{'id': page, 'metadata': w.zenodo_metadata(metadata(2)), 'submitted': False}]
+                        return []
+                    return original(method, path, data)
+                self.zenodo.request = truncated
+                with patch.object(w, 'MAX_DISCOVERY_PAGES', 3):
+                    with self.assertRaisesRegex(RuntimeError, 'needs_attention'):
+                        w.publish(package, folder, state, self.save, self.zenodo, discover=True)
+                self.assertTrue(all(method == 'GET' for method, _ in self.zenodo.calls))
+                self.assertEqual(self.saved['versions']['1']['discovery']['pages'], 3)
+                self.assertEqual('discovery_empty_at' in self.saved['versions']['1'], not capped)
+
+    def test_empty_discovery_requires_two_runs_separated_by_threshold(self):
+        package, folder = self.package()
+        state = self.fence(package)
+        for stamp in ('2026-02-01T00:00:00+00:00', '2026-02-01T00:59:59+00:00'):
+            with patch.object(w, 'now', return_value=stamp), self.assertRaisesRegex(RuntimeError, 'needs_attention'):
+                w.publish(package, folder, state, self.save, self.zenodo, discover=True)
+            state = copy.deepcopy(self.saved)
+            self.assertEqual(state['versions']['1']['discovery_empty_at'], '2026-02-01T00:00:00+00:00')
+            self.assertTrue(all(method == 'GET' for method, _ in self.zenodo.calls))
+        with patch.object(w, 'now', return_value='2026-02-01T01:00:00+00:00'):
+            result = w.publish(package, folder, state, self.save, self.zenodo, discover=True)
+        self.assertEqual(result['versions']['1']['phase'], 'published')
+        self.assertEqual(self.zenodo.calls.count(('POST', '/deposit/depositions')), 1)
+
+    def test_delayed_indexing_adopts_on_second_inventory_without_create(self):
+        package, folder = self.package()
+        state = self.fence(package)
+        with self.assertRaisesRegex(RuntimeError, 'needs_attention'):
+            w.publish(package, folder, state, self.save, self.zenodo, discover=True)
+        self.zenodo.record(1, w.zenodo_metadata(package['metadata']))
+        result = w.publish(package, folder, copy.deepcopy(self.saved), self.save, self.zenodo, discover=True)
+        self.assertEqual(result['versions']['1']['record_id'], 1)
+        self.assertNotIn(('POST', '/deposit/depositions'), self.zenodo.calls)
+
+    def test_lost_newversion_adopts_direct_latest_draft_with_inherited_metadata(self):
+        self.deliver()
+        package, folder = self.package(2)
+        self.zenodo.fail_after = ('POST', '/deposit/depositions/1/actions/newversion')
+        with self.assertRaises(TimeoutError):
+            w.publish(package, folder, self.saved, self.save, self.zenodo)
+        original = self.zenodo.request
+        def unindexed(method, path, data=None):
+            if method == 'GET' and '?' in path:
+                self.zenodo.calls.append((method, path))
+                return []
+            return original(method, path, data)
+        self.zenodo.request = unindexed
+        result = w.publish(package, folder, copy.deepcopy(self.saved), self.save, self.zenodo, discover=True)
+        self.assertEqual(result['versions']['2']['record_id'], 2)
+        self.assertEqual(result['versions']['2']['phase'], 'published')
+        self.assertEqual(self.zenodo.calls.count(('POST', '/deposit/depositions/1/actions/newversion')), 1)
+
+    def test_direct_latest_draft_wrong_identity_is_parked_without_writes(self):
+        self.deliver()
+        package, folder = self.package(2)
+        self.zenodo.fail_after = ('POST', '/deposit/depositions/1/actions/newversion')
+        with self.assertRaises(TimeoutError):
+            w.publish(package, folder, self.saved, self.save, self.zenodo)
+        self.zenodo.records[2]['metadata']['keywords'] = ['trureturing-note:other-example']
+        before = copy.deepcopy(self.zenodo.records)
+        self.zenodo.calls.clear()
+        with self.assertRaisesRegex(RuntimeError, 'needs_attention'):
+            w.publish(package, folder, copy.deepcopy(self.saved), self.save, self.zenodo, discover=True)
+        self.assertEqual(self.saved['versions']['2']['phase'], 'needs_attention')
+        self.assertEqual(self.zenodo.records, before)
+        self.assertTrue(all(method == 'GET' for method, _ in self.zenodo.calls))
+
+    def test_listing_status_disagreement_records_counts_and_parks(self):
+        package, folder = self.package()
+        state = self.fence(package)
+        row = self.zenodo.record(1, w.zenodo_metadata(package['metadata']))
+        original = self.zenodo.request
+        def disagrees(method, path, data=None):
+            if method == 'GET' and '?' in path:
+                self.zenodo.calls.append((method, path))
+                return [{**row, 'submitted': True}]
+            return original(method, path, data)
+        self.zenodo.request = disagrees
+        with self.assertRaisesRegex(RuntimeError, 'needs_attention'):
+            w.publish(package, folder, state, self.save, self.zenodo, discover=True)
+        entry = self.saved['versions']['1']
+        self.assertEqual(entry['phase'], 'needs_attention')
+        self.assertEqual(entry['discovery'], {'draft_candidates': 0, 'published_candidates': 0, 'pages': 1})
+        self.assertFalse(entry.get('discovery_pending'))
+        self.assertTrue(all(method == 'GET' for method, _ in self.zenodo.calls))
+
+    def test_candidate_readback_disagreement_parks_without_writes(self):
+        package, folder = self.package()
+        for change in ('id', 'submitted', 'metadata', 'http'):
+            with self.subTest(change=change):
+                self.zenodo = FakeZenodo()
+                state = self.fence(package)
+                self.zenodo.record(1, w.zenodo_metadata(package['metadata']))
+                original = self.zenodo.request
+                def changed(method, path, data=None):
+                    row = original(method, path, data)
+                    if method == 'GET' and path == '/deposit/depositions/1':
+                        if change == 'http':
+                            raise w.ZenodoHTTPError('GET', 503)
+                        row[change] = {'id': 2, 'submitted': None, 'metadata': None}[change]
+                    return row
+                self.zenodo.request = changed
+                with self.assertRaisesRegex(RuntimeError, 'needs_attention'):
+                    w.publish(package, folder, state, self.save, self.zenodo, discover=True)
+                self.assertEqual(self.saved['versions']['1']['phase'], 'needs_attention')
+                self.assertNotIn('record_id', self.saved['versions']['1'])
+                self.assertTrue(all(method == 'GET' for method, _ in self.zenodo.calls))
+
+    def test_incomplete_inventory_discards_earlier_empty_witness(self):
+        package, folder = self.package()
+        state = self.fence(package)
+        state['versions']['1'].update(discovery_empty_at='2026-01-01T01:00:00+00:00', discovery_pending=True)
+        self.zenodo.record(1, w.zenodo_metadata(metadata(2)))
+        with patch.object(w, 'MAX_DISCOVERY_PAGES', 1), self.assertRaisesRegex(RuntimeError, 'needs_attention'):
+            w.publish(package, folder, state, self.save, self.zenodo, discover=True)
+        self.assertNotIn('discovery_empty_at', self.saved['versions']['1'])
+        self.assertFalse(self.saved['versions']['1'].get('discovery_pending'))
+        self.assertTrue(all(method == 'GET' for method, _ in self.zenodo.calls))
+
     def test_discovery_adopts_one_matching_draft_before_upload_and_publishes(self):
         package, folder = self.package()
         state = self.fence(package)
@@ -298,13 +483,14 @@ class WorkflowTests(unittest.TestCase):
             w.publish(package, folder, state, self.save, self.zenodo, discover=True)
         entry = self.saved['versions']['1']
         self.assertEqual(entry['phase'], 'needs_attention')
-        self.assertEqual(entry['discovery'], {'draft_candidates': 2, 'published_candidates': 0, 'pages': 1})
+        self.assertEqual(entry['discovery'], {'draft_candidates': 2, 'published_candidates': 0, 'pages': 2})
         self.assertNotIn('record_id', entry)
         self.assertTrue(all(method == 'GET' for method, _ in self.zenodo.calls))
 
     def test_empty_discovery_creates_once_and_recovers_crash_before_identity_save(self):
         package, folder = self.package()
         state = self.fence(package)
+        state['versions']['1']['discovery_empty_at'] = '2026-01-01T01:00:00+00:00'
         class Crash(BaseException):
             pass
         def crash_after_create(value):
@@ -322,6 +508,7 @@ class WorkflowTests(unittest.TestCase):
     def test_retry_marker_prevents_second_create_when_response_and_inventory_are_empty(self):
         package, folder = self.package()
         state = self.fence(package)
+        state['versions']['1']['discovery_empty_at'] = '2026-01-01T01:00:00+00:00'
         original = self.zenodo.request
         def lost_create(method, path, data=None):
             if method == 'POST' and path == '/deposit/depositions':
@@ -339,6 +526,7 @@ class WorkflowTests(unittest.TestCase):
     def test_recovery_marker_must_save_before_retry_create(self):
         package, folder = self.package()
         state = self.fence(package)
+        state['versions']['1']['discovery_empty_at'] = '2026-01-01T01:00:00+00:00'
         def failed_save(value):
             raise RuntimeError('Synthetic receipt failure')
         with self.assertRaisesRegex(RuntimeError, 'receipt failure'):
@@ -413,6 +601,7 @@ class WorkflowTests(unittest.TestCase):
     def test_discovery_ignores_a_draft_for_another_revision(self):
         package, folder = self.package()
         state = self.fence(package)
+        state['versions']['1']['discovery_empty_at'] = '2026-01-01T01:00:00+00:00'
         self.zenodo.record(1, w.zenodo_metadata(metadata(2)))
         result = w.publish(package, folder, state, self.save, self.zenodo, discover=True)
         self.assertEqual(result['versions']['1']['record_id'], 2)
@@ -488,8 +677,9 @@ class WorkflowTests(unittest.TestCase):
         self.zenodo.fail_after = ('POST', '/deposit/depositions/1/actions/newversion')
         with self.assertRaises(TimeoutError):
             w.publish(package, folder, self.saved, self.save, self.zenodo)
-        with self.assertRaisesRegex(RuntimeError, 'needs_attention'):
-            w.publish(package, folder, copy.deepcopy(self.saved), self.save, self.zenodo, discover=True)
+        result = w.publish(package, folder, copy.deepcopy(self.saved), self.save, self.zenodo, discover=True)
+        self.assertEqual(result['versions']['2']['record_id'], 2)
+        self.assertEqual(result['versions']['2']['phase'], 'published')
         self.assertEqual(self.zenodo.calls.count(('POST', '/deposit/depositions/1/actions/newversion')), 1)
 
     def test_lost_publish_response_recovers_published_record(self):

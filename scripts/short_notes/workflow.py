@@ -38,11 +38,28 @@ MAX_FEED_BYTES = 8 * 1024 * 1024
 MAX_INDEX_BYTES = 16 * 1024 * 1024
 DEPOSITION_PAGE_SIZE = 100
 MAX_DISCOVERY_PAGES = 20
+MIN_CREATION_RECOVERY_SECONDS = 1800
+DEFAULT_CREATION_RECOVERY_SECONDS = 3600
 INITIAL_NOTES = 'Versioned short-note artifacts and publication receipts.'
 
 
 def now():
     return datetime.now(timezone.utc).isoformat()
+
+
+def validate_recovery_seconds(value):
+    if type(value) is not int or value < MIN_CREATION_RECOVERY_SECONDS:
+        raise ValueError('Creation recovery threshold must be an integer of at least 1800 seconds')
+    return value
+
+
+def creation_observed_at(entry):
+    """The later durable creation attempt; reject missing/naive timestamps."""
+    stamps = [datetime.fromisoformat(entry[key].replace('Z', '+00:00')) for key in
+              ('requested_at', 'creation_retry_attempted_at') if key in entry]
+    if 'requested_at' not in entry or any(stamp.tzinfo is None for stamp in stamps):
+        raise ValueError('Creation intent needs timezone-aware timestamps')
+    return max(stamps)
 
 
 def encode(value):
@@ -449,7 +466,11 @@ class Zenodo:
 
 
 def deposition_inventory(zenodo, status, page_budget):
-    """Enumerate owned versions, never infer absence from a search index or cap."""
+    """Enumerate the indexed owned deposit listing, ending only on an empty page.
+
+    A complete traversal is an observation of the search index, not proof that
+    an unindexed deposit does not exist. A page cap never establishes absence.
+    """
     records, seen = [], set()
     for page in range(1, page_budget + 1):
         query = urlencode({'status': status, 'size': DEPOSITION_PAGE_SIZE,
@@ -460,15 +481,16 @@ def deposition_inventory(zenodo, status, page_budget):
         for row in rows:
             if (not isinstance(row, dict) or not re.fullmatch(r'[1-9][0-9]*', str(row.get('id', '')))
                     or not isinstance(row.get('metadata'), dict)
-                    or type(row.get('submitted')) is not bool
-                    or row['submitted'] != (status == 'published')):
+                    or type(row.get('submitted')) is not bool):
                 raise ValueError('Unexpected Zenodo inventory entry; creation remains fenced')
+            if row['submitted'] != (status == 'published'):
+                return records, page, False
             identity = str(row['id'])
             if identity in seen:
                 return records, page, False
             seen.add(identity)
             records.append(row)
-        if len(rows) < DEPOSITION_PAGE_SIZE:
+        if not rows:
             return records, page, True
     return records, page_budget, False
 
@@ -515,9 +537,11 @@ def check_remote_files(record, package, directory):
 
 
 def remote_note_identity(actual, note):
-    """The same exact version, normalized title and ordered creator names."""
+    """The same note keyword, exact version, title and ordered creator names."""
     creators = actual.get('creators', [])
-    return (actual.get('version') == str(note['revision'])
+    return (isinstance(actual.get('keywords'), list)
+            and 'trureturing-note:' + note['id'] in actual['keywords']
+            and actual.get('version') == str(note['revision'])
             and isinstance(actual.get('title'), str)
             and zenodo_text(actual['title']) == zenodo_text(note['title'])
             and isinstance(creators, list) and len(creators) == len(note['creators'])
@@ -537,39 +561,88 @@ def check_remote_metadata(record, note):
         raise ValueError('Zenodo metadata differs from this note')
 
 
-def discover_creation(note, package, directory, state, entry, previous, save, zenodo):
+def discover_creation(note, package, directory, state, entry, previous, save, zenodo,
+                      recovery_seconds=DEFAULT_CREATION_RECOVERY_SECONDS):
     """Reconcile a lost create by inventory; authorize at most one recovery POST."""
     counts = {'draft_candidates': 0, 'published_candidates': 0, 'pages': 0}
 
-    def attention():
+    validate_recovery_seconds(recovery_seconds)
+
+    def attention(*, pending=False):
         entry.update(phase='needs_attention', discovery=counts)
+        if pending:
+            entry['discovery_pending'] = True
+        else:
+            entry.pop('discovery_pending', None)
+            entry.pop('discovery_empty_at', None)
         save(state)
         raise RuntimeError('Zenodo recovery needs_attention: ' + ', '.join(f'{k}={v}' for k, v in counts.items()))
 
-    drafts, pages, complete = deposition_inventory(zenodo, 'draft', MAX_DISCOVERY_PAGES)
+    def inventory(status, budget):
+        try:
+            return deposition_inventory(zenodo, status, budget)
+        except (ValueError, RuntimeError, OSError, KeyError, TypeError):
+            attention()
+
+    def read_record(path, expected_id=None):
+        try:
+            record = zenodo.request('GET', path)
+        except (ValueError, RuntimeError, OSError, KeyError, TypeError):
+            attention()
+        if (not isinstance(record, dict) or not isinstance(record.get('metadata'), dict)
+                or not re.fullmatch(r'[1-9][0-9]*', str(record.get('id', '')))
+                or type(record.get('submitted')) is not bool
+                or (expected_id is not None and str(record['id']) != str(expected_id))):
+            attention()
+        return record
+
+    # A lost newversion response has a stronger handle than the search index.
+    # The concept's direct latest_draft may still inherit the previous revision's
+    # metadata. Apply explicit recovery's keyword/concept checks before any write.
+    prior = None
+    if previous:
+        prior = read_record(f"/deposit/depositions/{previous['record_id']}", previous['record_id'])
+        try:
+            latest_path = prior['links']['latest_draft']
+            if not isinstance(latest_path, str):
+                raise ValueError('Expected a latest draft handle')
+        except (ValueError, KeyError, TypeError):
+            attention()
+        record = read_record(latest_path)
+        keywords = record['metadata'].get('keywords')
+        if not record['submitted']:
+            valid = (str(record['id']) != str(previous['record_id'])
+                     and isinstance(keywords, list) and 'trureturing-note:' + note['id'] in keywords)
+            if not valid:
+                attention()
+            entry.pop('discovery_pending', None)
+            entry.pop('discovery_empty_at', None)
+            entry.update(record_id=record['id'], phase='uploading', discovery=counts)
+            save(state)
+            return record
+
+    drafts, pages, complete = inventory('draft', MAX_DISCOVERY_PAGES)
     counts['pages'] = pages
     matches = [row for row in drafts if remote_note_identity(row['metadata'], note)]
     counts['draft_candidates'] = len(matches)
     if not complete or len(matches) > 1:
         attention()
-    prior = zenodo.request('GET', f"/deposit/depositions/{previous['record_id']}") if previous else None
     if matches:
-        record = zenodo.request('GET', f"/deposit/depositions/{int(matches[0]['id'])}")
-        if not remote_note_identity(record['metadata'], note) or record.get('submitted'):
+        record = read_record(f"/deposit/depositions/{int(matches[0]['id'])}", matches[0]['id'])
+        if not remote_note_identity(record['metadata'], note) or record['submitted']:
             attention()
         if prior:
-            latest = zenodo.request('GET', prior['links']['latest_draft'])
-            if str(latest['id']) != str(record['id']) or str(record['id']) == str(prior['id']):
-                attention()
+            # The direct concept lookup above did not identify this draft.
+            attention()
     else:
-        published, pages, complete = deposition_inventory(zenodo, 'published', MAX_DISCOVERY_PAGES - pages)
+        published, pages, complete = inventory('published', MAX_DISCOVERY_PAGES - pages)
         counts['pages'] += pages
         matches = [row for row in published if remote_note_identity(row['metadata'], note)]
         counts['published_candidates'] = len(matches)
         if not complete or len(matches) > 1:
             attention()
         if matches:
-            record = zenodo.request('GET', f"/deposit/depositions/{int(matches[0]['id'])}")
+            record = read_record(f"/deposit/depositions/{int(matches[0]['id'])}", matches[0]['id'])
             if not record.get('submitted') or not record.get('doi'):
                 attention()
             if prior and not any(prior.get(key) and str(prior[key]) == str(record.get(key))
@@ -584,18 +657,37 @@ def discover_creation(note, package, directory, state, entry, previous, save, ze
                 attention()
         else:
             if prior:
-                latest = zenodo.request('GET', prior['links']['latest_draft'])
-                # newversion can leave a draft inheriting the old version's
-                # metadata. Such a draft is not evidence of an absent create.
-                if not latest.get('submitted') or str(latest['id']) != str(prior['id']):
-                    attention()
+                attention()
             if entry.get('creation_retry_attempted_at'):
                 attention()
-            entry.update(phase='creating', discovery=counts, creation_retry_attempted_at=now())
+            stamp = now()
+            try:
+                current = datetime.fromisoformat(stamp.replace('Z', '+00:00'))
+                attempted = creation_observed_at(entry)
+                empty_at = entry.get('discovery_empty_at')
+                if empty_at is None:
+                    entry['discovery_empty_at'] = stamp
+                else:
+                    empty = datetime.fromisoformat(empty_at.replace('Z', '+00:00'))
+                    if empty.tzinfo is None:
+                        raise ValueError('Discovery observation needs a timezone')
+            except (ValueError, TypeError, AttributeError):
+                attention()
+            if empty_at is None:
+                attention(pending=True)
+            # Enforce both clocks at the final creation decision, including
+            # manual dispatch and retry_failed. Adoption above needs no delay.
+            if ((current - attempted).total_seconds() < recovery_seconds
+                    or (current - empty).total_seconds() < recovery_seconds):
+                attention(pending=True)
+            entry.pop('discovery_pending', None)
+            entry.update(phase='creating', discovery=counts, creation_retry_attempted_at=stamp)
             # This durable marker consumes the single retry BEFORE the POST.
             # A lost response/save can be discovered, but cannot cause a third POST.
             save(state)
             return None
+    entry.pop('discovery_pending', None)
+    entry.pop('discovery_empty_at', None)
     entry.update(record_id=record['id'], phase='uploading', discovery=counts)
     save(state)
     return record
@@ -617,8 +709,9 @@ def create_deposition(metadata, state, entry, previous, save, zenodo):
 
 
 def publish(package, directory, state, save, zenodo, recover_record=None, reuse_draft_from=None, reserve_only=False,
-            *, discover=False):
+            *, discover=False, recovery_seconds=DEFAULT_CREATION_RECOVERY_SECONDS):
     """Save remote identity before upload/publish; never blindly repeat creation."""
+    validate_recovery_seconds(recovery_seconds)
     note = verify_package(package, directory)
     if state is None:
         state = {'schema_version': 'short-note-state.v1', 'id': note['id'],
@@ -680,7 +773,7 @@ def publish(package, directory, state, save, zenodo, recover_record=None, reuse_
             create_deposition(metadata, state, entry, previous, save, zenodo)
     elif not entry.get('record_id'):
         if discover and recover_record is None and reuse_draft_from is None:
-            record = discover_creation(note, package, directory, state, entry, previous, save, zenodo)
+            record = discover_creation(note, package, directory, state, entry, previous, save, zenodo, recovery_seconds)
             if record is None:
                 create_deposition(metadata, state, entry, previous, save, zenodo)
         elif recover_record is None:
@@ -868,7 +961,7 @@ def release_state(release, note_id):
 
 
 def operate(action, note_id, revision, gh, zenodo=None, paper=None, recover_record=None, pages=None, reuse_draft_from=None,
-            *, discover=False):
+            *, discover=False, recovery_seconds=DEFAULT_CREATION_RECOVERY_SECONDS):
     tag = tag_for(note_id)
     release = gh.release(tag)
     if release is None:
@@ -890,7 +983,7 @@ def operate(action, note_id, revision, gh, zenodo=None, paper=None, recover_reco
                     raise ValueError('Invalid package asset name')
                 gh.download(tag, name, temp)
             state = publish(package, temp, state, save, zenodo, recover_record, reuse_draft_from,
-                            reserve_only=action == 'reserve', discover=discover)
+                            reserve_only=action == 'reserve', discover=discover, recovery_seconds=recovery_seconds)
             if action == 'reserve':
                 return state
         elif action == 'promote':

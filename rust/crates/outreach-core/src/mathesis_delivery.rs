@@ -72,6 +72,9 @@ pub trait DeliveryServices {
     }
     fn source(&mut self, descriptor: &Value) -> StageResult<SourceFile>;
     fn allow(&mut self, lane: &str, key: &str) -> bool;
+    fn previous(&self, _lane: &str) -> Vec<String> {
+        Vec::new()
+    }
     fn queue_public_link(&mut self, intent: Persisted<LinkIntent>) -> StageResult<Value>;
 }
 
@@ -106,14 +109,101 @@ impl From<outreach_canon::Error> for StageError {
     }
 }
 impl StageError {
+    /// Python exception ancestry at the adapter boundary. `bases` is the MRO
+    /// supplied by Python recordings/custom adapters; the parent links preserve
+    /// the standard hierarchy for older fixtures without that metadata.
+    pub fn is_a(&self, class: &str) -> bool {
+        if crate::array(&self.summary["bases"])
+            .iter()
+            .any(|base| base == class)
+        {
+            return true;
+        }
+        let mut kind = s(&self.summary["type"]);
+        loop {
+            if kind == class {
+                return true;
+            }
+            kind = match kind {
+                "UnsupportedOperation" if class == "ValueError" => "ValueError",
+                "HTTPError" => "URLError",
+                "URLError"
+                | "BlockingIOError"
+                | "ChildProcessError"
+                | "ConnectionError"
+                | "FileExistsError"
+                | "FileNotFoundError"
+                | "InterruptedError"
+                | "IsADirectoryError"
+                | "NotADirectoryError"
+                | "PermissionError"
+                | "ProcessLookupError"
+                | "TimeoutError"
+                | "UnsupportedOperation" => "OSError",
+                "BrokenPipeError"
+                | "ConnectionAbortedError"
+                | "ConnectionRefusedError"
+                | "ConnectionResetError" => "ConnectionError",
+                "UnsupportedThreadAttachments" | "_UploadRequestError" => "GateError",
+                "JSONDecodeError" | "UnicodeError" | "GateError" | "UnparseableEvidence" => {
+                    "ValueError"
+                }
+                "UnicodeDecodeError" | "UnicodeEncodeError" | "UnicodeTranslateError" => {
+                    "UnicodeError"
+                }
+                "NotImplementedError" | "RecursionError" | "CMARequestError" => "RuntimeError",
+                "KeyError" | "IndexError" => "LookupError",
+                "FloatingPointError" | "OverflowError" | "ZeroDivisionError" => "ArithmeticError",
+                "ModuleNotFoundError" => "ImportError",
+                "IndentationError" => "SyntaxError",
+                "TabError" => "IndentationError",
+                "UnboundLocalError" => "NameError",
+                "OSError"
+                | "ValueError"
+                | "RuntimeError"
+                | "ArithmeticError"
+                | "AssertionError"
+                | "AttributeError"
+                | "BufferError"
+                | "EOFError"
+                | "ImportError"
+                | "LookupError"
+                | "MemoryError"
+                | "NameError"
+                | "ReferenceError"
+                | "StopAsyncIteration"
+                | "StopIteration"
+                | "SyntaxError"
+                | "SystemError"
+                | "TypeError"
+                | "ExceptionGroup"
+                | "Warning"
+                | "NotSent"
+                | "DefiniteRejection"
+                | "SentSubjectsDeferred"
+                | "DraftsScanDeferred" => "Exception",
+                "Exception" | "BaseExceptionGroup" | "Stopped" | "ProcessDeath"
+                | "GeneratorExit" | "KeyboardInterrupt" | "SystemExit" => "BaseException",
+                _ => return false,
+            };
+        }
+    }
     pub fn is_interruption(&self) -> bool {
-        ["Stopped", "ProcessDeath", "KeyboardInterrupt", "SystemExit"]
-            .contains(&s(&self.summary["type"]))
+        if self.summary.get("bases").is_some() {
+            !self.is_a("Exception")
+        } else {
+            // Legacy observations cannot establish ancestry for unknown names.
+            matches!(
+                s(&self.summary["type"]),
+                "Stopped" | "ProcessDeath" | "KeyboardInterrupt" | "SystemExit"
+            )
+        }
     }
     pub fn status(&self) -> Option<i64> {
         self.summary["http_status"].as_i64()
     }
 }
+
 fn check(condition: bool, message: &str) -> StageResult<()> {
     Ok(require(condition, message)?)
 }
@@ -941,4 +1031,68 @@ fn checked_artifact(
         "The preserved artifact differs from the exact PASS",
     )?;
     Ok(source)
+}
+
+#[cfg(test)]
+mod exception_tests {
+    use super::*;
+
+    #[test]
+    fn legacy_errors_without_bases_keep_exception_semantics() {
+        for kind in [
+            "RuntimeError",
+            "NotImplementedError",
+            "KeyError",
+            "TypeError",
+            "AssertionError",
+            "UnsupportedThreadAttachments",
+            "SentSubjectsDeferred",
+            "NotSent",
+            "DefiniteRejection",
+            "CMARequestError",
+            "RemoteDisconnected",
+            "IncompleteRead",
+            "SyntheticOrdinaryError",
+            "BaseException",
+            "GeneratorExit",
+        ] {
+            let error = StageError {
+                summary: object([("type", string(kind))]),
+            };
+            assert!(!error.is_interruption(), "{kind}");
+        }
+        for kind in ["Stopped", "ProcessDeath", "KeyboardInterrupt", "SystemExit"] {
+            let error = StageError {
+                summary: object([("type", string(kind))]),
+            };
+            assert!(error.is_interruption(), "{kind}");
+        }
+    }
+
+    #[test]
+    fn recorded_custom_ancestry_distinguishes_exceptions_from_interruptions() {
+        for (bases, interrupted) in [
+            (vec![string("BaseException")], true),
+            (vec![string("Exception"), string("BaseException")], false),
+        ] {
+            let error = StageError {
+                summary: object([
+                    ("type", string("SyntheticCustom")),
+                    ("bases", Value::Array(bases)),
+                ]),
+            };
+            assert_eq!(error.is_interruption(), interrupted);
+        }
+    }
+
+    #[test]
+    fn recorded_empty_bases_differ_from_absent_bases() {
+        let error = StageError {
+            summary: object([
+                ("type", string("BaseException")),
+                ("bases", Value::Array(vec![])),
+            ]),
+        };
+        assert!(error.is_interruption());
+    }
 }

@@ -35,7 +35,10 @@
         "mathesis",
         "publication",
         "pool",
-        "delivery"
+        "delivery",
+        "inbound",
+        "formalization",
+        "prior-work"
       ]
     },
     "initial_rows": {

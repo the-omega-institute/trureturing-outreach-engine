@@ -3,6 +3,7 @@
 Requests are immutable. Verified Graph material lives in task data and is supplied
 separately to CMA; effective_inputs is only an execution/readback view.
 """
+from . import recording
 import copy
 import json
 from pathlib import Path
@@ -285,6 +286,7 @@ def effective_inputs(row):
     return inputs
 
 
+@recording.inbound_stage
 def resolve(row, mailbox, ledger, root):
     """Hydrate the reply target and bounded read-only legacy conversations."""
     from .mailbox import _adapter_method, address, instant, preserve_attachments

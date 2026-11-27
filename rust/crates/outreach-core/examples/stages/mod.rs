@@ -1,3 +1,4 @@
+pub mod intake_issues;
 pub mod mail;
 pub mod pool;
 use super::*;

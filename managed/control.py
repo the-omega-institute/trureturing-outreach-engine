@@ -643,6 +643,7 @@ def current_policy_revision():
     return source_head(ROOT)
 
 
+@recording.intake_binding
 def request_binding(kind, revision, policy_revision):
     if policy_revision is None:
         return {'source_revision': revision, 'workflow_hash': workflow(kind, revision)}

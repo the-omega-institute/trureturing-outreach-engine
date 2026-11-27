@@ -13,9 +13,10 @@ python3.12 rust/scenarios.py
 python3.12 -m unittest discover -s scenarios -p 'test_*.py'
 ```
 
-There are **1,904 scenarios from 412 converted tests**. Python runs all 1,904; Rust
-matches all **1,896 Mathesis, publication, sent-event, CMA pool and mail delivery
-scenarios**, and skips the eight intake scenarios. The counts by source suite are:
+There are **2,207 scenarios from 542 mapped tests** (539 original converted tests
+and three independent-review scenario groups). Python runs all 2,207;
+Rust matches all **2,207**, including mailbox intake, staged inbound hydration,
+formalization requests and prior-work issues. The counts by source suite are:
 
 | Source tests | Converted tests | Scenarios |
 | --- | ---: | ---: |
@@ -23,19 +24,24 @@ scenarios**, and skips the eight intake scenarios. The counts by source suite ar
 | `test_pre_reviewed.PreReviewedTests` | 13 | 21 |
 | `test_publication.PublicationTests` | 48 | 142 |
 | `test_sent_events.SentEventsTests` | 28 | 39 |
-| `test_mailbox_triage.TriageTests` | 8 | 8 |
+| `test_mailbox_triage.TriageTests` | 46 | 64 |
+| `test_bounces` | 7 | 10 |
+| `test_mailbox_attachments` | 12 | 21 |
+| `test_formalization_requests` | 11 | 37 |
+| `test_prior_work_issues` | 16 | 55 |
 | `test_sandbox_pool` | 97 | 888 |
 | `test_sandbox_groups` | 45 | 313 |
 | `test_pool_adopt` | 2 | 5 |
 | `test_cleanup_recovery` | 15 | 160 |
-| `test_automation` | 62 | 157 |
+| `test_automation` | 73 | 173 |
 | `test_owner_sent` | 37 | 54 |
 | `test_draft_revision` | 22 | 53 |
 | `test_stale_owner_draft` | 8 | 13 |
-| `test_thread_staging` | 2 | 2 |
+| `test_thread_staging` | 34 | 61 |
 | `test_thread_recipients` | 5 | 5 |
 | `test_reviewer_edit` | 1 | 5 |
 | `test_engine_split.MathesisOnceTest` | 2 | 5 |
+| Independent-review regressions | 3 | 49 |
 
 The publication count includes one new equal-priority arrival-order regression.
 Original tests remain, including assertions about restart recovery and operator
@@ -114,7 +120,7 @@ The extraction made these Python contracts explicit:
 Mathesis cases continue to cover ordinary and collection delivery, receipt
 recovery, version conflicts, revision pins, exact public-file readback, reading
 links, collection-before-withdrawal, checkpoint failure and legacy migration.
-The eight intake cases remain Python-only for phase 3d.
+Intake and inbound staging now run in both languages.
 
 
 Pool cases preserve the initial runtime as well as the ledger. A case executes
@@ -148,7 +154,7 @@ resulting files compared.
 The native test
 `test_owner_draft_receipts_intents_and_stale_conflicts_are_not_terminal` deliberately
 replaces revision recovery; it retains native coverage instead of encoding that
-replacement as a Rust transition. Pure validation, transport, CLI, intake and
+replacement as a Rust transition. Pure validation, transport, CLI and
 coordinator tests without a ported operation also keep native coverage. Runs with
 more than 40 tasks keep their native backlog assertions; smaller operations from
 the same test may still have mapped cases. Nonfinite constructor inputs remain
@@ -170,3 +176,116 @@ assertions. The Rust runner accepts streaming `--jsonl` input so the combined
 fixture set and consecutive bounded recording frames do not encounter canon's
 per-document size limit. Normal runner and local replay output remains counts
 only; `OUTREACH_SCENARIO_DEBUG=1` is an explicit local diagnostic mode.
+
+
+Phase 3d adds **262 scenarios from 137 source tests** (including eight replaced
+phase-3a intake fixtures and seven new issue-boundary regressions). The net increase
+is 254 fixtures and 127 converted tests. `extract_intake_issues.py` refreshes only
+these stages, retaining every original assertion. It captures request building,
+coverage gates, hydration, scientific projections and previews as well as stage
+invocations. Test IDs and operation IDs remain in `test-map.json`; the remaining
+prior-work result-contract/policy test stays native. The alias fixtures replace
+their invented `.co.uk` institutions with reserved `.invalid` domains before
+execution, preserving distinct registrable domains and the source assertions.
+
+The new stage counts are 111 intake; 59 inbound (38 hydration, 10 request
+builders, 11 coverage gates); 37 formalization (12 advances and 25 helper calls);
+and 55 prior-work (22 advances, 13 previews and 20 evidence projections/parses).
+The six new native formalization tests cover failed checkpoints, incomplete or
+malformed inventory, uncertain POSTs, invalid receipts, pause, the candidate
+bound and same-tick deduplication. A seventh regression verifies that public
+evidence excludes the installation's actual data repository, supplied explicitly
+to the Rust projection rather than inferred from a repository name.
+
+The scenarios fix these previously implicit Python contracts without changing
+them:
+
+- Equal received/sent timestamps select the first observation in adapter order.
+  Registered messages and their attachment upload pass precede unregistered
+  work. Deferred units retain their priority within each bounded candidate set.
+- Active and finished reply coverage use different identity sets; research does
+  not cover a reply. Parked tasks allow explicit restaging, and ingestion checks
+  coverage again. Newer intake tasks reuse the existing supersession and carried
+  answer transitions.
+- Native Graph matching refreshes its Sent-subject cache through typed reads.
+  The cache reuses its original `built_at` for less than a day, advances coverage
+  incrementally, and rebuilds malformed entries. Fakes supply read responses,
+  never resulting cache rows.
+- Immutable attachment staging uses content-addressed assets and exact readback.
+  Python performs no forced ledger save at that boundary; Rust preserves this
+  existing staging contract. Issue creation separately consumes a snapshot-bound
+  `Persisted<IssueIntent>` after a successful forced save.
+- A complete all-state issue inventory is required before creation. Failed or
+  uncertain effects keep the pending key and backoff; another creation during
+  the same tick cannot use the stale inventory. Prior-work holds apply across
+  every related note for the same result, including holds pinned to a sibling ID.
+- Earlier public evidence must end strictly before the resolution date range.
+  Overlap, missing context, private-source wording and unsigned legacy evidence
+  remain visible pending work. Historical `private: 0` has the same public
+  projection as Python's `False`; other truthy private markers stay private. A private `Kind:` introduced after public citation
+  fields is an ambiguous evidence entry and raises `UnparseableEvidence`.
+- Signed prior-work backfills store JSON string payloads. The offline loader now
+  preserves those strings while retaining the queue's historical raw empty
+  readback column. The production ledger loader is unchanged.
+
+`replay_mathesis.py` also accepts the four new stages, with counts-only output and
+no signing key requirement. New intake/hydration recording frames containing mail
+bodies are deliberately unavailable; they emit only the existing bounded digest
+and count record. Body-free frames replay normally, including native Graph
+subject-cache observations. This does not broaden phases 3a–3c's existing mail
+content recording. Recording remains inert without `OUTREACH_RECORD_DIR` and
+adds no save, network call, or production tick work beyond the disabled hook
+checks. `test_intake_issues.py` checks this boundary and snapshot immutability.
+
+Round-two independent review adds **34 Python-first regression scenarios** in
+`test_review_regressions.py`, with 13 intake, one inbound, 10 formalization and
+10 prior-work cases. These are additional synthetic boundary cases derived from
+the converted source tests; the 539 original converted-test count is unchanged.
+Refresh only these cases with
+`python3.12 scenarios/test_review_regressions.py --extract`.
+
+The cases cover all four terminal interruptions at Sent matching, bounce
+hydration and prior-context reads; eight refused budget units in each issue
+stage; GET and uncertain POST failures from `URLError`, `JSONDecodeError`,
+`ConnectionResetError` and a custom `ValueError` subclass; issue POST
+interruptions; attachment ID changes that reuse the current immutable Release;
+and equal Sent timestamps in both current and historical conversations.
+Exception observations carry Python base classes so adapters can preserve
+subclass handling, including custom classes. Rust compares both exception type
+and exact message in intake, inbound and both issue stages. A separate negative
+test alters only each stage's expected message and requires both runners to
+reject it. Recording tests verify Graph body, unique-body, preview and attachment
+content omission, standalone attachment responses, disabled hooks and replay of
+issue exception ancestry.
+
+Round-three review adds **11 Python-first regression scenarios** in
+`test_review_round3.py`: four prior-work evidence cases and seven intake cases.
+Each expected result was captured and replayed in Python, then independently
+confirmed to differ on the round-two Rust before the fixes. The evidence cases
+cover `NotImplementedError` with and without an HTTP status, a `GateError`
+subclass, and an `UnparseableEvidence` subclass. Intake covers a custom exception
+derived only from `BaseException` at Sent matching, bounce enrichment, prior
+context, and attachment preservation, plus subclasses of both attachment holds
+and Sent-subject deferral. Refresh only these cases with
+`python3.12 scenarios/test_review_round3.py --extract`.
+
+Rust uses recorded ancestry for these exception catches and propagates errors
+outside Python's `Exception` hierarchy. Recording replay also verifies all four
+new evidence cases.
+
+Round-four review adds **four Python-first regression scenarios** in
+`test_review_round4.py`: ancestry-free `RemoteDisconnected` and `IncompleteRead`
+at intake Sent matching, an unknown ordinary exception during delivery folder
+lookup, and an unknown ordinary exception during pool health observation. All
+four were captured and replayed in Python, then confirmed to differ on Rust
+`34ad151` before the fix. Refresh only these cases with
+`python3.12 scenarios/test_review_round4.py --extract`.
+
+When `bases` is present, Rust classifies an interruption by the absence of
+`Exception` in its ancestry, including an empty recorded ancestry. Without
+`bases`, only `Stopped`, `ProcessDeath`, `KeyboardInterrupt`, and `SystemExit`
+are interruptions; every other name is an ordinary exception. This preserves
+older adapter observations without requiring an exhaustive hierarchy table.
+New error observations in every stage record their Python bases. Recording tests
+check all nine stages with hooks enabled and unset, and replay the four legacy
+cases with newly recorded ancestry plus the round-three BaseException-only case.

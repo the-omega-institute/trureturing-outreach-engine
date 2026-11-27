@@ -344,7 +344,7 @@ def pending_uploads():
 # private recording data, never a production replay or a ledger save.
 from contextvars import ContextVar
 _STAGE = ContextVar('recorded_stage', default=None)
-_WRITE_METHODS = {'deliver', 'deliver_pre_reviewed', 'withdraw', 'upload', 'create', 'register_note', 'save_state', 'delete_asset', 'commit_tables', 'retire_sandbox', 'save_draft', 'submit', 'submit_tracked', 'discard_draft', 'create_draft', 'delete_draft', 'move_draft_to_deleted'}
+_WRITE_METHODS = {'deliver', 'deliver_pre_reviewed', 'withdraw', 'upload', 'create', 'register_note', 'save_state', 'delete_asset', 'commit_tables', 'retire_sandbox', 'save_draft', 'submit', 'submit_tracked', 'discard_draft', 'create_draft', 'delete_draft', 'move_draft_to_deleted', 'upload_task_batch'}
 
 
 def _capture(adapter_name, method, function, args, kwargs):
@@ -353,8 +353,9 @@ def _capture(adapter_name, method, function, args, kwargs):
     if frame is None: return function(*args, **kwargs)
     # Capture failures must never prevent, repeat or alter the adapter call.
     try:
+        if frame.get('stage') in {'intake','inbound'} and mail_bodies((args,kwargs)): frame['incomplete'] = True
         entry = {'adapter': adapter_name, 'method': method, 'kwargs': encode(kwargs)}
-        if method in _WRITE_METHODS or (adapter_name == 'cma' and method == 'request' and len(args) > 1 and args[1] != 'GET'):
+        if method in _WRITE_METHODS or (adapter_name in {'cma', 'github'} and method == 'request' and len(args) > 1 and args[1] != 'GET'):
             entry['saved_snapshot_digest'] = frame.get('_saved_snapshot_digest')
             entry['args_digest'] = hashlib.sha256(canonical(encode(args)).encode()).hexdigest()
         else: entry['args'] = encode(args)
@@ -371,16 +372,22 @@ def _capture(adapter_name, method, function, args, kwargs):
     except BaseException as error:
         # Do not read/seek HTTPError: observers must not change its body cursor.
         try:
-            entry['error'] = {'type': type(error).__name__, 'message': str(error) if frame.get('stage') in {'pool', 'delivery'} else ''}
+            entry['error'] = {'type': type(error).__name__, 'message': str(error) if frame.get('stage') in {'pool', 'delivery', 'formalization', 'prior-work'} else ''}
+            entry['error']['bases'] = [base.__name__ for base in type(error).__mro__[1:] if base is not object]
             if adapter_name == 'boundary' and frame['script'][-1] is not entry:
                 entry.pop('error', None); entry['result'] = None
             if 'error' in entry: frame['_errors'][id(error)] = entry['error']
             if hasattr(error, 'code') and 'error' in entry: entry['error']['status'] = error.code
+            for field in ('attachments','intake_reason'):
+                if hasattr(error,field) and 'error' in entry: entry['error'][field] = getattr(error,field)
         except Exception as recording_error:
             print('recording-error ' + type(recording_error).__name__, file=sys.stderr)
         raise
     try:
-        entry['result'] = encode(result)
+        if frame.get('stage') in {'intake','inbound'} and (mail_bodies(result) or (adapter_name == 'mailbox' and method == 'attachment_content' and result)):
+            frame['incomplete'] = True
+            entry['result'] = None
+        else: entry['result'] = encode(result)
         if adapter_name == 'releases' and method == 'run' and '--dir' in args:
             path = Path(args[args.index('--dir') + 1]) / args[args.index('--pattern') + 1]
             entry['download'] = {'name': path.name, 'base64': encode(path)['base64']}
@@ -390,17 +397,52 @@ def _capture(adapter_name, method, function, args, kwargs):
     return result
 
 
+def mail_bodies(value):
+    """New read stages must not expand the mail-content recording boundary."""
+    if isinstance(value, dict):
+        if any(value.get(key) for key in ('body','uniqueBody','bodyPreview','contentBytes','content_b64')): return True
+        if 'contentType' in value and value.get('content'): return True
+        return any(mail_bodies(v) for v in value.values())
+    if isinstance(value, (list,tuple)): return any(map(mail_bodies,value))
+    return False
+
+
 class _StageAdapter:
     def __init__(self, name, target):
         object.__setattr__(self, 'name', name); object.__setattr__(self, 'target', target)
+    @property
+    def __class__(self): return self.target.__class__
     def __setattr__(self, name, value): setattr(self.target, name, value)
+    def __call__(self, *args, **kwargs): return _capture(self.name, 'request', self.target, args, kwargs)
     def __getattr__(self, name):
         value = getattr(self.target, name)
+        frame = _STAGE.get()
+        if frame and frame.get('stage') == 'intake' and name in {'match_inbound_sent','_refresh_sent_subjects','_registered_recipient'}:
+            from .mailbox import GraphMailbox
+            if name == '_registered_recipient': return value
+            if getattr(value,'__func__',None) is getattr(GraphMailbox,name): return getattr(GraphMailbox,name).__get__(self)
+        if name == 'upload_task_batch' and frame and frame.get('stage') in {'intake','inbound'}:
+            def upload(files, tag, listings):
+                from .scenario_contract import encode
+                result = None
+                def perform(*_args):
+                    nonlocal result
+                    result = value(files, tag, listings)
+                    return {'listings': listings}
+                try: encoded = [[encode(path),ref] for path,ref in files.items()]
+                except Exception as error:
+                    frame['incomplete'] = True
+                    print('recording-error ' + type(error).__name__, file=sys.stderr)
+                    return value(files, tag, listings)
+                _capture(self.name, name, perform, (encoded,tag,listings), {})
+                return result
+            return upload
         return (lambda *a, **kw: _capture(self.name, name, value, a, kw)) if callable(value) else value
 
 
 def adapter(name, value):
     if not enabled() or _STAGE.get() is None or isinstance(value, _StageAdapter): return value
+    if name == 'github': _STAGE.get().setdefault('options',{})['github'] = True
     return _StageAdapter(name, value)
 
 
@@ -476,9 +518,29 @@ def stage_frame(name):
                          '_errors': {}, '_root': Path(root).resolve(), '_touched_files': set(),
                          'adapter_attributes': {'releases': {k: getattr(ledger.releases, k, '') for k in ('repo', 'tag')}},
                          'options': {'previous': list(getattr(getattr(ledger, 'tick', None), 'previous', {}).get(name, []))}}
-                if name in {'pool', 'delivery'}:
+                if name in {'pool', 'delivery', 'intake', 'inbound', 'formalization', 'prior-work'}:
                     if getattr(ledger, '_recording_saved_input', None): frame['saved_input'] = ledger._recording_saved_input
                     frame['workflows'] = {kind: workflow(kind) for kind in {r['kind'] for r in ledger.tasks.all()}}
+                if name in {'intake','inbound','formalization','prior-work'}:
+                    from .location import DATA_REPO
+                    frame['data_repo'] = DATA_REPO
+                    frame['operation'] = 'resolve' if name == 'inbound' else 'advance'
+                    frame['previous_units'] = getattr(getattr(ledger,'tick',None),'previous',{})
+                if name in {'intake','inbound'}:
+                    from .mailbox import GraphMailbox, _adapter_method
+                    box = args[0] if args else kwargs.get('mailbox')
+                    frame['adapter_attributes']['mailbox'] = {'settings': getattr(box,'settings',{}),
+                        'graph_mailbox': isinstance(box,GraphMailbox),
+                        'native_matching': getattr(getattr(box,'match_inbound_sent',None),'__func__',None) is GraphMailbox.match_inbound_sent,
+                        **{method: _adapter_method(box,method) is not None for method in ('sent_snapshot','match_inbound_sent','sent_messages_to','attachment_content')}}
+                    frame['options']['mailbox'] = box is not None
+                    frame['options']['previous'] = list(getattr(getattr(ledger,'tick',None),'previous',{}).get('mailbox-intake',[]))
+                    if name == 'intake':
+                        frame['revision'] = kwargs.get('revision') or (args[1] if len(args)>1 else None)
+                        explicit_now = kwargs.get('now') or (args[2] if len(args)>2 else None)
+                        if explicit_now: frame['datetime'] = explicit_now.isoformat()
+                    else: frame['row'] = config
+                if name in {'formalization','prior-work'}: frame['options']['github'] = (args[0] if args else kwargs.get('github')) is not None
                 if name == 'delivery':
                     box = args[0] if args else kwargs.get('mailbox')
                     frame['adapter_attributes']['mailbox'] = {method: callable(getattr(box, method, None)) for method in MAILBOX_FEATURES}
@@ -523,16 +585,29 @@ def stage_frame(name):
             elif name == 'publication':
                 if len(values) > 1 and values[1] is not None: values[1] = adapter('publication', values[1])
                 if len(values) > 2: secret = values[2]
-            elif name in {'sent', 'delivery'} and values and values[0] is not None: values[0] = adapter('mailbox', values[0])
+            elif name in {'sent', 'delivery', 'intake', 'inbound'} and values and values[0] is not None: values[0] = adapter('mailbox', values[0])
             try:
-                return stage(ledger, config, root, *values, **kwargs)
+                result = stage(ledger, config, root, *values, **kwargs)
+                if name == 'inbound':
+                    try:
+                        from .scenario_contract import encode
+                        if mail_bodies(result): frame['incomplete'] = True
+                        else: frame['expected_result'] = encode(result)
+                    except Exception: frame['incomplete'] = True
+                return result
             except BaseException as error:
-                frame['error'] = {'type': type(error).__name__, 'message': str(error) if name in {'pool','delivery'} else ''}; raise
+                frame['error'] = {'type': type(error).__name__, 'message': str(error) if name in {'pool','delivery','formalization','prior-work'} else '',
+                                  'bases': [base.__name__ for base in type(error).__mro__[1:] if base is not object]}; raise
             finally:
                 ledger.save, ledger.releases, ledger.tasks.update = original_save, original_releases, original_update
                 _STAGE.reset(token)
                 try:
                     final_digests, final_index, _, _ = capture_tables(ledger.tasks)
+                    if name in {'intake','inbound'} and mail_bodies(frame): frame['incomplete'] = True
+                    if name == 'intake' and 'datetime' not in frame:
+                        cursor = ledger.tasks.db.execute("SELECT payload FROM pipeline_state WHERE key='mailbox'").fetchone()
+                        if cursor: frame['datetime'] = json.loads(cursor[0])['through']
+                        else: frame['incomplete'] = True
                     if name == 'delivery' and ledger.tasks.db.execute("SELECT 1 FROM sqlite_master WHERE name='events'").fetchone():
                         frame['queue_event_times'] = [r[0] for r in ledger.tasks.db.execute('SELECT at FROM events WHERE seq>? ORDER BY seq', (frame['_queue_seq'],))]
                     frame['expected_final_digests'] = final_digests
@@ -751,3 +826,52 @@ def queue_clock(clock):
         except Exception: frame['incomplete'] = True
         return value
     return observed
+
+
+def issue_stage(stage):
+    @functools.wraps(stage)
+    def invoke(ledger, config, root, github=None):
+        return stage(ledger, config, github)
+    observe = stage_frame('formalization')(invoke)
+    @functools.wraps(stage)
+    def wrapped(ledger, config, github=None):
+        if not enabled(): return stage(ledger, config, github)
+        return observe(ledger, config, ledger.folder, github)
+    return wrapped
+
+
+def inbound_stage(stage):
+    def invoke(ledger, row, root, mailbox):
+        return stage(row, mailbox, ledger, root)
+    observe = stage_frame('inbound')(invoke)
+    @functools.wraps(stage)
+    def wrapped(row, mailbox, ledger, root):
+        if not enabled(): return stage(row, mailbox, ledger, root)
+        return observe(ledger, row, root, mailbox)
+    return wrapped
+
+
+def intake_binding(function):
+    @functools.wraps(function)
+    def wrapped(*args, **kwargs):
+        result = function(*args, **kwargs)
+        if enabled() and (frame := _STAGE.get()) is not None and frame.get('stage') == 'intake':
+            try: frame['binding'] = result
+            except Exception: frame['incomplete'] = True
+        return result
+    return wrapped
+
+
+def evidence_download(function):
+    @functools.wraps(function)
+    def wrapped(row, name, directory, releases):
+        if not enabled() or (_STAGE.get() or {}).get('stage') != 'prior-work':
+            return function(row, name, directory, releases)
+        result = None
+        def read(*_args):
+            nonlocal result
+            result = function(row, name, directory, getattr(releases,'target',releases))
+            return result
+        _capture('evidence','download',read,(row['id'],name,Path(directory)),{})
+        return result
+    return wrapped

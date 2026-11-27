@@ -155,6 +155,9 @@ impl<S: DeliveryServices> DeliveryServices for Ledger<S> {
     fn allow(&mut self, lane: &str, key: &str) -> bool {
         self.services.allow(lane, key)
     }
+    fn previous(&self, lane: &str) -> Vec<String> {
+        self.services.previous(lane)
+    }
     fn queue_public_link(&mut self, intent: Persisted<LinkIntent>) -> StageResult<Value> {
         self.services.queue_public_link(intent)
     }

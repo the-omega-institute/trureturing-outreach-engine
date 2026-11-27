@@ -1361,6 +1361,7 @@ def _has_registry_history(person):
     return bool(detail['threads'] or any(e.get('kind') == 'sent' for e in detail['events']))
 
 
+@recording.stage_frame('intake')
 def intake(ledger, config, root, mailbox, revision=None, now=None):
     """Actual Inbox -> one immutable reply task per current incoming message."""
     if mailbox is None or config['paused'] or not config['kinds'].get('reply'):return

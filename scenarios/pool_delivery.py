@@ -6,7 +6,7 @@ from managed.transports import Readback, Submission
 
 POOL_SETS = {'available', 'attempted'}
 
-def pool(case, ledger, script):
+def pool(case, ledger, script, *, capture=False):
     instance = sandbox_pool.SandboxPool.__new__(sandbox_pool.SandboxPool)
     instance.ledger = ledger
     for key, value in case['runtime'].items():
@@ -31,6 +31,7 @@ def pool(case, ledger, script):
     runtime = {k: sorted(v) if isinstance(v, (set, frozenset)) else v
                for k,v in vars(instance).items() if k != 'ledger'}
     from managed.scenario_contract import encode
+    if capture: return encode(runtime), encode(result)
     assert encode(runtime) == case['expected_runtime'], case['id'] + ': runtime differs'
     from managed.scenario_contract import encode
     assert encode(result) == case['expected_result'], case['id'] + ': result differs'

@@ -1,4 +1,5 @@
 """File reviewed scientific requests from the serialized coordinator."""
+from . import recording
 import hashlib
 import hmac
 import os
@@ -121,6 +122,7 @@ def passed(row):
             and review_current(row, row['request']['workflow_hash']))
 
 
+@recording.issue_stage
 def advance(ledger, config, github=None):
     if config['paused']:
         return
@@ -136,6 +138,7 @@ def advance(ledger, config, github=None):
         if token:
             github = SecretStore(token).github
 
+    if recording.enabled() and github is not None: github = recording.adapter('github', github)
     issues = None
     connector_error = 'Coordinator GitHub connection unavailable' if github is None else None
     # Bounded work leaves the rest durable in the ledger for later ticks.

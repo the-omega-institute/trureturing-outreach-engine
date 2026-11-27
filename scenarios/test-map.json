@@ -115,28 +115,28 @@
     "mathesis-collection_is_delivered_and_read_back_before_withdrawal-1"
   ],
   "test_mailbox_triage.TriageTests.test_intake_skips_operator_staged_inbound": [
-    "intake-intake_skips_operator_staged_inbound-1"
+    "intake-test_mailbox_triage-TriageTests-test_intake_skips_operator_staged_inbound-1"
   ],
   "test_mailbox_triage.TriageTests.test_intake_records_covered_unmapped_sender_as_handled": [
-    "intake-intake_records_covered_unmapped_sender_as_handled-1"
+    "intake-test_mailbox_triage-TriageTests-test_intake_records_covered_unmapped_sender_as_handled-1"
   ],
   "test_mailbox_triage.TriageTests.test_intake_skips_hydrated_reply_on_latest_inbound": [
-    "intake-intake_skips_hydrated_reply_on_latest_inbound-1"
+    "intake-test_mailbox_triage-TriageTests-test_intake_skips_hydrated_reply_on_latest_inbound-1"
   ],
   "test_mailbox_triage.TriageTests.test_intake_stages_reply_while_research_covers_the_message": [
-    "intake-intake_stages_reply_while_research_covers_the_message-1"
+    "intake-test_mailbox_triage-TriageTests-test_intake_stages_reply_while_research_covers_the_message-1"
   ],
   "test_mailbox_triage.TriageTests.test_intake_stages_when_covering_task_is_terminal": [
-    "intake-intake_stages_when_covering_task_is_terminal-1"
+    "intake-test_mailbox_triage-TriageTests-test_intake_stages_when_covering_task_is_terminal-1"
   ],
   "test_mailbox_triage.TriageTests.test_known_new_thread_and_unknown_first_message_get_separate_dispositions": [
-    "intake-known_new_thread_and_unknown_first_message_get_separate_dispositions-1"
+    "intake-test_mailbox_triage-TriageTests-test_known_new_thread_and_unknown_first_message_get_separate_dispositions-1"
   ],
   "test_mailbox_triage.TriageTests.test_each_observed_message_gets_a_reason_when_latest_has_a_sent_answer": [
-    "intake-each_observed_message_gets_a_reason_when_latest_has_a_sent_answer-1"
+    "intake-test_mailbox_triage-TriageTests-test_each_observed_message_gets_a_reason_when_latest_has_a_sent_answer-1"
   ],
   "test_mailbox_triage.TriageTests.test_hello_stranger_stays_in_attention": [
-    "intake-hello_stranger_stays_in_attention-1"
+    "intake-test_mailbox_triage-TriageTests-test_hello_stranger_stays_in_attention-1"
   ],
   "test_sent_events.SentEventsTests.test_bounded_paging_resumes_after_restoring_ledger": [
     "sent-bounded_paging_resumes_after_restoring_ledger-1",
@@ -2191,9 +2191,15 @@
     "delivery-test_automation-AutomationTests-test_actual_user_answer_produces_new_reviewed_academic_letter-2"
   ],
   "test_automation.AutomationTests.test_agent_hold_review_inventory_and_bounce_continue_exactly_once": [],
-  "test_automation.AutomationTests.test_alias_hint_matches_cc_registered_name_even_when_domain_is_ambiguous": [],
-  "test_automation.AutomationTests.test_alias_hint_matches_unique_sent_recipient_domain": [],
-  "test_automation.AutomationTests.test_ambiguous_alias_has_no_hint_but_keeps_thread_owner_task": [],
+  "test_automation.AutomationTests.test_alias_hint_matches_cc_registered_name_even_when_domain_is_ambiguous": [
+    "intake-test_automation-AutomationTests-test_alias_hint_matches_cc_registered_name_even_when_domain_is_ambiguous-1"
+  ],
+  "test_automation.AutomationTests.test_alias_hint_matches_unique_sent_recipient_domain": [
+    "intake-test_automation-AutomationTests-test_alias_hint_matches_unique_sent_recipient_domain-1"
+  ],
+  "test_automation.AutomationTests.test_ambiguous_alias_has_no_hint_but_keeps_thread_owner_task": [
+    "intake-test_automation-AutomationTests-test_ambiguous_alias_has_no_hint_but_keeps_thread_owner_task-1"
+  ],
   "test_automation.AutomationTests.test_automatic_guard_allows_a_clear_recipient": [
     "delivery-test_automation-AutomationTests-test_automatic_guard_allows_a_clear_recipient-1"
   ],
@@ -2284,9 +2290,18 @@
   "test_automation.AutomationTests.test_hosted_scientific_reviewer_identity_survives_mail_queue": [
     "delivery-test_automation-AutomationTests-test_hosted_scientific_reviewer_identity_survives_mail_queue-1"
   ],
-  "test_automation.AutomationTests.test_inbox_thread_enters_once_and_unknown_or_owner_mail_remains_visible": [],
-  "test_automation.AutomationTests.test_incomplete_inbox_read_never_advances_cursor": [],
-  "test_automation.AutomationTests.test_known_correspondent_without_current_sent_is_requeued_with_registry_context": [],
+  "test_automation.AutomationTests.test_inbox_thread_enters_once_and_unknown_or_owner_mail_remains_visible": [
+    "intake-test_automation-AutomationTests-test_inbox_thread_enters_once_and_unknown_or_owner_mail_remains_visible-1",
+    "intake-test_automation-AutomationTests-test_inbox_thread_enters_once_and_unknown_or_owner_mail_remains_visible-2",
+    "intake-test_automation-AutomationTests-test_inbox_thread_enters_once_and_unknown_or_owner_mail_remains_visible-3",
+    "intake-test_automation-AutomationTests-test_inbox_thread_enters_once_and_unknown_or_owner_mail_remains_visible-4"
+  ],
+  "test_automation.AutomationTests.test_incomplete_inbox_read_never_advances_cursor": [
+    "intake-test_automation-AutomationTests-test_incomplete_inbox_read_never_advances_cursor-1"
+  ],
+  "test_automation.AutomationTests.test_known_correspondent_without_current_sent_is_requeued_with_registry_context": [
+    "intake-test_automation-AutomationTests-test_known_correspondent_without_current_sent_is_requeued_with_registry_context-1"
+  ],
   "test_automation.AutomationTests.test_legacy_deploy_preserves_owner_draft_save_and_signed_review_after_restore": [
     "delivery-test_automation-AutomationTests-test_legacy_deploy_preserves_owner_draft_save_and_signed_review_after_restore-1",
     "delivery-test_automation-AutomationTests-test_legacy_deploy_preserves_owner_draft_save_and_signed_review_after_restore-2"
@@ -2304,7 +2319,9 @@
     "delivery-test_automation-AutomationTests-test_legacy_wrong_conversation_draft_is_reclassified_deleted_and_retried-1",
     "delivery-test_automation-AutomationTests-test_legacy_wrong_conversation_draft_is_reclassified_deleted_and_retried-2"
   ],
-  "test_automation.AutomationTests.test_machine_bounce_is_separate_from_unmapped_inventory": [],
+  "test_automation.AutomationTests.test_machine_bounce_is_separate_from_unmapped_inventory": [
+    "intake-test_automation-AutomationTests-test_machine_bounce_is_separate_from_unmapped_inventory-1"
+  ],
   "test_automation.AutomationTests.test_mail_inventory_rebind_survives_delivery_errors_and_resumes_delivery": [
     "delivery-test_automation-AutomationTests-test_mail_inventory_rebind_survives_delivery_errors_and_resumes_delivery-1",
     "delivery-test_automation-AutomationTests-test_mail_inventory_rebind_survives_delivery_errors_and_resumes_delivery-2",
@@ -2369,7 +2386,9 @@
     "delivery-test_automation-AutomationTests-test_pending_pass_can_be_rebound_without_rerunning_cma-2"
   ],
   "test_automation.AutomationTests.test_pending_rebind_cannot_approve_a_changed_result": [],
-  "test_automation.AutomationTests.test_previous_unmapped_message_is_re_evaluated_under_new_history_rule": [],
+  "test_automation.AutomationTests.test_previous_unmapped_message_is_re_evaluated_under_new_history_rule": [
+    "intake-test_automation-AutomationTests-test_previous_unmapped_message_is_re_evaluated_under_new_history_rule-1"
+  ],
   "test_automation.AutomationTests.test_questions_are_not_silently_hidden_in_a_hold_or_auto_letter": [],
   "test_automation.AutomationTests.test_rebound_pending_mail_still_holds_terminal_delivery_blocker": [
     "delivery-test_automation-AutomationTests-test_rebound_pending_mail_still_holds_terminal_delivery_blocker-1"
@@ -2482,9 +2501,17 @@
     "delivery-test_automation-AutomationTests-test_uncertain_owner_draft_refuses_through_settle_period-2",
     "delivery-test_automation-AutomationTests-test_uncertain_owner_draft_refuses_through_settle_period-3"
   ],
-  "test_automation.AutomationTests.test_unmatched_alias_has_no_hint_but_keeps_thread_owner_task": [],
-  "test_automation.AutomationTests.test_unregistered_alias_linked_to_sent_is_reply_task_with_registry_hint": [],
-  "test_automation.AutomationTests.test_unregistered_sender_thread_is_not_reread_every_tick": [],
+  "test_automation.AutomationTests.test_unmatched_alias_has_no_hint_but_keeps_thread_owner_task": [
+    "intake-test_automation-AutomationTests-test_unmatched_alias_has_no_hint_but_keeps_thread_owner_task-1"
+  ],
+  "test_automation.AutomationTests.test_unregistered_alias_linked_to_sent_is_reply_task_with_registry_hint": [
+    "intake-test_automation-AutomationTests-test_unregistered_alias_linked_to_sent_is_reply_task_with_registry_hint-1"
+  ],
+  "test_automation.AutomationTests.test_unregistered_sender_thread_is_not_reread_every_tick": [
+    "intake-test_automation-AutomationTests-test_unregistered_sender_thread_is_not_reread_every_tick-1",
+    "intake-test_automation-AutomationTests-test_unregistered_sender_thread_is_not_reread_every_tick-2",
+    "intake-test_automation-AutomationTests-test_unregistered_sender_thread_is_not_reread_every_tick-3"
+  ],
   "test_automation.AutomationTests.test_unsaved_owner_draft_transient_and_unknown_errors_keep_backoff": [
     "delivery-test_automation-AutomationTests-test_unsaved_owner_draft_transient_and_unknown_errors_keep_backoff-1",
     "delivery-test_automation-AutomationTests-test_unsaved_owner_draft_transient_and_unknown_errors_keep_backoff-2",
@@ -2769,51 +2796,142 @@
   "test_thread_staging.GraphIdentityTests.test_inbound_header_links_to_registered_sent_recipient": [],
   "test_thread_staging.GraphIdentityTests.test_inbound_subject_requires_one_recent_sent_message_and_a_substantive_reply_subject": [],
   "test_thread_staging.GraphIdentityTests.test_odata_identity_lookup_is_exact_escaped_and_unambiguous": [],
-  "test_thread_staging.StagingTests.test_all_unresolved_ids_hold_before_cma": [],
-  "test_thread_staging.StagingTests.test_attachment_selection_error_raises_for_explicit_resolution": [],
-  "test_thread_staging.StagingTests.test_coordinator_holds_attachment_failure_and_continues_other_staged_task": [],
-  "test_thread_staging.StagingTests.test_decision_history_after_staging_is_hydrated_without_owning_later_letter": [],
-  "test_thread_staging.StagingTests.test_delivery_uses_hydrated_sent_identity_and_preserves_owner_draft": [
-    "delivery-test_thread_staging-StagingTests-test_delivery_uses_hydrated_sent_identity_and_preserves_owner_draft-1"
+  "test_thread_staging.StagingTests.test_all_unresolved_ids_hold_before_cma": [
+    "inbound-test_thread_staging-StagingTests-test_all_unresolved_ids_hold_before_cma-1"
   ],
-  "test_thread_staging.StagingTests.test_held_401_resolution_is_retried": [],
-  "test_thread_staging.StagingTests.test_hydrated_chaser_carries_answers_from_held_continuation": [],
-  "test_thread_staging.StagingTests.test_hydrated_new_inbound_supersedes_an_older_owner_draft": [],
-  "test_thread_staging.StagingTests.test_hydration_bounds_fail_closed": [],
-  "test_thread_staging.StagingTests.test_ingest_rechecks_coverage_added_after_inbound_staging": [],
-  "test_thread_staging.StagingTests.test_latest_incoming_across_hydrated_conversations_selects_target": [],
-  "test_thread_staging.StagingTests.test_legacy_hold_retries_automatically_but_unrelated_or_started_holds_do_not": [],
-  "test_thread_staging.StagingTests.test_mismatched_conversations_or_existing_draft_hold": [],
-  "test_thread_staging.StagingTests.test_missing_message_id_is_staged_as_rowid_then_held_without_guessing": [],
-  "test_thread_staging.StagingTests.test_newer_incoming_is_captured_and_packet_source_is_enforced": [],
-  "test_thread_staging.StagingTests.test_no_resolved_incoming_id_holds_even_if_sent_context_contains_incoming": [],
+  "test_thread_staging.StagingTests.test_attachment_selection_error_raises_for_explicit_resolution": [
+    "inbound-test_thread_staging-StagingTests-test_attachment_selection_error_raises_for_explicit_resolution-1"
+  ],
+  "test_thread_staging.StagingTests.test_coordinator_holds_attachment_failure_and_continues_other_staged_task": [
+    "inbound-test_thread_staging-StagingTests-test_coordinator_holds_attachment_failure_and_continues_other_staged_task-1",
+    "inbound-test_thread_staging-StagingTests-test_coordinator_holds_attachment_failure_and_continues_other_staged_task-2"
+  ],
+  "test_thread_staging.StagingTests.test_decision_history_after_staging_is_hydrated_without_owning_later_letter": [
+    "inbound-test_thread_staging-StagingTests-test_decision_history_after_staging_is_hydrated_without_owning_later_letter-1"
+  ],
+  "test_thread_staging.StagingTests.test_delivery_uses_hydrated_sent_identity_and_preserves_owner_draft": [
+    "delivery-test_thread_staging-StagingTests-test_delivery_uses_hydrated_sent_identity_and_preserves_owner_draft-1",
+    "inbound-test_thread_staging-StagingTests-test_delivery_uses_hydrated_sent_identity_and_preserves_owner_draft-2"
+  ],
+  "test_thread_staging.StagingTests.test_held_401_resolution_is_retried": [
+    "inbound-test_thread_staging-StagingTests-test_held_401_resolution_is_retried-1"
+  ],
+  "test_thread_staging.StagingTests.test_hydrated_chaser_carries_answers_from_held_continuation": [
+    "inbound-test_thread_staging-StagingTests-test_hydrated_chaser_carries_answers_from_held_continuation-1"
+  ],
+  "test_thread_staging.StagingTests.test_hydrated_new_inbound_supersedes_an_older_owner_draft": [
+    "inbound-test_thread_staging-StagingTests-test_hydrated_new_inbound_supersedes_an_older_owner_draft-1"
+  ],
+  "test_thread_staging.StagingTests.test_hydration_bounds_fail_closed": [
+    "inbound-test_thread_staging-StagingTests-test_hydration_bounds_fail_closed-1",
+    "inbound-test_thread_staging-StagingTests-test_hydration_bounds_fail_closed-2"
+  ],
+  "test_thread_staging.StagingTests.test_ingest_rechecks_coverage_added_after_inbound_staging": [
+    "inbound-test_thread_staging-StagingTests-test_ingest_rechecks_coverage_added_after_inbound_staging-1",
+    "inbound-test_thread_staging-StagingTests-test_ingest_rechecks_coverage_added_after_inbound_staging-2",
+    "inbound-test_thread_staging-StagingTests-test_ingest_rechecks_coverage_added_after_inbound_staging-3"
+  ],
+  "test_thread_staging.StagingTests.test_latest_incoming_across_hydrated_conversations_selects_target": [
+    "inbound-test_thread_staging-StagingTests-test_latest_incoming_across_hydrated_conversations_selects_target-1"
+  ],
+  "test_thread_staging.StagingTests.test_legacy_hold_retries_automatically_but_unrelated_or_started_holds_do_not": [
+    "inbound-test_thread_staging-StagingTests-test_legacy_hold_retries_automatically_but_unrelated_or_started_holds_do_not-1"
+  ],
+  "test_thread_staging.StagingTests.test_mismatched_conversations_or_existing_draft_hold": [
+    "inbound-test_thread_staging-StagingTests-test_mismatched_conversations_or_existing_draft_hold-1",
+    "inbound-test_thread_staging-StagingTests-test_mismatched_conversations_or_existing_draft_hold-2"
+  ],
+  "test_thread_staging.StagingTests.test_missing_message_id_is_staged_as_rowid_then_held_without_guessing": [
+    "inbound-test_thread_staging-StagingTests-test_missing_message_id_is_staged_as_rowid_then_held_without_guessing-1"
+  ],
+  "test_thread_staging.StagingTests.test_newer_incoming_is_captured_and_packet_source_is_enforced": [
+    "inbound-test_thread_staging-StagingTests-test_newer_incoming_is_captured_and_packet_source_is_enforced-1"
+  ],
+  "test_thread_staging.StagingTests.test_no_resolved_incoming_id_holds_even_if_sent_context_contains_incoming": [
+    "inbound-test_thread_staging-StagingTests-test_no_resolved_incoming_id_holds_even_if_sent_context_contains_incoming-1"
+  ],
   "test_thread_staging.StagingTests.test_other_resolution_holds_and_started_legacy_holds_are_not_retried": [],
   "test_thread_staging.StagingTests.test_owner_controlled_line_blocks_like_ordinary_reply": [],
   "test_thread_staging.StagingTests.test_owner_controlled_participant_in_prior_context_blocks_other_owner": [],
-  "test_thread_staging.StagingTests.test_owner_decision_history_is_preserved_without_owning_later_letters": [],
+  "test_thread_staging.StagingTests.test_owner_decision_history_is_preserved_without_owning_later_letters": [
+    "inbound-test_thread_staging-StagingTests-test_owner_decision_history_is_preserved_without_owning_later_letters-1"
+  ],
   "test_thread_staging.StagingTests.test_paused_tasks_never_read_mailbox": [],
-  "test_thread_staging.StagingTests.test_prior_context_refusal_blocks_but_its_owners_and_drafts_do_not_change_target": [],
+  "test_thread_staging.StagingTests.test_prior_context_refusal_blocks_but_its_owners_and_drafts_do_not_change_target": [
+    "inbound-test_thread_staging-StagingTests-test_prior_context_refusal_blocks_but_its_owners_and_drafts_do_not_change_target-1",
+    "inbound-test_thread_staging-StagingTests-test_prior_context_refusal_blocks_but_its_owners_and_drafts_do_not_change_target-2"
+  ],
   "test_thread_staging.StagingTests.test_prior_context_refusal_is_rechecked_on_result_and_before_mailbox_write": [
-    "delivery-test_thread_staging-StagingTests-test_prior_context_refusal_is_rechecked_on_result_and_before_mailbox_write-1"
+    "delivery-test_thread_staging-StagingTests-test_prior_context_refusal_is_rechecked_on_result_and_before_mailbox_write-1",
+    "inbound-test_thread_staging-StagingTests-test_prior_context_refusal_is_rechecked_on_result_and_before_mailbox_write-2"
   ],
   "test_thread_staging.StagingTests.test_refusal_blocks_staging_and_fresh_admission": [],
-  "test_thread_staging.StagingTests.test_research_kind_uses_same_hydration_with_no_mail_authority": [],
-  "test_thread_staging.StagingTests.test_resolution_failures_hold_visibly_before_any_cma_call": [],
-  "test_thread_staging.StagingTests.test_resolves_full_current_thread_before_claim_without_mutating_request": [],
+  "test_thread_staging.StagingTests.test_research_kind_uses_same_hydration_with_no_mail_authority": [
+    "inbound-test_thread_staging-StagingTests-test_research_kind_uses_same_hydration_with_no_mail_authority-1"
+  ],
+  "test_thread_staging.StagingTests.test_resolution_failures_hold_visibly_before_any_cma_call": [
+    "inbound-test_thread_staging-StagingTests-test_resolution_failures_hold_visibly_before_any_cma_call-1"
+  ],
+  "test_thread_staging.StagingTests.test_resolves_full_current_thread_before_claim_without_mutating_request": [
+    "inbound-test_thread_staging-StagingTests-test_resolves_full_current_thread_before_claim_without_mutating_request-1"
+  ],
   "test_thread_staging.StagingTests.test_reuses_only_exact_latest_rowid_receipt_from_registry": [],
-  "test_thread_staging.StagingTests.test_review_inventory_includes_resolved_thread_and_prior_decision_survives": [],
+  "test_thread_staging.StagingTests.test_review_inventory_includes_resolved_thread_and_prior_decision_survives": [
+    "inbound-test_thread_staging-StagingTests-test_review_inventory_includes_resolved_thread_and_prior_decision_survives-1"
+  ],
   "test_thread_staging.StagingTests.test_shape_and_exact_idempotent_staging_new_revision_on_changes": [],
-  "test_thread_staging.StagingTests.test_split_conversations_choose_incoming_and_keep_read_only_sent_context": [],
-  "test_thread_staging.StagingTests.test_split_target_still_enforces_participants_owners_drafts_and_sent_evidence": [],
-  "test_thread_staging.StagingTests.test_stage_inbound_allows_restaging_over_a_parked_task": [],
-  "test_thread_staging.StagingTests.test_stage_inbound_refuses_active_coverage_and_replays_exact_request": [],
-  "test_thread_staging.StagingTests.test_stage_inbound_reuses_thread_ref_hydration": [],
-  "test_thread_staging.StagingTests.test_stage_inbound_with_owner_admits_registered_coauthor_in_conversation": [],
-  "test_thread_staging.StagingTests.test_stage_inbound_without_owner_uses_stable_classification_owner": [],
-  "test_thread_staging.StagingTests.test_target_and_prior_attachments_are_preserved_and_read_back": [],
-  "test_thread_staging.StagingTests.test_transient_graph_errors_stay_queued_then_resolve": [],
-  "test_thread_staging.StagingTests.test_unconfigured_mailbox_holds_visibly": [],
-  "test_thread_staging.StagingTests.test_unresolved_ids_are_recorded_when_an_incoming_id_resolves": [],
+  "test_thread_staging.StagingTests.test_split_conversations_choose_incoming_and_keep_read_only_sent_context": [
+    "inbound-test_thread_staging-StagingTests-test_split_conversations_choose_incoming_and_keep_read_only_sent_context-1"
+  ],
+  "test_thread_staging.StagingTests.test_split_target_still_enforces_participants_owners_drafts_and_sent_evidence": [
+    "inbound-test_thread_staging-StagingTests-test_split_target_still_enforces_participants_owners_drafts_and_sent_evidence-1",
+    "inbound-test_thread_staging-StagingTests-test_split_target_still_enforces_participants_owners_drafts_and_sent_evidence-2",
+    "inbound-test_thread_staging-StagingTests-test_split_target_still_enforces_participants_owners_drafts_and_sent_evidence-3",
+    "inbound-test_thread_staging-StagingTests-test_split_target_still_enforces_participants_owners_drafts_and_sent_evidence-4"
+  ],
+  "test_thread_staging.StagingTests.test_stage_inbound_allows_restaging_over_a_parked_task": [
+    "inbound-test_thread_staging-StagingTests-test_stage_inbound_allows_restaging_over_a_parked_task-1",
+    "inbound-test_thread_staging-StagingTests-test_stage_inbound_allows_restaging_over_a_parked_task-2",
+    "inbound-test_thread_staging-StagingTests-test_stage_inbound_allows_restaging_over_a_parked_task-3",
+    "inbound-test_thread_staging-StagingTests-test_stage_inbound_allows_restaging_over_a_parked_task-4",
+    "inbound-test_thread_staging-StagingTests-test_stage_inbound_allows_restaging_over_a_parked_task-5",
+    "inbound-test_thread_staging-StagingTests-test_stage_inbound_allows_restaging_over_a_parked_task-6"
+  ],
+  "test_thread_staging.StagingTests.test_stage_inbound_refuses_active_coverage_and_replays_exact_request": [
+    "inbound-test_thread_staging-StagingTests-test_stage_inbound_refuses_active_coverage_and_replays_exact_request-1",
+    "inbound-test_thread_staging-StagingTests-test_stage_inbound_refuses_active_coverage_and_replays_exact_request-2",
+    "inbound-test_thread_staging-StagingTests-test_stage_inbound_refuses_active_coverage_and_replays_exact_request-3",
+    "inbound-test_thread_staging-StagingTests-test_stage_inbound_refuses_active_coverage_and_replays_exact_request-4",
+    "inbound-test_thread_staging-StagingTests-test_stage_inbound_refuses_active_coverage_and_replays_exact_request-5",
+    "inbound-test_thread_staging-StagingTests-test_stage_inbound_refuses_active_coverage_and_replays_exact_request-6",
+    "inbound-test_thread_staging-StagingTests-test_stage_inbound_refuses_active_coverage_and_replays_exact_request-7",
+    "inbound-test_thread_staging-StagingTests-test_stage_inbound_refuses_active_coverage_and_replays_exact_request-8",
+    "inbound-test_thread_staging-StagingTests-test_stage_inbound_refuses_active_coverage_and_replays_exact_request-9"
+  ],
+  "test_thread_staging.StagingTests.test_stage_inbound_reuses_thread_ref_hydration": [
+    "inbound-test_thread_staging-StagingTests-test_stage_inbound_reuses_thread_ref_hydration-1",
+    "inbound-test_thread_staging-StagingTests-test_stage_inbound_reuses_thread_ref_hydration-2"
+  ],
+  "test_thread_staging.StagingTests.test_stage_inbound_with_owner_admits_registered_coauthor_in_conversation": [
+    "inbound-test_thread_staging-StagingTests-test_stage_inbound_with_owner_admits_registered_coauthor_in_conversation-1",
+    "inbound-test_thread_staging-StagingTests-test_stage_inbound_with_owner_admits_registered_coauthor_in_conversation-2",
+    "inbound-test_thread_staging-StagingTests-test_stage_inbound_with_owner_admits_registered_coauthor_in_conversation-3"
+  ],
+  "test_thread_staging.StagingTests.test_stage_inbound_without_owner_uses_stable_classification_owner": [
+    "inbound-test_thread_staging-StagingTests-test_stage_inbound_without_owner_uses_stable_classification_owner-1"
+  ],
+  "test_thread_staging.StagingTests.test_target_and_prior_attachments_are_preserved_and_read_back": [
+    "inbound-test_thread_staging-StagingTests-test_target_and_prior_attachments_are_preserved_and_read_back-1"
+  ],
+  "test_thread_staging.StagingTests.test_transient_graph_errors_stay_queued_then_resolve": [
+    "inbound-test_thread_staging-StagingTests-test_transient_graph_errors_stay_queued_then_resolve-1"
+  ],
+  "test_thread_staging.StagingTests.test_unconfigured_mailbox_holds_visibly": [
+    "inbound-test_thread_staging-StagingTests-test_unconfigured_mailbox_holds_visibly-1"
+  ],
+  "test_thread_staging.StagingTests.test_unresolved_ids_are_recorded_when_an_incoming_id_resolves": [
+    "inbound-test_thread_staging-StagingTests-test_unresolved_ids_are_recorded_when_an_incoming_id_resolves-1"
+  ],
   "test_thread_recipients.DeliveryThreadRecipientTests.test_automatic_send_registers_and_records_without_changing_pass": [
     "delivery-test_thread_recipients-DeliveryThreadRecipientTests-test_automatic_send_registers_and_records_without_changing_pass-1"
   ],
@@ -2874,5 +2992,416 @@
     "delivery-test_preflight_refuses_a_second_introduction_in_another_conversation-1",
     "delivery-test_preflight_refuses_a_second_introduction_in_another_conversation-2"
   ],
-  "test_engine_split.MathesisOnceTest.test_reply_rule_tells_agents_to_introduce_mathesis_once": []
+  "test_engine_split.MathesisOnceTest.test_reply_rule_tells_agents_to_introduce_mathesis_once": [],
+  "test_mailbox_triage.TriageTests.test_attention_orders_by_category_then_received_time": [
+    "intake-test_mailbox_triage-TriageTests-test_attention_orders_by_category_then_received_time-1"
+  ],
+  "test_mailbox_triage.TriageTests.test_departmental_reply_links_to_a_sent_copy": [
+    "intake-test_mailbox_triage-TriageTests-test_departmental_reply_links_to_a_sent_copy-1"
+  ],
+  "test_mailbox_triage.TriageTests.test_departmental_reply_to_group_uses_sent_task_owner": [
+    "intake-test_mailbox_triage-TriageTests-test_departmental_reply_to_group_uses_sent_task_owner-1",
+    "intake-test_mailbox_triage-TriageTests-test_departmental_reply_to_group_uses_sent_task_owner-2"
+  ],
+  "test_mailbox_triage.TriageTests.test_display_name_alias_with_exact_header_stages_with_alias_hint": [
+    "intake-test_mailbox_triage-TriageTests-test_display_name_alias_with_exact_header_stages_with_alias_hint-1"
+  ],
+  "test_mailbox_triage.TriageTests.test_display_name_with_registered_cc_keeps_both_new_subjects_in_attention": [
+    "intake-test_mailbox_triage-TriageTests-test_display_name_with_registered_cc_keeps_both_new_subjects_in_attention-1"
+  ],
+  "test_mailbox_triage.TriageTests.test_editorial_and_person_attention_with_bulk_counts": [
+    "intake-test_mailbox_triage-TriageTests-test_editorial_and_person_attention_with_bulk_counts-1"
+  ],
+  "test_mailbox_triage.TriageTests.test_fifteen_day_old_exact_link_stays_in_attention": [
+    "intake-test_mailbox_triage-TriageTests-test_fifteen_day_old_exact_link_stays_in_attention-1",
+    "intake-test_mailbox_triage-TriageTests-test_fifteen_day_old_exact_link_stays_in_attention-2"
+  ],
+  "test_mailbox_triage.TriageTests.test_home_domain_and_subdomains_only_stage_registered_senders": [
+    "intake-test_mailbox_triage-TriageTests-test_home_domain_and_subdomains_only_stage_registered_senders-1"
+  ],
+  "test_mailbox_triage.TriageTests.test_incremental_refresh_links_new_sent_and_drops_rows_outside_the_window": [
+    "intake-test_mailbox_triage-TriageTests-test_incremental_refresh_links_new_sent_and_drops_rows_outside_the_window-1",
+    "intake-test_mailbox_triage-TriageTests-test_incremental_refresh_links_new_sent_and_drops_rows_outside_the_window-2"
+  ],
+  "test_mailbox_triage.TriageTests.test_journal_and_collaboration_replies_link_to_sent_but_auto_submitted_stays_excluded": [
+    "intake-test_mailbox_triage-TriageTests-test_journal_and_collaboration_replies_link_to_sent_but_auto_submitted_stays_excluded-1"
+  ],
+  "test_mailbox_triage.TriageTests.test_ledger_reply_subject_without_prefix_and_unsent_packet": [
+    "intake-test_mailbox_triage-TriageTests-test_ledger_reply_subject_without_prefix_and_unsent_packet-1"
+  ],
+  "test_mailbox_triage.TriageTests.test_legacy_cursor_replays_once_and_stages_newer_message_after_verified_reply": [
+    "intake-test_mailbox_triage-TriageTests-test_legacy_cursor_replays_once_and_stages_newer_message_after_verified_reply-1",
+    "intake-test_mailbox_triage-TriageTests-test_legacy_cursor_replays_once_and_stages_newer_message_after_verified_reply-2"
+  ],
+  "test_mailbox_triage.TriageTests.test_legacy_unmapped_row_keeps_its_intake_reason": [
+    "intake-test_mailbox_triage-TriageTests-test_legacy_unmapped_row_keeps_its_intake_reason-1"
+  ],
+  "test_mailbox_triage.TriageTests.test_likely_contact_from_unique_reversed_name_and_prior_sent": [
+    "intake-test_mailbox_triage-TriageTests-test_likely_contact_from_unique_reversed_name_and_prior_sent-1"
+  ],
+  "test_mailbox_triage.TriageTests.test_likely_contact_requires_unique_name_with_at_least_two_tokens": [
+    "intake-test_mailbox_triage-TriageTests-test_likely_contact_requires_unique_name_with_at_least_two_tokens-1"
+  ],
+  "test_mailbox_triage.TriageTests.test_malformed_or_day_old_index_is_rebuilt": [
+    "intake-test_mailbox_triage-TriageTests-test_malformed_or_day_old_index_is_rebuilt-1",
+    "intake-test_mailbox_triage-TriageTests-test_malformed_or_day_old_index_is_rebuilt-2",
+    "intake-test_mailbox_triage-TriageTests-test_malformed_or_day_old_index_is_rebuilt-3"
+  ],
+  "test_mailbox_triage.TriageTests.test_manuscript_id_from_submission_task": [
+    "intake-test_mailbox_triage-TriageTests-test_manuscript_id_from_submission_task-1"
+  ],
+  "test_mailbox_triage.TriageTests.test_never_written_registered_sender_stays_in_attention": [
+    "intake-test_mailbox_triage-TriageTests-test_never_written_registered_sender_stays_in_attention-1"
+  ],
+  "test_mailbox_triage.TriageTests.test_no_task_prunes_old_history_and_work_caps_newest_entries": [
+    "intake-test_mailbox_triage-TriageTests-test_no_task_prunes_old_history_and_work_caps_newest_entries-1"
+  ],
+  "test_mailbox_triage.TriageTests.test_older_retained_message_cannot_hide_new_arrival_on_held_thread": [
+    "intake-test_mailbox_triage-TriageTests-test_older_retained_message_cannot_hide_new_arrival_on_held_thread-1"
+  ],
+  "test_mailbox_triage.TriageTests.test_one_listing_matches_the_old_per_message_windows_and_is_reused_after_restart": [
+    "intake-test_mailbox_triage-TriageTests-test_one_listing_matches_the_old_per_message_windows_and_is_reused_after_restart-1",
+    "intake-test_mailbox_triage-TriageTests-test_one_listing_matches_the_old_per_message_windows_and_is_reused_after_restart-2"
+  ],
+  "test_mailbox_triage.TriageTests.test_owner_controlled_row_is_released_after_manual_reply": [
+    "intake-test_mailbox_triage-TriageTests-test_owner_controlled_row_is_released_after_manual_reply-1",
+    "intake-test_mailbox_triage-TriageTests-test_owner_controlled_row_is_released_after_manual_reply-2"
+  ],
+  "test_mailbox_triage.TriageTests.test_owner_controlled_row_stages_after_name_removed_from_decisions": [
+    "intake-test_mailbox_triage-TriageTests-test_owner_controlled_row_stages_after_name_removed_from_decisions-1",
+    "intake-test_mailbox_triage-TriageTests-test_owner_controlled_row_stages_after_name_removed_from_decisions-2"
+  ],
+  "test_mailbox_triage.TriageTests.test_refusal_and_owner_controlled_are_not_staged": [
+    "intake-test_mailbox_triage-TriageTests-test_refusal_and_owner_controlled_are_not_staged-1"
+  ],
+  "test_mailbox_triage.TriageTests.test_refusal_check_handles_missing_sender_email_address": [
+    "intake-test_mailbox_triage-TriageTests-test_refusal_check_handles_missing_sender_email_address-1"
+  ],
+  "test_mailbox_triage.TriageTests.test_refusal_pauses_thread_reads_for_six_hours_even_with_registered_sender": [
+    "intake-test_mailbox_triage-TriageTests-test_refusal_pauses_thread_reads_for_six_hours_even_with_registered_sender-1",
+    "intake-test_mailbox_triage-TriageTests-test_refusal_pauses_thread_reads_for_six_hours_even_with_registered_sender-2",
+    "intake-test_mailbox_triage-TriageTests-test_refusal_pauses_thread_reads_for_six_hours_even_with_registered_sender-3",
+    "intake-test_mailbox_triage-TriageTests-test_refusal_pauses_thread_reads_for_six_hours_even_with_registered_sender-4"
+  ],
+  "test_mailbox_triage.TriageTests.test_registered_address_starts_new_thread_and_restart_is_idempotent": [
+    "intake-test_mailbox_triage-TriageTests-test_registered_address_starts_new_thread_and_restart_is_idempotent-1",
+    "intake-test_mailbox_triage-TriageTests-test_registered_address_starts_new_thread_and_restart_is_idempotent-2"
+  ],
+  "test_mailbox_triage.TriageTests.test_registered_replies_stage_before_a_previously_deferred_unregistered_reply": [
+    "intake-test_mailbox_triage-TriageTests-test_registered_replies_stage_before_a_previously_deferred_unregistered_reply-1"
+  ],
+  "test_mailbox_triage.TriageTests.test_registered_sender_at_mail_subdomain_stages_with_registry_history": [
+    "intake-test_mailbox_triage-TriageTests-test_registered_sender_at_mail_subdomain_stages_with_registry_history-1"
+  ],
+  "test_mailbox_triage.TriageTests.test_registered_sender_owns_message_despite_subject_sent_only_to_other_contact": [
+    "intake-test_mailbox_triage-TriageTests-test_registered_sender_owns_message_despite_subject_sent_only_to_other_contact-1"
+  ],
+  "test_mailbox_triage.TriageTests.test_registered_sender_with_auto_response_header_stages_before_triage": [
+    "intake-test_mailbox_triage-TriageTests-test_registered_sender_with_auto_response_header_stages_before_triage-1"
+  ],
+  "test_mailbox_triage.TriageTests.test_same_subject_in_different_sent_tasks_stays_ambiguous": [
+    "intake-test_mailbox_triage-TriageTests-test_same_subject_in_different_sent_tasks_stays_ambiguous-1"
+  ],
+  "test_mailbox_triage.TriageTests.test_sent_event_supplies_subject_after_adapter_restart": [
+    "intake-test_mailbox_triage-TriageTests-test_sent_event_supplies_subject_after_adapter_restart-1"
+  ],
+  "test_mailbox_triage.TriageTests.test_sent_subject_with_no_registered_owner_needs_attention": [
+    "intake-test_mailbox_triage-TriageTests-test_sent_subject_with_no_registered_owner_needs_attention-1"
+  ],
+  "test_mailbox_triage.TriageTests.test_service_senders_are_bulk_except_collaboration_service_notices": [
+    "intake-test_mailbox_triage-TriageTests-test_service_senders_are_bulk_except_collaboration_service_notices-1"
+  ],
+  "test_mailbox_triage.TriageTests.test_slice_exhausted_at_index_defers_subject_fallback_after_registered_and_exact_links": [
+    "intake-test_mailbox_triage-TriageTests-test_slice_exhausted_at_index_defers_subject_fallback_after_registered_and_exact_links-1"
+  ],
+  "test_mailbox_triage.TriageTests.test_time_and_task_budgets_retain_candidates_then_stage_them": [
+    "intake-test_mailbox_triage-TriageTests-test_time_and_task_budgets_retain_candidates_then_stage_them-1",
+    "intake-test_mailbox_triage-TriageTests-test_time_and_task_budgets_retain_candidates_then_stage_them-2",
+    "intake-test_mailbox_triage-TriageTests-test_time_and_task_budgets_retain_candidates_then_stage_them-3"
+  ],
+  "test_mailbox_triage.TriageTests.test_unresolvable_readback_checks_are_spaced_and_expire": [
+    "intake-test_mailbox_triage-TriageTests-test_unresolvable_readback_checks_are_spaced_and_expire-1",
+    "intake-test_mailbox_triage-TriageTests-test_unresolvable_readback_checks_are_spaced_and_expire-2",
+    "intake-test_mailbox_triage-TriageTests-test_unresolvable_readback_checks_are_spaced_and_expire-3",
+    "intake-test_mailbox_triage-TriageTests-test_unresolvable_readback_checks_are_spaced_and_expire-4"
+  ],
+  "test_mailbox_triage.TriageTests.test_work_reports_active_reply_duplicates_by_message_id": [],
+  "test_bounces.BounceParsingTests.test_ndr_sender_subject_and_header_signals": [],
+  "test_bounces.BounceParsingTests.test_ordinary_machine_notices_are_not_ndrs": [],
+  "test_bounces.BounceParsingTests.test_recipient_diagnostics_precede_original_message_addresses": [],
+  "test_bounces.BounceRegistryTests.test_body_dsn_classification_survives_compact_persistence": [
+    "intake-test_bounces-BounceRegistryTests-test_body_dsn_classification_survives_compact_persistence-1",
+    "intake-test_bounces-BounceRegistryTests-test_body_dsn_classification_survives_compact_persistence-2"
+  ],
+  "test_bounces.BounceRegistryTests.test_firstcontact_excludes_failed_address_but_selects_healthy_verified_alias": [],
+  "test_bounces.BounceRegistryTests.test_intake_classifies_without_reply_budget_and_keeps_bodies_out_of_state": [
+    "intake-test_bounces-BounceRegistryTests-test_intake_classifies_without_reply_budget_and_keeps_bodies_out_of_state-1"
+  ],
+  "test_bounces.BounceRegistryTests.test_mark_command_is_idempotent_preserves_history_and_preflights_exact_address": [],
+  "test_bounces.BounceRegistryTests.test_ndr_hydration_matches_exact_message_instead_of_latest_machine_message": [
+    "intake-test_bounces-BounceRegistryTests-test_ndr_hydration_matches_exact_message_instead_of_latest_machine_message-1"
+  ],
+  "test_bounces.BounceRegistryTests.test_notice_rows_are_compact_bounded_and_count_survives_boundary_replay": [
+    "intake-test_bounces-BounceRegistryTests-test_notice_rows_are_compact_bounded_and_count_survives_boundary_replay-1",
+    "intake-test_bounces-BounceRegistryTests-test_notice_rows_are_compact_bounded_and_count_survives_boundary_replay-2"
+  ],
+  "test_bounces.BounceRegistryTests.test_old_ndr_without_recipient_recovers_from_its_exact_message": [
+    "intake-test_bounces-BounceRegistryTests-test_old_ndr_without_recipient_recovers_from_its_exact_message-1"
+  ],
+  "test_bounces.BounceRegistryTests.test_old_twenty_two_bounces_refilter_to_two_ndrs_and_twenty_notices": [
+    "intake-test_bounces-BounceRegistryTests-test_old_twenty_two_bounces_refilter_to_two_ndrs_and_twenty_notices-1",
+    "intake-test_bounces-BounceRegistryTests-test_old_twenty_two_bounces_refilter_to_two_ndrs_and_twenty_notices-2"
+  ],
+  "test_bounces.BounceRegistryTests.test_work_proposal_has_ndr_evidence_and_reconcile_is_idempotent": [
+    "intake-test_bounces-BounceRegistryTests-test_work_proposal_has_ndr_evidence_and_reconcile_is_idempotent-1"
+  ],
+  "test_mailbox_attachments.AttachmentGateTests.test_file_limit_uses_metadata_and_accepts_exactly_30_mib": [],
+  "test_mailbox_attachments.AttachmentGateTests.test_unsupported_types_report_metadata_from_every_message_without_content": [],
+  "test_mailbox_attachments.AttachmentIntakeTests.test_attachment_free_conversations_run_first_with_deferred_priority_among_equals": [
+    "intake-test_mailbox_attachments-AttachmentIntakeTests-test_attachment_free_conversations_run_first_with_deferred_priority_among_equals-1"
+  ],
+  "test_mailbox_attachments.AttachmentIntakeTests.test_bad_readback_defers_and_reports_without_adding_a_task_or_index": [
+    "intake-test_mailbox_attachments-AttachmentIntakeTests-test_bad_readback_defers_and_reports_without_adding_a_task_or_index-1",
+    "intake-test_mailbox_attachments-AttachmentIntakeTests-test_bad_readback_defers_and_reports_without_adding_a_task_or_index-2"
+  ],
+  "test_mailbox_attachments.AttachmentIntakeTests.test_batch_preserves_distinct_bytes_with_one_upload_and_one_listing": [
+    "intake-test_mailbox_attachments-AttachmentIntakeTests-test_batch_preserves_distinct_bytes_with_one_upload_and_one_listing-1"
+  ],
+  "test_mailbox_attachments.AttachmentIntakeTests.test_cooldown_survives_replay_new_message_and_checks_again_when_due": [
+    "intake-test_mailbox_attachments-AttachmentIntakeTests-test_cooldown_survives_replay_new_message_and_checks_again_when_due-1",
+    "intake-test_mailbox_attachments-AttachmentIntakeTests-test_cooldown_survives_replay_new_message_and_checks_again_when_due-2",
+    "intake-test_mailbox_attachments-AttachmentIntakeTests-test_cooldown_survives_replay_new_message_and_checks_again_when_due-3",
+    "intake-test_mailbox_attachments-AttachmentIntakeTests-test_cooldown_survives_replay_new_message_and_checks_again_when_due-4"
+  ],
+  "test_mailbox_attachments.AttachmentIntakeTests.test_digestless_listing_falls_back_to_download": [
+    "intake-test_mailbox_attachments-AttachmentIntakeTests-test_digestless_listing_falls_back_to_download-1"
+  ],
+  "test_mailbox_attachments.AttachmentIntakeTests.test_missing_release_asset_is_uploaded_again": [
+    "intake-test_mailbox_attachments-AttachmentIntakeTests-test_missing_release_asset_is_uploaded_again-1",
+    "intake-test_mailbox_attachments-AttachmentIntakeTests-test_missing_release_asset_is_uploaded_again-2"
+  ],
+  "test_mailbox_attachments.AttachmentIntakeTests.test_next_inbound_reuses_attachment_already_staged_before_index": [
+    "intake-test_mailbox_attachments-AttachmentIntakeTests-test_next_inbound_reuses_attachment_already_staged_before_index-1",
+    "intake-test_mailbox_attachments-AttachmentIntakeTests-test_next_inbound_reuses_attachment_already_staged_before_index-2"
+  ],
+  "test_mailbox_attachments.AttachmentIntakeTests.test_next_inbound_reuses_verified_refs_after_ledger_restore": [
+    "intake-test_mailbox_attachments-AttachmentIntakeTests-test_next_inbound_reuses_verified_refs_after_ledger_restore-1",
+    "intake-test_mailbox_attachments-AttachmentIntakeTests-test_next_inbound_reuses_verified_refs_after_ledger_restore-2"
+  ],
+  "test_mailbox_attachments.AttachmentIntakeTests.test_other_gate_errors_still_propagate": [
+    "intake-test_mailbox_attachments-AttachmentIntakeTests-test_other_gate_errors_still_propagate-1"
+  ],
+  "test_mailbox_attachments.AttachmentIntakeTests.test_recheck_clears_retention_when_thread_becomes_supported": [
+    "intake-test_mailbox_attachments-AttachmentIntakeTests-test_recheck_clears_retention_when_thread_becomes_supported-1",
+    "intake-test_mailbox_attachments-AttachmentIntakeTests-test_recheck_clears_retention_when_thread_becomes_supported-2"
+  ],
+  "test_mailbox_attachments.AttachmentIntakeTests.test_retain_each_message_continue_and_checkpoint_without_attachment_content": [
+    "intake-test_mailbox_attachments-AttachmentIntakeTests-test_retain_each_message_continue_and_checkpoint_without_attachment_content-1"
+  ],
+  "test_mailbox_attachments.AttachmentIntakeTests.test_task_budget_deferral_preserves_attachment_diagnostics": [
+    "intake-test_mailbox_attachments-AttachmentIntakeTests-test_task_budget_deferral_preserves_attachment_diagnostics-1",
+    "intake-test_mailbox_attachments-AttachmentIntakeTests-test_task_budget_deferral_preserves_attachment_diagnostics-2"
+  ],
+  "test_formalization_requests.FilingTests.test_arxiv_gap_uses_no_doi_convention_and_distinguishes_sources": [
+    "formalization-test_formalization_requests-FilingTests-test_arxiv_gap_uses_no_doi_convention_and_distinguishes_sources-1",
+    "formalization-test_formalization_requests-FilingTests-test_arxiv_gap_uses_no_doi_convention_and_distinguishes_sources-2",
+    "formalization-test_formalization_requests-FilingTests-test_arxiv_gap_uses_no_doi_convention_and_distinguishes_sources-3",
+    "formalization-test_formalization_requests-FilingTests-test_arxiv_gap_uses_no_doi_convention_and_distinguishes_sources-4"
+  ],
+  "test_formalization_requests.FilingTests.test_closed_issue_reused_by_statement_and_doi_across_pages": [
+    "formalization-test_formalization_requests-FilingTests-test_closed_issue_reused_by_statement_and_doi_across_pages-1",
+    "formalization-test_formalization_requests-FilingTests-test_closed_issue_reused_by_statement_and_doi_across_pages-2"
+  ],
+  "test_formalization_requests.FilingTests.test_legacy_backfill_requires_explicit_signed_request_and_is_replay_safe": [
+    "formalization-test_formalization_requests-FilingTests-test_legacy_backfill_requires_explicit_signed_request_and_is_replay_safe-1",
+    "formalization-test_formalization_requests-FilingTests-test_legacy_backfill_requires_explicit_signed_request_and_is_replay_safe-2",
+    "formalization-test_formalization_requests-FilingTests-test_legacy_backfill_requires_explicit_signed_request_and_is_replay_safe-3",
+    "formalization-test_formalization_requests-FilingTests-test_legacy_backfill_requires_explicit_signed_request_and_is_replay_safe-4"
+  ],
+  "test_formalization_requests.FilingTests.test_lost_post_is_reconciled_after_restoring_snapshot": [
+    "formalization-test_formalization_requests-FilingTests-test_lost_post_is_reconciled_after_restoring_snapshot-1",
+    "formalization-test_formalization_requests-FilingTests-test_lost_post_is_reconciled_after_restoring_snapshot-2",
+    "formalization-test_formalization_requests-FilingTests-test_lost_post_is_reconciled_after_restoring_snapshot-3"
+  ],
+  "test_formalization_requests.FilingTests.test_unavailable_filing_leaves_pass_and_visible_pending_work": [
+    "formalization-test_formalization_requests-FilingTests-test_unavailable_filing_leaves_pass_and_visible_pending_work-1",
+    "formalization-test_formalization_requests-FilingTests-test_unavailable_filing_leaves_pass_and_visible_pending_work-2"
+  ],
+  "test_prior_work_issues.FilingTests.test_backfill_stages_only_signed_exact_result_references": [
+    "prior-work-test_prior_work_issues-FilingTests-test_backfill_stages_only_signed_exact_result_references-1"
+  ],
+  "test_prior_work_issues.FilingTests.test_cli_filters_dates_and_projects_only_safe_issue_fields": [
+    "prior-work-test_prior_work_issues-FilingTests-test_cli_filters_dates_and_projects_only_safe_issue_fields-1"
+  ],
+  "test_prior_work_issues.FilingTests.test_headed_private_report_stays_one_dated_item": [
+    "prior-work-test_prior_work_issues-FilingTests-test_headed_private_report_stays_one_dated_item-1",
+    "prior-work-test_prior_work_issues-FilingTests-test_headed_private_report_stays_one_dated_item-2",
+    "prior-work-test_prior_work_issues-FilingTests-test_headed_private_report_stays_one_dated_item-3"
+  ],
+  "test_prior_work_issues.FilingTests.test_legacy_heading_required_and_unparseable_evidence_stays_pending": [
+    "prior-work-test_prior_work_issues-FilingTests-test_legacy_heading_required_and_unparseable_evidence_stays_pending-1",
+    "prior-work-test_prior_work_issues-FilingTests-test_legacy_heading_required_and_unparseable_evidence_stays_pending-2",
+    "prior-work-test_prior_work_issues-FilingTests-test_legacy_heading_required_and_unparseable_evidence_stays_pending-3",
+    "prior-work-test_prior_work_issues-FilingTests-test_legacy_heading_required_and_unparseable_evidence_stays_pending-4",
+    "prior-work-test_prior_work_issues-FilingTests-test_legacy_heading_required_and_unparseable_evidence_stays_pending-5",
+    "prior-work-test_prior_work_issues-FilingTests-test_legacy_heading_required_and_unparseable_evidence_stays_pending-6"
+  ],
+  "test_prior_work_issues.FilingTests.test_legacy_reads_exact_evidence_and_caches_projection": [
+    "prior-work-test_prior_work_issues-FilingTests-test_legacy_reads_exact_evidence_and_caches_projection-1",
+    "prior-work-test_prior_work_issues-FilingTests-test_legacy_reads_exact_evidence_and_caches_projection-2",
+    "prior-work-test_prior_work_issues-FilingTests-test_legacy_reads_exact_evidence_and_caches_projection-3",
+    "prior-work-test_prior_work_issues-FilingTests-test_legacy_reads_exact_evidence_and_caches_projection-4",
+    "prior-work-test_prior_work_issues-FilingTests-test_legacy_reads_exact_evidence_and_caches_projection-5",
+    "prior-work-test_prior_work_issues-FilingTests-test_legacy_reads_exact_evidence_and_caches_projection-6",
+    "prior-work-test_prior_work_issues-FilingTests-test_legacy_reads_exact_evidence_and_caches_projection-7"
+  ],
+  "test_prior_work_issues.FilingTests.test_legacy_skips_private_filenames_and_old_cached_projections": [
+    "prior-work-test_prior_work_issues-FilingTests-test_legacy_skips_private_filenames_and_old_cached_projections-1",
+    "prior-work-test_prior_work_issues-FilingTests-test_legacy_skips_private_filenames_and_old_cached_projections-2",
+    "prior-work-test_prior_work_issues-FilingTests-test_legacy_skips_private_filenames_and_old_cached_projections-3"
+  ],
+  "test_prior_work_issues.FilingTests.test_lost_post_recovers_by_result_even_after_sources_change": [
+    "prior-work-test_prior_work_issues-FilingTests-test_lost_post_recovers_by_result_even_after_sources_change-1",
+    "prior-work-test_prior_work_issues-FilingTests-test_lost_post_recovers_by_result_even_after_sources_change-2"
+  ],
+  "test_prior_work_issues.FilingTests.test_missing_and_overlapping_dates_and_missing_id_are_pending": [
+    "prior-work-test_prior_work_issues-FilingTests-test_missing_and_overlapping_dates_and_missing_id_are_pending-1"
+  ],
+  "test_prior_work_issues.FilingTests.test_pending_until_resolution_date_from_result_table": [
+    "prior-work-test_prior_work_issues-FilingTests-test_pending_until_resolution_date_from_result_table-1",
+    "prior-work-test_prior_work_issues-FilingTests-test_pending_until_resolution_date_from_result_table-2"
+  ],
+  "test_prior_work_issues.FilingTests.test_privacy_phrases_block_context_but_mathematical_correspondence_is_public": [
+    "prior-work-test_prior_work_issues-FilingTests-test_privacy_phrases_block_context_but_mathematical_correspondence_is_public-1",
+    "prior-work-test_prior_work_issues-FilingTests-test_privacy_phrases_block_context_but_mathematical_correspondence_is_public-2"
+  ],
+  "test_prior_work_issues.FilingTests.test_public_fields_never_carry_an_address": [
+    "prior-work-test_prior_work_issues-FilingTests-test_public_fields_never_carry_an_address-1"
+  ],
+  "test_prior_work_issues.FilingTests.test_publication_exclusions_are_pending_in_preview_and_work": [
+    "prior-work-test_prior_work_issues-FilingTests-test_publication_exclusions_are_pending_in_preview_and_work-1",
+    "prior-work-test_prior_work_issues-FilingTests-test_publication_exclusions_are_pending_in_preview_and_work-2"
+  ],
+  "test_prior_work_issues.FilingTests.test_read_failures_are_visible_and_back_off_until_recovery": [
+    "prior-work-test_prior_work_issues-FilingTests-test_read_failures_are_visible_and_back_off_until_recovery-1",
+    "prior-work-test_prior_work_issues-FilingTests-test_read_failures_are_visible_and_back_off_until_recovery-2",
+    "prior-work-test_prior_work_issues-FilingTests-test_read_failures_are_visible_and_back_off_until_recovery-3",
+    "prior-work-test_prior_work_issues-FilingTests-test_read_failures_are_visible_and_back_off_until_recovery-4",
+    "prior-work-test_prior_work_issues-FilingTests-test_read_failures_are_visible_and_back_off_until_recovery-5"
+  ],
+  "test_prior_work_issues.FilingTests.test_result_contract_and_policy_cover_the_structured_check": [],
+  "test_prior_work_issues.FilingTests.test_source_wording_variants_and_addresses_in_urls_stay_out": [
+    "prior-work-test_prior_work_issues-FilingTests-test_source_wording_variants_and_addresses_in_urls_stay_out-1",
+    "prior-work-test_prior_work_issues-FilingTests-test_source_wording_variants_and_addresses_in_urls_stay_out-2",
+    "prior-work-test_prior_work_issues-FilingTests-test_source_wording_variants_and_addresses_in_urls_stay_out-3",
+    "prior-work-test_prior_work_issues-FilingTests-test_source_wording_variants_and_addresses_in_urls_stay_out-4",
+    "prior-work-test_prior_work_issues-FilingTests-test_source_wording_variants_and_addresses_in_urls_stay_out-5",
+    "prior-work-test_prior_work_issues-FilingTests-test_source_wording_variants_and_addresses_in_urls_stay_out-6",
+    "prior-work-test_prior_work_issues-FilingTests-test_source_wording_variants_and_addresses_in_urls_stay_out-7",
+    "prior-work-test_prior_work_issues-FilingTests-test_source_wording_variants_and_addresses_in_urls_stay_out-8",
+    "prior-work-test_prior_work_issues-FilingTests-test_source_wording_variants_and_addresses_in_urls_stay_out-9",
+    "prior-work-test_prior_work_issues-FilingTests-test_source_wording_variants_and_addresses_in_urls_stay_out-10",
+    "prior-work-test_prior_work_issues-FilingTests-test_source_wording_variants_and_addresses_in_urls_stay_out-11",
+    "prior-work-test_prior_work_issues-FilingTests-test_source_wording_variants_and_addresses_in_urls_stay_out-12",
+    "prior-work-test_prior_work_issues-FilingTests-test_source_wording_variants_and_addresses_in_urls_stay_out-13"
+  ],
+  "test_prior_work_issues.FilingTests.test_tick_is_paused_and_bounded_with_one_issue_per_result": [
+    "prior-work-test_prior_work_issues-FilingTests-test_tick_is_paused_and_bounded_with_one_issue_per_result-1",
+    "prior-work-test_prior_work_issues-FilingTests-test_tick_is_paused_and_bounded_with_one_issue_per_result-2",
+    "prior-work-test_prior_work_issues-FilingTests-test_tick_is_paused_and_bounded_with_one_issue_per_result-3",
+    "prior-work-test_prior_work_issues-FilingTests-test_tick_is_paused_and_bounded_with_one_issue_per_result-4"
+  ],
+  "test_formalization_requests.FilingTests.test_phase3d_eight_candidate_bound_and_same_tick_deduplication": [
+    "formalization-test_formalization_requests-FilingTests-test_phase3d_eight_candidate_bound_and_same_tick_deduplication-1",
+    "formalization-test_formalization_requests-FilingTests-test_phase3d_eight_candidate_bound_and_same_tick_deduplication-2",
+    "formalization-test_formalization_requests-FilingTests-test_phase3d_eight_candidate_bound_and_same_tick_deduplication-3",
+    "formalization-test_formalization_requests-FilingTests-test_phase3d_eight_candidate_bound_and_same_tick_deduplication-4",
+    "formalization-test_formalization_requests-FilingTests-test_phase3d_eight_candidate_bound_and_same_tick_deduplication-5",
+    "formalization-test_formalization_requests-FilingTests-test_phase3d_eight_candidate_bound_and_same_tick_deduplication-6",
+    "formalization-test_formalization_requests-FilingTests-test_phase3d_eight_candidate_bound_and_same_tick_deduplication-7",
+    "formalization-test_formalization_requests-FilingTests-test_phase3d_eight_candidate_bound_and_same_tick_deduplication-8",
+    "formalization-test_formalization_requests-FilingTests-test_phase3d_eight_candidate_bound_and_same_tick_deduplication-9",
+    "formalization-test_formalization_requests-FilingTests-test_phase3d_eight_candidate_bound_and_same_tick_deduplication-10"
+  ],
+  "test_formalization_requests.FilingTests.test_phase3d_failed_checkpoint_prevents_issue_creation": [
+    "formalization-test_formalization_requests-FilingTests-test_phase3d_failed_checkpoint_prevents_issue_creation-1",
+    "formalization-test_formalization_requests-FilingTests-test_phase3d_failed_checkpoint_prevents_issue_creation-2"
+  ],
+  "test_formalization_requests.FilingTests.test_phase3d_invalid_receipt_remains_pending": [
+    "formalization-test_formalization_requests-FilingTests-test_phase3d_invalid_receipt_remains_pending-1",
+    "formalization-test_formalization_requests-FilingTests-test_phase3d_invalid_receipt_remains_pending-2"
+  ],
+  "test_formalization_requests.FilingTests.test_phase3d_partial_or_invalid_inventory_never_authorizes_post": [
+    "formalization-test_formalization_requests-FilingTests-test_phase3d_partial_or_invalid_inventory_never_authorizes_post-1",
+    "formalization-test_formalization_requests-FilingTests-test_phase3d_partial_or_invalid_inventory_never_authorizes_post-2",
+    "formalization-test_formalization_requests-FilingTests-test_phase3d_partial_or_invalid_inventory_never_authorizes_post-3"
+  ],
+  "test_formalization_requests.FilingTests.test_phase3d_paused_stage_does_not_read_or_checkpoint": [
+    "formalization-test_formalization_requests-FilingTests-test_phase3d_paused_stage_does_not_read_or_checkpoint-1",
+    "formalization-test_formalization_requests-FilingTests-test_phase3d_paused_stage_does_not_read_or_checkpoint-2"
+  ],
+  "test_formalization_requests.FilingTests.test_phase3d_uncertain_post_stops_all_remaining_creations_this_tick": [
+    "formalization-test_formalization_requests-FilingTests-test_phase3d_uncertain_post_stops_all_remaining_creations_this_tick-1",
+    "formalization-test_formalization_requests-FilingTests-test_phase3d_uncertain_post_stops_all_remaining_creations_this_tick-2",
+    "formalization-test_formalization_requests-FilingTests-test_phase3d_uncertain_post_stops_all_remaining_creations_this_tick-3"
+  ],
+  "test_prior_work_issues.FilingTests.test_phase3d_installation_data_repository_is_not_public_evidence": [
+    "prior-work-test_prior_work_issues-FilingTests-test_phase3d_installation_data_repository_is_not_public_evidence-1",
+    "prior-work-test_prior_work_issues-FilingTests-test_phase3d_installation_data_repository_is_not_public_evidence-2"
+  ],
+  "test_review_regressions.ReviewRegressions.test_python_first_cases": [
+    "intake-review-round2-match-sent-Stopped",
+    "intake-review-round2-bounce-enrichment-Stopped",
+    "intake-review-round2-prior-context-Stopped",
+    "intake-review-round2-match-sent-ProcessDeath",
+    "intake-review-round2-bounce-enrichment-ProcessDeath",
+    "intake-review-round2-prior-context-ProcessDeath",
+    "intake-review-round2-match-sent-KeyboardInterrupt",
+    "intake-review-round2-bounce-enrichment-KeyboardInterrupt",
+    "intake-review-round2-prior-context-KeyboardInterrupt",
+    "intake-review-round2-match-sent-SystemExit",
+    "intake-review-round2-bounce-enrichment-SystemExit",
+    "intake-review-round2-prior-context-SystemExit",
+    "formalization-review-round2-eight-budget-refusals",
+    "prior-work-review-round2-eight-budget-refusals",
+    "formalization-review-round2-get-URLError",
+    "formalization-review-round2-get-JSONDecodeError",
+    "formalization-review-round2-get-ConnectionResetError",
+    "formalization-review-round2-get-SyntheticValueError",
+    "formalization-review-round2-post-URLError",
+    "formalization-review-round2-post-JSONDecodeError",
+    "formalization-review-round2-post-ConnectionResetError",
+    "formalization-review-round2-post-SyntheticValueError",
+    "prior-work-review-round2-get-URLError",
+    "prior-work-review-round2-get-JSONDecodeError",
+    "prior-work-review-round2-get-ConnectionResetError",
+    "prior-work-review-round2-get-SyntheticValueError",
+    "prior-work-review-round2-post-URLError",
+    "prior-work-review-round2-post-JSONDecodeError",
+    "prior-work-review-round2-post-ConnectionResetError",
+    "prior-work-review-round2-post-SyntheticValueError",
+    "formalization-review-round2-post-interruption",
+    "prior-work-review-round2-post-interruption",
+    "intake-review-round2-folder-move-reuses-current-release",
+    "inbound-review-round2-equal-sent-times-keep-first"
+  ],
+  "test_review_round3.ReviewRound3.test_python_first_cases": [
+    "prior-work-review-round3-evidence-runtime-subclass",
+    "prior-work-review-round3-evidence-runtime-subclass-http",
+    "prior-work-review-round3-evidence-gate-subclass",
+    "prior-work-review-round3-evidence-unparseable-subclass",
+    "intake-review-round3-match-sent-base-only",
+    "intake-review-round3-bounce-enrichment-base-only",
+    "intake-review-round3-prior-context-base-only",
+    "intake-review-round3-attachment-preservation-base-only",
+    "intake-review-round3-thread-unsupported-subclass",
+    "intake-review-round3-attachment-unsupported-subclass",
+    "intake-review-round3-sent-deferred-subclass"
+  ],
+  "test_review_round4.ReviewRound4.test_python_first_cases": [
+    "intake-review-round4-match-sent-no-bases-RemoteDisconnected",
+    "intake-review-round4-match-sent-no-bases-IncompleteRead",
+    "delivery-review-round4-folder-lookup-no-bases-unknown",
+    "pool-review-round4-health-no-bases-unknown"
+  ]
 }

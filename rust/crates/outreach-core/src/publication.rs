@@ -116,17 +116,39 @@ fn name(raw: &str) -> String {
     );
     casefold(&value.split_whitespace().collect::<Vec<_>>().join(" "))
 }
-fn exclusion(
+pub(crate) fn issue_exclusion(
+    row: &Value,
+    rows: &[Value],
+    table: &Value,
+    decision: &Value,
+    rid: &Value,
+) -> StageResult<Option<&'static str>> {
+    Ok(exclusion_inner(row, rows, table, decision, &Value::Null, Some(rid))?.0)
+}
+pub(crate) fn exclusion(
     row: &Value,
     rows: &[Value],
     table: &Value,
     decision: &Value,
     note: &Value,
 ) -> StageResult<(Option<&'static str>, Value)> {
+    exclusion_inner(row, rows, table, decision, note, None)
+}
+fn exclusion_inner(
+    row: &Value,
+    rows: &[Value],
+    table: &Value,
+    decision: &Value,
+    note: &Value,
+    result_id: Option<&Value>,
+) -> StageResult<(Option<&'static str>, Value)> {
     let parents = lineage(row, rows)?;
     let mut selected = identities(row, note);
     for p in &parents {
         selected.extend(identities(p, &Value::Null));
+    }
+    if let Some(rid) = result_id.filter(|v| truth(v)) {
+        selected.insert(s(rid).to_owned());
     }
     let related: Vec<_> = rows
         .iter()
@@ -136,6 +158,9 @@ fn exclusion(
         })
         .cloned()
         .collect();
+    if result_id.is_some_and(truth) {
+        selected.extend(related.iter().map(|r| s(&r["id"]).to_owned()));
+    }
     let mut reason = None;
     for hold in array(&table["holds"]) {
         let ids: BTreeSet<_> = ["legacy_id", "task_id", "note_id", "id"]

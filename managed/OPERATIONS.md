@@ -61,7 +61,18 @@ inside the captured process, keeping note IDs, revisions and draft IDs out of
 the step environment printed by Actions. Manual `action=notes` inputs
 replace the entire `OUTREACH_NOTE_REQUEST` selection, including optional fields.
 An invalid or incomplete selection fails rather than falling back to the secret.
-Scheduled runs continue to drain the ordinary queue.
+Scheduled drains also recover failed or interrupted publication requests whose
+revision is still `creating` without a `record_id`, once the later of
+`requested_at` and `creation_retry_attempted_at` is at least one hour old. Set
+`SHORT_NOTE_CREATION_RECOVERY_SECONDS` to change that threshold (integer seconds,
+minimum `1800`; default `3600`). The service also accepts the same environment
+variable or `drain --creation-recovery-seconds`. Invalid settings are rejected,
+reported as a count-only `needs_attention` warning, and the drain returns
+without external writes. Direct engine/drain calls reject invalid thresholds
+before any effect. Paused notes stay paused; batch and time limits still apply. Temporary
+empty-inventory waits have `phase=needs_attention` and `discovery_pending=true`;
+scheduled drains recheck them after the grace period. Ambiguous or inconsistent
+inventories stay parked for explicit inspection.
 The single concurrency group permits only one pending run. Even with
 `cancel-in-progress: false`, the next scheduled run can cancel a pending manual
 dispatch. Confirm that the manual run was not cancelled and that delivery ran;
@@ -81,40 +92,82 @@ gh release download short-note-alpha --repo "$OUTREACH_DATA_REPO" \
   --dir /private/operator/alpha-v2
 ```
 
-Check that the manifest hash matches `package_id`, and that both file SHA-256
-hashes match the immutable manifest. Inspect the original Zenodo draft through
-the account, checking its note keyword, version/concept, title, ordered creators,
-affiliations, identifiers, license, publication/preprint types, access right,
-file inventory and file checksums. A `creating` receipt without `record_id`
-means the creation outcome is uncertain: find the exact draft ID in the account
-before retrying. The creation fence prevents a second deposit. Never guess an ID,
-clear a receipt, restage a modified package as the same revision, or change its
-producer or Mathesis collection receipt.
-If an HTTP 500 left `phase=creating` but account inspection confirms that no draft
-was created, recovery still needs an operator-attested transition out of that
-uncertain state. This change does not implement that transition; the creation
-fence remains in place.
+The hosted workflow holds the Zenodo credential and performs recovery itself;
+the operator needs no Zenodo access or account inspection. A `creating` receipt
+without `record_id` triggers an account-owned deposition inventory using
+`GET /deposit/depositions`, `status=draft`, `all_versions=true`, and at most 100
+records per page. Numbered pagination shares a fixed 20-page budget across draft
+and published inventories. The deposit listing is backed by Zenodo's search
+index. Pagination ends only on an empty page, including when the server caps
+page size or returns a short page; reaching the budget is incomplete. Candidates
+must carry the exact `trureturing-note:<id>` keyword and match the exact metadata
+revision, normalized title and ordered creator names. Exactly one matching draft
+is saved as `record_id` with `phase=uploading`, then follows the existing upload, metadata,
+file inventory, checksum and publication checks. Existing published revisions
+also constrain recovery to their Zenodo concept/latest draft.
 
-For `uploading`, reuse the retained `record_id`. For uncertain `creating`, supply
-the recovered exact ID. Dispatch one publication request with `action=notes`,
-`note_action=publish`, `note_id`, `note_revision`, and `recover_record`. For example:
+More than one matching draft records `phase=needs_attention` with candidate and
+page counts only; no Zenodo write occurs. An incomplete or unstable inventory also
+stops without creating or publishing. With zero drafts, recovery inventories
+`status=published`: one matching record must pass all package metadata and file
+checksum checks before its publication receipt is recorded, without a create or
+publish call. Ambiguous or mismatched published records need attention.
+
+One complete traversal with no matching draft or publication saves
+`discovery_empty_at` and records `needs_attention` without a Zenodo write. Only a
+second complete empty traversal in a later run, at least one threshold after
+that saved observation, can allow one replacement create. The later creation
+attempt must also be at least one threshold old. Manual per-note dispatch and
+`retry_failed` enforce both clocks immediately before creation; they can adopt
+and verify an existing candidate immediately. Incomplete, inconsistent or
+ambiguous inventories discard the earlier empty observation. Before the POST,
+the private receipt durably records `creation_retry_attempted_at`, consuming that
+single retry. A crash after creation but before the ID is saved can discover the
+result on the next attempt. If inventory still shows nothing, the marker prevents
+another create and records `needs_attention`. A crash after the marker but before
+the POST also leaves the fence in place. Read failures keep the creation fenced.
+For a lost `newversion` response, recovery reads the previous record's concept
+`latest_draft` directly, without relying on indexing. An unsubmitted draft with
+the note keyword, a different ID from the previous published record and the same
+concept handle is adopted under the explicit-recovery checks, even if its
+metadata still names the older revision. It then follows the usual upload and
+verification path. An invalid direct draft stops for attention. If no draft or
+verified publication can be recovered for that concept, recovery never issues
+another `newversion`.
+
+Two spaced inventories reduce the chance of missing delayed indexing or a row
+skipped by changing offset pagination. They cannot prove absence: a committed
+draft may remain unindexed across both observations, or both traversals may skip
+it. A replacement create in that situation can still duplicate the deposit.
+When that risk is suspected, inspect the original handle and use explicit
+recovery rather than authorizing replacement from the index. Never clear the
+receipt, empty-inventory timestamp or retry marker, restage changed bytes as the
+same revision, or change its producer or Mathesis collection receipt.
+
+To request recovery now, dispatch `action=notes`, `note_action=publish`, `note_id`
+and `note_revision`, leaving `recover_record` empty. Adoption and verification
+can run immediately; an empty listing records attention and retains the creation
+and second-inventory grace periods for the selected immutable request. For example:
 
 ```sh
 gh workflow run outreach-control.yml \
   --repo the-omega-institute/trureturing-outreach-engine --ref main \
   -f action=notes -f note_action=publish -f note_id=alpha \
-  -f note_revision=2 -f recover_record=12345678
+  -f note_revision=2
 ```
 
 Leave `reuse_draft_from` empty when resuming the same revision. Set it only when
 an intentionally prepared **new artifact revision** must reuse a specific earlier
 unpublished revision's draft; it must be positive and less than `note_revision`.
-The selected package and creation fence remain authoritative. A supplied ID
+`recover_record` remains available when an exact ID is already known. For
+`uploading`, the retained `record_id` is reused. The selected package and creation
+fence remain authoritative. A supplied ID
 cannot replace a retained ID or trigger creation without a retained intent.
 `action=publish` executes only the selected immutable request, with `retry_failed`
 limited to that request. This applies to ordinary publication as well as recovery;
 other queued requests wait for their own dispatch or scheduled drain, and other
-failed requests still require explicit retry.
+failed requests follow the scheduled creation-recovery rule above or require
+explicit retry for other phases.
 Earlier request assets and delivery receipts are retained. Recovery uses the
 existing Zenodo concept/draft checks and never submits a manuscript to Mathesis.
 Existing collection links and producer identity stay in their original records.
@@ -132,8 +185,9 @@ still needs inspection.
 After dispatch, inspect the new private log and retained state: the exact version
 must have `phase=published`, the original `record_id` and `package_id`, and its
 published DOI. Check that the selected request is `dispatched`. A new delivery
-failure fails that run and records `failed`; subsequent scheduled drains skip
-that receipt, report `status=needs_attention` and list its request in private
+failure fails that run and records `failed`; subsequent scheduled drains apply
+the creation-recovery threshold or skip that receipt, report
+`status=needs_attention` and list its request in private
 JSON/status output. Public logs emit `processed`, `failed`, `remaining` and
 `needs_attention` counts, with a count-only GitHub `::warning::` annotation when
 `needs_attention > 0`. Previously recorded failures alone return success;

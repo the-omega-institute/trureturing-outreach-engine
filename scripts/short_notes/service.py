@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import argparse
 import copy
-from datetime import datetime
+from datetime import datetime, timezone
 import hashlib
 import json
 import os
@@ -39,6 +39,8 @@ SITE = 'https://www.trureturing.org/'
 REQUEST_PREFIX = 'request-'
 FEED_CACHE_ASSET = 'pages-feed-cache.json'
 FEED_CACHE_ENV = 'OUTREACH_FEED_CACHE'
+CREATION_RECOVERY_ENV = 'SHORT_NOTE_CREATION_RECOVERY_SECONDS'
+DEFAULT_CREATION_RECOVERY_SECONDS = 3600
 
 
 def feed_digest(feed):
@@ -361,7 +363,17 @@ def enqueue(catalog, request, gh):
     return {'id': note['id'], 'request': name, 'status': 'queued'}
 
 
-def queue(catalog, gh, retry_failed=False, *, releases=None):
+def stale_creation(entry, recovery_seconds):
+    if (recovery_seconds is None or entry.get('phase') != 'creating' or entry.get('record_id')):
+        return False
+    try:
+        requested = datetime.fromisoformat(entry['requested_at'].replace('Z', '+00:00'))
+        return requested.tzinfo is not None and (datetime.now(timezone.utc) - requested).total_seconds() >= recovery_seconds
+    except (KeyError, TypeError, ValueError, AttributeError):
+        return False
+
+
+def queue(catalog, gh, retry_failed=False, *, releases=None, recovery_seconds=None):
     rows = []
     releases = note_releases(catalog, gh) if releases is None else releases
     for note in catalog['notes']:
@@ -376,9 +388,12 @@ def queue(catalog, gh, retry_failed=False, *, releases=None):
                 continue
             previous = state.get('deliveries', {}).get(name, {})
             status = previous.get('status', 'queued')
+            recovering = (previous.get('action') == 'publish'
+                          and stale_creation(state.get('versions', {}).get(str(previous.get('revision')), {}),
+                                             recovery_seconds))
             if note['paused']:
                 status = 'paused'
-            if status == 'dispatched' or status == 'paused' or (status == 'failed' and not retry_failed):
+            if status == 'dispatched' or status == 'paused' or (status == 'failed' and not retry_failed and not recovering):
                 eligible = False
             else:
                 eligible = True
@@ -391,6 +406,13 @@ def queue(catalog, gh, retry_failed=False, *, releases=None):
                     request = validate_request(w.read(gh.download(w.tag_for(note['id']), name, temp)))
                 if request_name(request) != name or request['id'] != note['id']:
                     raise ValueError('Request asset identity differs from its note')
+            if (recovery_seconds is not None and not retry_failed and status not in ('paused', 'dispatched')
+                    and request['action'] == 'publish'):
+                entry = state.get('versions', {}).get(str(request.get('revision')), {})
+                if entry.get('phase') == 'creating' and not entry.get('record_id'):
+                    # Also respect the grace period after process death before
+                    # a failed delivery receipt could be written.
+                    eligible = stale_creation(entry, recovery_seconds)
             note_rows.append({'id': note['id'], 'request': name, 'status': status,
                               'eligible': eligible, 'operation': request,
                               'order': (asset.get('created_at', ''), asset.get('id', ordinal))})
@@ -679,11 +701,14 @@ def synchronize_if_changed(catalog, gh, pages, submissions=None, *, cache, relea
 
 
 def drain(catalog, gh, zenodo, pages, limit=10, retry_failed=False, budget_seconds=900, submissions=None,
-          *, cache=None, fetch=None, only_request=None):
+          *, cache=None, fetch=None, only_request=None, recovery_seconds=DEFAULT_CREATION_RECOVERY_SECONDS):
     if not 1 <= limit <= 100 or budget_seconds <= 0:
         raise ValueError('Select a batch limit of 1..100 and a positive time budget')
+    if type(recovery_seconds) is not int or recovery_seconds < 0:
+        raise ValueError('Creation recovery threshold must be a nonnegative number of seconds')
     releases = note_releases(catalog, gh)
-    planned = [row for row in queue(catalog, gh, retry_failed, releases=releases) if row['eligible']]
+    planned = [row for row in queue(catalog, gh, retry_failed, releases=releases,
+                                   recovery_seconds=recovery_seconds) if row['eligible']]
     if only_request is not None:
         planned = [row for row in planned if row['request'] == only_request]
     if any(row['operation']['action'] == 'publish' for row in planned) and zenodo is None:
@@ -711,7 +736,7 @@ def drain(catalog, gh, zenodo, pages, limit=10, retry_failed=False, budget_secon
             else:
                 w.operate(request['action'], row['id'], request.get('revision'), gh, zenodo,
                           request.get('publication'), request.get('recover_record'),
-                          reuse_draft_from=request.get('reuse_draft_from'))
+                          reuse_draft_from=request.get('reuse_draft_from'), discover=True)
             mark_delivery(gh, row, 'archived')
             accepted.append(row)
         except (ValueError, RuntimeError, OSError, KeyError, zipfile.BadZipFile) as error:
@@ -1069,6 +1094,7 @@ def parse_args(argv=None):
         cmd.add_argument('--retry-failed', action='store_true')
         if name == 'drain':
             cmd.add_argument('--limit', type=int, default=10)
+            cmd.add_argument('--creation-recovery-seconds', type=int)
     commands.add_parser('project')
     commands.add_parser('handoff')
     commands.add_parser('coverage')
@@ -1153,8 +1179,11 @@ def execute(args):
             result = drain(catalog, gh, zenodo, pages, getattr(args, 'limit', 10),
                            True, submissions=submission_board, only_request=request_name(request))
     elif args.command == 'drain':
+        recovery_seconds = getattr(args, 'creation_recovery_seconds', None)
+        if recovery_seconds is None:
+            recovery_seconds = int(os.environ.get(CREATION_RECOVERY_ENV) or DEFAULT_CREATION_RECOVERY_SECONDS)
         result = drain(catalog, gh, zenodo, pages, args.limit, args.retry_failed,
-                       submissions=submission_board, cache=cache)
+                       submissions=submission_board, cache=cache, recovery_seconds=recovery_seconds)
     elif args.command == 'queue':
         result = [{k: v for k, v in row.items() if k not in ('operation', 'order')}
                   for row in queue(catalog, gh, args.retry_failed)]

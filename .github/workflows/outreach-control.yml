@@ -16,7 +16,7 @@ on:
         description: 'For note_action=publish: exact staged revision'
         type: string
       recover_record:
-        description: 'Existing Zenodo draft ID after account/receipt inspection'
+        description: 'Optional existing Zenodo draft ID; omit for automatic recovery'
         type: string
       reuse_draft_from:
         description: 'Earlier unpublished artifact revision, only for explicit reuse'
@@ -106,4 +106,5 @@ jobs:
           PAGES_TOKEN: ${{ secrets.PAGES_TOKEN }}
           OUTREACH_NOTE_REQUEST: ${{ secrets.OUTREACH_NOTE_REQUEST }}
           NOTE_ACTION: drain
+          SHORT_NOTE_CREATION_RECOVERY_SECONDS: ${{ vars.SHORT_NOTE_CREATION_RECOVERY_SECONDS || '3600' }}
         run: python3 -m managed.hosted notes

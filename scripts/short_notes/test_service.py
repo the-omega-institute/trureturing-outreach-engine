@@ -750,15 +750,112 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual(self.ci(NOTE_ACTION='publish', NOTE_ID='alpha', NOTE_REVISION='1', RECOVER_RECORD='1')[0], 0)
         self.assertEqual(calls, self.zenodo.calls)
 
-    def test_ci_retry_without_recovered_id_keeps_creation_fence(self):
+    def test_ci_retry_without_recovered_id_discovers_and_publishes_one_draft(self):
         self.catalog = catalog('alpha')
         self.enqueue()
         self.zenodo.fail_after = ('POST', '/deposit/depositions')
         self.assertEqual(self.ci()[0], 1)
-        code, result, _ = self.ci(NOTE_ACTION='publish', NOTE_ID='alpha', NOTE_REVISION='1')
-        self.assertEqual(code, 1)
-        self.assertIn('Uncertain Zenodo creation', result['failed'][0]['error'])
+        code, result, _ = self.ci(dispatch={'note_action': 'publish', 'note_id': 'alpha', 'note_revision': '1'},
+                                  OUTREACH_NOTE_REQUEST='must never be parsed', RECOVER_RECORD='99')
+        self.assertEqual((code, result['processed'], result['needs_attention']), (0, 1, []))
+        self.assertEqual(self.state()['versions']['1']['phase'], 'published')
         self.assertEqual(self.zenodo.calls.count(('POST', '/deposit/depositions')), 1)
+
+    def age_creation(self, seconds):
+        from datetime import datetime, timedelta, timezone
+        state = self.state()
+        state['versions']['1']['requested_at'] = (datetime.now(timezone.utc) - timedelta(seconds=seconds)).isoformat()
+        self.gh.save_state(w.tag_for('alpha'), state)
+
+    def test_scheduled_drain_recovers_stale_creation_without_retry_failed(self):
+        self.catalog = catalog('alpha')
+        self.enqueue()
+        self.zenodo.fail_after = ('POST', '/deposit/depositions')
+        self.assertEqual(self.ci()[0], 1)
+        self.age_creation(3601)
+        code, result, public = self.ci()
+        self.assertEqual((code, result['processed'], result['needs_attention']), (0, 1, []))
+        self.assertEqual(self.state()['versions']['1']['phase'], 'published')
+        self.assertEqual(self.zenodo.calls.count(('POST', '/deposit/depositions')), 1)
+        self.assertEqual(public, ['notes processed=1 failed=0 remaining=0 needs_attention=0'])
+
+    def test_scheduled_recovery_threshold_is_configurable_and_skips_young_creations(self):
+        self.catalog = catalog('alpha')
+        self.enqueue()
+        self.zenodo.fail_after = ('POST', '/deposit/depositions')
+        self.assertEqual(self.ci()[0], 1)
+        self.age_creation(120)
+        calls = list(self.zenodo.calls)
+        self.assertEqual(self.ci()[1]['processed'], 0)
+        self.assertEqual(calls, self.zenodo.calls)
+        code, result, _ = self.ci(SHORT_NOTE_CREATION_RECOVERY_SECONDS='60')
+        self.assertEqual((code, result['processed']), (0, 1))
+        self.assertEqual(self.state()['versions']['1']['phase'], 'published')
+
+    def test_process_death_without_delivery_failure_still_observes_scheduled_threshold(self):
+        self.catalog = catalog('alpha')
+        self.enqueue()
+        self.zenodo.fail_after = ('POST', '/deposit/depositions')
+        with self.assertRaises(TimeoutError):
+            w.operate('publish', 'alpha', 1, self.gh, self.zenodo)
+        self.assertNotIn('deliveries', self.state())
+        calls = list(self.zenodo.calls)
+        self.assertEqual(self.ci()[1]['processed'], 0)
+        self.assertEqual(self.zenodo.calls, calls)
+        self.age_creation(3601)
+        self.assertEqual(self.ci()[1]['processed'], 1)
+        self.assertEqual(self.state()['versions']['1']['phase'], 'published')
+
+    def test_scheduled_empty_discovery_retries_creation_once(self):
+        self.catalog = catalog('alpha')
+        self.enqueue()
+        original = self.zenodo.request
+        def rejected_without_record(method, path, data=None):
+            if method == 'POST' and path == '/deposit/depositions':
+                raise w.ZenodoHTTPError('POST', 500)
+            return original(method, path, data)
+        self.zenodo.request = rejected_without_record
+        self.assertEqual(self.ci()[0], 1)
+        self.assertEqual(self.state()['versions']['1']['phase'], 'creating')
+        self.zenodo.request = original
+        self.age_creation(3601)
+        code, result, _ = self.ci()
+        self.assertEqual((code, result['processed']), (0, 1))
+        self.assertIn('creation_retry_attempted_at', self.state()['versions']['1'])
+        calls = list(self.zenodo.calls)
+        self.assertEqual(self.ci()[1]['processed'], 0)
+        self.assertEqual(self.zenodo.calls, calls)
+        self.assertEqual(self.zenodo.calls.count(('POST', '/deposit/depositions')), 1)
+
+    def test_manual_discovery_is_scoped_and_ambiguity_emits_only_counts(self):
+        self.catalog = catalog('alpha', 'beta')
+        self.enqueue('alpha')
+        self.zenodo.fail_after = ('POST', '/deposit/depositions')
+        self.assertEqual(self.ci()[0], 1)
+        self.zenodo.record(2, self.zenodo.records[1]['metadata'])
+        self.enqueue('beta')
+        self.zenodo.calls.clear()
+        code, result, public = self.ci(dispatch={'note_action': 'publish', 'note_id': 'alpha', 'note_revision': '1'})
+        self.assertEqual((code, result['processed'], result['remaining']), (1, 0, 1))
+        self.assertEqual(len(result['needs_attention']), 1)
+        self.assertTrue(all(method == 'GET' for method, _ in self.zenodo.calls))
+        self.assertEqual(self.state()['versions']['1']['phase'], 'needs_attention')
+        self.assertEqual(public, ['notes processed=0 failed=1 remaining=1 needs_attention=1',
+                                  '::warning::notes needs_attention=1'])
+
+    def test_paused_stale_creation_and_invalid_threshold_do_not_write(self):
+        self.catalog = catalog('alpha')
+        self.enqueue()
+        self.zenodo.fail_after = ('POST', '/deposit/depositions')
+        self.assertEqual(self.ci()[0], 1)
+        self.age_creation(3601)
+        self.catalog['notes'][0]['paused'] = True
+        calls = list(self.zenodo.calls)
+        self.assertEqual(self.ci()[1]['processed'], 0)
+        self.assertEqual(self.zenodo.calls, calls)
+        for value in (-1, True, 0.5):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                s.drain(self.catalog, self.gh, self.zenodo, self.pages, recovery_seconds=value)
 
     def test_manual_publish_retries_only_the_selected_failed_request(self):
         self.catalog = catalog('alpha', 'beta')

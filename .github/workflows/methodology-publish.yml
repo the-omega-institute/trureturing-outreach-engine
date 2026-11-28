@@ -1,0 +1,148 @@
+name: Methodology publication
+
+# Publishes one immutable version of a Mathesis methodology paper repository:
+# Zenodo first (exact-version DOI), then Mathesis delivery carrying that
+# paper.archive_doi, using the paper repository's own scripts/publish_version.py.
+# It never touches the outreach ledger, tables/publications.json or the mail queue.
+# Shares the single-writer group so the NyxID refresh token is never rotated by
+# two runs at once.
+
+on:
+  workflow_dispatch:
+    inputs:
+      repository:
+        description: 'Paper repository under mathesis-papers (owner/name)'
+        required: true
+        default: mathesis-papers/human-in-the-loop-automated-research
+      commit:
+        description: 'Full 40-character commit SHA to publish'
+        required: true
+      version:
+        description: 'Integer Mathesis/Zenodo version (1 for v1.0)'
+        required: true
+      version_label:
+        description: 'Version label, for example v1.0'
+        required: true
+      previous_version:
+        description: 'Previous Mathesis version for a new version (empty for the first)'
+        required: false
+        default: ''
+      previous_zenodo_record_id:
+        description: 'Zenodo record ID of the previous published version (empty for the first)'
+        required: false
+        default: ''
+      existing_zenodo_doi:
+        description: 'Recovery only: reuse this already-published exact-version DOI instead of publishing again'
+        required: false
+        default: ''
+      mode:
+        description: 'dry-run packages and validates only; live publishes'
+        type: choice
+        options: [dry-run, live]
+        default: dry-run
+
+concurrency:
+  group: outreach-control-single-writer
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  OUTREACH_DATA_ROOT: ${{ github.workspace }}/data
+  OUTREACH_DATA_REPO: ${{ secrets.OUTREACH_DATA_REPO }}
+  OUTREACH_DATA_BRANCH: ${{ vars.OUTREACH_DATA_BRANCH }}
+  OUTREACH_ENGINE_REPO: ${{ github.repository }}
+  OUTREACH_PUBLIC_LOG: '1'
+  GH_TOKEN: ${{ secrets.OUTREACH_DATA_TOKEN }}
+
+jobs:
+  publish:
+    environment: outreach-runtime
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Validate inputs
+        env:
+          PAPER_REPOSITORY: ${{ inputs.repository }}
+          PAPER_COMMIT: ${{ inputs.commit }}
+          PAPER_VERSION: ${{ inputs.version }}
+          PAPER_LABEL: ${{ inputs.version_label }}
+          PREVIOUS_VERSION: ${{ inputs.previous_version }}
+          PREVIOUS_RECORD: ${{ inputs.previous_zenodo_record_id }}
+          EXISTING_DOI: ${{ inputs.existing_zenodo_doi }}
+        run: |
+          set -eu
+          [[ "$PAPER_REPOSITORY" =~ ^mathesis-papers/[A-Za-z0-9._-]+$ ]] || { echo "::error::repository must be mathesis-papers/<name>"; exit 1; }
+          [[ "$PAPER_COMMIT" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::commit must be a full SHA"; exit 1; }
+          [[ "$PAPER_VERSION" =~ ^[1-9][0-9]*$ ]] || { echo "::error::version must be a positive integer"; exit 1; }
+          [[ "$PAPER_LABEL" =~ ^v[0-9]+\.[0-9]+$ ]] || { echo "::error::version_label must look like v1.0"; exit 1; }
+          [[ -z "$PREVIOUS_VERSION" || "$PREVIOUS_VERSION" =~ ^[1-9][0-9]*$ ]] || { echo "::error::previous_version must be empty or a positive integer"; exit 1; }
+          [[ -z "$PREVIOUS_RECORD" || "$PREVIOUS_RECORD" =~ ^[1-9][0-9]*$ ]] || { echo "::error::previous_zenodo_record_id must be empty or a positive integer"; exit 1; }
+          [[ -z "$EXISTING_DOI" || "$EXISTING_DOI" =~ ^10\.5281/zenodo\.[1-9][0-9]*$ ]] || { echo "::error::existing_zenodo_doi must be a Zenodo DOI"; exit 1; }
+          [[ -z "$EXISTING_DOI" || -z "$PREVIOUS_RECORD" ]] || { echo "::error::give at most one of existing_zenodo_doi and previous_zenodo_record_id"; exit 1; }
+      - name: Locate runtime credentials
+        run: echo "OUTREACH_CREDENTIAL_FILE=$RUNNER_TEMP/outreach-runtime.env" >> "$GITHUB_ENV"
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.repository }}
+          ref: ${{ inputs.commit }}
+          path: paper-source
+          persist-credentials: false
+      - name: Confirm pinned commit
+        env:
+          PAPER_COMMIT: ${{ inputs.commit }}
+        run: |
+          set -eu
+          test "$(git -C paper-source rev-parse HEAD)" = "$PAPER_COMMIT"
+          test -f paper-source/scripts/publish_version.py
+          test -f paper-source/mathesis.json
+          test -f paper-source/paper.pdf
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Prepare data
+        if: ${{ inputs.mode == 'live' }}
+        run: python3 -m managed.hosted checkout
+      - name: Prepare credentials
+        if: ${{ inputs.mode == 'live' }}
+        env:
+          OUTREACH_NYX_SESSION: ${{ secrets.OUTREACH_NYX_SESSION }}
+        run: python3 -m managed.hosted credentials
+      - name: Publish
+        env:
+          MODE: ${{ inputs.mode }}
+          PAPER_COMMIT: ${{ inputs.commit }}
+          PAPER_VERSION: ${{ inputs.version }}
+          PAPER_LABEL: ${{ inputs.version_label }}
+          PREVIOUS_VERSION: ${{ inputs.previous_version }}
+          PREVIOUS_RECORD: ${{ inputs.previous_zenodo_record_id }}
+          EXISTING_DOI: ${{ inputs.existing_zenodo_doi }}
+          ZENODO_TOKEN: ${{ inputs.mode == 'live' && secrets.ZENODO_TOKEN || '' }}
+        run: |
+          set -euo pipefail
+          args=(paper-source --version "$PAPER_VERSION" --version-label "$PAPER_LABEL"
+                --commit-sha "$PAPER_COMMIT" --out-dir "$RUNNER_TEMP/methodology-dist")
+          [[ -n "$PREVIOUS_VERSION" ]] && args+=(--previous-version "$PREVIOUS_VERSION")
+          [[ -n "$PREVIOUS_RECORD" ]] && args+=(--previous-zenodo-record-id "$PREVIOUS_RECORD")
+          [[ -n "$EXISTING_DOI" ]] && args+=(--existing-zenodo-doi "$EXISTING_DOI")
+          if [[ "$MODE" == live ]]; then
+            MATHESIS_TOKEN="$(sed -n 's/^CMA_ACCESS_TOKEN=//p' "$OUTREACH_CREDENTIAL_FILE" | head -n 1)"
+            [[ -n "$MATHESIS_TOKEN" ]] || { echo "::error::operator token unavailable"; exit 1; }
+            echo "::add-mask::$MATHESIS_TOKEN"
+            export MATHESIS_TOKEN
+          else
+            args+=(--dry-run)
+          fi
+          python3 paper-source/scripts/publish_version.py "${args[@]}"
+      - name: Keep receipt
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: methodology-receipt-${{ inputs.version_label }}-${{ inputs.mode }}
+          path: ${{ runner.temp }}/methodology-dist/publication-receipt-v*.json
+          if-no-files-found: ignore
+          retention-days: 90

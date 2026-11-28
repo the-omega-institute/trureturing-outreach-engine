@@ -297,3 +297,34 @@ checks the signature and result hash and accepts closure while the task is
 `awaiting-user`. It records `question-closed` with the reason and evidence
 reference and discards any unsent letter in that result. The closure appears
 in `work.user_questions_closed`.
+
+## Methodology paper versions (Zenodo, then Mathesis)
+
+`.github/workflows/methodology-publish.yml` publishes one immutable version of a
+`mathesis-papers/<name>` methodology repository with that repository's own
+`scripts/publish_version.py`. It is a separate `workflow_dispatch` entry in the
+`outreach-control-single-writer` group with `environment: outreach-runtime`, so it
+never rotates the NyxID refresh token concurrently with the Coordinator, and it
+never writes the outreach ledger, `tables/publications.json` or the mail queue.
+
+Inputs: `repository`, the full `commit`, integer `version`, `version_label`
+(`v1.0`), optional `previous_version` and `previous_zenodo_record_id` for later
+versions, optional `existing_zenodo_doi` for recovery, and `mode` (`dry-run`
+default, or `live`). `dry-run` packages `paper.pdf` and `source-v<N>.zip` and
+prints their sizes and SHA-256 without credentials. `live` refreshes the hosted
+NyxID session (`managed.hosted credentials`), passes its operator access token
+as `MATHESIS_TOKEN` and the repository `ZENODO_TOKEN`, publishes to Zenodo first,
+waits for the public record, delivers the same two files to Mathesis with
+`paper.archive_doi`, and reads both back. The receipt is kept as a workflow
+artifact.
+
+Dispatch shortly after a Coordinator run has started: a pending run in this
+group is replaced when another run queues. If Zenodo published but Mathesis
+delivery failed, re-dispatch with `existing_zenodo_doi` set to the exact-version
+DOI from the receipt; never re-run `live` without it, or a second deposit is
+created. Example for a later version:
+
+```sh
+gh workflow run methodology-publish.yml -f commit=<sha> -f version=2 \
+  -f version_label=v1.1 -f previous_version=1 -f previous_zenodo_record_id=<id> -f mode=dry-run
+```

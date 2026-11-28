@@ -364,17 +364,28 @@ def enqueue(catalog, request, gh):
 
 
 def stale_creation(entry, recovery_seconds):
-    pending = entry.get('phase') == 'needs_attention' and entry.get('discovery_pending') is True
+    pending = w.pending_creation_discovery(entry)
     if (recovery_seconds is None or (entry.get('phase') != 'creating' and not pending) or entry.get('record_id')):
         return False
     try:
+        attempts = entry.get('discovery_attempts', 0)
+        if type(attempts) is not int or not 0 <= attempts < w.MAX_DISCOVERY_ATTEMPTS:
+            return False
         requested = w.creation_observed_at(entry)
         if pending and entry.get('discovery_empty_at'):
             empty = datetime.fromisoformat(entry['discovery_empty_at'].replace('Z', '+00:00'))
             if empty.tzinfo is None:
                 return False
             requested = max(requested, empty)
-        return (datetime.now(timezone.utc) - requested).total_seconds() >= recovery_seconds
+        current = datetime.now(timezone.utc)
+        if attempts:
+            last = datetime.fromisoformat(entry['discovery_attempted_at'].replace('Z', '+00:00'))
+            if last.tzinfo is None:
+                return False
+            backoff = min(recovery_seconds * 2 ** (attempts - 1), w.MAX_DISCOVERY_BACKOFF_SECONDS)
+            if (current - last).total_seconds() < backoff:
+                return False
+        return (current - requested).total_seconds() >= recovery_seconds
     except (KeyError, TypeError, ValueError, AttributeError):
         return False
 
@@ -415,7 +426,7 @@ def queue(catalog, gh, retry_failed=False, *, releases=None, recovery_seconds=No
             if (recovery_seconds is not None and not retry_failed and status not in ('paused', 'dispatched')
                     and request['action'] == 'publish'):
                 entry = state.get('versions', {}).get(str(request.get('revision')), {})
-                if (entry.get('phase') == 'creating' or entry.get('discovery_pending')) and not entry.get('record_id'):
+                if (entry.get('phase') == 'creating' or entry.get('phase') == 'needs_attention') and not entry.get('record_id'):
                     # Also respect the grace period after process death before
                     # a failed delivery receipt could be written.
                     eligible = stale_creation(entry, recovery_seconds)

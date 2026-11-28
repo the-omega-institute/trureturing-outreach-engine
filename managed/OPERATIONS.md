@@ -135,6 +135,24 @@ verification path. An invalid direct draft stops for attention. If no draft or
 verified publication can be recovered for that concept, recovery never issues
 another `newversion`.
 
+Rows whose `submitted` state differs from the listed status are skipped and
+counted unless they carry this note's identity. Identity-matching rows are
+classified by their actual state and deduplicated across both listings; a
+matching published record is fully verified before adoption, and a matching
+published record together with a matching draft stops as `ambiguous`. Adoption
+of a concept's direct `latest_draft` waits until both listings are reconciled.
+The private receipt keeps `discovery.reason` (`running` with `previous_reason`
+while an attempt is in progress). Incomplete, unreadable, malformed, empty and
+too-young observations stay retryable: scheduled drains revisit them with
+exponential backoff from the threshold, capped at one day, for at most six
+attempts per creation intent, and an attempt interrupted mid-inventory resumes
+under its previous reason. `newversion_waiting_inventory` (a previous published
+version exists, its direct `latest_draft` passed the checks, no matching
+publication was seen and the listing stayed incomplete) has no attempt limit:
+it is retried at most once a day with no end until the listings reconcile or an
+operator dispatches `recover_record`. Identity, verification and ambiguity
+conflicts stay terminal.
+
 Two spaced inventories reduce the chance of missing delayed indexing or a row
 skipped by changing offset pagination. They cannot prove absence: a committed
 draft may remain unindexed across both observations, or both traversals may skip

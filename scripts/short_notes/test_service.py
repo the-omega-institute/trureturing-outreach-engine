@@ -767,6 +767,13 @@ class ServiceTests(unittest.TestCase):
         state['versions']['1']['requested_at'] = (datetime.now(timezone.utc) - timedelta(seconds=seconds)).isoformat()
         self.gh.save_state(w.tag_for('alpha'), state)
 
+    def age_creation_for_revision(self, revision, seconds):
+        from datetime import datetime, timedelta, timezone
+        state = self.state()
+        state['versions'][str(revision)]['requested_at'] = (
+            datetime.now(timezone.utc) - timedelta(seconds=seconds)).isoformat()
+        self.gh.save_state(w.tag_for('alpha'), state)
+
     def test_queue_grace_starts_at_later_creation_attempt(self):
         self.catalog = catalog('alpha')
         self.enqueue()
@@ -830,6 +837,224 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual(self.zenodo.calls.count(('POST', '/deposit/depositions')), 1)
         self.assertEqual(public, ['notes processed=1 failed=0 remaining=0 needs_attention=0'])
 
+    def age_discovery(self, seconds=90000):
+        from datetime import datetime, timedelta, timezone
+        state = self.state()
+        state['versions']['1']['discovery_attempted_at'] = (
+            datetime.now(timezone.utc) - timedelta(seconds=seconds)).isoformat()
+        self.gh.save_state(w.tag_for('alpha'), state)
+
+    def age_discovery_for_revision(self, revision, seconds=90000):
+        from datetime import datetime, timedelta, timezone
+        state = self.state()
+        state['versions'][str(revision)]['discovery_attempted_at'] = (
+            datetime.now(timezone.utc) - timedelta(seconds=seconds)).isoformat()
+        self.gh.save_state(w.tag_for('alpha'), state)
+
+    def test_incomplete_discovery_is_pending_and_next_due_drain_adopts(self):
+        for reason in ('page_cap', 'duplicate', 'read_error', 'malformed'):
+            with self.subTest(reason=reason):
+                self.gh, self.pages, self.zenodo = FakeGitHub(), FakeGitHub(), FakeZenodo()
+                self.catalog = catalog('alpha')
+                # Reuse the staged synthetic package between subtests.
+                folder = self.root / 'alpha-1' / 'prepared'
+                if folder.exists():
+                    w.stage(folder, self.gh)
+                    s.enqueue(self.catalog, request('alpha', 1), self.gh)
+                else:
+                    self.enqueue()
+                self.zenodo.fail_after = ('POST', '/deposit/depositions')
+                self.assertEqual(self.ci()[0], 1)
+                self.age_creation(3601)
+                original = self.zenodo.request
+                def incomplete(method, path, data=None):
+                    if method == 'GET' and '?' in path:
+                        if reason == 'read_error':
+                            raise TimeoutError('Synthetic private read failure')
+                        if reason == 'malformed':
+                            return [{'id': 1, 'metadata': {}, 'submitted': None}]
+                        if reason == 'duplicate':
+                            return [self.zenodo.records[1]] * 2
+                    return original(method, path, data)
+                self.zenodo.request = incomplete
+                with patch.object(w, 'MAX_DISCOVERY_PAGES', 1):
+                    code, result, public = self.ci()
+                self.assertEqual((code, result['processed']), (1, 0))
+                entry = self.state()['versions']['1']
+                self.assertEqual(entry['discovery']['reason'], reason)
+                self.assertTrue(entry['discovery_pending'])
+                self.assertNotIn('discovery_empty_at', entry)
+                self.assertEqual(public, ['notes processed=0 failed=1 remaining=0 needs_attention=1',
+                                          '::warning::notes needs_attention=1'])
+                # Neither a scheduled wake nor an early queued receipt bypasses backoff.
+                self.zenodo.request = original
+                calls = list(self.zenodo.calls)
+                self.assertEqual(self.ci()[1]['processed'], 0)
+                self.assertEqual(self.zenodo.calls, calls)
+                self.age_discovery()
+                self.assertEqual(self.ci()[1]['processed'], 1)
+                self.assertEqual(self.state()['versions']['1']['phase'], 'published')
+                self.assertEqual(self.zenodo.calls.count(('POST', '/deposit/depositions')), 1)
+
+    def test_legacy_attention_without_reason_is_revisited_on_next_drain(self):
+        self.catalog = catalog('alpha')
+        self.enqueue()
+        self.zenodo.fail_after = ('POST', '/deposit/depositions')
+        self.assertEqual(self.ci()[0], 1)
+        self.age_creation(3601)
+        state = self.state()
+        state['versions']['1'].update(phase='needs_attention', discovery={
+            'draft_candidates': 0, 'published_candidates': 0, 'pages': 1})
+        self.gh.save_state(w.tag_for('alpha'), state)
+        self.assertEqual(self.ci()[1]['processed'], 1)
+        self.assertEqual(self.state()['versions']['1']['phase'], 'published')
+        self.assertEqual(self.zenodo.calls.count(('POST', '/deposit/depositions')), 1)
+
+    def test_identity_and_verification_attention_remains_terminal(self):
+        self.catalog = catalog('alpha')
+        self.enqueue()
+        self.zenodo.fail_after = ('POST', '/deposit/depositions')
+        self.assertEqual(self.ci()[0], 1)
+        self.age_creation(3601)
+        for reason in ('ambiguous', 'prior_lookup', 'identity_mismatch', 'verification', 'running', None):
+            with self.subTest(reason=reason):
+                state = self.state()
+                state['versions']['1'].update(phase='needs_attention', discovery={
+                    'draft_candidates': 1, 'published_candidates': 0, 'pages': 2, 'reason': reason})
+                self.gh.save_state(w.tag_for('alpha'), state)
+                calls = list(self.zenodo.calls)
+                self.assertEqual(self.ci()[1]['processed'], 0)
+                self.assertEqual(self.zenodo.calls, calls)
+
+    def test_discovery_backoff_age_and_attempt_bound(self):
+        from datetime import datetime, timedelta, timezone
+        class Clock(datetime):
+            @classmethod
+            def now(cls, tz=None):
+                return cls(2026, 2, 1, tzinfo=timezone.utc)
+        current = Clock.now()
+        entry = {'phase': 'needs_attention', 'requested_at': (current - timedelta(days=2)).isoformat(),
+                 'discovery': {'reason': 'read_error'}, 'discovery_pending': True}
+        with patch.object(s, 'datetime', Clock):
+            for attempt, delay in ((1, 3600), (2, 7200), (3, 14400), (4, 28800), (5, 57600)):
+                entry['discovery_attempts'] = attempt
+                for elapsed, due in ((delay - 1, False), (delay, True)):
+                    entry['discovery_attempted_at'] = (current - timedelta(seconds=elapsed)).isoformat()
+                    self.assertEqual(s.stale_creation(entry, 3600), due)
+            entry['discovery_attempts'] = w.MAX_DISCOVERY_ATTEMPTS
+            entry['discovery_attempted_at'] = (current - timedelta(days=2)).isoformat()
+            self.assertFalse(s.stale_creation(entry, 3600))
+            entry['discovery_attempts'] = 1
+            entry['requested_at'] = (current - timedelta(seconds=3599)).isoformat()
+            self.assertFalse(s.stale_creation(entry, 3600))
+
+    def test_scheduled_discovery_stops_reads_at_attempt_bound(self):
+        self.catalog = catalog('alpha')
+        self.enqueue()
+        self.zenodo.fail_after = ('POST', '/deposit/depositions')
+        self.assertEqual(self.ci()[0], 1)
+        self.age_creation(3601)
+        original = self.zenodo.request
+        def unavailable(method, path, data=None):
+            if method == 'GET' and '?' in path:
+                self.zenodo.calls.append((method, path))
+                raise TimeoutError('Synthetic private detail')
+            return original(method, path, data)
+        self.zenodo.request = unavailable
+        for attempt in range(1, w.MAX_DISCOVERY_ATTEMPTS + 1):
+            self.assertEqual(self.ci()[0], 1)
+            self.assertEqual(self.state()['versions']['1']['discovery_attempts'], attempt)
+            self.age_discovery()
+        calls = list(self.zenodo.calls)
+        self.assertEqual(self.ci()[1]['processed'], 0)
+        self.assertEqual(self.zenodo.calls, calls)
+        self.assertTrue(self.state()['versions']['1']['discovery_pending'])
+        self.assertEqual(self.zenodo.calls.count(('POST', '/deposit/depositions')), 1)
+
+    def test_interrupted_discovery_is_revisited_by_a_scheduled_drain(self):
+        self.catalog = catalog('alpha')
+        self.enqueue()
+        self.zenodo.fail_after = ('POST', '/deposit/depositions')
+        self.assertEqual(self.ci()[0], 1)
+        self.age_creation(3601)
+        original = self.zenodo.request
+        unindexed = {'active': True}
+        interrupted = {'done': False, 'armed': False}
+
+        def kill_once(method, path, data=None):
+            if method == 'GET' and '?' in path and interrupted['armed'] and not interrupted['done']:
+                interrupted['done'] = True
+                raise KeyboardInterrupt()
+            if method == 'GET' and '?' in path and unindexed['active']:
+                return []
+            return original(method, path, data)
+
+        self.zenodo.request = kill_once
+        # The first scheduled attempt records an empty inventory and becomes
+        # retryable before the next attempt is interrupted.
+        self.assertEqual(self.ci()[1]['processed'], 0)
+        self.age_discovery()
+        state = self.state()
+        state['versions']['1']['discovery_empty_at'] = (
+            datetime.now(timezone.utc) - timedelta(seconds=90000)).isoformat()
+        self.gh.save_state(w.tag_for('alpha'), state)
+        interrupted['armed'] = True
+        with self.assertRaises(KeyboardInterrupt):
+            self.ci()
+        entry = self.state()['versions']['1']
+        self.assertEqual(entry['discovery']['reason'], 'running')
+        self.assertEqual(entry['discovery']['previous_reason'], 'empty')
+        self.assertTrue(entry['discovery_pending'])
+        self.zenodo.request = original
+        unindexed['active'] = False
+        self.age_discovery()
+        self.assertEqual(self.ci()[1]['processed'], 1)
+        self.assertEqual(self.state()['versions']['1']['phase'], 'published')
+        self.assertEqual(self.zenodo.calls.count(('POST', '/deposit/depositions')), 1)
+
+    def test_newversion_waiting_inventory_survives_attempt_cap_until_reconciled(self):
+        self.catalog = catalog('alpha')
+        self.publish()
+        self.package('alpha', 2)
+        s.enqueue(self.catalog, request('alpha', 2), self.gh)
+        self.zenodo.fail_after = ('POST', '/deposit/depositions/1/actions/newversion')
+        self.assertEqual(self.ci()[0], 1)
+        original = self.zenodo.request
+
+        def duplicate_listing(method, path, data=None):
+            if method == 'GET' and '?' in path:
+                return [self.zenodo.records[2], self.zenodo.records[2]]
+            return original(method, path, data)
+
+        self.zenodo.request = duplicate_listing
+        self.age_creation_for_revision(2, 3601)
+        for attempt in range(w.MAX_DISCOVERY_ATTEMPTS):
+            self.assertEqual(self.ci()[1]['processed'], 0)
+            entry = self.state()['versions']['2']
+            self.assertEqual(entry['discovery']['reason'], 'newversion_waiting_inventory')
+            self.assertEqual(entry['discovery_attempts'], attempt + 1)
+            self.age_discovery_for_revision(2)
+        entry = self.state()['versions']['2']
+        entry['discovery_attempted_at'] = (
+            datetime.now(timezone.utc) - timedelta(seconds=w.MAX_DISCOVERY_BACKOFF_SECONDS - 1)).isoformat()
+        self.assertFalse(s.stale_creation(entry, 3600))
+        entry['discovery_attempted_at'] = (
+            datetime.now(timezone.utc) - timedelta(seconds=w.MAX_DISCOVERY_BACKOFF_SECONDS)).isoformat()
+        self.assertTrue(s.stale_creation(entry, 3600))
+        self.assertEqual(s.queue(self.catalog, self.gh, releases={w.tag_for('alpha'): self.gh.release(w.tag_for('alpha'))},
+                                 recovery_seconds=3600)[1]['eligible'], True)
+
+        def complete_listing(method, path, data=None):
+            if method == 'GET' and '?' in path:
+                return []
+            return original(method, path, data)
+
+        self.zenodo.request = complete_listing
+        self.age_discovery_for_revision(2)
+        self.assertEqual(self.ci()[1]['processed'], 1)
+        self.assertEqual(self.state()['versions']['2']['phase'], 'published')
+        self.assertEqual(self.zenodo.calls.count(('POST', '/deposit/depositions/1/actions/newversion')), 1)
+
     def test_scheduled_recovery_threshold_is_configurable_and_skips_young_creations(self):
         self.catalog = catalog('alpha')
         self.enqueue()
@@ -880,6 +1105,7 @@ class ServiceTests(unittest.TestCase):
         state = self.state()
         state['versions']['1']['discovery_empty_at'] = state['versions']['1']['requested_at']
         self.gh.save_state(w.tag_for('alpha'), state)
+        self.age_discovery()
         code, result, _ = self.ci()
         self.assertEqual((code, result['processed']), (0, 1))
         self.assertIn('creation_retry_attempted_at', self.state()['versions']['1'])

@@ -870,9 +870,24 @@ class WorkflowTests(unittest.TestCase):
         entry = self.saved['versions']['1']
         self.assertEqual(entry['phase'], 'needs_attention')
         self.assertEqual(entry['discovery']['reason'], 'running')
+        self.assertEqual(entry['discovery']['previous_reason'], 'ambiguous')
         self.assertFalse(w.pending_creation_discovery(entry))
         self.assertTrue(w.pending_creation_discovery({'phase': 'needs_attention', 'discovery': {}}))
         self.assertFalse(w.pending_creation_discovery({'phase': 'needs_attention', 'discovery': {'reason': None}}))
+
+    def test_interrupted_retryable_discovery_remains_schedulable(self):
+        package, folder = self.package()
+        state = self.fence(package)
+        state['versions']['1'].update(phase='needs_attention', discovery={
+            'draft_candidates': 0, 'published_candidates': 0, 'pages': 1,
+            'reason': 'page_cap'}, discovery_pending=True)
+        with patch.object(self.zenodo, 'request', side_effect=KeyboardInterrupt), self.assertRaises(KeyboardInterrupt):
+            w.publish(package, folder, state, self.save, self.zenodo, discover=True)
+        entry = self.saved['versions']['1']
+        self.assertEqual(entry['discovery']['reason'], 'running')
+        self.assertEqual(entry['discovery']['previous_reason'], 'page_cap')
+        self.assertTrue(entry['discovery_pending'])
+        self.assertTrue(w.pending_creation_discovery(entry))
 
     def test_discovery_records_matching_verified_publication_without_writes(self):
         package, folder = self.package()

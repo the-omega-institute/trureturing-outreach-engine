@@ -369,7 +369,13 @@ def stale_creation(entry, recovery_seconds):
         return False
     try:
         attempts = entry.get('discovery_attempts', 0)
-        if type(attempts) is not int or not 0 <= attempts < w.MAX_DISCOVERY_ATTEMPTS:
+        discovery = entry.get('discovery') if isinstance(entry.get('discovery'), dict) else {}
+        reason = discovery.get('reason')
+        if reason == 'running':
+            reason = discovery.get('previous_reason')
+        waiting_for_inventory = reason == 'newversion_waiting_inventory'
+        if type(attempts) is not int or attempts < 0 or (
+                attempts >= w.MAX_DISCOVERY_ATTEMPTS and not waiting_for_inventory):
             return False
         requested = w.creation_observed_at(entry)
         if pending and entry.get('discovery_empty_at'):
@@ -382,7 +388,10 @@ def stale_creation(entry, recovery_seconds):
             last = datetime.fromisoformat(entry['discovery_attempted_at'].replace('Z', '+00:00'))
             if last.tzinfo is None:
                 return False
-            backoff = min(recovery_seconds * 2 ** (attempts - 1), w.MAX_DISCOVERY_BACKOFF_SECONDS)
+            # Waiting inventories may remain eligible indefinitely, so cap the
+            # exponent before evaluating it as well as capping the duration.
+            backoff = min(recovery_seconds * 2 ** min(attempts - 1, 32),
+                          w.MAX_DISCOVERY_BACKOFF_SECONDS)
             if (current - last).total_seconds() < backoff:
                 return False
         return (current - requested).total_seconds() >= recovery_seconds

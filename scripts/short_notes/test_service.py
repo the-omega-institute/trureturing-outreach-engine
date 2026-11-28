@@ -767,6 +767,13 @@ class ServiceTests(unittest.TestCase):
         state['versions']['1']['requested_at'] = (datetime.now(timezone.utc) - timedelta(seconds=seconds)).isoformat()
         self.gh.save_state(w.tag_for('alpha'), state)
 
+    def age_creation_for_revision(self, revision, seconds):
+        from datetime import datetime, timedelta, timezone
+        state = self.state()
+        state['versions'][str(revision)]['requested_at'] = (
+            datetime.now(timezone.utc) - timedelta(seconds=seconds)).isoformat()
+        self.gh.save_state(w.tag_for('alpha'), state)
+
     def test_queue_grace_starts_at_later_creation_attempt(self):
         self.catalog = catalog('alpha')
         self.enqueue()
@@ -834,6 +841,13 @@ class ServiceTests(unittest.TestCase):
         from datetime import datetime, timedelta, timezone
         state = self.state()
         state['versions']['1']['discovery_attempted_at'] = (
+            datetime.now(timezone.utc) - timedelta(seconds=seconds)).isoformat()
+        self.gh.save_state(w.tag_for('alpha'), state)
+
+    def age_discovery_for_revision(self, revision, seconds=90000):
+        from datetime import datetime, timedelta, timezone
+        state = self.state()
+        state['versions'][str(revision)]['discovery_attempted_at'] = (
             datetime.now(timezone.utc) - timedelta(seconds=seconds)).isoformat()
         self.gh.save_state(w.tag_for('alpha'), state)
 
@@ -956,6 +970,90 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual(self.zenodo.calls, calls)
         self.assertTrue(self.state()['versions']['1']['discovery_pending'])
         self.assertEqual(self.zenodo.calls.count(('POST', '/deposit/depositions')), 1)
+
+    def test_interrupted_discovery_is_revisited_by_a_scheduled_drain(self):
+        self.catalog = catalog('alpha')
+        self.enqueue()
+        self.zenodo.fail_after = ('POST', '/deposit/depositions')
+        self.assertEqual(self.ci()[0], 1)
+        self.age_creation(3601)
+        original = self.zenodo.request
+        unindexed = {'active': True}
+        interrupted = {'done': False, 'armed': False}
+
+        def kill_once(method, path, data=None):
+            if method == 'GET' and '?' in path and interrupted['armed'] and not interrupted['done']:
+                interrupted['done'] = True
+                raise KeyboardInterrupt()
+            if method == 'GET' and '?' in path and unindexed['active']:
+                return []
+            return original(method, path, data)
+
+        self.zenodo.request = kill_once
+        # The first scheduled attempt records an empty inventory and becomes
+        # retryable before the next attempt is interrupted.
+        self.assertEqual(self.ci()[1]['processed'], 0)
+        self.age_discovery()
+        state = self.state()
+        state['versions']['1']['discovery_empty_at'] = (
+            datetime.now(timezone.utc) - timedelta(seconds=90000)).isoformat()
+        self.gh.save_state(w.tag_for('alpha'), state)
+        interrupted['armed'] = True
+        with self.assertRaises(KeyboardInterrupt):
+            self.ci()
+        entry = self.state()['versions']['1']
+        self.assertEqual(entry['discovery']['reason'], 'running')
+        self.assertEqual(entry['discovery']['previous_reason'], 'empty')
+        self.assertTrue(entry['discovery_pending'])
+        self.zenodo.request = original
+        unindexed['active'] = False
+        self.age_discovery()
+        self.assertEqual(self.ci()[1]['processed'], 1)
+        self.assertEqual(self.state()['versions']['1']['phase'], 'published')
+        self.assertEqual(self.zenodo.calls.count(('POST', '/deposit/depositions')), 1)
+
+    def test_newversion_waiting_inventory_survives_attempt_cap_until_reconciled(self):
+        self.catalog = catalog('alpha')
+        self.publish()
+        self.package('alpha', 2)
+        s.enqueue(self.catalog, request('alpha', 2), self.gh)
+        self.zenodo.fail_after = ('POST', '/deposit/depositions/1/actions/newversion')
+        self.assertEqual(self.ci()[0], 1)
+        original = self.zenodo.request
+
+        def duplicate_listing(method, path, data=None):
+            if method == 'GET' and '?' in path:
+                return [self.zenodo.records[2], self.zenodo.records[2]]
+            return original(method, path, data)
+
+        self.zenodo.request = duplicate_listing
+        self.age_creation_for_revision(2, 3601)
+        for attempt in range(w.MAX_DISCOVERY_ATTEMPTS):
+            self.assertEqual(self.ci()[1]['processed'], 0)
+            entry = self.state()['versions']['2']
+            self.assertEqual(entry['discovery']['reason'], 'newversion_waiting_inventory')
+            self.assertEqual(entry['discovery_attempts'], attempt + 1)
+            self.age_discovery_for_revision(2)
+        entry = self.state()['versions']['2']
+        entry['discovery_attempted_at'] = (
+            datetime.now(timezone.utc) - timedelta(seconds=w.MAX_DISCOVERY_BACKOFF_SECONDS - 1)).isoformat()
+        self.assertFalse(s.stale_creation(entry, 3600))
+        entry['discovery_attempted_at'] = (
+            datetime.now(timezone.utc) - timedelta(seconds=w.MAX_DISCOVERY_BACKOFF_SECONDS)).isoformat()
+        self.assertTrue(s.stale_creation(entry, 3600))
+        self.assertEqual(s.queue(self.catalog, self.gh, releases={w.tag_for('alpha'): self.gh.release(w.tag_for('alpha'))},
+                                 recovery_seconds=3600)[1]['eligible'], True)
+
+        def complete_listing(method, path, data=None):
+            if method == 'GET' and '?' in path:
+                return []
+            return original(method, path, data)
+
+        self.zenodo.request = complete_listing
+        self.age_discovery_for_revision(2)
+        self.assertEqual(self.ci()[1]['processed'], 1)
+        self.assertEqual(self.state()['versions']['2']['phase'], 'published')
+        self.assertEqual(self.zenodo.calls.count(('POST', '/deposit/depositions/1/actions/newversion')), 1)
 
     def test_scheduled_recovery_threshold_is_configurable_and_skips_young_creations(self):
         self.catalog = catalog('alpha')

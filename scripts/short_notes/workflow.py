@@ -41,7 +41,8 @@ MAX_DISCOVERY_PAGES = 20
 MAX_DISCOVERY_ATTEMPTS = 6
 MAX_DISCOVERY_BACKOFF_SECONDS = 24 * 3600
 RETRYABLE_DISCOVERY_REASONS = {'page_cap', 'duplicate', 'read_error', 'malformed',
-                             'empty', 'too_young', 'retry_consumed'}
+                             'empty', 'too_young', 'retry_consumed',
+                             'newversion_waiting_inventory'}
 MIN_CREATION_RECOVERY_SECONDS = 1800
 DEFAULT_CREATION_RECOVERY_SECONDS = 3600
 INITIAL_NOTES = 'Versioned short-note artifacts and publication receipts.'
@@ -69,8 +70,18 @@ def creation_observed_at(entry):
 def pending_creation_discovery(entry):
     """Recognize retryable discovery, including #40's reasonless private state."""
     discovery = entry.get('discovery')
-    return (entry.get('phase') == 'needs_attention' and isinstance(discovery, dict)
-            and ('reason' not in discovery or discovery.get('reason') in RETRYABLE_DISCOVERY_REASONS))
+    if entry.get('phase') != 'needs_attention' or not isinstance(discovery, dict):
+        return False
+    reason = discovery.get('reason')
+    if reason == 'running':
+        # A durable running marker means that the process died after the
+        # attempt was counted. Its prior reason decides whether a scheduled
+        # drain may resume it. Legacy running rows with the pending marker are
+        # still retryable; an unmarked row remains terminal.
+        if 'previous_reason' not in discovery:
+            return bool(entry.get('discovery_pending'))
+        return discovery.get('previous_reason') in RETRYABLE_DISCOVERY_REASONS
+    return 'reason' not in discovery or reason in RETRYABLE_DISCOVERY_REASONS
 
 
 def encode(value):
@@ -619,7 +630,16 @@ def discover_creation(note, package, directory, state, entry, previous, save, ze
         if sum(len(matches) for matches in candidates.values()) > 1:
             attention('ambiguous')
         if diagnostic['reason']:
-            attention(diagnostic['reason'])
+            # A prior published version plus a directly verified latest draft
+            # has a stronger recovery handle than the search index. Keep the
+            # adoption deferral until both status listings reconcile, but do
+            # not consume the finite retry budget while the index is known to
+            # be incomplete and no matching publication has been observed.
+            waiting_for_inventory = (prior is not None and direct_draft is not None
+                                      and not candidates['published']
+                                      and diagnostic['reason'] in {
+                                          'page_cap', 'duplicate', 'read_error', 'malformed'})
+            attention('newversion_waiting_inventory' if waiting_for_inventory else diagnostic['reason'])
 
     def read_record(path, expected_id=None):
         try:
@@ -637,8 +657,31 @@ def discover_creation(note, package, directory, state, entry, previous, save, ze
     attempts = entry.get('discovery_attempts', 0)
     if type(attempts) is not int or attempts < 0:
         attention('malformed')
+    old_discovery = entry.get('discovery')
+    old_pending = pending_creation_discovery(entry)
+    previous_reason = None
+    have_previous_reason = False
+    if isinstance(old_discovery, dict):
+        if old_discovery.get('reason') == 'running':
+            if 'previous_reason' in old_discovery:
+                previous_reason = old_discovery.get('previous_reason')
+                have_previous_reason = True
+        elif 'reason' in old_discovery:
+            previous_reason = old_discovery.get('reason')
+            have_previous_reason = previous_reason is not None
+    running_discovery = {**counts, 'reason': 'running'}
+    if have_previous_reason:
+        running_discovery['previous_reason'] = previous_reason
     entry.update(discovery_attempts=attempts + 1, discovery_attempted_at=now(),
-                 discovery={**counts, 'reason': 'running'})
+                 discovery=running_discovery)
+    if not have_previous_reason and old_pending:
+        # Preserve retryability for legacy/reasonless pending rows even though
+        # there is no concrete reason to copy into the running marker.
+        entry['discovery_pending'] = True
+    elif have_previous_reason and previous_reason in RETRYABLE_DISCOVERY_REASONS:
+        entry['discovery_pending'] = True
+    else:
+        entry.pop('discovery_pending', None)
     # Count even an interrupted traversal against the scheduled read budget.
     save(state)
 

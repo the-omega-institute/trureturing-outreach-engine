@@ -902,7 +902,7 @@ class ServiceTests(unittest.TestCase):
         self.zenodo.fail_after = ('POST', '/deposit/depositions')
         self.assertEqual(self.ci()[0], 1)
         self.age_creation(3601)
-        for reason in ('ambiguous', 'prior_lookup', 'identity_mismatch', 'verification'):
+        for reason in ('ambiguous', 'prior_lookup', 'identity_mismatch', 'verification', 'running', None):
             with self.subTest(reason=reason):
                 state = self.state()
                 state['versions']['1'].update(phase='needs_attention', discovery={
